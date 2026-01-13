@@ -529,54 +529,47 @@ export const api = {
   musicEvents: {
     list: async (): Promise<any[]> => {
       try {
-        // Intentar obtener del backend real
-        const response = await fetch('/api/services?category=music_event', {
-          method: 'GET',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-        const result = await safeJson(response);
+        // Importar airtableService dinámicamente para evitar dependencia circular
+        const { airtableService } = await import('./airtableService');
         
-        if (result?.success && Array.isArray(result.data)) {
-          return result.data.map((item: any) => ({
-            id: item.id,
-            eventName: item.eventName || item.title,
-            date: item.date,
-            time: '9:30 PM', // Caribbean Night siempre es jueves 9:30 PM
-            dayOfWeek: 'Jueves',
-            price: item.price,
-            artistName: item.artistName,
-            imageUrl: item.imageUrl || item.image,
-            spotifyLink: item.spotifyLink,
-            description: item.description
-          }));
+        // Obtener artistas de la tabla Rimm_musicos en Airtable
+        const artists = await airtableService.getArtists();
+        
+        if (artists && artists.length > 0) {
+          console.log('✅ Loaded', artists.length, 'artists from Airtable Rimm_musicos');
+          
+          // Convertir artistas a formato de eventos musicales
+          return artists.map((artist: any, index: number) => {
+            // Generar fechas de jueves próximos para eventos
+            const eventDate = new Date();
+            eventDate.setDate(eventDate.getDate() + ((4 - eventDate.getDay() + 7) % 7) + (index * 7)); // Próximos jueves
+            
+            return {
+              id: artist.id || `artist-${index}`,
+              eventName: `Caribbean Night - ${artist.name}`,
+              date: eventDate.toISOString().split('T')[0],
+              time: '9:30 PM',
+              dayOfWeek: 'Jueves',
+              price: 85000, // Precio base Caribbean Night
+              artistName: artist.name,
+              imageUrl: artist.imageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600',
+              spotifyLink: artist.spotifyLink || '',
+              instagramLink: artist.instagramLink || '',
+              youtubeLink: artist.youtubeLink || '',
+              description: artist.bio || `Disfruta de la música en vivo de ${artist.name} en Caribbean Night`,
+              genre: artist.genre || 'Reggae',
+              isActive: artist.isActive !== false,
+              capacity: 100,
+              availableSpots: 50
+            };
+          }).filter((event: any) => event.isActive);
         }
         
-        // Fallback: intentar con Make proxy
-        const makeResponse = await fetch(MAKE_WEBHOOK_SERVICES, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ 
-            action: 'LIST_SERVICES', 
-            table: 'ServiciosTuristicos_SAI',
-            category: 'music_event' 
-          })
-        });
-        const makeData = await safeJson(makeResponse);
-        
-        if (makeData && Array.isArray(makeData)) {
-          return makeData;
-        }
-        
-        // Mock data para desarrollo
+        // Fallback a mock si no hay datos
+        console.warn('⚠️ No artists from Airtable, using mock data');
         return MOCK_CARIBBEAN_EVENTS;
       } catch (e) {
-        console.error('Error fetching music events:', e);
+        console.error('Error fetching music events from Airtable:', e);
         return MOCK_CARIBBEAN_EVENTS;
       }
     }
@@ -586,21 +579,16 @@ export const api = {
   rimmArtists: {
     list: async (): Promise<any[]> => {
       try {
-        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ 
-            action: 'LIST_RIMM_ARTISTS', 
-            table: 'Artistas_RIMM'
-          })
-        });
-        const data = await safeJson(response);
-        if (data && Array.isArray(data)) {
-          return data;
+        // Usar airtableService directamente para obtener artistas de Rimm_musicos
+        const { airtableService } = await import('./airtableService');
+        const artists = await airtableService.getArtists();
+        
+        if (artists && artists.length > 0) {
+          console.log('✅ Loaded', artists.length, 'RIMM artists from Airtable');
+          return artists;
         }
+        
+        console.warn('⚠️ No RIMM artists from Airtable, using mock data');
         return MOCK_RIMM_ARTISTS;
       } catch (e) {
         console.error('Error fetching RIMM artists:', e);
