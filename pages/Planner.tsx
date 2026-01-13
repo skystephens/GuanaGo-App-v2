@@ -302,10 +302,6 @@ const ServiceCard: React.FC<{ service: Tour; onClick: () => void }> = ({ service
   };
 
   const badge = getCategoryBadge(service.category);
-  
-  // Categoría de actividad (Cultura, Aventura, Relax, etc.)
-  const activityTag = service.categoriaActividad || service.activityCategory || 
-    (service.tags && service.tags.length > 0 ? service.tags[0] : null);
 
   return (
     <div
@@ -317,13 +313,8 @@ const ServiceCard: React.FC<{ service: Tour; onClick: () => void }> = ({ service
         <div className={`absolute top-2 right-2 ${badge.color} text-white px-2 py-1 rounded-lg`}>
           <span className="text-[8px] font-black uppercase">{badge.label}</span>
         </div>
-        {activityTag && (
-          <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-gray-700 px-2 py-1 rounded-lg">
-            <span className="text-[8px] font-bold">{activityTag}</span>
-          </div>
-        )}
         {service.isRaizal && (
-          <div className="absolute bottom-2 left-2 bg-amber-500 text-white px-2 py-1 rounded-lg">
+          <div className="absolute top-2 left-2 bg-amber-500 text-white px-2 py-1 rounded-lg">
             <span className="text-[8px] font-black">🌴 RAIZAL</span>
           </div>
         )}

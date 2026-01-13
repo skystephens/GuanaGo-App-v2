@@ -1,13 +1,13 @@
 /**
- * InteractiveMap - Mapa del Directorio a pantalla completa
- * Con panel deslizable de lista y marcadores interactivos
+ * InteractiveMap - Mapa del Directorio con vista Grid alternativa
+ * Toggle entre vista de Mapa y Grid de lugares
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, MapPin, Utensils, Pill, DollarSign, Bed, Navigation, 
-  Phone, Clock, ChevronRight, X, List, ChevronUp, 
-  ChevronDown, ExternalLink, Coffee, ShoppingBag, Waves
+  Phone, Clock, ChevronRight, X, Grid3X3, Map, 
+  ExternalLink, Coffee, ShoppingBag, Waves, Loader2
 } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -52,6 +52,8 @@ interface InteractiveMapProps {
 // San Andrés centro
 const SAN_ANDRES_CENTER: [number, number] = [-81.7006, 12.5847];
 
+type ViewMode = 'map' | 'grid';
+
 const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -61,7 +63,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlace, setSelectedPlace] = useState<DirectoryItem | null>(null);
-  const [panelExpanded, setPanelExpanded] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isLoading, setIsLoading] = useState(true);
   const [dataSource, setDataSource] = useState<'cache' | 'api' | 'fallback'>('fallback');
 
@@ -233,9 +235,20 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
     const lat = place.latitude || place.lat || 0;
     
     setSelectedPlace(place);
-    setPanelExpanded(false);
     
-    if (mapRef.current && lng !== 0 && lat !== 0) {
+    // Si estamos en grid, cambiar a mapa para mostrar el lugar
+    if (viewMode === 'grid' && lng !== 0 && lat !== 0) {
+      setViewMode('map');
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.flyTo({
+            center: [lng, lat],
+            zoom: 16,
+            duration: 800
+          });
+        }
+      }, 300);
+    } else if (mapRef.current && lng !== 0 && lat !== 0) {
       mapRef.current.flyTo({
         center: [lng, lat],
         zoom: 16,
@@ -249,13 +262,40 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
       {/* Header compacto */}
       <header className="bg-white px-4 pt-10 pb-3 shadow-sm z-20">
         <div className="flex items-center gap-3 mb-3">
-          <h1 className="text-xl font-black text-gray-900 flex-1">Mapa</h1>
+          <h1 className="text-xl font-black text-gray-900 flex-1">Directorio</h1>
+          
+          {/* Toggle Mapa/Grid */}
+          <div className="flex bg-gray-100 rounded-xl p-1">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                viewMode === 'grid' 
+                  ? 'bg-white text-emerald-600 shadow-sm' 
+                  : 'text-gray-500'
+              }`}
+            >
+              <Grid3X3 size={14} />
+              Grid
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                viewMode === 'map' 
+                  ? 'bg-white text-emerald-600 shadow-sm' 
+                  : 'text-gray-500'
+              }`}
+            >
+              <Map size={14} />
+              Mapa
+            </button>
+          </div>
+          
           <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${
             dataSource === 'api' ? 'bg-green-100 text-green-700' :
             dataSource === 'cache' ? 'bg-blue-100 text-blue-700' :
             'bg-yellow-100 text-yellow-700'
           }`}>
-            📍 {filteredPlaces.length} lugares
+            {filteredPlaces.length}
           </span>
         </div>
         
@@ -290,106 +330,69 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
         </div>
       </header>
 
-      {/* Mapa a pantalla completa */}
-      <div className="flex-1 relative">
-        <div ref={mapContainerRef} className="absolute inset-0" />
-        
-        {isLoading && (
-          <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-            <div className="text-center">
-              <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto mb-2"></div>
-              <p className="text-sm text-gray-500">Cargando mapa...</p>
+      {/* Vista de Mapa */}
+      {viewMode === 'map' && (
+        <div className="flex-1 relative">
+          <div ref={mapContainerRef} className="absolute inset-0" />
+          
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+              <div className="text-center">
+                <Loader2 size={32} className="animate-spin text-emerald-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Cargando mapa...</p>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
-      {/* Panel deslizable de lista */}
-      <div 
-        className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-[28px] shadow-2xl transition-all duration-300 z-30 ${
-          panelExpanded ? 'h-[70vh]' : 'h-auto'
-        }`}
-      >
-        {/* Handle del panel */}
-        <button 
-          onClick={() => setPanelExpanded(!panelExpanded)}
-          className="w-full py-3 flex flex-col items-center"
-        >
-          <div className="w-10 h-1 bg-gray-300 rounded-full mb-2"></div>
-          <div className="flex items-center gap-2 text-gray-500">
-            <List size={16} />
-            <span className="text-xs font-bold">{panelExpanded ? 'Cerrar lista' : 'Ver lista de lugares'}</span>
-            {panelExpanded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-          </div>
-        </button>
-
-        {/* Lista expandida */}
-        {panelExpanded && (
-          <div className="px-4 pb-6 overflow-y-auto" style={{ maxHeight: 'calc(70vh - 60px)' }}>
-            <div className="space-y-2">
+      {/* Vista de Grid */}
+      {viewMode === 'grid' && (
+        <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
+          {isLoading ? (
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="bg-white rounded-2xl h-40 animate-pulse"></div>
+              ))}
+            </div>
+          ) : filteredPlaces.length > 0 ? (
+            <div className="grid grid-cols-2 gap-3">
               {filteredPlaces.map(place => {
                 const style = getCategoryStyle(place.categoria || place.category || '');
                 return (
                   <button
                     key={place.id}
                     onClick={() => handleSelectFromList(place)}
-                    className="w-full bg-gray-50 rounded-2xl p-4 flex items-center gap-3 text-left hover:bg-gray-100 transition-colors active:scale-[0.98]"
+                    className="bg-white rounded-2xl p-4 text-left shadow-sm border border-gray-100 hover:shadow-md transition-all active:scale-[0.98] flex flex-col"
                   >
-                    <div className={`w-12 h-12 ${style.bg} rounded-xl flex items-center justify-center text-xl`}>
+                    <div className={`w-12 h-12 ${style.bg} rounded-xl flex items-center justify-center text-2xl mb-3`}>
                       {style.emoji}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 text-sm truncate">
-                        {place.nombre || place.name}
-                      </h3>
-                      <p className="text-xs text-gray-500 truncate">
-                        {place.categoria || place.category}
-                      </p>
-                    </div>
-                    <ChevronRight size={18} className="text-gray-300" />
+                    <h3 className="font-bold text-gray-900 text-sm leading-tight line-clamp-2 mb-1">
+                      {place.nombre || place.name}
+                    </h3>
+                    <p className="text-[10px] text-gray-400 font-medium uppercase">
+                      {place.categoria || place.category}
+                    </p>
+                    {(place.horario || place.hours) && (
+                      <div className="flex items-center gap-1 mt-2 text-gray-400">
+                        <Clock size={10} />
+                        <span className="text-[9px] truncate">{place.horario || place.hours}</span>
+                      </div>
+                    )}
                   </button>
                 );
               })}
-              
-              {filteredPlaces.length === 0 && (
-                <div className="py-12 text-center">
-                  <MapPin size={40} className="text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-400 text-sm">No hay lugares en esta categoría</p>
-                </div>
-              )}
             </div>
-          </div>
-        )}
-
-        {/* Preview cuando está colapsado */}
-        {!panelExpanded && filteredPlaces.length > 0 && (
-          <div className="px-4 pb-4 flex gap-2 overflow-x-auto no-scrollbar">
-            {filteredPlaces.slice(0, 5).map(place => {
-              const style = getCategoryStyle(place.categoria || place.category || '');
-              return (
-                <button
-                  key={place.id}
-                  onClick={() => handleSelectFromList(place)}
-                  className="flex-shrink-0 bg-gray-50 rounded-xl px-3 py-2 flex items-center gap-2 text-left hover:bg-gray-100"
-                >
-                  <span className="text-lg">{style.emoji}</span>
-                  <span className="text-xs font-medium text-gray-700 max-w-[120px] truncate">
-                    {place.nombre || place.name}
-                  </span>
-                </button>
-              );
-            })}
-            {filteredPlaces.length > 5 && (
-              <button
-                onClick={() => setPanelExpanded(true)}
-                className="flex-shrink-0 bg-emerald-50 text-emerald-600 rounded-xl px-3 py-2 text-xs font-bold"
-              >
-                +{filteredPlaces.length - 5} más
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="py-20 text-center">
+              <MapPin size={48} className="text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-400 font-bold">No hay lugares en esta categoría</p>
+              <p className="text-gray-300 text-sm mt-1">Intenta con otra búsqueda</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Modal de detalle */}
       {selectedPlace && (
