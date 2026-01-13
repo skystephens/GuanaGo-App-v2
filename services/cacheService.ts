@@ -469,7 +469,7 @@ export async function getDataWithFallback<T>(
     return { data: cached, source: 'cache', isStale: true };
   }
   
-  // No hay caché - intentar API
+  // No hay caché fresco - intentar API
   try {
     console.log(`🌐 Fetching ${key} desde API...`);
     const apiData = await fetchFromApi();
@@ -482,16 +482,18 @@ export async function getDataWithFallback<T>(
     console.warn(`❌ Error fetching ${key} desde API:`, error);
   }
   
-  // Fallback local
-  if (fallback) {
-    console.log(`🏠 Usando datos de fallback local: ${key}`);
-    saveToCache(key, fallback, 'fallback');
-    return { data: fallback, source: 'fallback', isStale: true };
+  // PRIORIDAD 1: Caché viejo que tengamos (datos reales de Airtable)
+  // Esto asegura que se use la última carga exitosa antes del fallback demo
+  if (cached) {
+    console.log(`📦 Usando caché anterior (sin API): ${key}`);
+    return { data: cached, source: 'cache', isStale: true };
   }
   
-  // Último recurso: caché viejo que tengamos
-  if (cached) {
-    return { data: cached, source: 'cache', isStale: true };
+  // PRIORIDAD 2: Solo usar fallback demo si NUNCA ha habido datos
+  if (fallback) {
+    console.log(`🏠 Usando datos demo (primera carga): ${key}`);
+    // No guardar fallback en caché para evitar que se confunda con datos reales
+    return { data: fallback, source: 'fallback', isStale: true };
   }
   
   throw new Error(`No hay datos disponibles para ${key}`);

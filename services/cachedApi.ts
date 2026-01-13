@@ -12,7 +12,8 @@
 import { api } from './api';
 import { airtableService } from './airtableService';
 import cache, { 
-  getDataWithFallback, 
+  getDataWithFallback,
+  getFromCache,
   initializeCache, 
   needsSync,
   syncAllData,
@@ -64,7 +65,13 @@ export const cachedApi = {
       );
       return result.data;
     } catch (error) {
-      console.warn('⚠️ Usando fallback de servicios:', error);
+      console.warn('⚠️ Error obteniendo servicios:', error);
+      // Intentar caché viejo antes de fallback demo
+      const cached = getFromCache<Tour[]>('services_turisticos');
+      if (cached) {
+        console.log('📦 Usando caché anterior de servicios');
+        return cached;
+      }
       return FALLBACK_SERVICES;
     }
   },
@@ -113,7 +120,13 @@ export const cachedApi = {
       );
       return result.data;
     } catch (error) {
-      console.warn('⚠️ Usando fallback de directorio:', error);
+      console.warn('⚠️ Error obteniendo directorio:', error);
+      // Intentar caché viejo antes de fallback demo
+      const cached = getFromCache<GuanaLocation[]>('directory_map');
+      if (cached) {
+        console.log('📦 Usando caché anterior de directorio');
+        return cached;
+      }
       return FALLBACK_DIRECTORY;
     }
   },
@@ -131,7 +144,10 @@ export const cachedApi = {
         }
       );
       return result.data;
-    } catch {
+    } catch (error) {
+      console.warn('⚠️ Error obteniendo zonas taxi:', error);
+      const cached = getFromCache<TaxiZone[]>('taxi_zones');
+      if (cached) return cached;
       return FALLBACK_TAXI_ZONES;
     }
   },
@@ -164,7 +180,12 @@ export const cachedApi = {
       );
       return result.data;
     } catch (error) {
-      console.warn('⚠️ Usando fallback de artistas:', error);
+      console.warn('⚠️ Error obteniendo artistas:', error);
+      const cached = getFromCache<any[]>('artistas_rimm');
+      if (cached) {
+        console.log('📦 Usando caché anterior de artistas');
+        return cached;
+      }
       return FALLBACK_ARTISTS;
     }
   },
@@ -183,7 +204,13 @@ export const cachedApi = {
         options
       );
       return result.data;
-    } catch {
+    } catch (error) {
+      console.warn('⚠️ Error obteniendo eventos:', error);
+      const cached = getFromCache<any[]>('caribbean_events');
+      if (cached) {
+        console.log('📦 Usando caché anterior de eventos');
+        return cached;
+      }
       return FALLBACK_CARIBBEAN_EVENTS;
     }
   },
