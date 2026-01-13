@@ -9,9 +9,12 @@ router.get('/', (req, res) => {
   res.json({
     success: true,
     message: 'Chatbot API funcionando',
-    endpoints: ['/message', '/conversation/:id']
+    endpoints: ['/message', '/cotizar', '/conversation/:id']
   });
 });
+
+// Cotizador inteligente con Groq AI (público)
+router.post('/cotizar', chatbotController.cotizar);
 
 // Chatbot público (sin autenticación requerida)
 router.post('/message', chatbotController.sendMessage);
