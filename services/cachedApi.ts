@@ -39,8 +39,14 @@ export const cachedApi = {
       const result = await getDataWithFallback<Tour[]>(
         'services_turisticos',
         async () => {
+          // Debug: Verificar configuración de Airtable
+          const isConfigured = airtableService.isConfigured();
+          console.log('🔧 Airtable configurado?', isConfigured);
+          console.log('🔧 API Key existe?', Boolean(import.meta.env.VITE_AIRTABLE_API_KEY));
+          console.log('🔧 Base ID existe?', Boolean(import.meta.env.VITE_AIRTABLE_BASE_ID));
+          
           // 🔥 PRIMERO: Intentar Airtable directo
-          if (airtableService.isConfigured()) {
+          if (isConfigured) {
             console.log('📡 Cargando servicios desde Airtable directo...');
             const airtableData = await airtableService.getServices();
             if (airtableData && airtableData.length > 0) {
