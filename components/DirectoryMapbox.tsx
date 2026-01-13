@@ -6,16 +6,16 @@ import { cachedApi } from '../services/cachedApi';
 import { FALLBACK_DIRECTORY } from '../services/cacheService';
 
 // Token de Mapbox - usar variable de entorno o token público de demo
-// IMPORTANTE: Reemplazar con tu propio token en .env.local
+// IMPORTANTE: En Render, configurar VITE_MAPBOX_API_KEY en Environment Variables
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_API_KEY || 
-  'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+  'pk.eyJ1Ijoic2t5c2s4aW5nIiwiYSI6ImNqbTc1M2VncDA0a2Iza25vN2x5M29obXcifQ.RoIq-SsDb9l32j8Ydw4d2w';
 
 // Verificar si el token es válido (tiene formato correcto)
 const isValidToken = MAPBOX_TOKEN && MAPBOX_TOKEN.startsWith('pk.') && MAPBOX_TOKEN.length > 50;
 
 if (isValidToken) {
   mapboxgl.accessToken = MAPBOX_TOKEN;
-  console.log('🗺️ Mapbox token configurado');
+  console.log('🗺️ Mapbox token configurado:', MAPBOX_TOKEN.substring(0, 30) + '...');
 } else {
   console.warn('⚠️ Token de Mapbox no válido. Verifica VITE_MAPBOX_API_KEY en .env.local');
 }

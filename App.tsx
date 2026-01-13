@@ -120,7 +120,7 @@ const App: React.FC = () => {
   const renderScreen = () => {
     switch (currentRoute) {
       case AppRoute.HOME: return <Home onNavigate={navigateTo} />;
-      case AppRoute.DYNAMIC_ITINERARY: return <Planner onNavigate={navigateTo} initialCategory={routeData?.category} />;
+      case AppRoute.DYNAMIC_ITINERARY: return <Planner onNavigate={navigateTo} initialCategory={detailData?.category} />;
       case AppRoute.MY_ITINERARY: return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.PROFILE: return (
         <AccountDashboard 
