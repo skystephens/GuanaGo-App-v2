@@ -4,6 +4,7 @@ import { cachedApi } from '../services/cachedApi';
 import { AppRoute, Tour } from '../types';
 import { GUANA_LOGO } from '../constants';
 import CaribbeanNightSection from '../components/CaribbeanNightSection';
+import GuanaPointsSection from '../components/GuanaPointsSection';
 
 interface HomeProps {
   onNavigate: (route: AppRoute, data?: any) => void;
@@ -143,6 +144,9 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             </button>
           </div>
         </div>
+
+        {/* GUANA Points - Retos y Recompensas */}
+        <GuanaPointsSection onNavigate={onNavigate} isAuthenticated={false} userPoints={0} />
 
         {/* RIMM Caribbean Night Section */}
         <CaribbeanNightSection onNavigate={onNavigate} />

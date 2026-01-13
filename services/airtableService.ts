@@ -21,8 +21,39 @@ const TABLES = {
   DIRECTORIO: 'Directorio_Mapa',
   SERVICIOS: 'ServiciosTuristicos_SAI',
   LEADS: 'Leads',
-  RIMM_MUSICOS: 'Rimm_musicos'
+  RIMM_MUSICOS: 'Rimm_musicos',
+  RETOS: 'Retos_GUANA' // Tabla de retos y desafíos
 };
+
+// Interfaz para usuario con GUANA Points
+export interface GuanaUser {
+  id: string;
+  guanaId: string;
+  nombre: string;
+  email: string;
+  telefono?: string;
+  whatsapp?: string;
+  saldoGuana: number;
+  puntosAcumulados: number;
+  puntosCanjeados: number;
+  nivel: 'Explorador' | 'Aventurero' | 'Experto' | 'Leyenda';
+  retosCompletados: number;
+  qrEscaneados: number;
+  fechaRegistro: string;
+}
+
+// Interfaz para retos GUANA
+export interface GuanaReto {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  puntosRecompensa: number;
+  tipo: 'qr_scan' | 'ruta' | 'compra' | 'referido' | 'social';
+  icono: string;
+  activo: boolean;
+  vecesCompletado?: number;
+  dificultad: 'facil' | 'medio' | 'dificil';
+}
 
 // Interfaz genérica para registros de Airtable
 interface AirtableRecord<T = any> {
@@ -347,6 +378,251 @@ export async function createLead(leadData: {
 }
 
 /**
+ * Obtener usuario por email o teléfono (desde tabla Leads)
+ */
+export async function getUserByEmail(email: string): Promise<GuanaUser | null> {
+  try {
+    const records = await fetchTable(TABLES.LEADS, {
+      filterByFormula: `{Email} = '${email}'`,
+      maxRecords: 1
+    });
+    
+    if (records.length === 0) return null;
+    
+    const r = records[0];
+    return mapLeadToUser(r);
+  } catch (error) {
+    console.error('❌ Error getting user:', error);
+    return null;
+  }
+}
+
+/**
+ * Obtener usuario por Guana_ID
+ */
+export async function getUserByGuanaId(guanaId: string): Promise<GuanaUser | null> {
+  try {
+    const records = await fetchTable(TABLES.LEADS, {
+      filterByFormula: `{Guana_ID} = '${guanaId}'`,
+      maxRecords: 1
+    });
+    
+    if (records.length === 0) return null;
+    
+    return mapLeadToUser(records[0]);
+  } catch (error) {
+    console.error('❌ Error getting user by Guana_ID:', error);
+    return null;
+  }
+}
+
+/**
+ * Mapear registro de Lead a usuario GUANA
+ */
+function mapLeadToUser(record: any): GuanaUser {
+  const f = record.fields;
+  const saldo = parseFloat(f.Saldo_GUANA || f['Saldo GUANA'] || '0') || 0;
+  const acumulados = parseFloat(f.Puntos_Acumulados || f['Puntos Acumulados'] || '0') || 0;
+  const canjeados = parseFloat(f.Puntos_Canjeados || f['Puntos Canjeados'] || '0') || 0;
+  
+  // Determinar nivel basado en puntos acumulados
+  let nivel: GuanaUser['nivel'] = 'Explorador';
+  if (acumulados >= 5000) nivel = 'Leyenda';
+  else if (acumulados >= 2000) nivel = 'Experto';
+  else if (acumulados >= 500) nivel = 'Aventurero';
+  
+  return {
+    id: record.id,
+    guanaId: f.Guana_ID || f.ID_Usuario || `GUANA-${record.id.substring(0, 8)}`,
+    nombre: f.Nombre || f.nombre || '',
+    email: f.Email || f.email || '',
+    telefono: f.Telefono || f.telefono || f.Phone || '',
+    whatsapp: f.WhatsApp || f.Whatsapp || f.Telefono || '',
+    saldoGuana: saldo,
+    puntosAcumulados: acumulados,
+    puntosCanjeados: canjeados,
+    nivel: nivel,
+    retosCompletados: parseInt(f.Retos_Completados || '0') || 0,
+    qrEscaneados: parseInt(f.QR_Escaneados || '0') || 0,
+    fechaRegistro: f.Fecha || record.createdTime || new Date().toISOString()
+  };
+}
+
+/**
+ * Registrar nuevo usuario con GUANA Points
+ */
+export async function registerGuanaUser(userData: {
+  nombre: string;
+  email: string;
+  telefono?: string;
+  whatsapp?: string;
+}): Promise<GuanaUser | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    console.warn('⚠️ Airtable credentials not configured');
+    return null;
+  }
+
+  // Generar Guana_ID único
+  const guanaId = `GUANA-${Date.now().toString(36).toUpperCase()}`;
+  
+  try {
+    const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.LEADS)}`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        records: [{
+          fields: {
+            Nombre: userData.nombre,
+            Email: userData.email,
+            Telefono: userData.telefono || '',
+            WhatsApp: userData.whatsapp || userData.telefono || '',
+            Guana_ID: guanaId,
+            Saldo_GUANA: 100, // Bonus de bienvenida
+            Puntos_Acumulados: 100,
+            Puntos_Canjeados: 0,
+            Retos_Completados: 0,
+            QR_Escaneados: 0,
+            Origen: 'App GuanaGO',
+            Fecha: new Date().toISOString()
+          }
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error registering user: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ User registered with Guana_ID:', guanaId);
+    return mapLeadToUser(data.records[0]);
+  } catch (error) {
+    console.error('❌ Error registering user:', error);
+    throw error;
+  }
+}
+
+/**
+ * Actualizar saldo de GUANA Points
+ */
+export async function updateGuanaBalance(
+  recordId: string, 
+  puntos: number, 
+  tipo: 'add' | 'subtract'
+): Promise<boolean> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return false;
+  }
+
+  try {
+    // Primero obtener el saldo actual
+    const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.LEADS)}/${recordId}`, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+    
+    if (!response.ok) throw new Error('User not found');
+    
+    const data = await response.json();
+    const saldoActual = parseFloat(data.fields.Saldo_GUANA || '0') || 0;
+    const acumuladosActual = parseFloat(data.fields.Puntos_Acumulados || '0') || 0;
+    const canjeadosActual = parseFloat(data.fields.Puntos_Canjeados || '0') || 0;
+    
+    const nuevoSaldo = tipo === 'add' ? saldoActual + puntos : Math.max(0, saldoActual - puntos);
+    
+    // Actualizar registro
+    const updateResponse = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.LEADS)}/${recordId}`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        fields: {
+          Saldo_GUANA: nuevoSaldo,
+          Puntos_Acumulados: tipo === 'add' ? acumuladosActual + puntos : acumuladosActual,
+          Puntos_Canjeados: tipo === 'subtract' ? canjeadosActual + puntos : canjeadosActual
+        }
+      })
+    });
+    
+    if (!updateResponse.ok) throw new Error('Failed to update balance');
+    
+    console.log(`✅ Balance updated: ${tipo === 'add' ? '+' : '-'}${puntos} GUANA`);
+    return true;
+  } catch (error) {
+    console.error('❌ Error updating balance:', error);
+    return false;
+  }
+}
+
+/**
+ * Obtener retos disponibles (mock por ahora, luego de Airtable)
+ */
+export function getAvailableRetos(): GuanaReto[] {
+  // Retos predefinidos - pueden venir de Airtable después
+  return [
+    {
+      id: 'reto-1',
+      titulo: 'Primer Check-in',
+      descripcion: 'Escanea tu primer QR en un establecimiento',
+      puntosRecompensa: 50,
+      tipo: 'qr_scan',
+      icono: '📍',
+      activo: true,
+      dificultad: 'facil'
+    },
+    {
+      id: 'reto-2',
+      titulo: 'Explorador de Playas',
+      descripcion: 'Visita 3 playas diferentes de San Andrés',
+      puntosRecompensa: 150,
+      tipo: 'ruta',
+      icono: '🏖️',
+      activo: true,
+      dificultad: 'medio'
+    },
+    {
+      id: 'reto-3',
+      titulo: 'Foodie Local',
+      descripcion: 'Prueba comida en 5 restaurantes del directorio',
+      puntosRecompensa: 200,
+      tipo: 'qr_scan',
+      icono: '🍽️',
+      activo: true,
+      dificultad: 'medio'
+    },
+    {
+      id: 'reto-4',
+      titulo: 'Tour Completo',
+      descripcion: 'Completa tu primer tour con GuanaGO',
+      puntosRecompensa: 300,
+      tipo: 'compra',
+      icono: '🚤',
+      activo: true,
+      dificultad: 'facil'
+    },
+    {
+      id: 'reto-5',
+      titulo: 'Embajador Guana',
+      descripcion: 'Refiere a un amigo que complete un tour',
+      puntosRecompensa: 500,
+      tipo: 'referido',
+      icono: '🤝',
+      activo: true,
+      dificultad: 'dificil'
+    },
+    {
+      id: 'reto-6',
+      titulo: 'Caribbean Night',
+      descripcion: 'Asiste a un evento de Caribbean Night',
+      puntosRecompensa: 250,
+      tipo: 'compra',
+      icono: '🎵',
+      activo: true,
+      dificultad: 'medio'
+    }
+  ];
+}
+
+/**
  * Servicio principal de Airtable
  */
 export const airtableService = {
@@ -364,6 +640,13 @@ export const airtableService = {
   
   // Leads
   createLead,
+  
+  // GUANA Points / Usuarios
+  getUserByEmail,
+  getUserByGuanaId,
+  registerGuanaUser,
+  updateGuanaBalance,
+  getAvailableRetos,
   
   // Acceso genérico a tablas
   fetchTable,
