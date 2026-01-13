@@ -142,24 +142,63 @@ export const api = {
     },
 
     getDirectoryMap: async (): Promise<any[]> => {
+      // Llamada directa a Airtable API para obtener los 31 puntos del directorio
+      const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY || 'patDWx13o3qtNjLqv.37cd343946b889d2044f1f5fa9039c06931d38a192f794c115f0efd21cca1658';
+      const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
+      const TABLE_NAME = 'Directorio_Mapa';
+      
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ 
-            action: 'GET_DIRECTORY_MAP', 
-            table: 'Directorio_Mapa',
-            baseId: 'appiReH55Qhrbv4Lk'
-          })
-        });
-        const data = await safeJson(response);
-        console.log('Directory data from Airtable:', data);
-        return (data && Array.isArray(data)) ? data : [];
+        console.log('📍 Fetching directory from Airtable...');
+        const response = await fetch(
+          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(TABLE_NAME)}?maxRecords=100`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        if (!response.ok) {
+          console.error('Airtable API error:', response.status, response.statusText);
+          return [];
+        }
+        
+        const data = await response.json();
+        console.log('📍 Airtable raw response:', data);
+        
+        if (data && data.records && Array.isArray(data.records)) {
+          // Transformar registros de Airtable al formato esperado
+          const items = data.records.map((record: any) => ({
+            id: record.id,
+            nombre: record.fields.Nombre || record.fields.nombre || record.fields.Name || '',
+            name: record.fields.Nombre || record.fields.nombre || record.fields.Name || '',
+            categoria: record.fields.Categoria || record.fields.categoria || record.fields.Category || 'General',
+            category: record.fields.Categoria || record.fields.categoria || record.fields.Category || 'General',
+            latitude: parseFloat(record.fields.Latitude || record.fields.latitude || record.fields.Lat || 0),
+            lat: parseFloat(record.fields.Latitude || record.fields.latitude || record.fields.Lat || 0),
+            longitude: parseFloat(record.fields.Longitude || record.fields.longitude || record.fields.Lng || 0),
+            lng: parseFloat(record.fields.Longitude || record.fields.longitude || record.fields.Lng || 0),
+            telefono: record.fields.Telefono || record.fields.telefono || record.fields.Phone || '',
+            phone: record.fields.Telefono || record.fields.telefono || record.fields.Phone || '',
+            direccion: record.fields.Direccion || record.fields.direccion || record.fields.Address || '',
+            address: record.fields.Direccion || record.fields.direccion || record.fields.Address || '',
+            horario: record.fields.Horario || record.fields.horario || record.fields.Hours || '',
+            hours: record.fields.Horario || record.fields.horario || record.fields.Hours || '',
+            descripcion: record.fields.Descripcion || record.fields.descripcion || record.fields.Description || '',
+            description: record.fields.Descripcion || record.fields.descripcion || record.fields.Description || '',
+            imagen: record.fields.Imagen?.[0]?.url || record.fields.imagen?.[0]?.url || '',
+            image: record.fields.Imagen?.[0]?.url || record.fields.imagen?.[0]?.url || ''
+          }));
+          
+          console.log(`✅ Loaded ${items.length} directory items from Airtable`);
+          return items;
+        }
+        
+        return [];
       } catch (e) {
-        console.error('Error fetching directory map:', e);
+        console.error('❌ Error fetching directory map from Airtable:', e);
         return [];
       }
     }
