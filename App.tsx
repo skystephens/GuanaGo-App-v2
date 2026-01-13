@@ -39,6 +39,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminFinance from './pages/admin/AdminFinance';
 import AdminServices from './pages/admin/AdminServices';
+import AdminBackend from './pages/admin/AdminBackend';
 
 import Navigation from './components/Navigation';
 import GuanaChatbot from './components/GuanaChatbot';
@@ -144,6 +145,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_USERS: return <AdminUsers />;
       case AppRoute.ADMIN_FINANCE: return <AdminFinance />;
       case AppRoute.ADMIN_SERVICES: return <AdminServices />;
+      case AppRoute.ADMIN_BACKEND: return <AdminBackend />;
       case AppRoute.GROUP_QUOTE: return <GroupQuote />;
       default: return <Home onNavigate={navigateTo} />;
     }
