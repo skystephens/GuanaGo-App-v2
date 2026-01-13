@@ -18,6 +18,10 @@ import HotelList from './pages/HotelList';
 import TaxiList from './pages/TaxiList';
 import PackageList from './pages/PackageList';
 
+// RIMM Caribbean Night Pages
+import RimmCluster from './pages/RimmCluster';
+import MusicEventDetail from './pages/MusicEventDetail';
+
 // Flow Pages
 import Reviews from './pages/Reviews';
 import Checkout from './pages/Checkout';
@@ -147,6 +151,8 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_SERVICES: return <AdminServices />;
       case AppRoute.ADMIN_BACKEND: return <AdminBackend />;
       case AppRoute.GROUP_QUOTE: return <GroupQuote />;
+      case AppRoute.RIMM_CLUSTER: return <RimmCluster onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.MUSIC_EVENT_DETAIL: return <MusicEventDetail data={detailData} onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };

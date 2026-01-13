@@ -224,6 +224,9 @@ export enum AppRoute {
   MY_ITINERARY = 'MY_ITINERARY',
   DYNAMIC_ITINERARY = 'DYNAMIC_ITINERARY',
   DIRECTORY = 'DIRECTORY',
+  // RIMM Caribbean Night Routes
+  RIMM_CLUSTER = 'RIMM_CLUSTER',
+  MUSIC_EVENT_DETAIL = 'MUSIC_EVENT_DETAIL',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin';

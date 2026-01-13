@@ -43,15 +43,16 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
   };
 
   const handleReservation = (event: MusicEvent) => {
-    // Navegar al flujo de reserva con los datos del evento
-    onNavigate(AppRoute.CHECKOUT, {
-      type: 'music_event',
+    // Navegar a la página de detalle del evento musical
+    onNavigate(AppRoute.MUSIC_EVENT_DETAIL, {
       id: event.id,
-      title: event.eventName,
-      price: event.price,
+      eventName: event.eventName,
       date: event.date,
-      image: event.imageUrl,
-      artistName: event.artistName
+      price: event.price,
+      artistName: event.artistName,
+      imageUrl: event.imageUrl,
+      spotifyLink: event.spotifyLink,
+      description: event.description
     });
   };
 
@@ -256,10 +257,10 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
       )}
 
       {/* Footer CTA */}
-      {!loading && !error && events.length > 1 && (
+      {!loading && !error && events.length > 0 && (
         <div className="mt-6 text-center">
           <button 
-            onClick={() => onNavigate(AppRoute.TOUR_LIST, { category: 'music_event' })}
+            onClick={() => onNavigate(AppRoute.RIMM_CLUSTER)}
             className="text-cyan-200 text-sm font-semibold hover:text-white transition-colors underline underline-offset-4"
           >
             Ver todos los eventos →
