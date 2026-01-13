@@ -76,18 +76,20 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
     { id: 'Playa', icon: <Waves size={16} />, label: 'Playas' },
   ];
 
-  // Cargar datos
+  // Cargar datos - 🔥 Forzar refresh desde Airtable
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const data = await cachedApi.getDirectory();
+        console.log('📡 InteractiveMap: Cargando directorio con forceRefresh...');
+        const data = await cachedApi.getDirectory({ forceRefresh: true });
         if (data && data.length > 0) {
+          console.log('✅ InteractiveMap: Directorio recibido:', data.length, 'lugares');
           setDirectoryData(data as DirectoryItem[]);
-          setDataSource('cache');
+          setDataSource('api');
         }
       } catch (err) {
-        console.log('Usando fallback');
+        console.log('⚠️ Usando fallback del directorio');
         setDataSource('fallback');
       }
       setIsLoading(false);

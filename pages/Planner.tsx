@@ -30,18 +30,21 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, initialCategory = 'all' }
   const { addToCart, itemCount } = useCart();
 
   // Cargar datos usando el sistema de caché
+  // 🔥 Forzar refresh desde Airtable
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
+        console.log('📡 Planner: Cargando servicios con forceRefresh...');
         const [servicesData, taxiData] = await Promise.all([
-          cachedApi.getServices(),
+          cachedApi.getServices({ forceRefresh: true }), // Forzar Airtable
           cachedApi.getTaxiZones()
         ]);
-        setServices(servicesData.filter(s => s.active));
+        console.log('✅ Planner: Servicios recibidos:', servicesData.length);
+        setServices(servicesData.filter(s => s.active !== false));
         setTaxiZones(taxiData);
       } catch (error) {
-        console.error('Error cargando servicios:', error);
+        console.error('❌ Error cargando servicios:', error);
         setServices(FALLBACK_SERVICES.filter(s => s.active));
       } finally {
         setLoading(false);

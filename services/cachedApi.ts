@@ -1,6 +1,7 @@
 /**
  * GuanaGO Cached API Service
  * Wrapper que integra la API con el sistema de caché local
+ * AHORA CON CONEXIÓN DIRECTA A AIRTABLE
  * 
  * Uso:
  *   import { cachedApi } from './services/cachedApi';
@@ -9,6 +10,7 @@
  */
 
 import { api } from './api';
+import { airtableService } from './airtableService';
 import cache, { 
   getDataWithFallback, 
   initializeCache, 
@@ -24,43 +26,66 @@ import cache, {
 import { Tour, GuanaLocation, TaxiZone } from '../types';
 
 // =========================================================
-// 🎯 API CON CACHÉ INTEGRADO
+// 🎯 API CON CACHÉ INTEGRADO + AIRTABLE DIRECTO
 // =========================================================
 
 export const cachedApi = {
   /**
    * Obtener servicios turísticos (tours, hoteles, paquetes)
-   * Siempre retorna datos - primero caché/fallback, luego actualiza
+   * AHORA USA AIRTABLE DIRECTAMENTE - sin Make.com
    */
   getServices: async (options?: { forceRefresh?: boolean }): Promise<Tour[]> => {
     try {
       const result = await getDataWithFallback<Tour[]>(
         'services_turisticos',
         async () => {
+          // 🔥 PRIMERO: Intentar Airtable directo
+          if (airtableService.isConfigured()) {
+            console.log('📡 Cargando servicios desde Airtable directo...');
+            const airtableData = await airtableService.getServices();
+            if (airtableData && airtableData.length > 0) {
+              console.log(`✅ ${airtableData.length} servicios desde Airtable`);
+              return airtableData as unknown as Tour[];
+            }
+          }
+          
+          // Fallback: Make.com webhook
+          console.log('📡 Fallback a Make.com webhook...');
           const data = await api.services.listPublic();
           return data.length > 0 ? data : null;
         },
         options
       );
       return result.data;
-    } catch {
-      console.warn('⚠️ Usando fallback de servicios');
+    } catch (error) {
+      console.warn('⚠️ Usando fallback de servicios:', error);
       return FALLBACK_SERVICES;
     }
   },
 
   /**
    * Obtener directorio del mapa (farmacias, cajeros, restaurantes, etc.)
-   * Datos siempre disponibles para el mapa
+   * AHORA USA AIRTABLE DIRECTAMENTE
    */
   getDirectory: async (options?: { forceRefresh?: boolean }): Promise<GuanaLocation[]> => {
     try {
       const result = await getDataWithFallback<GuanaLocation[]>(
         'directory_map',
         async () => {
+          // 🔥 PRIMERO: Intentar Airtable directo
+          if (airtableService.isConfigured()) {
+            console.log('📡 Cargando directorio desde Airtable directo...');
+            const airtableData = await airtableService.getDirectoryPoints();
+            if (airtableData && airtableData.length > 0) {
+              console.log(`✅ ${airtableData.length} puntos desde Airtable`);
+              return airtableData as unknown as GuanaLocation[];
+            }
+          }
+          
+          // Fallback: Make.com webhook
+          console.log('📡 Fallback a Make.com webhook...');
           const data = await api.directory.getDirectoryMap();
           if (data && data.length > 0) {
-            // Normalizar estructura
             return data.map((item: any) => ({
               id: item.id || item.Id,
               name: item.name || item.nombre || item.Name,
@@ -81,8 +106,8 @@ export const cachedApi = {
         options
       );
       return result.data;
-    } catch {
-      console.warn('⚠️ Usando fallback de directorio');
+    } catch (error) {
+      console.warn('⚠️ Usando fallback de directorio:', error);
       return FALLBACK_DIRECTORY;
     }
   },
@@ -106,20 +131,34 @@ export const cachedApi = {
   },
 
   /**
-   * Obtener artistas RIMM
+   * Obtener artistas RIMM - Caribbean Night
+   * AHORA USA AIRTABLE DIRECTAMENTE (tabla Rimm_musicos)
    */
   getArtists: async (options?: { forceRefresh?: boolean }): Promise<any[]> => {
     try {
       const result = await getDataWithFallback<any[]>(
         'artistas_rimm',
         async () => {
+          // 🔥 PRIMERO: Intentar Airtable directo
+          if (airtableService.isConfigured()) {
+            console.log('📡 Cargando artistas desde Airtable (Rimm_musicos)...');
+            const airtableData = await airtableService.getArtists();
+            if (airtableData && airtableData.length > 0) {
+              console.log(`✅ ${airtableData.length} artistas desde Airtable`);
+              return airtableData;
+            }
+          }
+          
+          // Fallback: Make.com webhook
+          console.log('📡 Fallback a Make.com webhook para artistas...');
           const data = await api.rimmArtists.list();
           return data.length > 0 ? data : null;
         },
         options
       );
       return result.data;
-    } catch {
+    } catch (error) {
+      console.warn('⚠️ Usando fallback de artistas:', error);
       return FALLBACK_ARTISTS;
     }
   },
@@ -223,6 +262,23 @@ async function syncInBackground(): Promise<void> {
 export async function forceFullSync(): Promise<{ success: string[]; failed: string[] }> {
   console.log('🔄 Forzando sincronización completa...');
   return syncInBackground().then(() => ({ success: ['all'], failed: [] }));
+}
+
+/**
+ * Limpiar toda la caché local
+ * Útil para forzar recarga de datos frescos desde Airtable
+ */
+export function clearAllCache(): void {
+  console.log('🗑️ Limpiando toda la caché local...');
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('guanago_')) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+  console.log(`✅ ${keysToRemove.length} items de caché eliminados`);
 }
 
 // =========================================================

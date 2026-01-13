@@ -5,6 +5,7 @@ import {
   ChevronRight, Star, Headphones, Image, ChevronLeft
 } from 'lucide-react';
 import { api } from '../services/api';
+import { cachedApi } from '../services/cachedApi';
 import { AppRoute } from '../types';
 
 interface MusicEvent {
@@ -71,9 +72,10 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
     setError(null);
     try {
       // Cargar todos los datos en paralelo
+      // 🔥 Artistas ahora viene de Airtable directo (Rimm_musicos)
       const [eventsData, artistsData, packagesData, galleryData] = await Promise.all([
         api.musicEvents.list(),
-        api.rimmArtists.list(),
+        cachedApi.getArtists(), // ← Airtable directo!
         api.rimmPackages.list(),
         api.rimmGallery.list()
       ]);
