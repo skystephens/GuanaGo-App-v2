@@ -233,7 +233,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
 
       el.addEventListener('click', () => {
         setSelectedPlace(place);
-        setPanelExpanded(false);
         mapRef.current?.flyTo({
           center: [lng, lat],
           zoom: 16,
@@ -285,7 +284,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="h-full w-full bg-gray-100 flex flex-col overflow-hidden">
+    <div className=\"min-h-screen w-full bg-gray-100 flex flex-col overflow-hidden\">
       {/* Header compacto */}
       <header className="bg-white px-4 pt-10 pb-3 shadow-sm z-20 flex-shrink-0">
         <div className="flex items-center gap-3 mb-3">
@@ -359,8 +358,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
 
       {/* Vista de Mapa */}
       {viewMode === 'map' && (
-        <div className="flex-1 relative overflow-hidden">
-          <div ref={mapContainerRef} className="absolute inset-0" />
+        <div className="flex-1 relative overflow-hidden" style={{ minHeight: 'calc(100vh - 200px)' }}>
+          <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
           
           {isLoading && (
             <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">

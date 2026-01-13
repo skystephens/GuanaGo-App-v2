@@ -96,7 +96,7 @@ const GuanaChatbot: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-24 left-0 right-0 z-50 flex justify-end px-6 max-w-md mx-auto pointer-events-none font-sans">
+    <div className="fixed bottom-24 right-4 md:right-8 lg:right-12 z-50 pointer-events-none font-sans">
       <div className="relative pointer-events-auto">
         {!isOpen && (
           <button onClick={() => setIsOpen(true)} className="w-16 h-16 bg-emerald-500 rounded-full shadow-lg border-2 border-white flex items-center justify-center relative group hover:scale-105 transition-transform">
