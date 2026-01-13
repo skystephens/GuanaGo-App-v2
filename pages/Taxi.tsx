@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ArrowLeft, MapPin, ChevronDown, Car, Truck, Info, Ticket } from 'lucide-react';
 import { TAXI_ZONES } from '../constants';
-import SanAndresMap from '../components/SanAndresMap';
+import TaxiZonesMapbox from '../components/TaxiZonesMapbox';
 
 interface TaxiProps {
   onBack: () => void;
@@ -52,13 +52,13 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
          </div>
 
          {/* Map Visualization */}
-         <div className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 mb-6 flex flex-col items-center overflow-hidden">
-            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Mapa de Zonas</h3>
-            <SanAndresMap 
+         <div className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 mb-6">
+            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Mapa de Zonas</h3>
+            <TaxiZonesMapbox 
               selectedZoneId={selectedZoneId} 
               onSelectZone={(id) => setSelectedZoneId(id)} 
             />
-            <p className="text-xs text-gray-400 mt-2 text-center">Toca una zona para seleccionarla</p>
+            <p className="text-xs text-gray-400 mt-3 text-center">Toca una zona en el mapa para seleccionarla</p>
          </div>
 
          {/* Calculator Form */}
