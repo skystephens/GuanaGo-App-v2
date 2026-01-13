@@ -22,6 +22,30 @@ const safeJson = async (response: Response) => {
   }
 };
 
+// Transformar datos de Airtable ServiciosTuristicos_SAI al formato Tour
+const transformAirtableService = (record: any): Tour => {
+  // Campos esperados de Airtable: Nombre, Descripcion, Precio, Imagen, Categoria, Duracion, Rating, Estado
+  const fields = record.fields || record;
+  return {
+    id: record.id || fields.id || `tour_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    title: fields.Nombre || fields.title || fields.name || 'Tour sin nombre',
+    description: fields.Descripcion || fields.description || fields.Description || '',
+    price: parseFloat(fields.Precio || fields.price || 0),
+    image: fields.Imagen?.[0]?.url || fields.Imagen || fields.image || fields.Image || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400',
+    gallery: fields.Galeria?.map((img: any) => img.url || img) || fields.gallery || [],
+    category: (fields.Categoria || fields.category || 'tour').toLowerCase() as Tour['category'],
+    duration: fields.Duracion || fields.duration || '4 horas',
+    rating: parseFloat(fields.Rating || fields.rating || '4.5'),
+    reviews: parseInt(fields.Reviews || fields.reviews || '0'),
+    active: fields.Estado === 'Activo' || fields.active === true || fields.Estado === true || true,
+    ownerId: fields.ProveedorId || fields.ownerId || undefined,
+    isRaizal: fields.EsRaizal || fields.isRaizal || false,
+    raizalHistory: fields.HistoriaRaizal || fields.raizalHistory || undefined,
+    latitude: parseFloat(fields.Latitud || fields.latitude || 0) || undefined,
+    longitude: parseFloat(fields.Longitud || fields.longitude || 0) || undefined
+  };
+};
+
 export const api = {
   // --- USUARIOS Y PERFILES ---
   users: {
@@ -283,8 +307,13 @@ export const api = {
           })
         });
         const data = await safeJson(response);
-        return (data && Array.isArray(data)) ? data : [...POPULAR_TOURS, ...HOTEL_LIST, ...POPULAR_PACKAGES] as Tour[];
+        if (data && Array.isArray(data)) {
+          // Transformar datos de Airtable al formato Tour
+          return data.map(transformAirtableService).filter(s => s.active);
+        }
+        return [...POPULAR_TOURS, ...HOTEL_LIST, ...POPULAR_PACKAGES] as Tour[];
       } catch (e) {
+        console.error('Error fetching services:', e);
         return [...POPULAR_TOURS, ...HOTEL_LIST, ...POPULAR_PACKAGES] as Tour[];
       }
     },
@@ -303,8 +332,12 @@ export const api = {
           })
         });
         const data = await safeJson(response);
-        return (data && Array.isArray(data)) ? data : [...POPULAR_TOURS, ...HOTEL_LIST, ...POPULAR_PACKAGES] as Tour[];
+        if (data && Array.isArray(data)) {
+          return data.map(transformAirtableService);
+        }
+        return [...POPULAR_TOURS, ...HOTEL_LIST, ...POPULAR_PACKAGES] as Tour[];
       } catch (e) {
+        console.error('Error fetching all services:', e);
         return [...POPULAR_TOURS, ...HOTEL_LIST, ...POPULAR_PACKAGES] as Tour[];
       }
     },
