@@ -1,0 +1,121 @@
+{
+  "info": {
+    "name": "GuanaGO - Auth & Leads Webhook Tests",
+    "description": "Colección para probar el Escenario 1: Puente Auth & Leads (Backend <-> Make <-> Airtable)\n\n## Flujo del Escenario:\n1. Webhook recibe POST con email, nombre, metodo_auth, avatar_url, action\n2. Make busca en Airtable por Email\n3. Router:\n   - Nuevo Usuario: Crea registro, asigna 20 GUANA, genera Guana_ID (GGO-26-XXXX)\n   - Usuario Existente: Actualiza UltimaInteraccion, retorna saldo actual",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "WEBHOOK_URL",
+      "value": "https://hook.us1.make.com/8lz93j5qs3m5qu4cakeukxeq6hhgx6hc",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Registro Nuevo Usuario (Email)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"nuevo_usuario_{{$timestamp}}@guanago.com\",\n  \"nombre\": \"Juan Test García\",\n  \"metodo_auth\": \"email\",\n  \"avatar_url\": \"https://ui-avatars.com/api/?name=Juan+Test&background=random\",\n  \"action\": \"register\"\n}"
+        },
+        "url": {
+          "raw": "{{WEBHOOK_URL}}",
+          "host": ["{{WEBHOOK_URL}}"]
+        },
+        "description": "**Caso de prueba:** Nuevo usuario registrándose por primera vez.\n\n**Respuesta esperada:**\n```json\n{\n  \"status\": \"success\",\n  \"action\": \"registered\",\n  \"db_id\": \"rec...\",\n  \"guana_id\": \"GGO-26-XXXX\",\n  \"saldo\": 20\n}\n```"
+      }
+    },
+    {
+      "name": "2. Login Usuario Existente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"usuario@existente.com\",\n  \"nombre\": \"Usuario Existente\",\n  \"metodo_auth\": \"email\",\n  \"avatar_url\": \"https://ui-avatars.com/api/?name=Existente&background=random\",\n  \"action\": \"login\"\n}"
+        },
+        "url": {
+          "raw": "{{WEBHOOK_URL}}",
+          "host": ["{{WEBHOOK_URL}}"]
+        },
+        "description": "**Caso de prueba:** Usuario que ya existe en Airtable hace login.\n\n⚠️ **IMPORTANTE:** Cambia el email por uno que realmente exista en tu tabla de Leads.\n\n**Respuesta esperada:**\n```json\n{\n  \"status\": \"success\",\n  \"action\": \"logged_in\",\n  \"db_id\": \"rec...\",\n  \"guana_id\": \"GGO-26-XXXX\",\n  \"saldo\": <saldo_actual>\n}\n```"
+      }
+    },
+    {
+      "name": "3. Registro OAuth Google",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"google_user_{{$timestamp}}@gmail.com\",\n  \"nombre\": \"Google Test User\",\n  \"metodo_auth\": \"google\",\n  \"avatar_url\": \"https://lh3.googleusercontent.com/a/default-user=s96-c\",\n  \"action\": \"register\"\n}"
+        },
+        "url": {
+          "raw": "{{WEBHOOK_URL}}",
+          "host": ["{{WEBHOOK_URL}}"]
+        },
+        "description": "**Caso de prueba:** Nuevo usuario registrándose via Google OAuth.\n\n**Respuesta esperada:**\n```json\n{\n  \"status\": \"success\",\n  \"action\": \"registered\",\n  \"db_id\": \"rec...\",\n  \"guana_id\": \"GGO-26-XXXX\",\n  \"saldo\": 20\n}\n```"
+      }
+    },
+    {
+      "name": "4. Registro OAuth Apple",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"apple_user_{{$timestamp}}@privaterelay.appleid.com\",\n  \"nombre\": \"Apple Test User\",\n  \"metodo_auth\": \"apple\",\n  \"avatar_url\": \"\",\n  \"action\": \"register\"\n}"
+        },
+        "url": {
+          "raw": "{{WEBHOOK_URL}}",
+          "host": ["{{WEBHOOK_URL}}"]
+        },
+        "description": "**Caso de prueba:** Nuevo usuario registrándose via Apple Sign-In.\n\nNota: Apple oculta el email real del usuario.\n\n**Respuesta esperada:**\n```json\n{\n  \"status\": \"success\",\n  \"action\": \"registered\",\n  \"db_id\": \"rec...\",\n  \"guana_id\": \"GGO-26-XXXX\",\n  \"saldo\": 20\n}\n```"
+      }
+    },
+    {
+      "name": "5. Test con Email Específico",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"TU_EMAIL_REAL@ejemplo.com\",\n  \"nombre\": \"Tu Nombre Completo\",\n  \"metodo_auth\": \"email\",\n  \"avatar_url\": \"https://ui-avatars.com/api/?name=Tu+Nombre&background=random\",\n  \"action\": \"login\"\n}"
+        },
+        "url": {
+          "raw": "{{WEBHOOK_URL}}",
+          "host": ["{{WEBHOOK_URL}}"]
+        },
+        "description": "**Caso de prueba personalizable:** Edita el body con tu email real para probar.\n\n**Usar para:**\n- Probar con tu cuenta personal\n- Verificar que el saldo se recupera correctamente\n- Debug de casos específicos"
+      }
+    }
+  ]
+}

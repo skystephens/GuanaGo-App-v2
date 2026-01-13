@@ -1,12 +1,34 @@
 
 # 🗺️ Guana Go: Arquitectura Técnica Pro (V3.0)
 
+
+Instalamos viual studio con la funcion de github Copilot.
+con este servicio  y un diseño previo en google stitch + AI Studio de google + la ayuda de un Gem de gemini logre conetar y probar tanto en render como en mi sitio web de wordpress con divi builder ademas de escenarios de make con ias como Groq, Chatgpt, Gemini hacer consultas para crear un bot que pudiera hacer las distintas operaciones del Cerebro.
+
+app / pwa / pagina web responsive. 
+
+[NÚCLEO CENTRAL: EL "BRAIN" (Airtable + Make)]
+
+Memoria: Airtable (Tours, Procedimientos RAG, Logs de Trazabilidad).
+Procesamiento: Escenarios de Make conectando con Groq (velocidad) y Gemini (análisis profundo).
+Salida: JSON estandarizado hacia la PWA.
+
+[FRONTEND: LA CARA (VS Code + GitHub)]
+PWA: React/Vite (lo que estás subiendo a Render).
+Componentes: Mapbox (Mapa interactivo), Wallet (Hedera), Directory (Aliados).
+Integración: Llamadas API hacia los webhooks de Make.
+
+[CANALES DE DISTRIBUCIÓN]
+B2C: WordPress/Divi (Informativo, atrae tráfico). Turista y Residente
+Operación: PWA GuanaGo (Reserva real, validación QR, $GUANA).
+B2B: Dashboard para el Secretario de Turismo y Aliados (Locales).
+
 ## 🧠 1. El Cerebro (Data Flow - Proxy Security)
 Para garantizar la integridad y seguridad, la App no se conecta directamente a Airtable.
 1. **App**: Envía peticiones firmadas con un `actionID` a **Make.com**.
 2. **Make.com (Proxy)**: 
-   - Inyecta las API Keys de forma segura.
-   - Realiza cálculos de agregación (ej: sumar cupos ocupados).
+   - Inyecta las API Keys de forma segura.  (confirmar con Agente Ia que elementos de make les suministro o si creo un escenario para facilitar dicha carga usando un webhook u otra de las funciones.)
+   - Realiza cálculos de agregación Basado en la lista de servicios que tenemos en make se crea una base de datos D1 que tiene la tarifa y confirma cupo o disponibilidad, ya sea en tiempo real o con una alerta de confirmacion que luego se envia al aliado operardor (ej: sumar cupos ocupados).
    - Registra transacciones en el Ledger de Hedera.
 3. **Tablas Reales (Airtable SAI)**:
    - `ServiciosTuristicos SAI`: Maestro de tours, precios y capacidad.

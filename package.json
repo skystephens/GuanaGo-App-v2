@@ -5,14 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "nodemon server.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "vite build",
     "preview": "vite preview",
     "start": "node server.js"
   },
   "dependencies": {
     "axios": "^1.13.2",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.556.0",
     "mapbox-gl": "^3.17.0",
     "react": "^19.2.1",
@@ -22,6 +26,8 @@
     "@types/mapbox-gl": "^3.4.1",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.11",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
