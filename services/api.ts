@@ -409,6 +409,8 @@ export const api = {
             id: item.id,
             eventName: item.eventName || item.title,
             date: item.date,
+            time: '9:30 PM', // Caribbean Night siempre es jueves 9:30 PM
+            dayOfWeek: 'Jueves',
             price: item.price,
             artistName: item.artistName,
             imageUrl: item.imageUrl || item.image,
@@ -443,38 +445,241 @@ export const api = {
         return MOCK_CARIBBEAN_EVENTS;
       }
     }
+  },
+
+  // --- RIMM ARTISTAS ---
+  rimmArtists: {
+    list: async (): Promise<any[]> => {
+      try {
+        const response = await fetch(MAKE_PROXY_URL, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ 
+            action: 'LIST_RIMM_ARTISTS', 
+            table: 'Artistas_RIMM'
+          })
+        });
+        const data = await safeJson(response);
+        if (data && Array.isArray(data)) {
+          return data;
+        }
+        return MOCK_RIMM_ARTISTS;
+      } catch (e) {
+        console.error('Error fetching RIMM artists:', e);
+        return MOCK_RIMM_ARTISTS;
+      }
+    },
+    getById: async (artistId: string): Promise<any | null> => {
+      try {
+        const response = await fetch(MAKE_PROXY_URL, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ 
+            action: 'GET_RIMM_ARTIST', 
+            table: 'Artistas_RIMM',
+            artistId
+          })
+        });
+        const data = await safeJson(response);
+        return data || MOCK_RIMM_ARTISTS.find(a => a.id === artistId) || null;
+      } catch (e) {
+        return MOCK_RIMM_ARTISTS.find(a => a.id === artistId) || null;
+      }
+    }
+  },
+
+  // --- RIMM PAQUETES (desde ServiciosTuristicos_SAI) ---
+  rimmPackages: {
+    list: async (): Promise<any[]> => {
+      try {
+        const response = await fetch(MAKE_PROXY_URL, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ 
+            action: 'LIST_SERVICES', 
+            table: 'ServiciosTuristicos_SAI',
+            category: 'rimm_package'
+          })
+        });
+        const data = await safeJson(response);
+        if (data && Array.isArray(data)) {
+          return data;
+        }
+        return MOCK_RIMM_PACKAGES;
+      } catch (e) {
+        console.error('Error fetching RIMM packages:', e);
+        return MOCK_RIMM_PACKAGES;
+      }
+    }
+  },
+
+  // --- RIMM GALERÍA DEL VENUE ---
+  rimmGallery: {
+    list: async (): Promise<string[]> => {
+      try {
+        const response = await fetch(MAKE_PROXY_URL, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ 
+            action: 'GET_RIMM_GALLERY', 
+            table: 'RIMM_Gallery'
+          })
+        });
+        const data = await safeJson(response);
+        if (data && Array.isArray(data)) {
+          return data.map((item: any) => item.imageUrl || item.url);
+        }
+        return MOCK_VENUE_GALLERY;
+      } catch (e) {
+        return MOCK_VENUE_GALLERY;
+      }
+    }
   }
 };
 
-// Mock data para Caribbean Night events (desarrollo)
+// Mock data para Caribbean Night events (desarrollo) - JUEVES 9:30 PM
 const MOCK_CARIBBEAN_EVENTS = [
   {
     id: 'cn-001',
     eventName: 'Caribbean Night - Live Stieg Edition',
-    date: '2026-01-15',
+    date: '2026-01-16', // Jueves
+    time: '9:30 PM',
+    dayOfWeek: 'Jueves',
     price: 85000,
     artistName: 'Stieg',
     imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600',
     spotifyLink: 'https://open.spotify.com/artist/example',
-    description: 'Una noche mágica de música Kriol en vivo con el talento local de San Andrés.'
+    description: 'Una noche mágica de música Kriol en vivo con el talento local de San Andrés.',
+    capacity: 100,
+    availableSpots: 45
   },
   {
     id: 'cn-002',
     eventName: 'Reggae Roots Night',
-    date: '2026-01-22',
+    date: '2026-01-23', // Jueves
+    time: '9:30 PM',
+    dayOfWeek: 'Jueves',
     price: 75000,
     artistName: 'Island Vibes Band',
     imageUrl: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=600',
     spotifyLink: 'https://open.spotify.com/artist/example2',
-    description: 'Reggae auténtico con sabor caribeño para una noche inolvidable.'
+    description: 'Reggae auténtico con sabor caribeño para una noche inolvidable.',
+    capacity: 100,
+    availableSpots: 62
   },
   {
     id: 'cn-003',
     eventName: 'Calypso Sunset Session',
-    date: '2026-01-29',
+    date: '2026-01-30', // Jueves
+    time: '9:30 PM',
+    dayOfWeek: 'Jueves',
     price: 65000,
     artistName: 'Caribbean Soul',
     imageUrl: 'https://images.unsplash.com/photo-1501612780327-45045538702b?w=600',
-    description: 'Calypso y ritmos tradicionales al atardecer frente al mar.'
+    description: 'Calypso y ritmos tradicionales al atardecer frente al mar.',
+    capacity: 100,
+    availableSpots: 78
   }
+];
+
+// Mock data para artistas RIMM (estructura para Airtable: Artistas_RIMM)
+const MOCK_RIMM_ARTISTS = [
+  {
+    id: 'artist-001',
+    name: 'Stieg',
+    genre: 'Reggae / Kriol',
+    bio: 'Stieg es uno de los artistas más representativos de la música Raizal de San Andrés. Su sonido fusiona reggae tradicional con ritmos Kriol autóctonos.',
+    imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600',
+    spotifyLink: 'https://open.spotify.com/artist/example',
+    instagramLink: 'https://instagram.com/stieg_sai',
+    youtubeLink: 'https://youtube.com/@stieg',
+    upcomingEvents: 2,
+    isActive: true
+  },
+  {
+    id: 'artist-002',
+    name: 'Island Vibes Band',
+    genre: 'Reggae / Dancehall',
+    bio: 'Banda local de San Andrés que lleva más de 10 años tocando en vivo. Especialistas en reggae roots y dancehall caribeño.',
+    imageUrl: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=600',
+    spotifyLink: 'https://open.spotify.com/artist/example2',
+    instagramLink: 'https://instagram.com/islandvibes',
+    upcomingEvents: 1,
+    isActive: true
+  },
+  {
+    id: 'artist-003',
+    name: 'Caribbean Soul',
+    genre: 'Calypso / Soca',
+    bio: 'Caribbean Soul trae los ritmos tradicionales del Calypso y Soca a las nuevas generaciones, preservando la cultura musical de las islas.',
+    imageUrl: 'https://images.unsplash.com/photo-1501612780327-45045538702b?w=600',
+    instagramLink: 'https://instagram.com/caribbeansoul',
+    upcomingEvents: 1,
+    isActive: true
+  },
+  {
+    id: 'artist-004',
+    name: 'Miss Trinie',
+    genre: 'Folklore Raizal',
+    bio: 'Guardiana de las tradiciones musicales Raizales. Miss Trinie preserva y enseña los cantos tradicionales de la isla.',
+    imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600',
+    upcomingEvents: 0,
+    isActive: true
+  }
+];
+
+// Mock data para paquetes RIMM (desde ServiciosTuristicos_SAI con category: rimm_package)
+const MOCK_RIMM_PACKAGES = [
+  {
+    id: 'pkg-rimm-001',
+    title: 'Caribbean Night + Hotel',
+    description: 'Entrada al evento + 1 noche en hotel partner con desayuno incluido',
+    price: 250000,
+    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600',
+    includes: ['Entrada VIP Caribbean Night', '1 noche Hotel 4★', 'Desayuno buffet', 'Traslado al venue'],
+    category: 'rimm_package',
+    active: true
+  },
+  {
+    id: 'pkg-rimm-002',
+    title: 'Full RIMM Experience',
+    description: 'Acceso a todos los eventos del mes + tour cultural Raizal',
+    price: 450000,
+    image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=600',
+    includes: ['3 eventos Caribbean Night', 'Tour Cultura Raizal (4h)', 'Merchandising RIMM exclusivo', 'Meet & Greet con artistas'],
+    category: 'rimm_package',
+    active: true
+  },
+  {
+    id: 'pkg-rimm-003',
+    title: 'Noche Romántica Caribeña',
+    description: 'Caribbean Night en pareja con cena y champagne',
+    price: 320000,
+    image: 'https://images.unsplash.com/photo-1501612780327-45045538702b?w=600',
+    includes: ['2 entradas VIP', 'Cena romántica para 2', 'Botella de champagne', 'Mesa reservada frente al escenario'],
+    category: 'rimm_package',
+    active: true
+  }
+];
+
+// Mock galería del venue Caribbean Night
+const MOCK_VENUE_GALLERY = [
+  'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600',
+  'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600',
+  'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=600',
+  'https://images.unsplash.com/photo-1501612780327-45045538702b?w=600',
+  'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=600',
+  'https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=600'
 ];

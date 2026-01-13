@@ -59,7 +59,8 @@ const MusicEventDetail: React.FC<MusicEventDetailProps> = ({ data, onBack, onNav
         month: 'long',
         year: 'numeric'
       }),
-      time: '8:00 PM' // Default, se puede hacer dinámico
+      time: '9:30 PM', // Caribbean Night siempre es 9:30 PM
+      dayOfWeek: 'Jueves' // Caribbean Night siempre es jueves
     };
   };
 

@@ -227,6 +227,7 @@ export enum AppRoute {
   // RIMM Caribbean Night Routes
   RIMM_CLUSTER = 'RIMM_CLUSTER',
   MUSIC_EVENT_DETAIL = 'MUSIC_EVENT_DETAIL',
+  ARTIST_DETAIL = 'ARTIST_DETAIL',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin';

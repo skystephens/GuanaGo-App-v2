@@ -21,6 +21,7 @@ import PackageList from './pages/PackageList';
 // RIMM Caribbean Night Pages
 import RimmCluster from './pages/RimmCluster';
 import MusicEventDetail from './pages/MusicEventDetail';
+import ArtistDetail from './pages/ArtistDetail';
 
 // Flow Pages
 import Reviews from './pages/Reviews';
@@ -153,6 +154,7 @@ const App: React.FC = () => {
       case AppRoute.GROUP_QUOTE: return <GroupQuote />;
       case AppRoute.RIMM_CLUSTER: return <RimmCluster onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.MUSIC_EVENT_DETAIL: return <MusicEventDetail data={detailData} onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ARTIST_DETAIL: return <ArtistDetail data={detailData} onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };

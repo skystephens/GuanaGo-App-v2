@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   Music, Calendar, MapPin, Users, Clock, ArrowLeft, 
   Sparkles, ExternalLink, Ticket, Loader2, AlertCircle,
-  ChevronRight, Star, Headphones
+  ChevronRight, Star, Headphones, Image, ChevronLeft
 } from 'lucide-react';
 import { api } from '../services/api';
 import { AppRoute } from '../types';
@@ -11,6 +11,8 @@ interface MusicEvent {
   id: string;
   eventName: string;
   date: string;
+  time?: string;
+  dayOfWeek?: string;
   price: number;
   artistName: string;
   imageUrl: string;
@@ -21,6 +23,30 @@ interface MusicEvent {
   availableSpots?: number;
 }
 
+interface Artist {
+  id: string;
+  name: string;
+  genre: string;
+  bio: string;
+  imageUrl: string;
+  spotifyLink?: string;
+  instagramLink?: string;
+  youtubeLink?: string;
+  upcomingEvents: number;
+  isActive: boolean;
+}
+
+interface RimmPackage {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  image: string;
+  includes: string[];
+  category: string;
+  active: boolean;
+}
+
 interface RimmClusterProps {
   onBack: () => void;
   onNavigate: (route: AppRoute, data?: any) => void;
@@ -28,23 +54,37 @@ interface RimmClusterProps {
 
 const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
   const [events, setEvents] = useState<MusicEvent[]>([]);
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [packages, setPackages] = useState<RimmPackage[]>([]);
+  const [gallery, setGallery] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'artists' | 'packages'>('upcoming');
+  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'artists' | 'packages' | 'gallery'>('upcoming');
+  const [selectedImage, setSelectedImage] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchMusicEvents();
+    fetchAllData();
   }, []);
 
-  const fetchMusicEvents = async () => {
+  const fetchAllData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.musicEvents.list();
-      setEvents(data || []);
+      // Cargar todos los datos en paralelo
+      const [eventsData, artistsData, packagesData, galleryData] = await Promise.all([
+        api.musicEvents.list(),
+        api.rimmArtists.list(),
+        api.rimmPackages.list(),
+        api.rimmGallery.list()
+      ]);
+      
+      setEvents(eventsData || []);
+      setArtists(artistsData || []);
+      setPackages(packagesData || []);
+      setGallery(galleryData || []);
     } catch (err) {
-      console.error('Error fetching RIMM events:', err);
-      setError('No pudimos cargar los eventos. Intenta de nuevo.');
+      console.error('Error fetching RIMM data:', err);
+      setError('No pudimos cargar los datos. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -58,40 +98,6 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
       full: date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })
     };
   };
-
-  // Artistas únicos
-  const artists = events.reduce((acc: { name: string; image: string; spotifyLink?: string; eventCount: number }[], event) => {
-    const existing = acc.find(a => a.name === event.artistName);
-    if (existing) {
-      existing.eventCount++;
-    } else {
-      acc.push({
-        name: event.artistName,
-        image: event.imageUrl,
-        spotifyLink: event.spotifyLink,
-        eventCount: 1
-      });
-    }
-    return acc;
-  }, []);
-
-  // Paquetes sugeridos (mock por ahora, conectar con backend después)
-  const packages = [
-    {
-      id: 'pkg-rimm-1',
-      title: 'Caribbean Night + Hotel',
-      description: 'Entrada al evento + 1 noche en hotel partner',
-      price: 250000,
-      includes: ['Entrada VIP', '1 noche hotel 4★', 'Desayuno incluido']
-    },
-    {
-      id: 'pkg-rimm-2',
-      title: 'Full RIMM Experience',
-      description: 'Todos los eventos del mes + tour cultural',
-      price: 450000,
-      includes: ['3 eventos', 'Tour Cultura Raizal', 'Merchandising RIMM']
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-cyan-950 to-gray-900">
@@ -134,29 +140,30 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
             Caribbean <span className="text-cyan-300">Night</span>
           </h1>
           <p className="text-white/70 text-sm">
-            Vive la música Kriol y la cultura Raizal de San Andrés en eventos únicos
+            Todos los <span className="text-orange-400 font-bold">Jueves 9:30 PM</span> • Música Kriol en vivo
           </p>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="px-4 -mt-2 relative z-20">
-        <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl p-1 flex">
+        <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl p-1 flex overflow-x-auto no-scrollbar">
           {[
             { id: 'upcoming', label: 'Próximos', icon: Calendar },
             { id: 'artists', label: 'Artistas', icon: Headphones },
-            { id: 'packages', label: 'Paquetes', icon: Ticket }
+            { id: 'packages', label: 'Paquetes', icon: Ticket },
+            { id: 'gallery', label: 'Galería', icon: Image }
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setSelectedTab(tab.id as any)}
-              className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all ${
+              className={`flex-1 py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all whitespace-nowrap ${
                 selectedTab === tab.id
                   ? 'bg-cyan-600 text-white shadow-lg'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              <tab.icon size={16} />
+              <tab.icon size={14} />
               {tab.label}
             </button>
           ))}
@@ -180,7 +187,7 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
             <div>
               <p className="text-red-200 font-medium text-sm">{error}</p>
               <button 
-                onClick={fetchMusicEvents}
+                onClick={fetchAllData}
                 className="text-red-300 text-xs underline mt-1"
               >
                 Reintentar
@@ -193,7 +200,13 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
         {!loading && !error && selectedTab === 'upcoming' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-white font-bold text-lg">Próximos Eventos</h2>
+              <div>
+                <h2 className="text-white font-bold text-lg">Próximos Eventos</h2>
+                <p className="text-gray-400 text-xs flex items-center gap-1 mt-1">
+                  <Clock size={12} />
+                  Todos los jueves 9:30 PM
+                </p>
+              </div>
               <span className="text-cyan-400 text-sm">{events.length} eventos</span>
             </div>
 
@@ -213,6 +226,7 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
                   >
                     {/* Date Column */}
                     <div className="w-20 bg-gradient-to-b from-orange-500 to-orange-600 flex flex-col items-center justify-center py-4">
+                      <span className="text-white/70 text-[10px] font-bold uppercase">JUE</span>
                       <span className="text-white text-2xl font-black">{date.day}</span>
                       <span className="text-white/80 text-xs font-bold">{date.month}</span>
                     </div>
@@ -229,16 +243,16 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 text-gray-400 text-xs">
+                          <span className="flex items-center gap-1">
+                            <Clock size={12} />
+                            {event.time || '9:30 PM'}
+                          </span>
                           {event.availableSpots !== undefined && (
                             <span className="flex items-center gap-1">
                               <Users size={12} />
                               {event.availableSpots} cupos
                             </span>
                           )}
-                          <span className="flex items-center gap-1">
-                            <MapPin size={12} />
-                            San Andrés
-                          </span>
                         </div>
                         <span className="text-orange-400 font-bold text-sm">
                           ${event.price.toLocaleString()}
@@ -256,27 +270,36 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
           </div>
         )}
 
-        {/* Artists Tab */}
+        {/* Artists Tab - Conectado a Airtable */}
         {!loading && !error && selectedTab === 'artists' && (
           <div className="space-y-4">
-            <h2 className="text-white font-bold text-lg mb-4">Artistas del Clúster</h2>
+            <div className="mb-4">
+              <h2 className="text-white font-bold text-lg">Artistas del Clúster</h2>
+              <p className="text-gray-400 text-xs mt-1">Talento Raizal de San Andrés</p>
+            </div>
             
             <div className="grid grid-cols-2 gap-4">
-              {artists.map((artist, index) => (
+              {artists.map((artist) => (
                 <div 
-                  key={index}
-                  className="bg-gray-800/60 backdrop-blur-sm border border-gray-700 rounded-2xl overflow-hidden"
+                  key={artist.id}
+                  onClick={() => onNavigate(AppRoute.ARTIST_DETAIL, artist)}
+                  className="bg-gray-800/60 backdrop-blur-sm border border-gray-700 rounded-2xl overflow-hidden cursor-pointer hover:border-cyan-600 transition-all"
                 >
                   <div className="h-32 relative">
                     <img 
-                      src={artist.image}
+                      src={artist.imageUrl}
                       alt={artist.name}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                    {artist.upcomingEvents > 0 && (
+                      <div className="absolute top-2 right-2 bg-orange-500 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">
+                        {artist.upcomingEvents} próx.
+                      </div>
+                    )}
                     <div className="absolute bottom-2 left-2 right-2">
                       <h3 className="text-white font-bold text-sm truncate">{artist.name}</h3>
-                      <p className="text-cyan-300 text-xs">{artist.eventCount} evento(s)</p>
+                      <p className="text-cyan-300 text-xs">{artist.genre}</p>
                     </div>
                   </div>
                   
@@ -286,18 +309,19 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
                         href={artist.spotifyLink}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="flex items-center gap-1 text-green-400 text-xs font-medium hover:text-green-300"
                       >
                         <ExternalLink size={12} />
                         Spotify
                       </a>
                     ) : (
-                      <span className="text-gray-500 text-xs">Sin Spotify</span>
+                      <span className="text-gray-500 text-xs">--</span>
                     )}
-                    <button className="text-cyan-400 text-xs font-medium flex items-center gap-1">
-                      <Star size={12} />
+                    <span className="text-cyan-400 text-xs font-medium flex items-center gap-1">
                       Ver más
-                    </button>
+                      <ChevronRight size={12} />
+                    </span>
                   </div>
                 </div>
               ))}
@@ -312,37 +336,48 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
           </div>
         )}
 
-        {/* Packages Tab */}
+        {/* Packages Tab - Conectado a ServiciosTuristicos_SAI */}
         {!loading && !error && selectedTab === 'packages' && (
           <div className="space-y-4">
-            <h2 className="text-white font-bold text-lg mb-4">Paquetes Especiales</h2>
+            <div className="mb-4">
+              <h2 className="text-white font-bold text-lg">Paquetes Especiales</h2>
+              <p className="text-gray-400 text-xs mt-1">Combos exclusivos Caribbean Night</p>
+            </div>
             
             {packages.map(pkg => (
               <div 
                 key={pkg.id}
                 onClick={() => onNavigate(AppRoute.CHECKOUT, { 
                   type: 'rimm_package', 
-                  ...pkg,
-                  image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600'
+                  id: pkg.id,
+                  title: pkg.title,
+                  price: pkg.price,
+                  image: pkg.image,
+                  description: pkg.description,
+                  includes: pkg.includes
                 })}
-                className="bg-gradient-to-r from-cyan-900/50 to-orange-900/30 backdrop-blur-sm border border-cyan-700/50 rounded-2xl p-5 cursor-pointer hover:border-cyan-500 transition-all active:scale-[0.98]"
+                className="bg-gradient-to-r from-cyan-900/50 to-orange-900/30 backdrop-blur-sm border border-cyan-700/50 rounded-2xl overflow-hidden cursor-pointer hover:border-cyan-500 transition-all active:scale-[0.98]"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
+                {/* Package Image */}
+                <div className="h-32 relative">
+                  <img 
+                    src={pkg.image}
+                    alt={pkg.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                  <div className="absolute bottom-3 left-4 right-4">
                     <h3 className="text-white font-bold text-base">{pkg.title}</h3>
-                    <p className="text-gray-300 text-xs mt-1">{pkg.description}</p>
+                    <p className="text-gray-300 text-xs mt-0.5">{pkg.description}</p>
                   </div>
-                  <div className="text-right">
-                    <span className="text-orange-400 font-black text-lg">
-                      ${pkg.price.toLocaleString()}
-                    </span>
-                    <p className="text-gray-500 text-xs">COP</p>
+                  <div className="absolute top-3 right-3 bg-orange-500 text-white px-2 py-1 rounded-lg">
+                    <span className="font-black text-sm">${pkg.price.toLocaleString()}</span>
                   </div>
                 </div>
                 
-                <div className="border-t border-gray-700 pt-3 mt-3">
+                <div className="p-4">
                   <p className="text-gray-400 text-xs mb-2 font-medium">Incluye:</p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {pkg.includes.map((item, i) => (
                       <span 
                         key={i}
@@ -352,17 +387,114 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
                       </span>
                     ))}
                   </div>
-                </div>
 
-                <button className="w-full mt-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
-                  <Ticket size={16} />
-                  Reservar Paquete
-                </button>
+                  <button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                    <Ticket size={16} />
+                    Reservar Paquete
+                  </button>
+                </div>
               </div>
             ))}
+
+            {packages.length === 0 && (
+              <div className="text-center py-12">
+                <Ticket size={48} className="text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-400">No hay paquetes disponibles</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Gallery Tab */}
+        {!loading && !error && selectedTab === 'gallery' && (
+          <div className="space-y-4">
+            <div className="mb-4">
+              <h2 className="text-white font-bold text-lg">Galería del Venue</h2>
+              <p className="text-gray-400 text-xs mt-1">Conoce el lugar donde vivimos la música</p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {gallery.map((image, index) => (
+                <div 
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`relative rounded-2xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity ${
+                    index === 0 ? 'col-span-2 h-48' : 'h-32'
+                  }`}
+                >
+                  <img 
+                    src={image}
+                    alt={`Venue ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/20 hover:bg-black/0 transition-colors"></div>
+                </div>
+              ))}
+            </div>
+
+            {gallery.length === 0 && (
+              <div className="text-center py-12">
+                <Image size={48} className="text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-400">No hay fotos disponibles</p>
+              </div>
+            )}
+
+            {/* Location Info */}
+            <div className="bg-gray-800/60 border border-gray-700 rounded-2xl p-4 mt-6">
+              <h3 className="text-white font-bold text-sm mb-2 flex items-center gap-2">
+                <MapPin size={16} className="text-cyan-400" />
+                Ubicación
+              </h3>
+              <p className="text-gray-300 text-sm">San Andrés Isla, Colombia</p>
+              <p className="text-gray-400 text-xs mt-1">El venue exacto se confirma con tu reserva</p>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Image Lightbox */}
+      {selectedImage !== null && (
+        <div 
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button 
+            onClick={() => setSelectedImage(null)}
+            className="absolute top-4 right-4 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"
+          >
+            <span className="text-white text-xl">×</span>
+          </button>
+          
+          {selectedImage > 0 && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); setSelectedImage(selectedImage - 1); }}
+              className="absolute left-4 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"
+            >
+              <ChevronLeft size={24} className="text-white" />
+            </button>
+          )}
+          
+          <img 
+            src={gallery[selectedImage]}
+            alt={`Venue ${selectedImage + 1}`}
+            className="max-w-full max-h-full object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+          
+          {selectedImage < gallery.length - 1 && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); setSelectedImage(selectedImage + 1); }}
+              className="absolute right-4 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"
+            >
+              <ChevronRight size={24} className="text-white" />
+            </button>
+          )}
+          
+          <div className="absolute bottom-4 text-white text-sm">
+            {selectedImage + 1} / {gallery.length}
+          </div>
+        </div>
+      )}
 
       {/* Bottom Safe Area */}
       <div className="h-24"></div>
