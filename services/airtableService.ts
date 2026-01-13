@@ -22,7 +22,8 @@ const TABLES = {
   SERVICIOS: 'ServiciosTuristicos_SAI',
   LEADS: 'Leads',
   RIMM_MUSICOS: 'Rimm_musicos',
-  RETOS: 'Retos_GUANA' // Tabla de retos y desafíos
+  RETOS: 'Retos_GUANA',
+  TRANSACCIONES: 'GUANA_Transacciones' // Nueva tabla para historial de puntos
 };
 
 // Interfaz para usuario con GUANA Points
@@ -53,6 +54,67 @@ export interface GuanaReto {
   activo: boolean;
   vecesCompletado?: number;
   dificultad: 'facil' | 'medio' | 'dificil';
+}
+
+// =========================================================
+// 🔗 GUANA POINTS - TRANSACCIONES CON SOPORTE HEDERA
+// =========================================================
+
+// Tipos de transacción
+export type TransactionType = 'ganado' | 'canjeado' | 'bono' | 'expirado' | 'transferido';
+
+// Conceptos de transacción
+export type TransactionConcept = 
+  | 'reto_qr' 
+  | 'compra_tour' 
+  | 'referido' 
+  | 'bienvenida' 
+  | 'canje_descuento' 
+  | 'canje_premio'
+  | 'reto_ruta'
+  | 'reto_social'
+  | 'bonus_especial'
+  | 'correccion';
+
+// Estado de blockchain
+export type BlockchainStatus = 'pending' | 'confirmed' | 'failed' | 'not_required';
+
+// Interfaz para transacciones GUANA Points
+export interface GuanaTransaction {
+  id: string;                          // ID del registro en Airtable
+  idTransaccion: string;               // ID legible (TXN-XXXX)
+  guanaId: string;                     // ID del usuario
+  usuarioNombre?: string;              // Nombre del usuario (para display)
+  tipo: TransactionType;               // ganado, canjeado, etc.
+  monto: number;                       // Cantidad de puntos
+  saldoAnterior: number;               // Saldo antes
+  saldoNuevo: number;                  // Saldo después
+  concepto: TransactionConcept;        // reto_qr, compra_tour, etc.
+  descripcion: string;                 // Detalle legible
+  retoId?: string;                     // Link a reto (si aplica)
+  servicioId?: string;                 // Link a servicio (si aplica)
+  fecha: string;                       // ISO timestamp
+  validado: boolean;                   // Confirmado
+  
+  // Campos Hedera Hashgraph
+  hederaTxHash?: string;               // Hash de transacción en Hedera
+  hederaConsensusTimestamp?: string;   // Timestamp de consenso Hedera
+  hederaTokenId?: string;              // Token ID (0.0.XXXXX)
+  blockchainStatus: BlockchainStatus;  // Estado de sync con blockchain
+  blockchainMemo?: string;             // Metadata/memo en blockchain
+}
+
+// Datos para crear una nueva transacción
+export interface CreateTransactionData {
+  guanaId: string;
+  tipo: TransactionType;
+  monto: number;
+  concepto: TransactionConcept;
+  descripcion: string;
+  retoId?: string;
+  servicioId?: string;
+  // Para futuro Hedera
+  syncToBlockchain?: boolean;
 }
 
 // Interfaz genérica para registros de Airtable
@@ -622,6 +684,315 @@ export function getAvailableRetos(): GuanaReto[] {
   ];
 }
 
+// =========================================================
+// 💰 TRANSACCIONES GUANA POINTS - CON SOPORTE HEDERA
+// =========================================================
+
+/**
+ * Crear una nueva transacción de GUANA Points
+ * Registra en Airtable y opcionalmente sincroniza con Hedera
+ */
+export async function createTransaction(
+  data: CreateTransactionData
+): Promise<GuanaTransaction | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    console.error('❌ Airtable no configurado');
+    return null;
+  }
+
+  try {
+    // 1. Obtener usuario y saldo actual
+    const user = await getUserByGuanaId(data.guanaId);
+    if (!user) {
+      throw new Error(`Usuario no encontrado: ${data.guanaId}`);
+    }
+
+    const saldoAnterior = user.saldoGuana;
+    let saldoNuevo: number;
+
+    // 2. Calcular nuevo saldo según tipo
+    if (data.tipo === 'ganado' || data.tipo === 'bono') {
+      saldoNuevo = saldoAnterior + data.monto;
+    } else if (data.tipo === 'canjeado' || data.tipo === 'transferido') {
+      if (saldoAnterior < data.monto) {
+        throw new Error(`Saldo insuficiente: ${saldoAnterior} < ${data.monto}`);
+      }
+      saldoNuevo = saldoAnterior - data.monto;
+    } else {
+      // expirado
+      saldoNuevo = Math.max(0, saldoAnterior - data.monto);
+    }
+
+    // 3. Generar ID de transacción único
+    const txnId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+
+    // 4. Crear registro en Airtable
+    const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.TRANSACCIONES)}`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        fields: {
+          Id_Transaccion: txnId,
+          Guana_ID: data.guanaId,
+          Tipo: data.tipo,
+          Monto: data.monto,
+          Saldo_Anterior: saldoAnterior,
+          Saldo_Nuevo: saldoNuevo,
+          Concepto: data.concepto,
+          Descripcion: data.descripcion,
+          Reto_ID: data.retoId || '',
+          Servicio_ID: data.servicioId || '',
+          Validado: true,
+          // Hedera fields - pending hasta que se implemente
+          Blockchain_Status: data.syncToBlockchain ? 'pending' : 'not_required',
+          Hedera_TxHash: '',
+          Hedera_Consensus_Timestamp: '',
+          Hedera_Token_ID: '',
+          Blockchain_Memo: JSON.stringify({
+            guanaId: data.guanaId,
+            concepto: data.concepto,
+            timestamp: new Date().toISOString()
+          })
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Error creando transacción');
+    }
+
+    const result = await response.json();
+    
+    // 5. Actualizar saldo del usuario
+    await updateGuanaBalance(
+      user.id, 
+      data.monto, 
+      (data.tipo === 'ganado' || data.tipo === 'bono') ? 'add' : 'subtract'
+    );
+
+    console.log(`✅ Transacción creada: ${txnId} | ${data.tipo} ${data.monto} GUANA`);
+    
+    return mapRecordToTransaction(result);
+  } catch (error) {
+    console.error('❌ Error creando transacción:', error);
+    throw error;
+  }
+}
+
+/**
+ * Obtener historial de transacciones de un usuario
+ */
+export async function getTransactionHistory(
+  guanaId: string,
+  options?: { limit?: number; offset?: string }
+): Promise<{ transactions: GuanaTransaction[]; offset?: string }> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return { transactions: [] };
+  }
+
+  try {
+    const limit = options?.limit || 50;
+    let url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.TRANSACCIONES)}?` +
+      `filterByFormula={Guana_ID}="${guanaId}"` +
+      `&sort[0][field]=Fecha&sort[0][direction]=desc` +
+      `&pageSize=${limit}`;
+    
+    if (options?.offset) {
+      url += `&offset=${options.offset}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error('Error fetching transactions');
+    }
+
+    const data = await response.json();
+    const transactions = data.records.map(mapRecordToTransaction);
+
+    console.log(`📋 ${transactions.length} transacciones para ${guanaId}`);
+    return { 
+      transactions, 
+      offset: data.offset 
+    };
+  } catch (error) {
+    console.error('❌ Error obteniendo historial:', error);
+    return { transactions: [] };
+  }
+}
+
+/**
+ * Obtener una transacción por ID
+ */
+export async function getTransactionById(txnId: string): Promise<GuanaTransaction | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return null;
+  }
+
+  try {
+    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.TRANSACCIONES)}?` +
+      `filterByFormula={Id_Transaccion}="${txnId}"`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error('Transaction not found');
+    }
+
+    const data = await response.json();
+    if (data.records.length === 0) {
+      return null;
+    }
+
+    return mapRecordToTransaction(data.records[0]);
+  } catch (error) {
+    console.error('❌ Error obteniendo transacción:', error);
+    return null;
+  }
+}
+
+/**
+ * Actualizar estado de blockchain de una transacción
+ * (Para usar cuando Hedera confirme la transacción)
+ */
+export async function updateTransactionBlockchainStatus(
+  recordId: string,
+  hederaData: {
+    txHash: string;
+    consensusTimestamp: string;
+    tokenId: string;
+    status: BlockchainStatus;
+  }
+): Promise<boolean> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return false;
+  }
+
+  try {
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.TRANSACCIONES)}/${recordId}`,
+      {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          fields: {
+            Hedera_TxHash: hederaData.txHash,
+            Hedera_Consensus_Timestamp: hederaData.consensusTimestamp,
+            Hedera_Token_ID: hederaData.tokenId,
+            Blockchain_Status: hederaData.status
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to update blockchain status');
+    }
+
+    console.log(`🔗 Blockchain status updated: ${recordId} → ${hederaData.status}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Error actualizando blockchain status:', error);
+    return false;
+  }
+}
+
+/**
+ * Obtener transacciones pendientes de sincronizar con blockchain
+ */
+export async function getPendingBlockchainTransactions(): Promise<GuanaTransaction[]> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return [];
+  }
+
+  try {
+    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.TRANSACCIONES)}?` +
+      `filterByFormula={Blockchain_Status}="pending"` +
+      `&sort[0][field]=Fecha&sort[0][direction]=asc`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error('Error fetching pending transactions');
+    }
+
+    const data = await response.json();
+    return data.records.map(mapRecordToTransaction);
+  } catch (error) {
+    console.error('❌ Error obteniendo transacciones pendientes:', error);
+    return [];
+  }
+}
+
+/**
+ * Resumen de transacciones de un usuario
+ */
+export async function getTransactionSummary(guanaId: string): Promise<{
+  totalGanado: number;
+  totalCanjeado: number;
+  transaccionesCount: number;
+  ultimaTransaccion?: GuanaTransaction;
+}> {
+  const { transactions } = await getTransactionHistory(guanaId, { limit: 100 });
+  
+  let totalGanado = 0;
+  let totalCanjeado = 0;
+  
+  transactions.forEach(tx => {
+    if (tx.tipo === 'ganado' || tx.tipo === 'bono') {
+      totalGanado += tx.monto;
+    } else if (tx.tipo === 'canjeado' || tx.tipo === 'transferido') {
+      totalCanjeado += tx.monto;
+    }
+  });
+
+  return {
+    totalGanado,
+    totalCanjeado,
+    transaccionesCount: transactions.length,
+    ultimaTransaccion: transactions[0]
+  };
+}
+
+/**
+ * Helper: Mapear registro de Airtable a GuanaTransaction
+ */
+function mapRecordToTransaction(record: any): GuanaTransaction {
+  const f = record.fields;
+  return {
+    id: record.id,
+    idTransaccion: f.Id_Transaccion || '',
+    guanaId: f.Guana_ID || '',
+    usuarioNombre: f.Usuario_Nombre || undefined,
+    tipo: f.Tipo || 'ganado',
+    monto: parseInt(f.Monto) || 0,
+    saldoAnterior: parseInt(f.Saldo_Anterior) || 0,
+    saldoNuevo: parseInt(f.Saldo_Nuevo) || 0,
+    concepto: f.Concepto || 'bienvenida',
+    descripcion: f.Descripcion || '',
+    retoId: f.Reto_ID || undefined,
+    servicioId: f.Servicio_ID || undefined,
+    fecha: f.Fecha || record.createdTime,
+    validado: Boolean(f.Validado),
+    // Hedera
+    hederaTxHash: f.Hedera_TxHash || undefined,
+    hederaConsensusTimestamp: f.Hedera_Consensus_Timestamp || undefined,
+    hederaTokenId: f.Hedera_Token_ID || undefined,
+    blockchainStatus: f.Blockchain_Status || 'not_required',
+    blockchainMemo: f.Blockchain_Memo || undefined
+  };
+}
+
 /**
  * Servicio principal de Airtable
  */
@@ -647,6 +1018,14 @@ export const airtableService = {
   registerGuanaUser,
   updateGuanaBalance,
   getAvailableRetos,
+  
+  // 💰 Transacciones GUANA Points (con soporte Hedera)
+  createTransaction,
+  getTransactionHistory,
+  getTransactionById,
+  getTransactionSummary,
+  updateTransactionBlockchainStatus,
+  getPendingBlockchainTransactions,
   
   // Acceso genérico a tablas
   fetchTable,
