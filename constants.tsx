@@ -63,8 +63,48 @@ export const HOTEL_LIST: Hotel[] = [
 // Added HOTEL_DATA export to fix Detail.tsx import error
 export const HOTEL_DATA = HOTEL_LIST[0];
 
+// Zonas de Taxi oficiales de San Andrés - Tarifas 2026
 export const TAXI_ZONES: TaxiZone[] = [
-  { id: 'z1', name: 'Zona 1 (Centro)', sectors: 'Centro, North End', priceSmall: 50000, priceLarge: 70000, color: 'bg-yellow-400' }
+  { 
+    id: 'z1', 
+    name: 'Zona 1 - Centro / North End', 
+    sectors: 'Centro, North End, El Cliff, Peatonal, Aeropuerto, Spratt Bight',
+    priceSmall: 13000,  // 1-4 pasajeros
+    priceLarge: 26000,  // 5+ pasajeros (van/microbús)
+    color: 'bg-yellow-400' 
+  },
+  { 
+    id: 'z2', 
+    name: 'Zona 2 - San Luis', 
+    sectors: 'San Luis, Sound Bay, Rocky Cay, Bahía Sonora',
+    priceSmall: 30000,
+    priceLarge: 50000,
+    color: 'bg-green-500' 
+  },
+  { 
+    id: 'z3', 
+    name: 'Zona 3 - La Loma / El Cove', 
+    sectors: 'La Loma, El Cove, Orange Hill, Brooks Hill',
+    priceSmall: 35000,
+    priceLarge: 55000,
+    color: 'bg-pink-500' 
+  },
+  { 
+    id: 'z4', 
+    name: 'Zona 4 - Sur / Punta Sur', 
+    sectors: 'Punta Sur, South End, Tom Hooker, El Acuario',
+    priceSmall: 45000,
+    priceLarge: 70000,
+    color: 'bg-blue-400' 
+  },
+  { 
+    id: 'z5', 
+    name: 'Zona 5 - West View / Cove', 
+    sectors: 'West View, Cueva de Morgan, Big Pond, Linval',
+    priceSmall: 40000,
+    priceLarge: 60000,
+    color: 'bg-red-500' 
+  }
 ];
 
 export const AMENITY_ICONS: Record<string, React.ReactNode> = {
