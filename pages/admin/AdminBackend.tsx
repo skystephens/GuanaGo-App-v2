@@ -1,321 +1,454 @@
+/**
+ * AdminBackend - Panel de Sincronización con Airtable
+ * Muestra estado de conexión, última sincronización y permite forzar actualización
+ */
+
 import React, { useState, useEffect } from 'react';
 import { 
-  Server, 
-  Activity, 
+  Database, 
+  RefreshCw, 
   CheckCircle, 
   XCircle, 
-  RefreshCw, 
-  Database, 
-  Globe, 
-  Zap,
-  AlertTriangle,
   Clock,
-  Users,
-  MessageSquare,
+  Trash2,
+  Download,
+  AlertTriangle,
+  Loader2,
   MapPin,
-  Car,
-  Calendar,
-  Package
+  Package,
+  Music,
+  Users,
+  FileText,
+  Wifi,
+  WifiOff,
+  HardDrive,
+  Zap,
+  Server
 } from 'lucide-react';
+import { airtableService } from '../../services/airtableService';
+import { clearAllCache } from '../../services/cachedApi';
 
-interface EndpointStatus {
+interface TableStatus {
   name: string;
-  path: string;
-  status: 'checking' | 'online' | 'offline' | 'error';
-  responseTime?: number;
-  lastChecked?: string;
-  data?: any;
-  error?: string;
+  airtableTable: string;
   icon: React.ReactNode;
+  status: 'idle' | 'syncing' | 'success' | 'error';
+  recordCount: number;
+  lastSync: string | null;
+  error?: string;
 }
 
 const AdminBackend: React.FC = () => {
-  const [endpoints, setEndpoints] = useState<EndpointStatus[]>([
-    { name: 'Health Check', path: '/api/health', status: 'checking', icon: <Activity size={18} /> },
-    { name: 'Auth / Webhook', path: '/api/auth/webhook', status: 'checking', icon: <Users size={18} /> },
-    { name: 'Directory', path: '/api/directory', status: 'checking', icon: <MapPin size={18} /> },
-    { name: 'Services', path: '/api/services', status: 'checking', icon: <Package size={18} /> },
-    { name: 'Taxis', path: '/api/taxis', status: 'checking', icon: <Car size={18} /> },
-    { name: 'Reservations', path: '/api/reservations', status: 'checking', icon: <Calendar size={18} /> },
-    { name: 'Chatbot', path: '/api/chatbot', status: 'checking', icon: <MessageSquare size={18} /> },
+  const [isConnected, setIsConnected] = useState<boolean | null>(null);
+  const [tables, setTables] = useState<TableStatus[]>([
+    { 
+      name: 'Servicios Turísticos', 
+      airtableTable: 'ServiciosTuristicos_SAI',
+      icon: <Package size={20} />,
+      status: 'idle',
+      recordCount: 0,
+      lastSync: null
+    },
+    { 
+      name: 'Directorio / Mapa', 
+      airtableTable: 'Directorio_Mapa',
+      icon: <MapPin size={20} />,
+      status: 'idle',
+      recordCount: 0,
+      lastSync: null
+    },
+    { 
+      name: 'Artistas RIMM', 
+      airtableTable: 'Rimm_musicos',
+      icon: <Music size={20} />,
+      status: 'idle',
+      recordCount: 0,
+      lastSync: null
+    },
+    { 
+      name: 'Leads', 
+      airtableTable: 'Leads',
+      icon: <Users size={20} />,
+      status: 'idle',
+      recordCount: 0,
+      lastSync: null
+    },
   ]);
   
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastFullCheck, setLastFullCheck] = useState<string | null>(null);
+  const [isSyncingAll, setIsSyncingAll] = useState(false);
+  const [cacheInfo, setCacheInfo] = useState({ size: 0, items: 0 });
+  const [lastGlobalSync, setLastGlobalSync] = useState<string | null>(null);
 
-  const BASE_URL = window.location.origin;
-
-  const checkEndpoint = async (endpoint: EndpointStatus): Promise<EndpointStatus> => {
-    const startTime = Date.now();
-    try {
-      const response = await fetch(`${BASE_URL}${endpoint.path}`, {
-        method: endpoint.path.includes('webhook') ? 'POST' : 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: endpoint.path.includes('webhook') 
-          ? JSON.stringify({ test: true, source: 'admin-panel' })
-          : undefined,
-      });
-      
-      const responseTime = Date.now() - startTime;
-      
-      let data = null;
-      try {
-        data = await response.json();
-      } catch {
-        // Response might not be JSON
-      }
-
-      return {
-        ...endpoint,
-        status: response.ok ? 'online' : 'error',
-        responseTime,
-        lastChecked: new Date().toLocaleTimeString(),
-        data,
-        error: response.ok ? undefined : `HTTP ${response.status}`,
-      };
-    } catch (error) {
-      return {
-        ...endpoint,
-        status: 'offline',
-        responseTime: Date.now() - startTime,
-        lastChecked: new Date().toLocaleTimeString(),
-        error: error instanceof Error ? error.message : 'Connection failed',
-      };
-    }
-  };
-
-  const checkAllEndpoints = async () => {
-    setIsRefreshing(true);
-    
-    // Reset all to checking
-    setEndpoints(prev => prev.map(ep => ({ ...ep, status: 'checking' as const })));
-    
-    // Check each endpoint
-    const results = await Promise.all(endpoints.map(checkEndpoint));
-    setEndpoints(results);
-    setLastFullCheck(new Date().toLocaleString());
-    setIsRefreshing(false);
-  };
-
+  // Verificar conexión con Airtable al cargar
   useEffect(() => {
-    checkAllEndpoints();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(checkAllEndpoints, 30000);
-    return () => clearInterval(interval);
+    checkConnection();
+    loadCacheInfo();
+    loadLastSyncTimes();
   }, []);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'online': return 'text-green-500';
-      case 'offline': return 'text-red-500';
-      case 'error': return 'text-yellow-500';
-      default: return 'text-gray-400';
+  const checkConnection = async () => {
+    setIsConnected(null);
+    try {
+      if (!airtableService.isConfigured()) {
+        setIsConnected(false);
+        return;
+      }
+      
+      // Probar conexión con una petición pequeña
+      const testData = await airtableService.fetchTable('ServiciosTuristicos_SAI', { maxRecords: 1 });
+      setIsConnected(testData !== null && testData.length > 0);
+    } catch {
+      setIsConnected(false);
     }
   };
 
-  const getStatusBg = (status: string) => {
-    switch (status) {
-      case 'online': return 'bg-green-900/30 border-green-700';
-      case 'offline': return 'bg-red-900/30 border-red-700';
-      case 'error': return 'bg-yellow-900/30 border-yellow-700';
-      default: return 'bg-gray-800 border-gray-700';
+  const loadCacheInfo = () => {
+    let totalSize = 0;
+    let itemCount = 0;
+    
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('guanago_')) {
+        const value = localStorage.getItem(key);
+        if (value) {
+          totalSize += value.length * 2; // Aproximado en bytes (UTF-16)
+          itemCount++;
+        }
+      }
+    }
+    
+    setCacheInfo({ size: Math.round(totalSize / 1024), items: itemCount });
+  };
+
+  const loadLastSyncTimes = () => {
+    // Cargar tiempos de última sincronización desde localStorage
+    const metadata = localStorage.getItem('guanago_cache_metadata');
+    if (metadata) {
+      try {
+        const data = JSON.parse(metadata);
+        if (data.lastSync) {
+          setLastGlobalSync(new Date(data.lastSync).toLocaleString());
+        }
+      } catch {}
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'online': return <CheckCircle size={18} className="text-green-500" />;
-      case 'offline': return <XCircle size={18} className="text-red-500" />;
-      case 'error': return <AlertTriangle size={18} className="text-yellow-500" />;
-      default: return <RefreshCw size={18} className="text-gray-400 animate-spin" />;
+  const syncTable = async (index: number) => {
+    const table = tables[index];
+    
+    // Actualizar estado a "syncing"
+    setTables(prev => prev.map((t, i) => 
+      i === index ? { ...t, status: 'syncing' as const, error: undefined } : t
+    ));
+
+    try {
+      let data: any[] = [];
+      
+      switch (table.airtableTable) {
+        case 'ServiciosTuristicos_SAI':
+          data = await airtableService.getServices();
+          break;
+        case 'Directorio_Mapa':
+          data = await airtableService.getDirectoryPoints();
+          break;
+        case 'Rimm_musicos':
+          data = await airtableService.getArtists();
+          break;
+        case 'Leads':
+          data = await airtableService.fetchTable('Leads');
+          break;
+      }
+
+      const now = new Date().toLocaleString();
+      
+      setTables(prev => prev.map((t, i) => 
+        i === index ? { 
+          ...t, 
+          status: 'success' as const,
+          recordCount: data.length,
+          lastSync: now
+        } : t
+      ));
+
+    } catch (error) {
+      setTables(prev => prev.map((t, i) => 
+        i === index ? { 
+          ...t, 
+          status: 'error' as const,
+          error: error instanceof Error ? error.message : 'Error de sincronización'
+        } : t
+      ));
     }
   };
 
-  const onlineCount = endpoints.filter(ep => ep.status === 'online').length;
-  const totalCount = endpoints.length;
+  const syncAllTables = async () => {
+    setIsSyncingAll(true);
+    
+    for (let i = 0; i < tables.length; i++) {
+      await syncTable(i);
+      // Pequeña pausa entre peticiones para no saturar
+      await new Promise(r => setTimeout(r, 300));
+    }
+    
+    setLastGlobalSync(new Date().toLocaleString());
+    
+    // Guardar timestamp en metadata
+    const metadata = { lastSync: Date.now(), appVersion: '2.0.0' };
+    localStorage.setItem('guanago_cache_metadata', JSON.stringify(metadata));
+    
+    setIsSyncingAll(false);
+    loadCacheInfo();
+  };
+
+  const handleClearCache = () => {
+    if (confirm('¿Estás seguro de limpiar toda la caché local? Los datos se recargarán desde Airtable.')) {
+      clearAllCache();
+      loadCacheInfo();
+      setTables(prev => prev.map(t => ({ ...t, status: 'idle' as const, recordCount: 0, lastSync: null })));
+    }
+  };
+
+  const getStatusIcon = (status: TableStatus['status']) => {
+    switch (status) {
+      case 'syncing': return <Loader2 size={18} className="animate-spin text-blue-500" />;
+      case 'success': return <CheckCircle size={18} className="text-green-500" />;
+      case 'error': return <XCircle size={18} className="text-red-500" />;
+      default: return <Clock size={18} className="text-gray-400" />;
+    }
+  };
+
+  const totalRecords = tables.reduce((sum, t) => sum + t.recordCount, 0);
+  const successCount = tables.filter(t => t.status === 'success').length;
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white pb-24 font-sans">
+    <div className="min-h-screen bg-gray-50 pb-32">
       {/* Header */}
-      <header className="px-6 pt-12 pb-6 bg-gray-900">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Server size={24} className="text-purple-500" />
-              Backend Monitor
-            </h1>
-            <p className="text-gray-400 text-sm mt-1">Estado de la API en tiempo real</p>
-          </div>
-          <button
-            onClick={checkAllEndpoints}
-            disabled={isRefreshing}
-            className={`p-3 rounded-full transition-all ${
-              isRefreshing 
-                ? 'bg-gray-700 cursor-not-allowed' 
-                : 'bg-purple-600 hover:bg-purple-500'
-            }`}
-          >
-            <RefreshCw size={20} className={isRefreshing ? 'animate-spin' : ''} />
-          </button>
+      <header className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 pt-14 pb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <Database size={28} />
+          <h1 className="text-2xl font-black">Panel de Datos</h1>
         </div>
+        <p className="text-indigo-100 text-sm">Sincronización directa con Airtable</p>
       </header>
 
-      <div className="px-6 space-y-6">
-        {/* Server Info Card */}
-        <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-2xl p-6 border border-purple-700/50">
-          <div className="flex items-center gap-4">
-            <div className="bg-purple-600/30 p-4 rounded-xl">
-              <Globe size={32} className="text-purple-400" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold">Servidor Backend</h3>
-              <p className="text-purple-300 text-sm font-mono break-all">{BASE_URL}</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4 mt-6">
-            <div className="bg-gray-900/50 rounded-xl p-4 text-center">
-              <div className={`text-2xl font-bold ${onlineCount === totalCount ? 'text-green-400' : 'text-yellow-400'}`}>
-                {onlineCount}/{totalCount}
-              </div>
-              <p className="text-gray-400 text-xs mt-1">Endpoints Online</p>
-            </div>
-            <div className="bg-gray-900/50 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-blue-400">
-                {endpoints.filter(ep => ep.responseTime).reduce((sum, ep) => sum + (ep.responseTime || 0), 0) / 
-                  Math.max(endpoints.filter(ep => ep.responseTime).length, 1) | 0}ms
-              </div>
-              <p className="text-gray-400 text-xs mt-1">Tiempo Promedio</p>
-            </div>
-            <div className="bg-gray-900/50 rounded-xl p-4 text-center">
-              <div className={`text-2xl font-bold ${onlineCount === totalCount ? 'text-green-400' : 'text-red-400'}`}>
-                {onlineCount === totalCount ? '✓' : '!'}
-              </div>
-              <p className="text-gray-400 text-xs mt-1">{onlineCount === totalCount ? 'Healthy' : 'Issues'}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Last Check Info */}
-        {lastFullCheck && (
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            <Clock size={14} />
-            <span>Última verificación: {lastFullCheck}</span>
-          </div>
-        )}
-
-        {/* Endpoints List */}
-        <div className="space-y-3">
-          <h3 className="text-lg font-bold flex items-center gap-2">
-            <Database size={18} className="text-blue-400" />
-            Endpoints de API
-          </h3>
-          
-          {endpoints.map((endpoint, idx) => (
-            <div
-              key={idx}
-              className={`rounded-xl p-4 border transition-all ${getStatusBg(endpoint.status)}`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg bg-gray-800 ${getStatusColor(endpoint.status)}`}>
-                    {endpoint.icon}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm">{endpoint.name}</h4>
-                    <p className="text-gray-400 text-xs font-mono">{endpoint.path}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  {endpoint.responseTime !== undefined && (
-                    <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
-                      {endpoint.responseTime}ms
-                    </span>
-                  )}
-                  {getStatusIcon(endpoint.status)}
-                </div>
-              </div>
-              
-              {/* Response Data */}
-              {endpoint.status === 'online' && endpoint.data && (
-                <div className="mt-3 bg-gray-900/50 rounded-lg p-3 overflow-x-auto">
-                  <pre className="text-xs text-green-400 font-mono">
-                    {JSON.stringify(endpoint.data, null, 2).substring(0, 200)}
-                    {JSON.stringify(endpoint.data).length > 200 && '...'}
-                  </pre>
-                </div>
+      <div className="px-4 -mt-4 space-y-4">
+        
+        {/* Estado de Conexión */}
+        <div className="bg-white rounded-2xl shadow-lg p-5 border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {isConnected === null ? (
+                <Loader2 size={24} className="animate-spin text-gray-400" />
+              ) : isConnected ? (
+                <Wifi size={24} className="text-green-500" />
+              ) : (
+                <WifiOff size={24} className="text-red-500" />
               )}
-              
-              {/* Error Message */}
-              {(endpoint.status === 'offline' || endpoint.status === 'error') && endpoint.error && (
-                <div className="mt-3 bg-red-900/30 rounded-lg p-3">
-                  <p className="text-xs text-red-400">
-                    <strong>Error:</strong> {endpoint.error}
+              <div>
+                <h3 className="font-bold text-gray-800">Conexión Airtable</h3>
+                <p className="text-xs text-gray-500">
+                  {isConnected === null ? 'Verificando...' : 
+                   isConnected ? '✅ Conectado correctamente' : 
+                   '❌ Sin conexión - Verifica credenciales'}
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={checkConnection}
+              className="p-2 hover:bg-gray-100 rounded-xl transition"
+            >
+              <RefreshCw size={20} className="text-gray-500" />
+            </button>
+          </div>
+          
+          {!airtableService.isConfigured() && (
+            <div className="mt-3 p-3 bg-yellow-50 rounded-xl border border-yellow-200">
+              <div className="flex items-start gap-2">
+                <AlertTriangle size={18} className="text-yellow-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-800">Credenciales no configuradas</p>
+                  <p className="text-xs text-yellow-600 mt-1">
+                    Agrega VITE_AIRTABLE_API_KEY y VITE_AIRTABLE_BASE_ID en .env
                   </p>
                 </div>
-              )}
+              </div>
             </div>
-          ))}
+          )}
         </div>
 
-        {/* Make Webhook Info */}
-        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
-          <div className="flex items-center gap-3 mb-4">
-            <Zap size={20} className="text-yellow-500" />
-            <h3 className="font-bold">Webhook para Make (Escenario 1)</h3>
+        {/* Stats rápidas */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-white rounded-xl p-4 shadow border border-gray-100 text-center">
+            <p className="text-2xl font-black text-indigo-600">{tables.length}</p>
+            <p className="text-xs text-gray-500">Tablas</p>
           </div>
-          
-          <div className="bg-gray-900 rounded-lg p-4">
-            <p className="text-xs text-gray-400 mb-2">URL del Webhook:</p>
-            <code className="text-sm text-yellow-400 break-all">
-              {BASE_URL}/api/auth/webhook
-            </code>
+          <div className="bg-white rounded-xl p-4 shadow border border-gray-100 text-center">
+            <p className="text-2xl font-black text-emerald-600">{totalRecords}</p>
+            <p className="text-xs text-gray-500">Registros</p>
           </div>
-          
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="bg-gray-900 rounded-lg p-3">
-              <p className="text-xs text-gray-400">Método</p>
-              <p className="text-sm font-bold text-blue-400">POST</p>
-            </div>
-            <div className="bg-gray-900 rounded-lg p-3">
-              <p className="text-xs text-gray-400">Content-Type</p>
-              <p className="text-sm font-bold text-blue-400">application/json</p>
-            </div>
-          </div>
-          
-          <div className="mt-4 bg-gray-900 rounded-lg p-4">
-            <p className="text-xs text-gray-400 mb-2">Ejemplo de Payload:</p>
-            <pre className="text-xs text-gray-300 font-mono overflow-x-auto">
-{`{
-  "email": "usuario@ejemplo.com",
-  "name": "Nombre Usuario",
-  "source": "make-webhook"
-}`}
-            </pre>
+          <div className="bg-white rounded-xl p-4 shadow border border-gray-100 text-center">
+            <p className="text-2xl font-black text-purple-600">{successCount}/{tables.length}</p>
+            <p className="text-xs text-gray-500">Sincronizadas</p>
           </div>
         </div>
 
-        {/* Quick Test Button */}
+        {/* Botón Sincronizar Todo */}
         <button
-          onClick={async () => {
-            const testEndpoint = endpoints.find(ep => ep.path === '/api/auth/webhook');
-            if (testEndpoint) {
-              const result = await checkEndpoint(testEndpoint);
-              setEndpoints(prev => prev.map(ep => 
-                ep.path === '/api/auth/webhook' ? result : ep
-              ));
-              alert(result.status === 'online' 
-                ? '✅ Webhook funcionando correctamente!' 
-                : `❌ Error: ${result.error}`);
-            }
-          }}
-          className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-bold py-4 rounded-xl hover:from-yellow-500 hover:to-orange-500 transition-all flex items-center justify-center gap-2"
+          onClick={syncAllTables}
+          disabled={isSyncingAll || !isConnected}
+          className={`w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-3 shadow-lg transition ${
+            isSyncingAll || !isConnected 
+              ? 'bg-gray-300 cursor-not-allowed' 
+              : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600'
+          }`}
         >
-          <Zap size={20} />
-          Probar Webhook Make
+          {isSyncingAll ? (
+            <>
+              <Loader2 size={22} className="animate-spin" />
+              Sincronizando...
+            </>
+          ) : (
+            <>
+              <Download size={22} />
+              Sincronizar Todas las Tablas
+            </>
+          )}
         </button>
+
+        {lastGlobalSync && (
+          <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1">
+            <Clock size={12} />
+            Última sincronización: {lastGlobalSync}
+          </p>
+        )}
+
+        {/* Lista de Tablas */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+          <div className="p-4 border-b border-gray-100 bg-gray-50">
+            <h3 className="font-bold text-gray-800 flex items-center gap-2">
+              <FileText size={18} />
+              Tablas de Airtable
+            </h3>
+          </div>
+          
+          <div className="divide-y divide-gray-100">
+            {tables.map((table, index) => (
+              <div 
+                key={table.airtableTable}
+                className="p-4 flex items-center justify-between hover:bg-gray-50 transition"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-xl ${
+                    table.status === 'success' ? 'bg-green-100 text-green-600' :
+                    table.status === 'error' ? 'bg-red-100 text-red-600' :
+                    table.status === 'syncing' ? 'bg-blue-100 text-blue-600' :
+                    'bg-gray-100 text-gray-500'
+                  }`}>
+                    {table.icon}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800">{table.name}</h4>
+                    <p className="text-xs text-gray-400 font-mono">{table.airtableTable}</p>
+                    {table.lastSync && (
+                      <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
+                        <CheckCircle size={12} />
+                        {table.lastSync} • <strong>{table.recordCount}</strong> registros
+                      </p>
+                    )}
+                    {table.error && (
+                      <p className="text-xs text-red-500 mt-1">{table.error}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(table.status)}
+                  <button
+                    onClick={() => syncTable(index)}
+                    disabled={table.status === 'syncing' || !isConnected}
+                    className={`p-2 rounded-xl transition ${
+                      table.status === 'syncing' || !isConnected
+                        ? 'text-gray-300 cursor-not-allowed'
+                        : 'text-indigo-500 hover:bg-indigo-50'
+                    }`}
+                  >
+                    <RefreshCw size={18} className={table.status === 'syncing' ? 'animate-spin' : ''} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Información de Caché */}
+        <div className="bg-white rounded-2xl shadow-lg p-5 border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <HardDrive size={22} className="text-gray-500" />
+              <div>
+                <h3 className="font-bold text-gray-800">Caché Local</h3>
+                <p className="text-xs text-gray-500">Datos guardados en el navegador</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="bg-gray-50 rounded-xl p-3 text-center">
+              <p className="text-2xl font-black text-gray-800">{cacheInfo.items}</p>
+              <p className="text-xs text-gray-500">Items guardados</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-3 text-center">
+              <p className="text-2xl font-black text-gray-800">{cacheInfo.size} KB</p>
+              <p className="text-xs text-gray-500">Tamaño aprox.</p>
+            </div>
+          </div>
+          
+          <button
+            onClick={handleClearCache}
+            className="w-full py-3 rounded-xl border-2 border-red-200 text-red-500 font-bold flex items-center justify-center gap-2 hover:bg-red-50 transition"
+          >
+            <Trash2 size={18} />
+            Limpiar Caché Local
+          </button>
+        </div>
+
+        {/* Información de Configuración */}
+        <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-5 text-white">
+          <h3 className="font-bold mb-3 flex items-center gap-2">
+            <Server size={18} />
+            Configuración Actual
+          </h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Base ID:</span>
+              <span className="font-mono text-xs bg-gray-700 px-2 py-1 rounded">
+                {import.meta.env.VITE_AIRTABLE_BASE_ID 
+                  ? `${String(import.meta.env.VITE_AIRTABLE_BASE_ID).slice(0, 10)}...` 
+                  : '❌ No configurado'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">API Key:</span>
+              <span className="font-mono text-xs bg-gray-700 px-2 py-1 rounded">
+                {import.meta.env.VITE_AIRTABLE_API_KEY 
+                  ? `${String(import.meta.env.VITE_AIRTABLE_API_KEY).slice(0, 12)}...` 
+                  : '❌ No configurado'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Tablas:</span>
+              <span className="text-emerald-400 font-bold">{Object.keys(airtableService.tables).length} configuradas</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Fuente de datos:</span>
+              <span className="flex items-center gap-1 text-emerald-400">
+                <Zap size={14} />
+                Airtable Directo
+              </span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
