@@ -99,9 +99,18 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
     loadData();
   }, []);
 
-  // Inicializar mapa
+  // Inicializar mapa - Solo cuando está en vista mapa
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (viewMode !== 'map') return;
+    if (!mapContainerRef.current) return;
+    
+    // Si ya existe un mapa, redimensionarlo
+    if (mapRef.current) {
+      setTimeout(() => {
+        mapRef.current?.resize();
+      }, 100);
+      return;
+    }
 
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
@@ -120,8 +129,17 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
     mapRef.current = map;
 
     return () => {
-      map.remove();
-      mapRef.current = null;
+      // No destruir el mapa al cambiar de vista
+    };
+  }, [viewMode]);
+  
+  // Limpiar mapa al desmontar componente
+  useEffect(() => {
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
     };
   }, []);
 
@@ -332,8 +350,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
 
       {/* Vista de Mapa */}
       {viewMode === 'map' && (
-        <div className="flex-1 relative">
-          <div ref={mapContainerRef} className="absolute inset-0" />
+        <div className="flex-1 relative min-h-[300px]">
+          <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
           
           {isLoading && (
             <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
@@ -346,38 +364,38 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
         </div>
       )}
 
-      {/* Vista de Grid */}
+      {/* Vista de Grid - Optimizada para móvil */}
       {viewMode === 'grid' && (
-        <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
+        <div className="flex-1 overflow-y-auto px-3 py-3 pb-24">
           {isLoading ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="bg-white rounded-2xl h-40 animate-pulse"></div>
+                <div key={i} className="bg-white rounded-xl h-28 animate-pulse"></div>
               ))}
             </div>
           ) : filteredPlaces.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               {filteredPlaces.map(place => {
                 const style = getCategoryStyle(place.categoria || place.category || '');
                 return (
                   <button
                     key={place.id}
                     onClick={() => handleSelectFromList(place)}
-                    className="bg-white rounded-2xl p-4 text-left shadow-sm border border-gray-100 hover:shadow-md transition-all active:scale-[0.98] flex flex-col"
+                    className="bg-white rounded-xl p-3 text-left shadow-sm border border-gray-100 hover:shadow-md transition-all active:scale-[0.98] flex flex-col"
                   >
-                    <div className={`w-12 h-12 ${style.bg} rounded-xl flex items-center justify-center text-2xl mb-3`}>
+                    <div className={`w-10 h-10 ${style.bg} rounded-lg flex items-center justify-center text-lg mb-2`}>
                       {style.emoji}
                     </div>
-                    <h3 className="font-bold text-gray-900 text-sm leading-tight line-clamp-2 mb-1">
+                    <h3 className="font-bold text-gray-900 text-xs leading-tight line-clamp-2 mb-0.5">
                       {place.nombre || place.name}
                     </h3>
-                    <p className="text-[10px] text-gray-400 font-medium uppercase">
+                    <p className="text-[9px] text-gray-400 font-medium uppercase truncate">
                       {place.categoria || place.category}
                     </p>
                     {(place.horario || place.hours) && (
-                      <div className="flex items-center gap-1 mt-2 text-gray-400">
-                        <Clock size={10} />
-                        <span className="text-[9px] truncate">{place.horario || place.hours}</span>
+                      <div className="flex items-center gap-1 mt-1 text-gray-400">
+                        <Clock size={8} />
+                        <span className="text-[8px] truncate">{place.horario || place.hours}</span>
                       </div>
                     )}
                   </button>
