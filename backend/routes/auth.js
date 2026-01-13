@@ -1,4 +1,3 @@
-n
 import express from 'express';
 import * as authController from '../controllers/authController.js';
 import { authenticateToken } from '../middleware/auth.js';
