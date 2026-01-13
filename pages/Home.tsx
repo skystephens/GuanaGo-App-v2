@@ -79,60 +79,67 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
 
   return (
     <div className="pb-24 relative min-h-screen bg-gray-50">
-      <header className="px-6 pt-12 pb-4 bg-white flex items-center gap-3">
-         <div className="bg-emerald-50 w-12 h-12 rounded-2xl flex items-center justify-center p-1 border border-emerald-100 shadow-sm">
-            <img src={GUANA_LOGO} alt="Guana Go" className="w-full h-full object-contain" />
+      <header className="px-6 md:px-8 lg:px-12 pt-12 pb-4 bg-white flex items-center justify-between">
+         <div className="flex items-center gap-3">
+           <div className="bg-emerald-50 w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center p-1 border border-emerald-100 shadow-sm">
+              <img src={GUANA_LOGO} alt="Guana Go" className="w-full h-full object-contain" />
+           </div>
+           <div>
+              <h1 className="text-xs text-gray-400 font-bold uppercase tracking-wider">Explora SAI</h1>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 leading-none">Guana Go</h2>
+           </div>
          </div>
-         <div>
-            <h1 className="text-xs text-gray-400 font-bold uppercase tracking-wider">Explora SAI</h1>
-            <h2 className="text-xl font-bold text-gray-800 leading-none">Guana Go</h2>
+         {/* Desktop: info adicional */}
+         <div className="hidden md:flex items-center gap-4 text-sm text-gray-500">
+           <span>🌴 San Andrés Isla</span>
+           <span className="text-emerald-600 font-semibold">Tu guía turística</span>
          </div>
       </header>
 
-      <div className="px-6">
+      <div className="px-6 md:px-8 lg:px-12">
         {/* Sección Planifica tu Viaje - Accesos directos a categorías */}
         <div className="mb-8 mt-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">Planifica tu Viaje</h3>
+            <h3 className="text-sm md:text-base font-black text-gray-400 uppercase tracking-widest">Planifica tu Viaje</h3>
             <button 
               onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY)}
-              className="text-emerald-600 text-xs font-bold"
+              className="text-emerald-600 text-xs md:text-sm font-bold hover:underline"
             >
               Ver todo →
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             <button 
               onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'package' })}
-              className="bg-gradient-to-br from-purple-500 to-pink-500 text-white p-4 rounded-2xl text-left shadow-md hover:shadow-lg transition-all active:scale-95"
+              className="bg-gradient-to-br from-purple-500 to-pink-500 text-white p-4 md:p-6 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
             >
-              <PackageIcon size={24} className="mb-2" />
-              <h4 className="font-bold text-sm">Paquetes</h4>
-              <p className="text-xs opacity-80">Todo incluido</p>
+              <PackageIcon size={24} className="mb-2 md:mb-3" />
+              <h4 className="font-bold text-sm md:text-base">Paquetes</h4>
+              <p className="text-xs md:text-sm opacity-80">Todo incluido</p>
             </button>
             <button 
               onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'tour' })}
-              className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white p-4 rounded-2xl text-left shadow-md hover:shadow-lg transition-all active:scale-95"
+              className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white p-4 md:p-6 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
             >
-              <Anchor size={24} className="mb-2" />
-              <h4 className="font-bold text-sm">Tours</h4>
-              <p className="text-xs opacity-80">Explora la isla</p>
+              <Anchor size={24} className="mb-2 md:mb-3" />
+              <h4 className="font-bold text-sm md:text-base">Tours</h4>
+              <p className="text-xs md:text-sm opacity-80">Explora la isla</p>
             </button>
             <button 
               onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'hotel' })}
-              className="bg-gradient-to-br from-amber-500 to-orange-500 text-white p-4 rounded-2xl text-left shadow-md hover:shadow-lg transition-all active:scale-95"
+              className="bg-gradient-to-br from-amber-500 to-orange-500 text-white p-4 md:p-6 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
             >
-              <Bed size={24} className="mb-2" />
-              <h4 className="font-bold text-sm">Hoteles</h4>
-              <p className="text-xs opacity-80">Donde quedarte</p>
+              <Bed size={24} className="mb-2 md:mb-3" />
+              <h4 className="font-bold text-sm md:text-base">Hoteles</h4>
+              <p className="text-xs md:text-sm opacity-80">Donde quedarte</p>
             </button>
             <button 
               onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'taxi' })}
-              className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white p-4 rounded-2xl text-left shadow-md hover:shadow-lg transition-all active:scale-95"
+              className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white p-4 md:p-6 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
             >
-              <Car size={24} className="mb-2" />
-              <h4 className="font-bold text-sm">Traslados</h4>
-              <p className="text-xs opacity-80">Movilidad fácil</p>
+              <Car size={24} className="mb-2 md:mb-3" />
+              <h4 className="font-bold text-sm md:text-base">Traslados</h4>
+              <p className="text-xs md:text-sm opacity-80">Movilidad fácil</p>
             </button>
           </div>
         </div>
@@ -163,34 +170,35 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           </div>
           
           {loading ? (
-            <div className="grid grid-cols-2 gap-4">
-               {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="bg-white rounded-3xl h-52 animate-pulse border border-gray-100"></div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+               {[1, 2, 3, 4, 5, 6].map(i => (
+                  <div key={i} className="bg-white rounded-3xl h-52 md:h-64 animate-pulse border border-gray-100"></div>
                ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 pb-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 pb-4">
               {services.length > 0 ? services.map((item) => (
                 <div 
                   key={item.id} 
-                  className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col cursor-pointer border border-gray-100 hover:shadow-md transition-all active:scale-95" 
+                  className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col cursor-pointer border border-gray-100 hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95 group" 
                   onClick={() => {
                      if (item.category === 'hotel') onNavigate(AppRoute.HOTEL_DETAIL, item);
                      else if (item.category === 'package') onNavigate(AppRoute.PACKAGE_DETAIL, item);
                      else onNavigate(AppRoute.TOUR_DETAIL, item);
                   }}
                 >
-                  <div className="h-32 w-full relative">
-                     <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                  <div className="h-32 md:h-40 lg:h-44 w-full relative overflow-hidden">
+                     <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                      <div className={`absolute top-2 right-2 ${getCategoryColor(item.category)} text-white px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm`}>
                         {getCategoryIcon(item.category)}
-                        <span className="text-[8px] font-black uppercase">{getCategoryLabel(item.category)}</span>
+                        <span className="text-[8px] md:text-[10px] font-black uppercase">{getCategoryLabel(item.category)}</span>
                      </div>
                   </div>
-                  <div className="p-4 flex flex-col flex-1">
-                     <h4 className="font-bold text-gray-800 text-xs leading-tight line-clamp-2 mb-2">{item.title}</h4>
-                     <div className="mt-auto">
-                        <span className="text-emerald-600 font-black text-sm">${item.price.toLocaleString()}</span>
+                  <div className="p-4 md:p-5 flex flex-col flex-1">
+                     <h4 className="font-bold text-gray-800 text-xs md:text-sm leading-tight line-clamp-2 mb-2">{item.title}</h4>
+                     <div className="mt-auto flex items-center justify-between">
+                        <span className="text-emerald-600 font-black text-sm md:text-base">${item.price.toLocaleString()}</span>
+                        <span className="hidden md:inline text-xs text-gray-400">Ver más →</span>
                      </div>
                   </div>
                 </div>

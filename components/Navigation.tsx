@@ -46,21 +46,25 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
   const isDark = role === 'partner' || role === 'admin';
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 py-3 px-1 flex justify-around items-center z-50 max-w-md mx-auto w-full border-t transition-all duration-300
-      ${isDark ? 'bg-gray-900 border-gray-800 shadow-2xl' : 'bg-white border-gray-100 shadow-[0_-12px_40px_rgba(0,0,0,0.08)] rounded-t-[32px]'}`}>
+    <div className={`fixed bottom-0 left-1/2 -translate-x-1/2 py-3 px-1 md:px-4 flex justify-around items-center z-50 
+      w-full max-w-md md:max-w-2xl lg:max-w-5xl xl:max-w-7xl
+      border-t transition-all duration-300
+      ${isDark ? 'bg-gray-900 border-gray-800 shadow-2xl' : 'bg-white border-gray-100 shadow-[0_-12px_40px_rgba(0,0,0,0.08)] rounded-t-[32px] md:rounded-t-3xl'}`}>
       {navItems.map((item) => {
         const isActive = currentRoute === item.route;
         return (
           <button
             key={item.label}
             onClick={() => onNavigate(item.route)}
-            className={`flex flex-col items-center gap-1 transition-all relative py-2 rounded-2xl flex-1 ${
+            className={`flex flex-col md:flex-row items-center gap-1 md:gap-2 transition-all relative py-2 md:py-3 md:px-4 rounded-2xl flex-1 md:flex-none
+              md:hover:bg-gray-100 md:dark:hover:bg-gray-800
+              ${
               isActive 
-                ? (isDark ? 'text-emerald-400' : 'text-emerald-600') 
+                ? (isDark ? 'text-emerald-400 md:bg-gray-800' : 'text-emerald-600 md:bg-emerald-50') 
                 : (isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600')
             }`}
           >
-            <div className={`relative transition-transform duration-300 ${isActive ? 'scale-110' : ''}`}>
+            <div className={`relative transition-transform duration-300 ${isActive ? 'scale-110 md:scale-100' : ''}`}>
               {item.icon}
               {item.route === AppRoute.CHECKOUT && itemCount > 0 && (
                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-600 text-white text-[9px] font-black rounded-full border-2 border-white flex items-center justify-center">
@@ -68,10 +72,10 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
                  </span>
               )}
             </div>
-            <span className={`text-[8px] font-black uppercase tracking-tighter ${isActive ? 'opacity-100' : 'opacity-60'}`}>{item.label}</span>
+            <span className={`text-[8px] md:text-xs font-black uppercase tracking-tighter md:tracking-normal md:normal-case md:font-semibold ${isActive ? 'opacity-100' : 'opacity-60 md:opacity-80'}`}>{item.label}</span>
             
             {isActive && (
-              <div className={`absolute -bottom-1 w-1 h-1 rounded-full ${isDark ? 'bg-emerald-400' : 'bg-emerald-600'}`}></div>
+              <div className={`absolute -bottom-1 w-1 h-1 rounded-full md:hidden ${isDark ? 'bg-emerald-400' : 'bg-emerald-600'}`}></div>
             )}
           </button>
         );

@@ -173,18 +173,26 @@ const App: React.FC = () => {
   const isDark = userRole !== 'tourist' && currentRoute !== AppRoute.LOGIN && currentRoute !== AppRoute.PARTNER_REGISTER;
 
   return (
-    <div className={`h-screen font-sans mx-auto max-w-md shadow-2xl overflow-hidden relative border-x 
-      ${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
+    <div className={`min-h-screen font-sans transition-colors duration-300
+      ${isDark ? 'bg-gray-950 text-white' : 'bg-gray-100 text-gray-900'}`}>
       
-      <main className="h-full relative overflow-auto">
-        {renderScreen()}
-      </main>
-      
-      <Navigation currentRoute={currentRoute} onNavigate={navigateTo} role={userRole} isAuthenticated={isAuthenticated} />
+      {/* Contenedor principal - responsive: móvil centrado, PC layout completo */}
+      <div className={`mx-auto min-h-screen relative
+        max-w-md md:max-w-2xl lg:max-w-5xl xl:max-w-7xl
+        ${isDark ? 'bg-gray-900' : 'bg-gray-50'}
+        md:shadow-2xl md:border-x
+        ${isDark ? 'md:border-gray-800' : 'md:border-gray-200'}`}>
+        
+        <main className="min-h-screen pb-20 md:pb-24 relative overflow-auto">
+          {renderScreen()}
+        </main>
+        
+        <Navigation currentRoute={currentRoute} onNavigate={navigateTo} role={userRole} isAuthenticated={isAuthenticated} />
 
-      {userRole === 'tourist' && (
-        <GuanaChatbot />
-      )}
+        {userRole === 'tourist' && (
+          <GuanaChatbot />
+        )}
+      </div>
     </div>
   );
 };
