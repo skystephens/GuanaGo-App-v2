@@ -4,7 +4,7 @@ import { Wifi, Wind, Utensils, Droplets, Sun, Pill, DollarSign, ShoppingBag, Cof
 import React from 'react';
 import { api } from './services/api';
 
-export const GUANA_LOGO = "https://cdn-icons-png.flaticon.com/512/10046/10046429.png"; 
+export const GUANA_LOGO = "https://guanago.travel/wp-content/uploads/sites/2/2025/12/Logotipo-App-guanago-5.png"; 
 
 export const DIRECTORY_DATA: GuanaLocation[] = [
   { id: 'd1', name: 'Droguería Alemana Central', latitude: 12.5847, longitude: -81.7006, category: 'Transporte', price: 0 }, // Usaremos category como discriminador visual
