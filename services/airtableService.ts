@@ -189,27 +189,49 @@ export async function getServices(category?: string) {
       price: precio,
       precio: precio,
       
-      // Duración
-      duration: f['Duracion'] || f['Duración'] || '',
-      duracion: f['Duracion'] || f['Duración'] || '',
-      
-      // Ubicación
-      location: f['Ubicacion'] || f['Punto de encuentro - Lugar de recogida "Pickup at hotel"'] || 'San Andrés',
+      // Ubicación (isla: San Andres o Providencia)
+      location: f['Ubicacion'] || 'San Andrés',
       ubicacion: f['Ubicacion'] || 'San Andrés',
+      isla: f['Ubicacion'] || 'San Andrés',
+      
+      // Punto de encuentro (solo para reservas confirmadas)
+      meetingPoint: f['Punto de encuentro - Lugar de recogida "Pickup at hotel"'] || f['Punto de Encuentro'] || '',
+      puntoEncuentro: f['Punto de encuentro - Lugar de recogida "Pickup at hotel"'] || f['Punto de Encuentro'] || '',
       
       // Imágenes
       image: f['Imagen']?.[0]?.url || f['Fotos']?.[0]?.url || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
       images: f['Imagen']?.map((img: any) => img.url) || f['Fotos']?.map((img: any) => img.url) || [],
+      gallery: f['Imagen']?.map((img: any) => img.url) || f['Fotos']?.map((img: any) => img.url) || [],
       
-      // Horarios y capacidad
-      schedule: f['Horarios de Operacion'] || '',
-      horario: f['Horarios de Operacion'] || '',
+      // Horarios de operación
+      schedule: f['Horarios de Operacion'] || f['Horarios de Operación'] || '',
+      horario: f['Horarios de Operacion'] || f['Horarios de Operación'] || '',
+      operatingHours: f['Horarios de Operacion'] || f['Horarios de Operación'] || '',
+      
+      // Duración del tour
+      duration: f['Duracion'] || f['Duración'] || '',
+      duracion: f['Duracion'] || f['Duración'] || '',
+      
+      // Días de operación
+      operatingDays: f['Dias_Operacion'] || f['Dias'] || f['Días'] || '',
+      diasOperacion: f['Dias_Operacion'] || f['Dias'] || f['Días'] || '',
+      
+      // Capacidad
       capacity: parseInt(f['Capacidad'] || '10') || 10,
       capacidad: parseInt(f['Capacidad'] || '10') || 10,
       
-      // Incluye
-      includes: f['que Incluye'] || f['Incluye'] || '',
-      incluye: f['que Incluye'] || f['Incluye'] || '',
+      // Qué incluye
+      includes: f['que Incluye'] || f['Incluye'] || f['Que Incluye'] || '',
+      incluye: f['que Incluye'] || f['Incluye'] || f['Que Incluye'] || '',
+      
+      // Categoría de actividad (Cultura, Aventura, Relax, etc.)
+      activityCategory: f['Categoria'] || '',
+      categoriaActividad: f['Categoria'] || '',
+      tags: Array.isArray(f['Categoria']) ? f['Categoria'] : (f['Categoria'] ? [f['Categoria']] : []),
+      
+      // Tipo de servicio (Tour, Alojamiento, Paquete)
+      serviceType: f['Tipo de Servicio'] || 'Tour',
+      tipoServicio: f['Tipo de Servicio'] || 'Tour',
       
       // Estado
       active: f['Publicado'] === true,
@@ -218,9 +240,6 @@ export async function getServices(category?: string) {
       // Rating (default alto para tours nuevos)
       rating: parseFloat(f['Rating'] || '4.5') || 4.5,
       reviews: parseInt(f['Reviews'] || '0') || Math.floor(Math.random() * 50) + 10,
-      
-      // Categorías adicionales (array)
-      tags: f['Categoria'] || [],
       
       // ID interno
       internalId: f['ID'] || record.id,
@@ -231,7 +250,7 @@ export async function getServices(category?: string) {
       // Spread de campos adicionales
       ...f
     };
-  }).filter(s => s.active); // Solo servicios publicados
+  }).filter(s => s.active && (s.ubicacion === 'San Andres' || s.ubicacion === 'San Andrés' || !s.ubicacion)); // Solo servicios publicados de San Andrés
 }
 
 /**

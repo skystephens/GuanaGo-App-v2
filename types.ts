@@ -6,7 +6,8 @@ export interface Tour {
   reviews: number;
   price: number; 
   image: string;
-  gallery?: string[]; 
+  gallery?: string[];
+  images?: string[];
   category: 'tour' | 'hotel' | 'taxi' | 'package' | 'handicraft';
   description?: string;
   duration?: string;
@@ -16,6 +17,26 @@ export interface Tour {
   raizalHistory?: string;
   latitude?: number;
   longitude?: number;
+  
+  // Campos de Airtable
+  ubicacion?: string;
+  isla?: string;
+  location?: string;
+  schedule?: string;
+  horario?: string;
+  operatingHours?: string;
+  operatingDays?: string;
+  diasOperacion?: string;
+  includes?: string;
+  incluye?: string;
+  activityCategory?: string;
+  categoriaActividad?: string;
+  tags?: string[];
+  serviceType?: string;
+  tipoServicio?: string;
+  meetingPoint?: string;
+  puntoEncuentro?: string;
+  provider?: string;
 }
 
 export interface ItineraryDay {

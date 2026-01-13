@@ -100,7 +100,16 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
   const nextImage = () => setActiveImageIndex((prev) => (prev + 1) % gallery.length);
   const prevImage = () => setActiveImageIndex((prev) => (prev - 1 + gallery.length) % gallery.length);
 
-  const timeSlots = ['08:00 AM', '10:00 AM', '02:00 PM', '04:00 PM', '07:00 PM'];
+  // Usar horarios de Airtable si existen, sino usar defaults
+  const parseTimeSlots = (schedule: string): string[] => {
+    if (!schedule) return ['08:00 AM', '10:00 AM', '02:00 PM', '04:00 PM'];
+    // Intentar parsear horarios del formato "8:00 AM - 5:00 PM" o similar
+    const matches = schedule.match(/\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)?/g);
+    if (matches && matches.length > 0) return matches;
+    return ['08:00 AM', '10:00 AM', '02:00 PM', '04:00 PM'];
+  };
+  
+  const timeSlots = parseTimeSlots(data.schedule || data.horario || data.operatingHours || '');
 
   return (
     <div className="bg-gray-50 min-h-screen relative pb-64 font-sans overflow-x-hidden">
@@ -154,8 +163,8 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                 <MapPin size={16} />
               </div>
               <div>
-                <p className="text-xs font-bold leading-tight">{data.address || 'San Andrés Isla, Colombia'}</p>
-                <button className="text-[10px] font-black text-emerald-600 uppercase tracking-wider mt-1.5 underline decoration-emerald-200">Ver en el mapa</button>
+                <p className="text-xs font-bold leading-tight">{data.isla || data.ubicacion || 'San Andrés Isla, Colombia'}</p>
+                <p className="text-[10px] text-gray-400 mt-1">La ubicación exacta se mostrará tras confirmar tu reserva</p>
               </div>
            </div>
 
@@ -174,24 +183,31 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
            </div>
         </div>
 
-        {/* Gallery Thumbnails */}
+        {/* Gallery Thumbnails - 4 fotos pequeñas */}
+        {gallery.length > 1 && (
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
-             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Inspiración</h3>
-             <button onClick={() => openLightbox(0)} className="text-[10px] font-bold text-emerald-600">Explorar todo</button>
+             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Galería</h3>
+             <button onClick={() => openLightbox(0)} className="text-[10px] font-bold text-emerald-600">Ver todas ({gallery.length})</button>
           </div>
-          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-             {gallery.slice(1).map((img: string, idx: number) => (
+          <div className="grid grid-cols-4 gap-2">
+             {gallery.slice(1, 5).map((img: string, idx: number) => (
                 <div 
                    key={idx} 
                    onClick={() => openLightbox(idx + 1)}
-                   className="relative w-40 h-28 rounded-3xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-all active:scale-95"
+                   className="relative aspect-square rounded-2xl overflow-hidden border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-all active:scale-95"
                 >
-                   <img src={img} className="w-full h-full object-cover" alt={`Gallery ${idx}`} />
+                   <img src={img} className="w-full h-full object-cover" alt={`Gallery ${idx + 1}`} />
+                   {idx === 3 && gallery.length > 5 && (
+                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                       <span className="text-white font-bold text-sm">+{gallery.length - 5}</span>
+                     </div>
+                   )}
                 </div>
              ))}
           </div>
         </div>
+        )}
 
         {/* Info Box / Booking Details */}
         <div className="mb-10 space-y-4">
@@ -257,15 +273,80 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
            {/* About Section */}
            <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100">
              <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest mb-4">La Experiencia</h3>
-             <p className="text-gray-500 leading-relaxed text-sm font-medium">{data.description}</p>
-             <div className="mt-8 pt-6 border-t border-gray-50 flex items-center justify-between">
+             
+             {/* Categoría de actividad */}
+             {(data.categoriaActividad || data.activityCategory || (data.tags && data.tags.length > 0)) && (
+               <div className="flex flex-wrap gap-2 mb-4">
+                 {(Array.isArray(data.tags) ? data.tags : [data.categoriaActividad || data.activityCategory]).filter(Boolean).map((tag: string, idx: number) => (
+                   <span key={idx} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase">
+                     {tag}
+                   </span>
+                 ))}
+               </div>
+             )}
+             
+             <p className="text-gray-500 leading-relaxed text-sm font-medium mb-6">{data.description}</p>
+             
+             {/* Información del servicio */}
+             <div className="grid grid-cols-2 gap-4 mb-6">
+               {/* Duración */}
+               {data.duration && (
+                 <div className="bg-gray-50 rounded-2xl p-4">
+                   <div className="flex items-center gap-2 mb-1">
+                     <Clock size={14} className="text-emerald-600" />
+                     <span className="text-[10px] font-black text-gray-400 uppercase">Duración</span>
+                   </div>
+                   <p className="text-sm font-bold text-gray-800">{data.duration}</p>
+                 </div>
+               )}
+               
+               {/* Días de operación */}
+               {(data.diasOperacion || data.operatingDays) && (
+                 <div className="bg-gray-50 rounded-2xl p-4">
+                   <div className="flex items-center gap-2 mb-1">
+                     <Calendar size={14} className="text-emerald-600" />
+                     <span className="text-[10px] font-black text-gray-400 uppercase">Días</span>
+                   </div>
+                   <p className="text-sm font-bold text-gray-800">{data.diasOperacion || data.operatingDays}</p>
+                 </div>
+               )}
+               
+               {/* Horarios de operación */}
+               {(data.horario || data.schedule || data.operatingHours) && (
+                 <div className="bg-gray-50 rounded-2xl p-4 col-span-2">
+                   <div className="flex items-center gap-2 mb-1">
+                     <Clock size={14} className="text-emerald-600" />
+                     <span className="text-[10px] font-black text-gray-400 uppercase">Horarios de Operación</span>
+                   </div>
+                   <p className="text-sm font-bold text-gray-800">{data.horario || data.schedule || data.operatingHours}</p>
+                 </div>
+               )}
+             </div>
+             
+             {/* Qué incluye */}
+             {(data.incluye || data.includes) && (
+               <div className="mb-6">
+                 <h4 className="text-xs font-black text-gray-600 uppercase mb-3 flex items-center gap-2">
+                   <CheckCircle size={14} className="text-emerald-500" />
+                   Qué Incluye
+                 </h4>
+                 <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+                   <p className="text-sm text-emerald-800 font-medium leading-relaxed whitespace-pre-line">{data.incluye || data.includes}</p>
+                 </div>
+               </div>
+             )}
+             
+             {/* Cancelación */}
+             <div className="pt-6 border-t border-gray-50 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                    <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
                       <ShieldCheck size={20} />
                    </div>
-                   <span className="text-[10px] font-black text-gray-800 uppercase tracking-tighter">Cancelación Gratis</span>
+                   <div>
+                     <span className="text-[10px] font-black text-gray-800 uppercase tracking-tighter block">Cancelación Gratis</span>
+                     <span className="text-[9px] text-gray-400">Máximo 24 horas antes de la hora de realización</span>
+                   </div>
                 </div>
-                <button className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Saber más</button>
              </div>
            </div>
         </div>
