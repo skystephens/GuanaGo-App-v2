@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Caribbean Night Reservation - The Sound of the Island</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec49", // Neon Green
+                        "secondary-red": "#ff3b30",
+                        "secondary-yellow": "#ffcc00",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102215", // Deep Green/Black
+                        "surface-dark": "#1a3521",
+                    },
+                    fontFamily: {
+                        "display": ["Be Vietnam Pro", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "2xl": "2rem",
+                        "full": "9999px"
+                    },
+                    backgroundImage: {
+                        'tropical-gradient': 'linear-gradient(135deg, #102215 0%, #05100a 100%)',
+                        'accent-gradient': 'linear-gradient(90deg, #13ec49 0%, #0fb839 100%)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 1,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+        /* Custom scrollbar for better aesthetic */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #102215; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1a3521; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #23482c; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-screen flex flex-col overflow-x-hidden selection:bg-primary selection:text-black">
+<!-- TopNavBar -->
+<div class="w-full border-b border-white/10 bg-background-dark/95 backdrop-blur-sm sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<header class="flex items-center justify-between h-16">
+<div class="flex items-center gap-3">
+<div class="size-8 text-primary">
+<span class="material-symbols-outlined text-3xl">music_note</span>
+</div>
+<h2 class="text-white text-lg font-bold tracking-tight">The Sound of the Island</h2>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<nav class="flex gap-6">
+<a class="text-gray-300 hover:text-primary transition-colors text-sm font-medium" href="#">Events</a>
+<a class="text-gray-300 hover:text-primary transition-colors text-sm font-medium" href="#">Community</a>
+<a class="text-gray-300 hover:text-primary transition-colors text-sm font-medium" href="#">Instrument Fund</a>
+<a class="text-gray-300 hover:text-primary transition-colors text-sm font-medium" href="#">My Wallet</a>
+</nav>
+<button class="flex items-center justify-center rounded-lg h-9 px-4 bg-primary text-background-dark text-sm font-bold hover:bg-white hover:scale-105 transition-all">
+                        Login
+                    </button>
+</div>
+<button class="md:hidden text-white">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</header>
+</div>
+</div>
+<!-- Main Content Layout -->
+<main class="flex-grow flex flex-col items-center w-full pb-32">
+<div class="w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-8">
+<!-- Breadcrumbs -->
+<div class="flex items-center gap-2 text-sm">
+<a class="text-primary/70 hover:text-primary transition-colors" href="#">Home</a>
+<span class="text-white/40">/</span>
+<a class="text-primary/70 hover:text-primary transition-colors" href="#">Events</a>
+<span class="text-white/40">/</span>
+<span class="text-white font-medium">Caribbean Night</span>
+</div>
+<!-- Hero Section -->
+<div class="relative w-full rounded-2xl overflow-hidden aspect-[21/9] min-h-[400px] shadow-2xl group">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Vibrant tropical night scene with palm silhouettes and neon lights" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAidzNtOgdjDjahcd13RHMsrzgCw-4pt8DNjJcIuUNQf0MvwJ6721-Uk2OUxYdOQ9JcWdpPi-_YBua08TNzi_3XTKHMLytld4L9qqVv2OrFTNiLbjvepsV0PQeNZla-nP1mpP9ACc7HDCaOP3EhSexPd-EmHAtYir0b2fTW0EEKdXXrTs23T36eqTiZhDMA8QG73zwaEnxBhmTnyrzRsFs08Uhz1U4uLo6KpVZf4R68ZNknT0Zq_qHdWhGrEwBfNmgcYA3e2JVsE1LB');"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-background-dark/90 via-background-dark/50 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent"></div>
+<div class="relative z-10 h-full flex flex-col justify-end p-8 md:p-12 max-w-2xl">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-yellow/20 border border-secondary-yellow/40 backdrop-blur-md w-fit mb-4">
+<span class="material-symbols-outlined text-secondary-yellow text-sm">local_fire_department</span>
+<span class="text-secondary-yellow text-xs font-bold uppercase tracking-wider">Selling Fast</span>
+</div>
+<h1 class="text-4xl md:text-6xl font-black text-white leading-tight mb-4 tracking-tight">
+                        Caribbean Night
+                    </h1>
+<p class="text-gray-200 text-lg md:text-xl font-light mb-8 max-w-lg leading-relaxed">
+                        Immerse yourself in the Neo-Tropical soundscape. Live percussion, electronic fusion, and island soul. Every Thursday night.
+                    </p>
+</div>
+</div>
+<!-- Two Column Layout for Booking Process -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Left Column: Calendar & Selection -->
+<div class="lg:col-span-8 flex flex-col gap-10">
+<!-- Step 1: Calendar -->
+<section>
+<div class="flex items-center gap-4 mb-6">
+<div class="flex items-center justify-center size-8 rounded-full bg-primary text-background-dark font-bold">1</div>
+<h2 class="text-2xl font-bold text-white">Select a Thursday</h2>
+</div>
+<div class="bg-surface-dark rounded-xl p-6 border border-white/5 shadow-lg">
+<div class="flex items-center justify-between mb-6">
+<button class="p-2 hover:bg-white/10 rounded-full transition-colors text-white">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<span class="text-lg font-bold text-white">November 2023</span>
+<button class="p-2 hover:bg-white/10 rounded-full transition-colors text-white">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+<div class="grid grid-cols-7 gap-y-4 gap-x-2 text-center">
+<!-- Days Header -->
+<div class="text-white/40 text-xs font-bold uppercase tracking-wider">Sun</div>
+<div class="text-white/40 text-xs font-bold uppercase tracking-wider">Mon</div>
+<div class="text-white/40 text-xs font-bold uppercase tracking-wider">Tue</div>
+<div class="text-white/40 text-xs font-bold uppercase tracking-wider">Wed</div>
+<div class="text-primary text-xs font-bold uppercase tracking-wider">Thu</div>
+<div class="text-white/40 text-xs font-bold uppercase tracking-wider">Fri</div>
+<div class="text-white/40 text-xs font-bold uppercase tracking-wider">Sat</div>
+<!-- Calendar Dates (Simplified logic for visuals) -->
+<!-- Week 1 -->
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/30 hover:bg-white/5 text-sm" disabled="">29</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/30 hover:bg-white/5 text-sm" disabled="">30</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/30 hover:bg-white/5 text-sm" disabled="">31</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">1</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg bg-primary text-background-dark font-bold shadow-[0_0_15px_rgba(19,236,73,0.4)] hover:scale-110 transition-transform">2</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">3</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">4</button>
+<!-- Week 2 -->
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">5</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">6</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">7</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">8</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-primary font-bold border border-primary/30 hover:bg-primary/10 transition-colors">9</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">10</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">11</button>
+<!-- Week 3 -->
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">12</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">13</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">14</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">15</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-primary font-bold border border-primary/30 hover:bg-primary/10 transition-colors">16</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">17</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">18</button>
+<!-- Week 4 -->
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">19</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">20</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">21</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">22</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-primary font-bold border border-primary/30 hover:bg-primary/10 transition-colors">23</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">24</button>
+<button class="h-10 w-full flex items-center justify-center rounded-lg text-white/50 hover:bg-white/5 text-sm">25</button>
+</div>
+</div>
+</section>
+<!-- Step 2: Seating Map -->
+<section>
+<div class="flex items-center gap-4 mb-6">
+<div class="flex items-center justify-center size-8 rounded-full bg-primary text-background-dark font-bold">2</div>
+<h2 class="text-2xl font-bold text-white">Choose your Vibe</h2>
+</div>
+<div class="bg-surface-dark rounded-xl p-6 border border-white/5 shadow-lg overflow-hidden relative">
+<!-- Map Legend -->
+<div class="flex flex-wrap gap-4 mb-8 justify-center">
+<div class="flex items-center gap-2">
+<span class="size-3 rounded-full bg-white/20 border border-white/40"></span>
+<span class="text-xs text-white/60">Available</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="size-3 rounded-full bg-primary shadow-[0_0_8px_rgba(19,236,73,0.5)]"></span>
+<span class="text-xs text-white/60">Selected</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="size-3 rounded-full bg-secondary-red/40"></span>
+<span class="text-xs text-white/60">Sold Out</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="size-3 rounded-full bg-secondary-yellow border border-secondary-yellow"></span>
+<span class="text-xs text-white/60">VIP (NFT Holder)</span>
+</div>
+</div>
+<!-- Stage Visual -->
+<div class="w-full flex justify-center mb-12">
+<div class="w-2/3 h-12 bg-gradient-to-b from-primary/20 to-transparent rounded-t-full border-t-2 border-primary/50 flex items-center justify-center relative">
+<span class="text-primary font-bold tracking-[0.2em] text-sm uppercase">Stage &amp; Performance Area</span>
+<div class="absolute -bottom-6 w-full flex justify-center opacity-30">
+<div class="h-16 w-16 rounded-full bg-primary blur-3xl"></div>
+</div>
+</div>
+</div>
+<!-- Tables Grid -->
+<div class="grid grid-cols-5 gap-6 max-w-lg mx-auto mb-8 relative z-10">
+<!-- Row 1 -->
+<button class="aspect-square rounded-full border border-white/20 bg-white/5 hover:bg-white/20 flex items-center justify-center text-xs text-white/50 transition-all group">
+<span class="material-symbols-outlined text-base mb-1 group-hover:scale-110">table_bar</span>
+<span class="sr-only">Table 101</span>
+</button>
+<button class="aspect-square rounded-full border border-secondary-yellow bg-secondary-yellow/10 flex items-center justify-center text-xs text-secondary-yellow transition-all shadow-[0_0_10px_rgba(255,204,0,0.2)]">
+<span class="material-symbols-outlined text-base">star</span>
+</button>
+<button class="aspect-square rounded-full bg-primary border-2 border-white flex items-center justify-center text-background-dark font-bold shadow-[0_0_15px_rgba(19,236,73,0.6)] scale-110">
+<span class="material-symbols-outlined">check</span>
+</button>
+<button class="aspect-square rounded-full border border-secondary-yellow bg-secondary-yellow/10 flex items-center justify-center text-xs text-secondary-yellow transition-all shadow-[0_0_10px_rgba(255,204,0,0.2)]">
+<span class="material-symbols-outlined text-base">star</span>
+</button>
+<button class="aspect-square rounded-full border border-white/20 bg-white/5 hover:bg-white/20 flex items-center justify-center text-xs text-white/50 transition-all group">
+<span class="material-symbols-outlined text-base group-hover:scale-110">table_bar</span>
+</button>
+<!-- Row 2 -->
+<button class="aspect-square rounded-full border border-white/20 bg-white/5 hover:bg-white/20 flex items-center justify-center text-xs text-white/50 transition-all group">
+<span class="material-symbols-outlined text-base group-hover:scale-110">table_bar</span>
+</button>
+<button class="aspect-square rounded-full bg-secondary-red/20 border border-transparent flex items-center justify-center text-xs text-secondary-red/50 cursor-not-allowed">
+<span class="material-symbols-outlined text-base">block</span>
+</button>
+<button class="aspect-square rounded-full border border-white/20 bg-white/5 hover:bg-white/20 flex items-center justify-center text-xs text-white/50 transition-all group">
+<span class="material-symbols-outlined text-base group-hover:scale-110">table_bar</span>
+</button>
+<button class="aspect-square rounded-full bg-secondary-red/20 border border-transparent flex items-center justify-center text-xs text-secondary-red/50 cursor-not-allowed">
+<span class="material-symbols-outlined text-base">block</span>
+</button>
+<button class="aspect-square rounded-full border border-white/20 bg-white/5 hover:bg-white/20 flex items-center justify-center text-xs text-white/50 transition-all group">
+<span class="material-symbols-outlined text-base group-hover:scale-110">table_bar</span>
+</button>
+<!-- Row 3 -->
+<button class="aspect-square rounded-full border border-white/20 bg-white/5 hover:bg-white/20 flex items-center justify-center text-xs text-white/50 transition-all group">
+<span class="material-symbols-outlined text-base group-hover:scale-110">table_bar</span>
+</button>
+<button class="aspect-square rounded-full border border-white/20 bg-white/5 hover:bg-white/20 flex items-center justify-center text-xs text-white/50 transition-all group">
+<span class="material-symbols-outlined text-base group-hover:scale-110">table_bar</span>
+</button>
+<button class="aspect-square rounded-full border border-white/20 bg-white/5 hover:bg-white/20 flex items-center justify-center text-xs text-white/50 transition-all group">
+<span class="material-symbols-outlined text-base group-hover:scale-110">table_bar</span>
+</button>
+<button class="aspect-square rounded-full border border-white/20 bg-white/5 hover:bg-white/20 flex items-center justify-center text-xs text-white/50 transition-all group">
+<span class="material-symbols-outlined text-base group-hover:scale-110">table_bar</span>
+</button>
+<button class="aspect-square rounded-full border border-white/20 bg-white/5 hover:bg-white/20 flex items-center justify-center text-xs text-white/50 transition-all group">
+<span class="material-symbols-outlined text-base group-hover:scale-110">table_bar</span>
+</button>
+</div>
+<div class="text-center text-xs text-white/40 mt-4 font-medium">Front Stage View • Table 103 Selected</div>
+</div>
+</section>
+<!-- Step 3: Ticket Type -->
+<section>
+<div class="flex items-center gap-4 mb-6">
+<div class="flex items-center justify-center size-8 rounded-full bg-primary text-background-dark font-bold">3</div>
+<h2 class="text-2xl font-bold text-white">Select Ticket Type</h2>
+</div>
+<div class="grid md:grid-cols-2 gap-4">
+<!-- Standard Ticket -->
+<label class="relative cursor-pointer group">
+<input class="peer sr-only" name="ticket" type="radio"/>
+<div class="h-full p-6 rounded-2xl bg-surface-dark border border-white/10 peer-checked:border-primary/50 peer-checked:bg-white/5 transition-all">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-xl font-bold text-white mb-1">Standard</h3>
+<p class="text-white/60 text-sm">Experience the night</p>
+</div>
+<div class="size-6 rounded-full border-2 border-white/20 peer-checked:border-primary peer-checked:bg-primary flex items-center justify-center">
+<div class="size-2.5 rounded-full bg-background-dark opacity-0 peer-checked:opacity-100"></div>
+</div>
+</div>
+<div class="text-2xl font-bold text-white mb-6">$45 <span class="text-sm font-normal text-white/40">/ person</span></div>
+<ul class="space-y-3 mb-6">
+<li class="flex items-center gap-3 text-sm text-gray-300">
+<span class="material-symbols-outlined text-primary text-lg">check_circle</span>
+                                            Table Reservation
+                                        </li>
+<li class="flex items-center gap-3 text-sm text-gray-300">
+<span class="material-symbols-outlined text-primary text-lg">check_circle</span>
+                                            Welcome Drink
+                                        </li>
+</ul>
+</div>
+</label>
+<!-- NFT Ticket -->
+<label class="relative cursor-pointer group">
+<input checked="" class="peer sr-only" name="ticket" type="radio"/>
+<div class="h-full p-6 rounded-2xl bg-[#152e1d] border-2 border-secondary-yellow/30 peer-checked:border-secondary-yellow peer-checked:shadow-[0_0_20px_rgba(255,204,0,0.1)] transition-all overflow-hidden relative">
+<!-- Shine effect -->
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-secondary-yellow/10 blur-3xl rounded-full pointer-events-none"></div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<h3 class="text-xl font-bold text-white">True Fan</h3>
+<span class="bg-secondary-yellow text-black text-[10px] font-bold px-2 py-0.5 rounded-full">NFT</span>
+</div>
+<p class="text-secondary-yellow/80 text-sm">Collect &amp; Support</p>
+</div>
+<div class="size-6 rounded-full border-2 border-secondary-yellow/50 peer-checked:border-secondary-yellow peer-checked:bg-secondary-yellow flex items-center justify-center">
+<div class="size-2.5 rounded-full bg-background-dark opacity-0 peer-checked:opacity-100"></div>
+</div>
+</div>
+<div class="text-2xl font-bold text-white mb-6">$65 <span class="text-sm font-normal text-white/40">/ person</span></div>
+<ul class="space-y-3 mb-6 relative z-10">
+<li class="flex items-center gap-3 text-sm text-gray-200">
+<span class="material-symbols-outlined text-secondary-yellow text-lg">diamond</span>
+                                            Priority Table Location
+                                        </li>
+<li class="flex items-center gap-3 text-sm text-gray-200">
+<span class="material-symbols-outlined text-secondary-yellow text-lg">token</span>
+                                            Digital Collectible (POAP)
+                                        </li>
+<li class="flex items-center gap-3 text-sm text-gray-200">
+<span class="material-symbols-outlined text-secondary-yellow text-lg">savings</span>
+                                            10% Lifetime Discount
+                                        </li>
+<li class="flex items-center gap-3 text-sm text-white font-medium bg-white/5 p-2 rounded-lg -ml-2">
+<span class="material-symbols-outlined text-primary text-lg">volunteer_activism</span>
+                                            Contributes to Instrument Fund
+                                        </li>
+</ul>
+</div>
+</label>
+</div>
+</section>
+</div>
+<!-- Right Column: Hablador Digital & Info -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- Hablador Digital Card -->
+<div class="bg-surface-dark border border-white/10 rounded-2xl p-6 sticky top-24">
+<div class="flex items-center gap-3 mb-4">
+<div class="size-10 rounded-full bg-white/5 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">campaign</span>
+</div>
+<h3 class="font-bold text-white text-lg">Hablador Digital</h3>
+</div>
+<p class="text-sm text-gray-300 mb-6 leading-relaxed">
+                            "The Sound of the Island" isn't just a venue; it's a circular economy.
+                        </p>
+<div class="space-y-4">
+<div class="bg-background-dark rounded-xl p-4 border border-white/5">
+<div class="flex justify-between items-center mb-2">
+<span class="text-xs font-bold text-white uppercase tracking-wider">Instrument Fund</span>
+<span class="text-xs font-bold text-primary">78% Goal Met</span>
+</div>
+<div class="w-full bg-white/10 rounded-full h-2 mb-3">
+<div class="bg-primary h-2 rounded-full" style="width: 78%"></div>
+</div>
+<p class="text-xs text-gray-400">
+                                    Your "True Fan" ticket directly funds the repair of local steel drums and percussion instruments.
+                                </p>
+</div>
+<div class="flex items-start gap-3 p-3 bg-secondary-yellow/5 border border-secondary-yellow/20 rounded-xl">
+<span class="material-symbols-outlined text-secondary-yellow mt-0.5">recycling</span>
+<div>
+<h4 class="text-sm font-bold text-white mb-1">Circular Impact</h4>
+<p class="text-xs text-gray-400">
+                                        We employ local artisans for repairs, keeping the culture and economy alive.
+                                    </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Help / Support -->
+<div class="rounded-xl p-6 border border-white/5 flex flex-col items-center text-center">
+<div class="size-10 rounded-full bg-white/5 flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-white/60">help_outline</span>
+</div>
+<h4 class="text-white font-medium mb-1">New to NFTs?</h4>
+<p class="text-xs text-gray-400 mb-3">Don't worry, we create a wallet for you automatically with your email.</p>
+<a class="text-primary text-xs font-bold hover:underline" href="#">Learn more about our tech</a>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Sticky Booking Summary Footer -->
+<div class="fixed bottom-0 left-0 w-full bg-[#0a160d] border-t border-white/10 p-4 z-40 backdrop-blur-xl bg-opacity-95">
+<div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-start">
+<div class="flex flex-col">
+<span class="text-xs text-gray-400 uppercase tracking-wide">Date</span>
+<span class="text-white font-bold text-sm">Thu, Nov 2</span>
+</div>
+<div class="h-8 w-px bg-white/10 hidden sm:block"></div>
+<div class="flex flex-col">
+<span class="text-xs text-gray-400 uppercase tracking-wide">Seat</span>
+<span class="text-white font-bold text-sm">Table 103</span>
+</div>
+<div class="h-8 w-px bg-white/10 hidden sm:block"></div>
+<div class="flex flex-col">
+<span class="text-xs text-gray-400 uppercase tracking-wide">Total</span>
+<span class="text-primary font-bold text-xl">$65.00</span>
+</div>
+</div>
+<button class="w-full sm:w-auto bg-primary hover:bg-white text-background-dark font-black py-3 px-8 rounded-xl transition-all hover:scale-105 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(19,236,73,0.3)]">
+<span>Reserve Spot</span>
+<span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</div>
+</div>
+</body></html>

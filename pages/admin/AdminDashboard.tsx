@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music } from 'lucide-react';
 import { ADMIN_STATS, PARTNER_RESERVATIONS, POPULAR_TOURS } from '../../constants';
 import { AppRoute } from '../../types';
 
@@ -94,7 +94,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
          </div>
 
          {/* Quick Actions */}
-         <div className="grid grid-cols-3 gap-3 pt-2">
+         <div className="grid grid-cols-4 gap-3 pt-2">
              <button 
                onClick={() => onNavigate(AppRoute.ADMIN_USERS)}
                className="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:bg-gray-750 flex flex-col items-center gap-2 text-center"
@@ -108,6 +108,14 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
              >
                <DollarSign size={24} className="text-green-500" />
                <span className="text-xs font-bold">Finanzas</span>
+             </button>
+             <button 
+               onClick={() => onNavigate(AppRoute.ADMIN_CARIBBEAN_NIGHT)}
+               className="bg-gradient-to-br from-orange-900 to-cyan-900 p-4 rounded-xl border border-orange-600 hover:border-orange-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"
+             >
+               <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
+               <Music size={24} className="text-orange-400" />
+               <span className="text-xs font-bold">Caribbean</span>
              </button>
              <button 
                onClick={() => onNavigate(AppRoute.ADMIN_BACKEND)}

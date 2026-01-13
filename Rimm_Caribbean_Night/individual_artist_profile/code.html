@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Individual Artist Profile - The Sound of the Island</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec49", // Neon Green
+                        "secondary": "#ff3b30", // Tropical Red
+                        "tertiary": "#ffcc00", // Tropical Yellow
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#05100a", // Deep Jungle Black
+                        "surface-dark": "#112215", // Lighter Jungle Green
+                        "border-dark": "#23482c",
+                        "text-light": "#92c9a0",
+                    },
+                    fontFamily: {
+                        "display": ["Be Vietnam Pro", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white overflow-x-hidden antialiased selection:bg-primary selection:text-background-dark">
+<header class="sticky top-0 z-50 w-full border-b border-border-dark bg-background-dark/95 backdrop-blur-md">
+<div class="layout-container flex h-full grow flex-col">
+<div class="px-6 md:px-12 xl:px-40 flex justify-center py-3">
+<div class="layout-content-container flex w-full max-w-[1200px] items-center justify-between">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-white cursor-pointer group">
+<div class="size-8 rounded-full bg-primary flex items-center justify-center text-background-dark">
+<span class="material-symbols-outlined text-xl font-bold">music_note</span>
+</div>
+<h2 class="text-white text-lg font-bold leading-tight tracking-tight group-hover:text-primary transition-colors">The Sound of the Island</h2>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-white text-sm font-medium hover:text-primary transition-colors" href="#">Showcase</a>
+<a class="text-white text-sm font-medium hover:text-primary transition-colors" href="#">Experiences</a>
+<a class="text-white text-sm font-medium hover:text-primary transition-colors" href="#">Marketplace</a>
+<a class="text-white text-sm font-medium hover:text-primary transition-colors" href="#">Community</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden lg:flex items-center justify-center size-10 rounded-full bg-surface-dark hover:bg-border-dark text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="flex min-w-[120px] cursor-pointer items-center justify-center rounded-xl h-10 px-4 bg-primary text-background-dark text-sm font-bold shadow-[0_0_15px_rgba(19,236,73,0.3)] hover:shadow-[0_0_25px_rgba(19,236,73,0.5)] transition-shadow">
+<span class="truncate">Connect Wallet</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</header>
+<main class="flex flex-col items-center w-full">
+<section class="w-full relative overflow-hidden">
+<div class="absolute inset-0 z-0">
+<div class="absolute inset-0 bg-cover bg-center opacity-30 blur-sm" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDvcPIm1LX-kLYznTPgIM2MX-9Bry2WiqFvP9jFGb1FVq502oXawjTy_32d-5hU2zsoQ7jy1dirf3M_G58YMtwNJTmLst_aldU3Tjtmhvg3H3QFXDtUilXYB7mplEa8g_9o-rJZo45Tp9l2W2xQS-EJ5slo8lYoShf0pVurd9yC8IMawQzODsRp9xBb7AGdf-w0b2blTorz6s9NAMtHi9U68MRSHDM_T61hzm2RW_qqScdY4LbvwmPhjD1A_KfvUIXNDVAEgwaur3ws');"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-background-dark/90 via-background-dark/80 to-background-dark"></div>
+</div>
+<div class="layout-content-container relative z-10 w-full max-w-[1200px] mx-auto px-6 md:px-12 xl:px-40 py-12 md:py-20">
+<div class="flex flex-col md:flex-row gap-10 items-center">
+<div class="w-full md:w-1/3 aspect-[3/4] rounded-2xl overflow-hidden border border-border-dark shadow-2xl relative group">
+<img alt="Kalea Profile" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcVr0smAwDRi-v4GVVOri5j9PZuqgtJXHTc6uA0cV1MF7-4bN3gqI7NBN_QpwQK-OAqhkBZWd8yp04eyCuoesI2VEfk62-AzAQxSzdMazRPOoO36BPU1CGmwFkU7JnXqSqVErMsQfOSzTud4qRQKgpQig7bvQwI079kMUPcV_SwLvL_AYBWWMWADcj6OvSdy0xcxBeQBMg5DJLSMh4BWBFPJ4PnGqJnb6WsLpLhYebvKlWuMMIGfonxHpTa7qBKG13yXlgbkObXma1"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-4 left-4 right-4">
+<div class="flex items-center gap-2 text-primary font-bold text-sm mb-1 bg-black/40 backdrop-blur-md w-fit px-3 py-1 rounded-full">
+<span class="material-symbols-outlined text-lg">verified</span> Verified Artist
+                            </div>
+</div>
+</div>
+<div class="w-full md:w-2/3 flex flex-col gap-6">
+<div class="animate-fade-in-up">
+<div class="flex flex-wrap gap-2 mb-4">
+<span class="px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-bold uppercase tracking-wider">Neo-Tropical</span>
+<span class="px-3 py-1 rounded-full bg-surface-dark text-white border border-border-dark text-xs font-bold uppercase tracking-wider">Afro-House</span>
+<span class="px-3 py-1 rounded-full bg-surface-dark text-white border border-border-dark text-xs font-bold uppercase tracking-wider">Tribal Tech</span>
+</div>
+<h1 class="text-6xl md:text-8xl font-black text-white tracking-tighter leading-none mb-4">
+                               KALEA
+                           </h1>
+<div class="flex items-center gap-2 text-text-light text-lg">
+<span class="material-symbols-outlined text-primary">location_on</span> Tulum, Mexico
+                           </div>
+</div>
+<p class="text-xl text-white/80 font-light max-w-2xl leading-relaxed">
+                           Weaving the primal rhythms of the jungle with futuristic synths. A sonic journey that transcends the dancefloor and enters the soul. Experience the Sound of the Island.
+                       </p>
+<div class="flex flex-wrap gap-4 pt-4">
+<a class="h-14 px-8 rounded-xl bg-primary hover:bg-[#0fd640] text-background-dark font-black text-lg flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(19,236,73,0.3)] hover:shadow-[0_0_30px_rgba(19,236,73,0.5)] transform hover:-translate-y-0.5" href="#services">
+<span>Book Now</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</a>
+<a class="h-14 px-8 rounded-xl bg-surface-dark border border-border-dark hover:border-primary text-white font-medium flex items-center gap-2 transition-all" href="#music">
+<span class="material-symbols-outlined">play_circle</span>
+<span>Latest Mix</span>
+</a>
+<div class="flex gap-2 ml-auto">
+<button class="size-14 rounded-xl border border-border-dark bg-surface-dark flex items-center justify-center text-text-light hover:text-white hover:border-primary/50 transition-colors"><i class="material-symbols-outlined">share</i></button>
+<button class="size-14 rounded-xl border border-border-dark bg-surface-dark flex items-center justify-center text-text-light hover:text-secondary hover:border-secondary/50 transition-colors"><i class="material-symbols-outlined">favorite</i></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="w-full bg-background-dark relative py-16 border-t border-border-dark" id="music">
+<div class="layout-content-container w-full max-w-[1200px] mx-auto px-6 md:px-12 xl:px-40">
+<div class="flex items-end justify-between mb-10">
+<div>
+<h2 class="text-3xl font-bold text-white mb-2 pl-2 border-l-4 border-primary">Songs &amp; Albums</h2>
+<p class="text-text-light mt-2">Latest sonic vibrations straight from the studio.</p>
+</div>
+<a class="text-primary text-sm font-bold flex items-center gap-1 hover:underline" href="#">View Discography <span class="material-symbols-outlined text-sm">arrow_outward</span></a>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<div class="lg:col-span-5 bg-surface-dark border border-border-dark rounded-2xl p-8 flex flex-col justify-between h-full min-h-[350px] relative overflow-hidden group shadow-xl">
+<div class="absolute inset-0 bg-cover bg-center opacity-30 group-hover:scale-105 transition-transform duration-700" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDV9-YWUHbzmeFKck9xmDfT43Qq4GThYZTPBl1Q2z5EBJyOk3HiduQLCokw9yf8dMqQEfwVJ4Anwh_ePmqA4AOpWYNQ4vPpMfr0va2i2U7bjx-vOZXiFGIA0gdu5bHeqcS6kOMWa9NQQTYU3f9zCmzmuaIgsX9KsFjVkj0GAtbrVMl-14cv8xSGdQIBpRTzUJe2JXz44xWcz7BB6iEr0DbZWTuyykXSMTykTRYebujqL0HGHOzvJMBNdrq3DAPA0icuOXNw23UWhUQ0');"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
+<div class="relative z-10 flex justify-between items-start">
+<span class="bg-secondary text-white text-xs font-bold px-3 py-1 rounded-lg shadow-lg shadow-secondary/20">NEW RELEASE</span>
+<button class="size-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"><span class="material-symbols-outlined">more_horiz</span></button>
+</div>
+<div class="relative z-10 mt-auto">
+<h3 class="text-3xl font-bold text-white mb-1">Jungle Whispers</h3>
+<p class="text-text-light text-sm mb-6">Kalea ft. The Elders</p>
+<div class="flex items-end gap-1 h-10 mb-6 opacity-80">
+<div class="w-1.5 bg-primary h-4 rounded-full"></div>
+<div class="w-1.5 bg-primary h-6 rounded-full"></div>
+<div class="w-1.5 bg-primary h-10 rounded-full"></div>
+<div class="w-1.5 bg-primary h-5 rounded-full"></div>
+<div class="w-1.5 bg-primary h-8 rounded-full"></div>
+<div class="w-1.5 bg-primary h-4 rounded-full"></div>
+<div class="w-1.5 bg-white/20 h-3 rounded-full"></div>
+<div class="w-1.5 bg-white/20 h-5 rounded-full"></div>
+<div class="w-1.5 bg-white/20 h-2 rounded-full"></div>
+<div class="w-1.5 bg-white/20 h-6 rounded-full"></div>
+<div class="w-1.5 bg-white/20 h-3 rounded-full"></div>
+<div class="w-1.5 bg-white/20 h-2 rounded-full"></div>
+</div>
+<div class="flex items-center gap-4">
+<button class="size-16 rounded-full bg-primary text-background-dark flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl">play_arrow</span>
+</button>
+<div class="flex-1">
+<div class="w-full bg-white/10 h-1.5 rounded-full cursor-pointer">
+<div class="w-1/2 bg-primary h-1.5 rounded-full shadow-[0_0_10px_rgba(19,236,73,0.5)]"></div>
+</div>
+<div class="flex justify-between text-xs text-white/50 mt-2 font-mono">
+<span>1:24</span>
+<span>4:10</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-6">
+<div class="group cursor-pointer">
+<div class="aspect-square rounded-2xl overflow-hidden border border-border-dark mb-4 relative shadow-lg">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBubvjSfha11E3Rz5YEg4HiR5hpUgyYQG6KjxR462OowMCIsC2qGiqvZ8b6l9u8pwx_NsH3SUu3OxnWjVVSz4WOCay244FkryE2Dc-0A8OYVJU8X4wbfA2BwPQiwd4Xj02bh6Oi3lakTS2_J9zosO_i0FpsiLKtLOrIRBRq4dX-FAzCDXlmnKj4aKbrDf0lHFYpnlFU4frB2LLh9FZUdHeXOLoXrDPtma1s1Qftp1GWiNk77pwBUEJf4QiA1nRK2jrO6OYjzcY4FS-0"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+<span class="material-symbols-outlined text-white text-5xl drop-shadow-lg">play_circle</span>
+</div>
+</div>
+<h4 class="text-white font-bold truncate text-lg group-hover:text-primary transition-colors">Neon Flora</h4>
+<p class="text-sm text-text-light">EP • 2023</p>
+</div>
+<div class="group cursor-pointer">
+<div class="aspect-square rounded-2xl overflow-hidden border border-border-dark mb-4 relative shadow-lg">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAY3R4PBkaZ2DmbbEcVMi2mHbKQhL9dp4axF_7fnzXz5CnW4-1FIsiedETFrCzknxXKxA22QbTqrY2x7j_3RcEl-tTo9vZ2f0QFxDGTLy9vN1S_HWqqGjd8pnw0fKHK3BdbOgRU3xf8pLZZE6tvoPj6qlBdxDlaHcp3hLCq5tHVNnWeLWU4u8YDF6XVTM3dTpu-Zrdmyv8KBZxVDMa84Ai3tnQUkejfJRaz0nAyaoEJToeMZRTabKEVTxNzOWdEe0-n7FI6xoWAIsdA"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+<span class="material-symbols-outlined text-white text-5xl drop-shadow-lg">play_circle</span>
+</div>
+</div>
+<h4 class="text-white font-bold truncate text-lg group-hover:text-primary transition-colors">Solar Flares</h4>
+<p class="text-sm text-text-light">Album • 2022</p>
+</div>
+<div class="group cursor-pointer">
+<div class="aspect-square rounded-2xl overflow-hidden border border-border-dark mb-4 relative shadow-lg">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBS_cqBFhOdiJT7lRw_ffENixkSMLJxQJL7cn8y_jOyepMsDvciXLuk_EtoAdO31WO1INLP2LTYG8XGRez7Xa5KYb5aUV4QJPdVFCDpa5v5LM1PYvFi7hkr5bi2GWSk_gdfw5QRNJd3XzPFVgtEY-yC5Ei4i0HLRkkfzvon8osnJJjwx0lm4p6a9sO2RFEYKdxCKNqcyl3rZsn9suY9okgDIwPd1OQeWugztucmnbBdPHEoMa897D08dN8XcyvqJaHt5j30CH5VsPoS"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+<span class="material-symbols-outlined text-white text-5xl drop-shadow-lg">play_circle</span>
+</div>
+</div>
+<h4 class="text-white font-bold truncate text-lg group-hover:text-primary transition-colors">Digital Palm</h4>
+<p class="text-sm text-text-light">Single • 2022</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="w-full bg-surface-dark border-t border-border-dark py-16 md:py-24">
+<div class="layout-content-container w-full max-w-[1200px] mx-auto px-6 md:px-12 xl:px-40">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+<div>
+<div class="flex items-center gap-3 mb-6">
+<div class="h-0.5 w-12 bg-primary"></div>
+<span class="text-primary font-bold uppercase tracking-widest text-sm">Biography</span>
+</div>
+<h2 class="text-4xl font-bold text-white mb-8">Born from the Sound of the Island</h2>
+<div class="space-y-6 text-white/80 leading-relaxed text-lg">
+<p>Kalea started her musical journey in the dense mangroves of the island's north shore. Influenced by traditional percussionists and the rising wave of electronic music, she forged a unique sound that bridges the gap between the organic and the digital.</p>
+<p>Her sets are not just performances; they are rituals. Designed to reconnect the audience with nature through frequency and rhythm.</p>
+</div>
+<div class="mt-10 flex gap-8">
+<div class="flex flex-col">
+<span class="text-4xl font-black text-white">500+</span>
+<span class="text-sm text-text-light font-medium uppercase tracking-wider mt-1">Live Shows</span>
+</div>
+<div class="w-px bg-white/10 h-16"></div>
+<div class="flex flex-col">
+<span class="text-4xl font-black text-white">12M</span>
+<span class="text-sm text-text-light font-medium uppercase tracking-wider mt-1">Streams</span>
+</div>
+<div class="w-px bg-white/10 h-16"></div>
+<div class="flex flex-col">
+<span class="text-4xl font-black text-white">4</span>
+<span class="text-sm text-text-light font-medium uppercase tracking-wider mt-1">Awards</span>
+</div>
+</div>
+</div>
+<div class="bg-background-dark border border-border-dark p-8 rounded-3xl relative shadow-2xl">
+<div class="absolute -top-6 -right-6 size-32 bg-primary/10 rounded-full blur-2xl"></div>
+<h3 class="text-xl font-bold text-white mb-8 flex items-center gap-3 relative z-10">
+<span class="material-symbols-outlined text-secondary text-3xl">local_fire_department</span>
+                            True Fan Facts
+                        </h3>
+<div class="space-y-4 relative z-10">
+<div class="flex items-start gap-4 p-5 rounded-2xl bg-surface-dark border border-border-dark/50 hover:border-primary/30 transition-colors group">
+<div class="size-12 rounded-full bg-tertiary/10 text-tertiary flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">psychology</span>
+</div>
+<div>
+<h4 class="text-white font-bold text-base">Meditative State</h4>
+<p class="text-sm text-text-light mt-1">Kalea meditates for 2 hours before every sunset set.</p>
+</div>
+</div>
+<div class="flex items-start gap-4 p-5 rounded-2xl bg-surface-dark border border-border-dark/50 hover:border-primary/30 transition-colors group">
+<div class="size-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">headphones</span>
+</div>
+<div>
+<h4 class="text-white font-bold text-base">Vinyl Only</h4>
+<p class="text-sm text-text-light mt-1">She learned on vinyl and still keeps a secret stash for special nights.</p>
+</div>
+</div>
+<div class="flex items-start gap-4 p-5 rounded-2xl bg-surface-dark border border-border-dark/50 hover:border-primary/30 transition-colors group">
+<div class="size-12 rounded-full bg-secondary/10 text-secondary flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">pets</span>
+</div>
+<div>
+<h4 class="text-white font-bold text-base">Jaguar Spirit</h4>
+<p class="text-sm text-text-light mt-1">Her spirit animal is the Jaguar, featured in her visuals.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="w-full bg-background-dark py-20 border-t border-border-dark relative" id="services">
+<div class="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="layout-content-container w-full max-w-[1200px] mx-auto px-6 md:px-12 xl:px-40 relative z-10">
+<div class="text-center max-w-2xl mx-auto mb-16">
+<h2 class="text-3xl md:text-5xl font-black text-white mb-6">Book a Live Experience</h2>
+<p class="text-text-light text-lg">Select the vibe you want to bring to your venue or event. Directly book through the Sound of the Island.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="group bg-surface-dark border border-border-dark rounded-2xl overflow-hidden hover:border-primary transition-all hover:shadow-[0_0_30px_rgba(19,236,73,0.15)] flex flex-col hover:-translate-y-2 duration-300">
+<div class="h-56 relative overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAxYYdzQw2ixVadMcHcq4nos-sMTgSKQWm4oxqXamjVJTB2LzjcyqOR5NPiIWZIQCX6KL8_ZPTgbTV3bTitAJgkv57A8tmak2-vc1xwhEh-4Fj-SWrY4X5Z2bnfZ0T9YL_V-UDRP5GJ8Eynztp-gyrzp5a6bwRP2S3domunoDIlMVYFZvYeAzmYJKatvODhh_I-F0zgYgZmsKqjpyANXBxQNVKDVmbrNlfTAoWUlKNpsrN9mVZzf2dHxYQccsSmR8gLPgtiugr69btg');"></div>
+<div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors"></div>
+<div class="absolute bottom-4 left-4">
+<h3 class="text-2xl font-bold text-white drop-shadow-md">Caribbean Night</h3>
+</div>
+</div>
+<div class="p-8 flex flex-col grow">
+<p class="text-sm text-text-light mb-6 leading-relaxed">High energy festival set featuring live percussionists and tropical dancers. Best for clubs and festivals.</p>
+<ul class="text-xs text-white/80 space-y-3 mb-8">
+<li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm bg-primary/10 rounded-full p-1">check</span> 2-Hour Set</li>
+<li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm bg-primary/10 rounded-full p-1">check</span> Live Drummers Included</li>
+</ul>
+<button class="mt-auto w-full py-4 rounded-xl border border-primary text-primary font-bold hover:bg-primary hover:text-background-dark transition-colors uppercase tracking-wide text-sm">Request Quote</button>
+</div>
+</div>
+<div class="group bg-surface-dark border border-border-dark rounded-2xl overflow-hidden hover:border-primary transition-all hover:shadow-[0_0_40px_rgba(19,236,73,0.2)] flex flex-col relative hover:-translate-y-2 duration-300 scale-105 z-10">
+<div class="absolute top-0 right-0 bg-secondary text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl z-10 shadow-lg">POPULAR</div>
+<div class="h-56 relative overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB_OLyAkDNTF-wor6LINsPjlX3unYOtkhaJXcNpm0yYwQO6KImPBdJ8CO7gEyIwx8MPigQ1Vg3pzONRLavtSpuxzXDy6Am6rsXlcGdp3Oat6O3YsEr_iHkjaD2YlNaBX2w3riU1R4OXSb88rDVYI2cCGpFg8PbNtl_AtV3j155voivLv-kRFvsfS-sE-nFMozlQVjpVLPCc0X9wpF6cjzLUM4PIDKtWl3a5iIZ74GaAdQW8JxdwTrNGL844pNtZK3tSRQnDvv5HyFkn');"></div>
+<div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors"></div>
+<div class="absolute bottom-4 left-4">
+<h3 class="text-2xl font-bold text-white drop-shadow-md">Private Ritual</h3>
+</div>
+</div>
+<div class="p-8 flex flex-col grow">
+<p class="text-sm text-text-light mb-6 leading-relaxed">Intimate deep house journey curated for private villas, yachts, or exclusive gatherings.</p>
+<ul class="text-xs text-white/80 space-y-3 mb-8">
+<li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm bg-primary/10 rounded-full p-1">check</span> Sunset or Sunrise</li>
+<li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm bg-primary/10 rounded-full p-1">check</span> Custom Playlist</li>
+</ul>
+<button class="mt-auto w-full py-4 rounded-xl bg-primary text-background-dark font-black hover:bg-[#0fd640] transition-colors shadow-lg shadow-primary/20 uppercase tracking-wide text-sm">Book Now</button>
+</div>
+</div>
+<div class="group bg-surface-dark border border-border-dark rounded-2xl overflow-hidden hover:border-primary transition-all hover:shadow-[0_0_30px_rgba(19,236,73,0.15)] flex flex-col hover:-translate-y-2 duration-300">
+<div class="h-56 relative overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB0SaUowg0FpsEUS5okCPz2GQxsk6kJ0plPssGC0eC1fQTBLPvzCmvVUJ_Zgn-Vu_gcA9b5jzR2ph7WBxQ6wcEsQAxasq0uPBzOyXYW5lBGN7AXlBKSEWNwanyR3zqJihnyhgyHsjXe1vsj8hPirMeCRUZhB9jX0pJLJKn-vTGsF1RAeYqglNc2c6nxz3HZDf2jW2-XxI0WkDbfFoG3i_LRoOtzmfueMzxIco7GOwPxel3amExjL6x8IbzrVwBI3ReN-I8-3iGVOesp');"></div>
+<div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors"></div>
+<div class="absolute bottom-4 left-4">
+<h3 class="text-2xl font-bold text-white drop-shadow-md">Corporate &amp; Brand</h3>
+</div>
+</div>
+<div class="p-8 flex flex-col grow">
+<p class="text-sm text-text-light mb-6 leading-relaxed">Sophisticated sonic backdrops for product launches, networking events, and fashion shows.</p>
+<ul class="text-xs text-white/80 space-y-3 mb-8">
+<li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm bg-primary/10 rounded-full p-1">check</span> Background or Main Stage</li>
+<li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm bg-primary/10 rounded-full p-1">check</span> Brand-Aligned Vibe</li>
+</ul>
+<button class="mt-auto w-full py-4 rounded-xl border border-primary text-primary font-bold hover:bg-primary hover:text-background-dark transition-colors uppercase tracking-wide text-sm">Request Quote</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="w-full px-6 md:px-12 xl:px-40 py-16 bg-surface-dark/30 border-t border-border-dark">
+<div class="layout-content-container flex flex-col w-full max-w-[1200px] mx-auto">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="text-2xl font-bold text-white mb-2">Exclusive Fan Collectibles</h2>
+<p class="text-sm text-text-light">Own a piece of the experience with these limited edition NFTs.</p>
+</div>
+<a class="text-primary text-sm hover:underline font-medium" href="#">View Marketplace</a>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="group bg-surface-dark rounded-xl border border-border-dark overflow-hidden hover:border-primary/50 transition-all hover:-translate-y-1">
+<div class="aspect-square relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBubvjSfha11E3Rz5YEg4HiR5hpUgyYQG6KjxR462OowMCIsC2qGiqvZ8b6l9u8pwx_NsH3SUu3OxnWjVVSz4WOCay244FkryE2Dc-0A8OYVJU8X4wbfA2BwPQiwd4Xj02bh6Oi3lakTS2_J9zosO_i0FpsiLKtLOrIRBRq4dX-FAzCDXlmnKj4aKbrDf0lHFYpnlFU4frB2LLh9FZUdHeXOLoXrDPtma1s1Qftp1GWiNk77pwBUEJf4QiA1nRK2jrO6OYjzcY4FS-0"/>
+<div class="absolute top-2 right-2 bg-black/60 backdrop-blur px-2 py-1 rounded-lg text-xs text-primary font-mono border border-white/10">0.45 ETH</div>
+</div>
+<div class="p-4">
+<h4 class="font-bold text-white text-lg">Jungle Pass</h4>
+<button class="mt-3 w-full text-xs bg-white/5 hover:bg-white/10 text-white py-2 rounded-lg transition-colors border border-white/10">Bid Now</button>
+</div>
+</div>
+<div class="group bg-surface-dark rounded-xl border border-border-dark overflow-hidden hover:border-primary/50 transition-all hover:-translate-y-1">
+<div class="aspect-square relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAY3R4PBkaZ2DmbbEcVMi2mHbKQhL9dp4axF_7fnzXz5CnW4-1FIsiedETFrCzknxXKxA22QbTqrY2x7j_3RcEl-tTo9vZ2f0QFxDGTLy9vN1S_HWqqGjd8pnw0fKHK3BdbOgRU3xf8pLZZE6tvoPj6qlBdxDlaHcp3hLCq5tHVNnWeLWU4u8YDF6XVTM3dTpu-Zrdmyv8KBZxVDMa84Ai3tnQUkejfJRaz0nAyaoEJToeMZRTabKEVTxNzOWdEe0-n7FI6xoWAIsdA"/>
+<div class="absolute top-2 right-2 bg-black/60 backdrop-blur px-2 py-1 rounded-lg text-xs text-primary font-mono border border-white/10">0.12 ETH</div>
+</div>
+<div class="p-4">
+<h4 class="font-bold text-white text-lg">Sonic Wave</h4>
+<button class="mt-3 w-full text-xs bg-white/5 hover:bg-white/10 text-white py-2 rounded-lg transition-colors border border-white/10">Bid Now</button>
+</div>
+</div>
+<div class="group bg-surface-dark rounded-xl border border-border-dark overflow-hidden hover:border-primary/50 transition-all hover:-translate-y-1">
+<div class="aspect-square relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBS_cqBFhOdiJT7lRw_ffENixkSMLJxQJL7cn8y_jOyepMsDvciXLuk_EtoAdO31WO1INLP2LTYG8XGRez7Xa5KYb5aUV4QJPdVFCDpa5v5LM1PYvFi7hkr5bi2GWSk_gdfw5QRNJd3XzPFVgtEY-yC5Ei4i0HLRkkfzvon8osnJJjwx0lm4p6a9sO2RFEYKdxCKNqcyl3rZsn9suY9okgDIwPd1OQeWugztucmnbBdPHEoMa897D08dN8XcyvqJaHt5j30CH5VsPoS"/>
+<div class="absolute top-2 right-2 bg-black/60 backdrop-blur px-2 py-1 rounded-lg text-xs text-primary font-mono border border-white/10">0.80 ETH</div>
+</div>
+<div class="p-4">
+<h4 class="font-bold text-white text-lg">Golden Palm</h4>
+<button class="mt-3 w-full text-xs bg-white/5 hover:bg-white/10 text-white py-2 rounded-lg transition-colors border border-white/10">Bid Now</button>
+</div>
+</div>
+<a class="group flex flex-col items-center justify-center border border-dashed border-border-dark rounded-xl text-text-light hover:text-primary hover:border-primary/50 transition-colors bg-surface-dark/50" href="#">
+<div class="size-12 rounded-full bg-surface-dark border border-border-dark flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl">grid_view</span>
+</div>
+<span class="font-bold">View Collection</span>
+</a>
+</div>
+</div>
+</section>
+</main>
+<footer class="border-t border-border-dark bg-background-dark py-12 px-6">
+<div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-2 text-white">
+<div class="size-6 rounded-full bg-primary flex items-center justify-center text-background-dark">
+<span class="material-symbols-outlined text-sm font-bold">music_note</span>
+</div>
+<span class="font-bold">The Sound of the Island</span>
+</div>
+<div class="text-text-light text-sm">
+            © 2024 The Sound of the Island. All rights reserved.
+        </div>
+<div class="flex gap-4">
+<a class="text-text-light hover:text-white" href="#"><span class="material-symbols-outlined">public</span></a>
+<a class="text-text-light hover:text-white" href="#"><span class="material-symbols-outlined">alternate_email</span></a>
+</div>
+</div>
+</footer>
+
+</body></html>

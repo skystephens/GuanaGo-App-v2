@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Sound of the Island - Artist Showcase</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec49", // Neon Green
+                        "secondary": "#FFCC00", // Yellow for Legendary
+                        "accent-red": "#FF3B30", // Red for Rare/Hot
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#112215", // Deep Jungle Green
+                        "surface-dark": "#193320", // Card Background
+                        "surface-darker": "#0D1810", // Darker surface
+                    },
+                    fontFamily: {
+                        "display": ["Be Vietnam Pro", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "full": "9999px"},
+                    backgroundImage: {
+                        'neo-tropical': "linear-gradient(to bottom, rgba(17, 34, 21, 0.8), rgba(17, 34, 21, 1)), url('https://images.unsplash.com/photo-1565103405469-8dd3d105b4b1?q=80&w=2670&auto=format&fit=crop')",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom Scrollbar for Neo-Tropical Vibe */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #112215;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #23482c;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #13ec49;
+        }
+        .text-glow {
+            text-shadow: 0 0 20px rgba(19, 236, 73, 0.3);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px -10px rgba(19, 236, 73, 0.15);
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white overflow-x-hidden antialiased">
+<!-- Top Navigation -->
+<header class="fixed top-0 z-50 w-full border-b border-[#23482c] bg-[#112215]/90 backdrop-blur-md">
+<div class="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
+<div class="flex items-center gap-3">
+<div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+<span class="material-symbols-outlined text-3xl">forest</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight text-white">The Sound of the Island</h1>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium text-white hover:text-primary transition-colors" href="#">Marketplace</a>
+<a class="text-sm font-medium text-white hover:text-primary transition-colors" href="#">Experiences</a>
+<a class="text-sm font-medium text-white hover:text-primary transition-colors" href="#">Community</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-background-dark hover:bg-[#34f063] transition-colors">
+<span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+<span>Connect</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Wrapper -->
+<main class="relative flex min-h-screen w-full flex-col pt-20">
+<!-- Hero Section -->
+<section class="relative flex min-h-[600px] flex-col items-center justify-center overflow-hidden px-6 py-16 text-center lg:py-24">
+<!-- Background Image -->
+<div class="absolute inset-0 z-0 bg-cover bg-center" data-alt="Abstract tropical neon jungle background with dark green leaves and bright lights" style="background-image: linear-gradient(rgba(17, 34, 21, 0.4) 0%, rgba(17, 34, 21, 1) 100%), url('https://lh3.googleusercontent.com/aida-public/AB6AXuDWrCsAHsy33_HEqMNuGc2MJXNwJhURKD3X_nuI_x9QiRVaTPzYK9439h8jiVLGMUwV2MklBvfHm7anw9LUrZN2lSbAV-UuPheJhHUUgxQyOxOfBqyoATDTrMeNGhgXkPQiv0_Cmor6lTIGz4SPnhYBYkkGvqUVgqO7JbhHRIhB5uJ2wbey3MAaySJA6Ho8p4gc1IVlOAjtZZ4_mu-in7z0T3yKlOD08aJ8yCiANX3hpqfeeYCGk3A_OWZ8D-FLJkjUedIcTqbTA7mp');">
+</div>
+<div class="relative z-10 mx-auto max-w-4xl flex flex-col items-center gap-6">
+<div class="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 backdrop-blur-sm">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<span class="text-xs font-bold uppercase tracking-wider text-primary">Live Season 3</span>
+</div>
+<h2 class="text-5xl font-black leading-tight tracking-tight sm:text-6xl md:text-7xl text-glow">
+                    Discover the Pulse <br/> of the Island
+                </h2>
+<p class="max-w-2xl text-lg text-gray-300 md:text-xl">
+                    Collect Moments, Not Tickets. Immerse yourself in the neo-tropical soundscape where nature meets technology.
+                </p>
+<div class="flex flex-wrap items-center justify-center gap-4 pt-4">
+<button class="h-12 min-w-[160px] rounded-xl bg-primary px-6 text-base font-bold text-background-dark hover:bg-[#34f063] transition-all">
+                        Explore Showcase
+                    </button>
+<button class="flex h-12 min-w-[160px] items-center justify-center gap-2 rounded-xl border border-[#23482c] bg-surface-dark px-6 text-base font-bold text-white hover:bg-[#23482c] transition-all">
+<span class="material-symbols-outlined text-[20px]">play_circle</span>
+                        Watch Trailer
+                    </button>
+</div>
+</div>
+</section>
+<!-- Filter & Search Section -->
+<section class="sticky top-20 z-40 border-b border-[#23482c] bg-[#112215]/95 backdrop-blur-md">
+<div class="mx-auto max-w-7xl px-6 py-4">
+<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+<div class="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+<!-- Active Filter -->
+<button class="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-background-dark">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+                            All Genres
+                        </button>
+<!-- Inactive Filters -->
+<button class="group flex h-10 shrink-0 items-center gap-2 rounded-xl border border-[#23482c] bg-transparent px-4 text-sm font-medium text-white hover:bg-[#23482c] transition-colors">
+<span class="material-symbols-outlined text-[20px] text-gray-400 group-hover:text-white">music_note</span>
+                            Afro-Beat
+                        </button>
+<button class="group flex h-10 shrink-0 items-center gap-2 rounded-xl border border-[#23482c] bg-transparent px-4 text-sm font-medium text-white hover:bg-[#23482c] transition-colors">
+<span class="material-symbols-outlined text-[20px] text-gray-400 group-hover:text-white">graphic_eq</span>
+                            Synth-Wave
+                        </button>
+<button class="group flex h-10 shrink-0 items-center gap-2 rounded-xl border border-[#23482c] bg-transparent px-4 text-sm font-medium text-white hover:bg-[#23482c] transition-colors">
+<span class="material-symbols-outlined text-[20px] text-secondary">diamond</span>
+                            Rare NFTs
+                        </button>
+</div>
+<div class="relative w-full md:w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+<input class="h-10 w-full rounded-xl border-none bg-[#193320] pl-10 pr-4 text-sm text-white placeholder-gray-400 focus:ring-2 focus:ring-primary" placeholder="Search artists..." type="text"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Featured Artist (Hero Card) -->
+<section class="mx-auto max-w-7xl px-6 pt-12 pb-6">
+<div class="flex items-center gap-2 pb-6">
+<span class="material-symbols-outlined text-secondary">verified</span>
+<h2 class="text-2xl font-bold tracking-tight text-white">Featured Artist of the Week</h2>
+</div>
+<div class="@container">
+<div class="group relative overflow-hidden rounded-2xl bg-surface-dark border border-[#23482c] hover:border-primary/50 transition-all duration-300">
+<div class="grid gap-0 lg:grid-cols-2">
+<!-- Image/Video Area -->
+<div class="relative h-[300px] lg:h-auto min-h-[400px] overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Futuristic afro-futurism female artist portrait with neon face paint" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBJ2sfctqLUh3Oao6vITs-PQbM7U-v3SIX0QNMrM1ITRQn4eXc7BWzRZMn5H1304aL_5S3_pCvDYEA3prgYbszZhBbPYNCxZ81lw8ORPfCexcavUD8zEiTd7wEoQYiwv2owfvWZsBtyHFDF-qSXN_F3Uvau87W9ofa1yh5XDHaixyQifylRBsjrLlwwlf3Wt6AhOGeLjEFQm9J2sk-XHqo9M48Cuf7-EK1LeTGnL-zerLJ95fNoisMcvk3PRTED41URU9la3-a3Lehz');">
+</div>
+<!-- Live Badge -->
+<div class="absolute top-4 left-4 flex items-center gap-2 rounded-lg bg-accent-red/90 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
+<span class="material-symbols-outlined text-[16px]">podcasts</span>
+                                LIVE NOW
+                            </div>
+<!-- Trailer Play Overlay -->
+<div class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-background-dark shadow-[0_0_30px_rgba(19,236,73,0.5)] transform scale-90 group-hover:scale-100 transition-transform">
+<span class="material-symbols-outlined text-4xl ml-1">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Content Area -->
+<div class="flex flex-col justify-center p-8 lg:p-12 relative">
+<!-- Rarity BG Texture -->
+<div class="absolute right-0 top-0 p-32 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[200px] text-white">star</span>
+</div>
+<div class="relative z-10 space-y-6">
+<div class="space-y-2">
+<div class="flex items-center gap-3">
+<span class="rounded-md bg-secondary/20 px-2 py-1 text-xs font-bold text-secondary border border-secondary/20">LEGENDARY RARITY</span>
+<span class="rounded-md bg-white/10 px-2 py-1 text-xs font-medium text-white">Afro-Futurism</span>
+</div>
+<h3 class="text-4xl font-black tracking-tight text-white lg:text-5xl">Solaris Vibe</h3>
+<p class="text-gray-400 max-w-md">
+                                        Merging traditional rhythms with quantum synthesizer waves. Owners of this NFT get backstage VR access.
+                                    </p>
+</div>
+<div class="flex flex-wrap gap-4 pt-2">
+<button class="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-background-dark hover:bg-[#34f063] transition-colors shadow-[0_4px_14px_rgba(19,236,73,0.3)]">
+<span class="material-symbols-outlined">smart_toy</span>
+                                        Ask the Artist (AI Bio)
+                                    </button>
+<button class="flex items-center gap-2 rounded-xl border border-[#23482c] bg-[#112215] px-6 py-3 text-sm font-bold text-white hover:bg-[#23482c] transition-colors">
+<span class="material-symbols-outlined">local_activity</span>
+                                        View Pass Options
+                                    </button>
+</div>
+<div class="flex items-center gap-4 border-t border-white/10 pt-6">
+<div class="flex -space-x-3">
+<img alt="User avatar" class="h-8 w-8 rounded-full border-2 border-[#193320] object-cover" data-alt="User avatar 1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJXD0FTsyfVJaboakF-wQL1uiX3yXNPyvh_8YDPfh5ZJ9J00eIJ5MTKQrcqIHuuoo9vgTv2hxzztUZd5e3IDku4M_bW51f7bcGDieA4a77t8MpdzFnN9pGxHp9gUGiWYr6GmZudH7Aiqi3kRhDQIQK8_gBnpNWrRugJqTER6vEK4upL0gZnCV8GYlthSLKn3XwGCPrKq2xfNyRT0Ni8uMdRUjkD1AD-GIGRJ4m1vTpfiq6WUVl6gqUAEW08onoIk5zpQZl1YhCQf9m"/>
+<img alt="User avatar" class="h-8 w-8 rounded-full border-2 border-[#193320] object-cover" data-alt="User avatar 2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCN47uFow6Mb0P88DLHFPC6mOotgH4DaR0Yy_g9zJPkhA8_svd1S-ZpX1M2tzZS8eZGD3DSrhgeyXMuxcVwEs_nJ3lll4iXGCsSVXUflysYvXWOw27Na3zVkgyEtUfXAmgdl86qImAIKtFfLNn5yjefhMTHW2tkUiuMturq9gV1Fc_SLn1i65SkqPae6Gs-PQMWms0UwA7nHNYeonbMyIs-5JOQrk66cSUTOwoV99X1JRW6Bz5ARH4n7LBeUD72mGnXKerLCd1onbjJ"/>
+<img alt="User avatar" class="h-8 w-8 rounded-full border-2 border-[#193320] object-cover" data-alt="User avatar 3" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0Mq4o2I5ZCxnOuB8LIpvXvii0HkoR-bzdCqn4nHOAVybGu1_R0jriEWd4hARc1agB0nGd_nEgBAJ6xkadjKNhnog9YAV-Z5mY12cbd2D_vdf6kDa2joUFcM0Lkf3OeaKuPLveF5XhRTpGt8v4_xhzLM42JAftz5oKErO6xXS6Oj9iwDuYnnjDMgB3bnCoTCZCoZtuIgMtL8ytNtNk6GVba5PLr7wDmEg3y3-wtp6kSOzkE7jsYnke6LhkS_Gcr2FTIE0Bshwjvaj9"/>
+</div>
+<span class="text-xs font-medium text-gray-400">1.2k collectors joined</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Artist Grid Section -->
+<section class="mx-auto max-w-7xl px-6 py-12">
+<div class="mb-8 flex items-end justify-between">
+<div>
+<h2 class="text-2xl font-bold tracking-tight text-white">Trending on the Island</h2>
+<p class="mt-1 text-sm text-gray-400">Curated sounds from the neo-tropical underground.</p>
+</div>
+<button class="hidden text-sm font-medium text-primary hover:text-white md:block">View All Artists -&gt;</button>
+</div>
+<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+<!-- Card 1: Rare -->
+<article class="group card-hover relative flex flex-col overflow-hidden rounded-xl bg-surface-dark border border-[#23482c]">
+<div class="relative aspect-[4/5] overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="DJ wearing cyberpunk glasses surrounded by palm leaves" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA3cFujcV12R1OX4k0Kgxtl0Tky9W13BhHSozJf7AYO41f3px0W78IuSHvGCM8JW1PCYr-Xku4McDCvkl8q11ipBDQMtz9tDKF8ZI_N4QeSIKPNfRxzXv4-dviJDFwlzCkfkKWFosNgEnaDWczigEhHyHXB528lCd0qv1MLJDEvNdtCIpydIjMThSY6gQOsdgPgahkpbuRaLbIK6e1trHVxDTjw3_RfINB0HysI0Kzax3t9jMGievxSJ_3ONQkSlJKMSvuwHeVqc5kj');">
+</div>
+<div class="absolute top-3 right-3 rounded bg-accent-red/20 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-accent-red border border-accent-red/20 backdrop-blur-md">
+                            Rare Rarity
+                        </div>
+<div class="absolute bottom-3 right-3">
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md hover:bg-primary hover:text-background-dark transition-all">
+<span class="material-symbols-outlined text-[24px]">play_arrow</span>
+</button>
+</div>
+</div>
+<div class="flex flex-1 flex-col p-4">
+<div class="mb-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Synth-Wave</div>
+<h3 class="mb-1 text-lg font-bold text-white">Neon Palms</h3>
+<p class="mb-4 text-xs text-gray-400 line-clamp-2">Transporting you to a retro-future beach party. Experience the digital breeze.</p>
+<div class="mt-auto pt-3 border-t border-white/5">
+<button class="w-full flex items-center justify-center gap-2 rounded-lg bg-[#23482c] hover:bg-[#2c5a37] py-2 text-xs font-bold text-white transition-colors">
+<span class="material-symbols-outlined text-[16px]">smart_toy</span>
+                                Ask AI Bio
+                            </button>
+</div>
+</div>
+</article>
+<!-- Card 2: Common -->
+<article class="group card-hover relative flex flex-col overflow-hidden rounded-xl bg-surface-dark border border-[#23482c]">
+<div class="relative aspect-[4/5] overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="Reggae artist playing a holographic guitar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBxhEe2S29Al0KVyCQbclz_keY9UIvYF_zjYJBB1npE-5wmQvAaABrD-gEJOGOhk_FY1NiNmWN_kwvG_KSNeWWCAcIgEg2UZMERpAO5LCOpxRC_FoImgf6rJFiGSAn4TgGuQphz8YIqIHrfyNqX_2oY1Q9lscBFvLsBpVeLkRb6luI_yPpnJzlcuTn9atCWfzppg7Q5N5E9lcLN2Ez6KrQ-_GJ49ldrK9DdJa8pEhivi7_0Y4slLlZSdJ3CjbI9WVDWZMyZuHIMyae9');">
+</div>
+<div class="absolute top-3 right-3 rounded bg-primary/20 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-primary border border-primary/20 backdrop-blur-md">
+                            Common
+                        </div>
+<div class="absolute bottom-3 right-3">
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md hover:bg-primary hover:text-background-dark transition-all">
+<span class="material-symbols-outlined text-[24px]">play_arrow</span>
+</button>
+</div>
+</div>
+<div class="flex flex-1 flex-col p-4">
+<div class="mb-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Reggae-Tech</div>
+<h3 class="mb-1 text-lg font-bold text-white">Zion Digital</h3>
+<p class="mb-4 text-xs text-gray-400 line-clamp-2">Roots reggae infused with deep techno beats. A spiritual journey through code.</p>
+<div class="mt-auto pt-3 border-t border-white/5">
+<button class="w-full flex items-center justify-center gap-2 rounded-lg bg-[#23482c] hover:bg-[#2c5a37] py-2 text-xs font-bold text-white transition-colors">
+<span class="material-symbols-outlined text-[16px]">smart_toy</span>
+                                Ask AI Bio
+                            </button>
+</div>
+</div>
+</article>
+<!-- Card 3: Legendary -->
+<article class="group card-hover relative flex flex-col overflow-hidden rounded-xl bg-surface-dark border border-[#23482c] shadow-[0_0_15px_rgba(255,204,0,0.1)]">
+<div class="relative aspect-[4/5] overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="Abstract digital art representation of sound waves in gold and black" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDhY28JCawKHACKggfxZ7_23xCBud2XSkhagBRnuYdl6j02jCvrcq9wxIa1_wa6vglISYbnWffQ7B6ZRrVvQbVfoiZ6rKefsaXKmpCpm1CcuwUzbuTqdvh0ydKCo6xDO5p6uOHTSsrK_lHjhtd2r8G9tnAddPz60Lj5N13xAy89zcpbR8UaW0cEL3wzb0xiM27uY3eHpKeit-XbxhYpuF1GUqbdEF7EwWsIqQU6--zMtPKQbNn-xldCziPPFj4REXFph7vHITowHEGs');">
+</div>
+<div class="absolute top-3 right-3 rounded bg-secondary/20 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-secondary border border-secondary/20 backdrop-blur-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">star</span> Legendary
+                        </div>
+<div class="absolute bottom-3 right-3">
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md hover:bg-primary hover:text-background-dark transition-all">
+<span class="material-symbols-outlined text-[24px]">play_arrow</span>
+</button>
+</div>
+</div>
+<div class="flex flex-1 flex-col p-4 relative overflow-hidden">
+<!-- Shine effect for legendary -->
+<div class="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-secondary/10 blur-xl"></div>
+<div class="mb-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Experimental</div>
+<h3 class="mb-1 text-lg font-bold text-white">The Void</h3>
+<p class="mb-4 text-xs text-gray-400 line-clamp-2">Pure audio-visual silence and noise. Only 10 NFTs available worldwide.</p>
+<div class="mt-auto pt-3 border-t border-white/5">
+<button class="w-full flex items-center justify-center gap-2 rounded-lg bg-[#23482c] hover:bg-[#2c5a37] py-2 text-xs font-bold text-white transition-colors">
+<span class="material-symbols-outlined text-[16px]">smart_toy</span>
+                                Ask AI Bio
+                            </button>
+</div>
+</div>
+</article>
+<!-- Card 4: Rare -->
+<article class="group card-hover relative flex flex-col overflow-hidden rounded-xl bg-surface-dark border border-[#23482c]">
+<div class="relative aspect-[4/5] overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="Drummer with glowing neon drumsticks" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC02TbC2BMqMChFlEDhYL-r0AsBolkfn1te5ZoUZBfOumLWuvy7RICcj00Tj7k23tY31NDlLtoAGiEz6qzklqh9qN7aOheRKxcrtoxebplkvHepADQOq6VyK3pFkcdc9DxWphr1SM2TWbluUq3Ad81nBOaL220i4RtmbtjE3d6lp5ertZR9UK6Yye1mKMK_ss0gzq4IcNc8zTSKMUHBq0P5a61NxtXyuWbEqD64VybLP7LjFjJ748QAlguUdWqV9ZQkn3a9ijMCrG2V');">
+</div>
+<div class="absolute top-3 right-3 rounded bg-accent-red/20 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-accent-red border border-accent-red/20 backdrop-blur-md">
+                            Rare Rarity
+                        </div>
+<div class="absolute bottom-3 right-3">
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md hover:bg-primary hover:text-background-dark transition-all">
+<span class="material-symbols-outlined text-[24px]">play_arrow</span>
+</button>
+</div>
+</div>
+<div class="flex flex-1 flex-col p-4">
+<div class="mb-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Tribal House</div>
+<h3 class="mb-1 text-lg font-bold text-white">Beat Hunter</h3>
+<p class="mb-4 text-xs text-gray-400 line-clamp-2">Driving tribal rhythms for the modern jungle. Connect with the primal beat.</p>
+<div class="mt-auto pt-3 border-t border-white/5">
+<button class="w-full flex items-center justify-center gap-2 rounded-lg bg-[#23482c] hover:bg-[#2c5a37] py-2 text-xs font-bold text-white transition-colors">
+<span class="material-symbols-outlined text-[16px]">smart_toy</span>
+                                Ask AI Bio
+                            </button>
+</div>
+</div>
+</article>
+</div>
+<div class="mt-12 flex justify-center md:hidden">
+<button class="rounded-xl border border-[#23482c] bg-surface-dark px-6 py-3 text-sm font-bold text-white hover:bg-[#23482c]">
+                    View All Artists
+                </button>
+</div>
+</section>
+<!-- Newsletter / CTA Section -->
+<section class="mx-auto max-w-7xl px-6 py-12">
+<div class="rounded-3xl bg-gradient-to-r from-[#193320] to-[#112215] p-8 md:p-16 border border-[#23482c] relative overflow-hidden">
+<!-- Decorative Elements -->
+<div class="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-primary/5 blur-3xl"></div>
+<div class="absolute bottom-0 left-0 -ml-16 -mb-16 h-64 w-64 rounded-full bg-secondary/5 blur-3xl"></div>
+<div class="relative z-10 mx-auto max-w-2xl text-center">
+<h2 class="text-3xl font-black text-white md:text-4xl">Never Miss a Drop</h2>
+<p class="mt-4 text-gray-400">Join the Neo-Tropical community. Get notified about exclusive NFT drops, secret shows, and artist Q&amp;As.</p>
+<form class="mt-8 flex flex-col gap-3 sm:flex-row">
+<input class="flex-1 rounded-xl border border-[#23482c] bg-[#0d1810] px-5 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Enter your email" type="email"/>
+<button class="rounded-xl bg-white px-8 py-3 font-bold text-background-dark hover:bg-gray-100 transition-colors" type="button">
+                            Subscribe
+                        </button>
+</form>
+<p class="mt-4 text-xs text-gray-500">No spam. Only jungle vibes.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="border-t border-[#23482c] bg-[#0d1810] py-12 text-sm">
+<div class="mx-auto max-w-7xl px-6 lg:px-8">
+<div class="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
+<div class="col-span-2 lg:col-span-2">
+<div class="flex items-center gap-2 mb-4">
+<div class="flex size-8 items-center justify-center rounded bg-primary/10 text-primary">
+<span class="material-symbols-outlined">forest</span>
+</div>
+<span class="text-lg font-bold text-white">The Sound of the Island</span>
+</div>
+<p class="text-gray-400 max-w-xs">
+                        A decentralized marketplace for neo-tropical experiences. Connecting artists and fans through immersive technology.
+                    </p>
+</div>
+<div>
+<h3 class="font-bold text-white mb-4">Discover</h3>
+<ul class="space-y-3 text-gray-400">
+<li><a class="hover:text-primary" href="#">Marketplace</a></li>
+<li><a class="hover:text-primary" href="#">Trending Artists</a></li>
+<li><a class="hover:text-primary" href="#">Live Events</a></li>
+<li><a class="hover:text-primary" href="#">NFT Gallery</a></li>
+</ul>
+</div>
+<div>
+<h3 class="font-bold text-white mb-4">Community</h3>
+<ul class="space-y-3 text-gray-400">
+<li><a class="hover:text-primary" href="#">Discord Server</a></li>
+<li><a class="hover:text-primary" href="#">Twitter / X</a></li>
+<li><a class="hover:text-primary" href="#">Instagram</a></li>
+<li><a class="hover:text-primary" href="#">Blog</a></li>
+</ul>
+</div>
+<div>
+<h3 class="font-bold text-white mb-4">Support</h3>
+<ul class="space-y-3 text-gray-400">
+<li><a class="hover:text-primary" href="#">Help Center</a></li>
+<li><a class="hover:text-primary" href="#">Terms of Service</a></li>
+<li><a class="hover:text-primary" href="#">Privacy Policy</a></li>
+<li><a class="hover:text-primary" href="#">Contact Us</a></li>
+</ul>
+</div>
+</div>
+<div class="mt-12 border-t border-white/5 pt-8 text-center text-gray-500">
+<p>© 2023 The Sound of the Island. All rights reserved.</p>
+</div>
+</div>
+</footer>
+</body></html>

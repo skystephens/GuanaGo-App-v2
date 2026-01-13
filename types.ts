@@ -228,6 +228,7 @@ export enum AppRoute {
   RIMM_CLUSTER = 'RIMM_CLUSTER',
   MUSIC_EVENT_DETAIL = 'MUSIC_EVENT_DETAIL',
   ARTIST_DETAIL = 'ARTIST_DETAIL',
+  ADMIN_CARIBBEAN_NIGHT = 'ADMIN_CARIBBEAN_NIGHT',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin';
