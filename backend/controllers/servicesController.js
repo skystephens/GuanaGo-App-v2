@@ -8,6 +8,48 @@ const MOCK_SERVICES = [
   { id: '3', title: 'Snorkel en el Acuario', category: 'tour', price: 80, rating: 4.9, image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400' },
 ];
 
+// Mock data para eventos musicales RIMM Caribbean Night
+const MOCK_MUSIC_EVENTS = [
+  {
+    id: 'cn-001',
+    eventName: 'Caribbean Night - Live Stieg Edition',
+    title: 'Caribbean Night - Live Stieg Edition',
+    date: '2026-01-15',
+    price: 85000,
+    artistName: 'Stieg',
+    imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600',
+    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600',
+    spotifyLink: 'https://open.spotify.com/artist/example',
+    description: 'Una noche mágica de música Kriol en vivo con el talento local de San Andrés.',
+    category: 'music_event'
+  },
+  {
+    id: 'cn-002',
+    eventName: 'Reggae Roots Night',
+    title: 'Reggae Roots Night',
+    date: '2026-01-22',
+    price: 75000,
+    artistName: 'Island Vibes Band',
+    imageUrl: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=600',
+    image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=600',
+    spotifyLink: 'https://open.spotify.com/artist/example2',
+    description: 'Reggae auténtico con sabor caribeño para una noche inolvidable.',
+    category: 'music_event'
+  },
+  {
+    id: 'cn-003',
+    eventName: 'Calypso Sunset Session',
+    title: 'Calypso Sunset Session',
+    date: '2026-01-29',
+    price: 65000,
+    artistName: 'Caribbean Soul',
+    imageUrl: 'https://images.unsplash.com/photo-1501612780327-45045538702b?w=600',
+    image: 'https://images.unsplash.com/photo-1501612780327-45045538702b?w=600',
+    description: 'Calypso y ritmos tradicionales al atardecer frente al mar.',
+    category: 'music_event'
+  }
+];
+
 const isMakeConfigured = () => {
   return config.makeWebhooks.services && !config.makeWebhooks.services.includes('YOUR_');
 };
@@ -18,6 +60,49 @@ const isMakeConfigured = () => {
 export const getServices = async (req, res, next) => {
   try {
     const { category, featured, search } = req.query;
+    
+    // Si se solicitan eventos musicales, devolver mock de RIMM
+    if (category === 'music_event') {
+      console.log('🎵 Solicitando eventos musicales RIMM Caribbean Night');
+      
+      if (!isMakeConfigured()) {
+        return res.json({
+          success: true,
+          data: MOCK_MUSIC_EVENTS,
+          total: MOCK_MUSIC_EVENTS.length,
+          source: 'mock'
+        });
+      }
+      
+      // Intentar obtener de Make/Airtable
+      try {
+        const result = await makeRequest(
+          config.makeWebhooks.services,
+          {
+            action: 'list',
+            filters: { category: 'music_event' }
+          },
+          'GET_MUSIC_EVENTS'
+        );
+        
+        if (result.services && result.services.length > 0) {
+          return res.json({
+            success: true,
+            data: result.services,
+            total: result.total || result.services.length
+          });
+        }
+      } catch (makeError) {
+        console.log('⚠️ Make error, usando mock para music_event:', makeError.message);
+      }
+      
+      return res.json({
+        success: true,
+        data: MOCK_MUSIC_EVENTS,
+        total: MOCK_MUSIC_EVENTS.length,
+        source: 'mock-fallback'
+      });
+    }
     
     // Si Make no está configurado, devolver datos mock
     if (!isMakeConfigured()) {

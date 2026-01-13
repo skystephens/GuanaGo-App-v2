@@ -388,5 +388,93 @@ export const api = {
         return [];
       }
     }
+  },
+
+  // --- RIMM CARIBBEAN NIGHT EVENTS ---
+  musicEvents: {
+    list: async (): Promise<any[]> => {
+      try {
+        // Intentar obtener del backend real
+        const response = await fetch('/api/services?category=music_event', {
+          method: 'GET',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+        const result = await safeJson(response);
+        
+        if (result?.success && Array.isArray(result.data)) {
+          return result.data.map((item: any) => ({
+            id: item.id,
+            eventName: item.eventName || item.title,
+            date: item.date,
+            price: item.price,
+            artistName: item.artistName,
+            imageUrl: item.imageUrl || item.image,
+            spotifyLink: item.spotifyLink,
+            description: item.description
+          }));
+        }
+        
+        // Fallback: intentar con Make proxy
+        const makeResponse = await fetch(MAKE_PROXY_URL, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ 
+            action: 'LIST_SERVICES', 
+            table: 'ServiciosTuristicos_SAI',
+            category: 'music_event' 
+          })
+        });
+        const makeData = await safeJson(makeResponse);
+        
+        if (makeData && Array.isArray(makeData)) {
+          return makeData;
+        }
+        
+        // Mock data para desarrollo
+        return MOCK_CARIBBEAN_EVENTS;
+      } catch (e) {
+        console.error('Error fetching music events:', e);
+        return MOCK_CARIBBEAN_EVENTS;
+      }
+    }
   }
 };
+
+// Mock data para Caribbean Night events (desarrollo)
+const MOCK_CARIBBEAN_EVENTS = [
+  {
+    id: 'cn-001',
+    eventName: 'Caribbean Night - Live Stieg Edition',
+    date: '2026-01-15',
+    price: 85000,
+    artistName: 'Stieg',
+    imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600',
+    spotifyLink: 'https://open.spotify.com/artist/example',
+    description: 'Una noche mágica de música Kriol en vivo con el talento local de San Andrés.'
+  },
+  {
+    id: 'cn-002',
+    eventName: 'Reggae Roots Night',
+    date: '2026-01-22',
+    price: 75000,
+    artistName: 'Island Vibes Band',
+    imageUrl: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=600',
+    spotifyLink: 'https://open.spotify.com/artist/example2',
+    description: 'Reggae auténtico con sabor caribeño para una noche inolvidable.'
+  },
+  {
+    id: 'cn-003',
+    eventName: 'Calypso Sunset Session',
+    date: '2026-01-29',
+    price: 65000,
+    artistName: 'Caribbean Soul',
+    imageUrl: 'https://images.unsplash.com/photo-1501612780327-45045538702b?w=600',
+    description: 'Calypso y ritmos tradicionales al atardecer frente al mar.'
+  }
+];

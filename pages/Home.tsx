@@ -4,6 +4,7 @@ import { Search, MapPin, Anchor, Bed, Package as PackageIcon, ShoppingBag, Car, 
 import { api } from '../services/api';
 import { AppRoute, Tour } from '../types';
 import { GUANA_LOGO } from '../constants';
+import CaribbeanNightSection from '../components/CaribbeanNightSection';
 
 interface HomeProps {
   onNavigate: (route: AppRoute, data?: any) => void;
@@ -140,6 +141,9 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
              ))}
           </div>
         </div>
+
+        {/* RIMM Caribbean Night Section */}
+        <CaribbeanNightSection onNavigate={onNavigate} />
 
         <div>
           <div className="flex items-center justify-between mb-6">
