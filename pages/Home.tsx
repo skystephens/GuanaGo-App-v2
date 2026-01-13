@@ -1,6 +1,5 @@
-
 import React, { useEffect, useState } from 'react';
-import { Search, MapPin, Anchor, Bed, Package as PackageIcon, ShoppingBag, Car, Map, Utensils, Loader2, Clock, RefreshCw } from 'lucide-react';
+import { MapPin, Anchor, Bed, Package as PackageIcon, Car, RefreshCw } from 'lucide-react';
 import { cachedApi } from '../services/cachedApi';
 import { AppRoute, Tour } from '../types';
 import { GUANA_LOGO } from '../constants';
@@ -14,9 +13,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   const [services, setServices] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
   const [dataSource, setDataSource] = useState<'cache' | 'api' | 'fallback'>('cache');
 
   useEffect(() => {
@@ -51,31 +47,11 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
     setIsRefreshing(false);
   };
 
-  const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const q = e.target.value;
-    setSearchQuery(q);
-    if (q.length > 2) {
-      setIsSearching(true);
-      const results = await cachedApi.searchDirectory(q);
-      if (results && Array.isArray(results)) {
-         // Integración de resultados de búsqueda
-      }
-      setIsSearching(false);
-    } else if (q.length === 0) {
-       fetchData();
-    }
-  };
-
-  const filteredServices = services.filter(item => 
-    selectedCategory === 'all' ? true : item.category === selectedCategory
-  );
-
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'hotel': return <Bed size={10} />;
       case 'package': return <PackageIcon size={10} />;
       case 'tour': return <Anchor size={10} />;
-      case 'handicraft': return <ShoppingBag size={10} />;
       case 'taxi': return <Car size={10} />;
       default: return <MapPin size={10} />;
     }
@@ -86,7 +62,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
       case 'hotel': return 'bg-blue-500';
       case 'package': return 'bg-purple-500';
       case 'tour': return 'bg-green-500';
-      case 'handicraft': return 'bg-orange-500';
       case 'taxi': return 'bg-yellow-500';
       default: return 'bg-gray-500';
     }
@@ -97,20 +72,10 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         case 'hotel': return 'Hotel';
         case 'package': return 'Paquete';
         case 'tour': return 'Tour';
-        case 'handicraft': return 'Tienda';
         case 'taxi': return 'Transporte';
         default: return 'Servicio';
      }
   };
-
-  const categories = [
-    { id: 'all', label: 'Todos' },
-    { id: 'package', label: 'Paquetes' },
-    { id: 'tour', label: 'Tours' },
-    { id: 'hotel', label: 'Hoteles' },
-    { id: 'taxi', label: 'Taxis' },
-    { id: 'handicraft', label: 'Tienda' }
-  ];
 
   return (
     <div className="pb-24 relative min-h-screen bg-gray-50">
@@ -125,43 +90,8 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
       </header>
 
       <div className="px-6">
-        <div className="relative mt-2 mb-6">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            {isSearching ? <Loader2 size={18} className="animate-spin text-emerald-500" /> : <Search size={20} className="text-gray-400" />}
-          </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={handleSearch}
-            placeholder="Busca experiencias en la isla..."
-            className="w-full bg-white border border-gray-100 rounded-2xl py-3.5 pl-11 pr-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm"
-          />
-        </div>
-
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-             <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">Categorías</h3>
-          </div>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-             {categories.map((cat) => (
-               <button 
-                  key={cat.id} 
-                  onClick={() => setSelectedCategory(cat.id)} 
-                  className={`px-6 py-3 rounded-2xl text-xs font-black whitespace-nowrap transition-all shadow-sm border ${
-                    selectedCategory === cat.id ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-500 border-gray-100 hover:border-emerald-200'
-                  }`}
-               >
-                  {cat.label}
-               </button>
-             ))}
-          </div>
-        </div>
-
-        {/* RIMM Caribbean Night Section */}
-        <CaribbeanNightSection onNavigate={onNavigate} />
-
         {/* Sección Planifica tu Viaje - Accesos directos a categorías */}
-        <div className="mb-8">
+        <div className="mb-8 mt-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">Planifica tu Viaje</h3>
             <button 
@@ -207,11 +137,12 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        <div>
+        {/* RIMM Caribbean Night Section */}
+        <CaribbeanNightSection onNavigate={onNavigate} />
+
+        <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
-             <h3 className="text-lg font-black text-gray-800">
-                {selectedCategory === 'all' ? 'Recomendados para ti' : `Lo mejor en ${categories.find(c => c.id === selectedCategory)?.label}`}
-             </h3>
+             <h3 className="text-lg font-black text-gray-800">Recomendados para ti</h3>
              <div className="flex items-center gap-2">
                <span className={`text-xs px-2 py-1 rounded-full ${
                  dataSource === 'api' ? 'bg-green-100 text-green-700' :
@@ -239,7 +170,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 pb-4">
-              {filteredServices.length > 0 ? filteredServices.map((item) => (
+              {services.length > 0 ? services.map((item) => (
                 <div 
                   key={item.id} 
                   className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col cursor-pointer border border-gray-100 hover:shadow-md transition-all active:scale-95" 

@@ -173,10 +173,10 @@ const App: React.FC = () => {
   const isDark = userRole !== 'tourist' && currentRoute !== AppRoute.LOGIN && currentRoute !== AppRoute.PARTNER_REGISTER;
 
   return (
-    <div className={`min-h-screen font-sans mx-auto max-w-md shadow-2xl overflow-hidden relative border-x 
+    <div className={`h-screen font-sans mx-auto max-w-md shadow-2xl overflow-hidden relative border-x 
       ${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
       
-      <main className="min-h-screen">
+      <main className="h-full relative overflow-auto">
         {renderScreen()}
       </main>
       

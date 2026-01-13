@@ -108,7 +108,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
     if (mapRef.current) {
       setTimeout(() => {
         mapRef.current?.resize();
-      }, 100);
+      }, 50);
       return;
     }
 
@@ -117,7 +117,16 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
       style: 'mapbox://styles/mapbox/streets-v12',
       center: SAN_ANDRES_CENTER,
       zoom: 13,
-      attributionControl: false
+      attributionControl: false,
+      maxBounds: [
+        [-82.1, 12.3], // Southwest
+        [-81.3, 12.9]  // Northeast - límites de San Andrés
+      ]
+    });
+
+    // Forzar resize después de que el mapa cargue
+    map.on('load', () => {
+      setTimeout(() => map.resize(), 100);
     });
 
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
@@ -276,9 +285,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-100 z-50 flex flex-col">
+    <div className="h-full w-full bg-gray-100 flex flex-col overflow-hidden">
       {/* Header compacto */}
-      <header className="bg-white px-4 pt-10 pb-3 shadow-sm z-20">
+      <header className="bg-white px-4 pt-10 pb-3 shadow-sm z-20 flex-shrink-0">
         <div className="flex items-center gap-3 mb-3">
           <h1 className="text-xl font-black text-gray-900 flex-1">Directorio</h1>
           
@@ -350,8 +359,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
 
       {/* Vista de Mapa */}
       {viewMode === 'map' && (
-        <div className="flex-1 relative min-h-[300px]">
-          <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
+        <div className="flex-1 relative overflow-hidden">
+          <div ref={mapContainerRef} className="absolute inset-0" />
           
           {isLoading && (
             <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
@@ -366,7 +375,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
 
       {/* Vista de Grid - Optimizada para móvil */}
       {viewMode === 'grid' && (
-        <div className="flex-1 overflow-y-auto px-3 py-3 pb-24">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3 pb-20">
           {isLoading ? (
             <div className="grid grid-cols-2 gap-2">
               {[1, 2, 3, 4, 5, 6].map(i => (
