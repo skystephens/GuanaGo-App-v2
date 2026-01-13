@@ -1,12 +1,24 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { MapPin, X, Phone, Clock, Navigation, ExternalLink } from 'lucide-react';
-import { api } from '../services/api';
-import { DIRECTORY_DATA } from '../constants';
+import { MapPin, X, Phone, Clock, Navigation, ExternalLink, RefreshCw, AlertCircle } from 'lucide-react';
+import { cachedApi } from '../services/cachedApi';
+import { FALLBACK_DIRECTORY } from '../services/cacheService';
 
-// Token de Mapbox
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_API_KEY || 'pk.eyJ1IjoiZ3VhbmlhZ28iLCJhIjoiY2t2bW1iNnE2MGN1cDJvcG81bTVtbWQ0byJ9.XxX3p4f1b8K3J6F5Ykz9RQ';
+// Token de Mapbox - usar variable de entorno o token público de demo
+// IMPORTANTE: Reemplazar con tu propio token en .env.local
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_API_KEY || 
+  'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+
+// Verificar si el token es válido (tiene formato correcto)
+const isValidToken = MAPBOX_TOKEN && MAPBOX_TOKEN.startsWith('pk.') && MAPBOX_TOKEN.length > 50;
+
+if (isValidToken) {
+  mapboxgl.accessToken = MAPBOX_TOKEN;
+  console.log('🗺️ Mapbox token configurado');
+} else {
+  console.warn('⚠️ Token de Mapbox no válido. Verifica VITE_MAPBOX_API_KEY en .env.local');
+}
 
 interface DirectoryItem {
   id: string;
@@ -41,37 +53,52 @@ const DirectoryMapbox: React.FC<DirectoryMapboxProps> = ({ activeCategory = 'Tod
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   
   const [selectedMarker, setSelectedMarker] = useState<DirectoryItem | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [directoryData, setDirectoryData] = useState<DirectoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  // Iniciar con datos de fallback inmediatamente para que siempre haya contenido
+  const [directoryData, setDirectoryData] = useState<DirectoryItem[]>(FALLBACK_DIRECTORY as DirectoryItem[]);
+  const [dataSource, setDataSource] = useState<'cache' | 'api' | 'fallback'>('fallback');
   const [mapError, setMapError] = useState<string | null>(null);
 
   // San Andrés Isla centro
   const SAN_ANDRES_CENTER: [number, number] = [-81.7006, 12.5847];
   const DEFAULT_ZOOM = 13;
 
-  // Cargar datos del directorio
+  // Cargar datos del directorio usando el sistema de caché
   useEffect(() => {
     const loadDirectoryData = async () => {
-      setIsLoading(true);
       try {
-        console.log('📍 Loading directory data...');
-        const data = await api.directory.getDirectoryMap();
+        console.log('📍 Cargando directorio con caché...');
+        const data = await cachedApi.getDirectory();
         if (data && data.length > 0) {
-          setDirectoryData(data);
-          console.log(`✅ Loaded ${data.length} items`);
-        } else {
-          console.warn('⚠️ No data, using fallback');
-          setDirectoryData(DIRECTORY_DATA as DirectoryItem[]);
+          setDirectoryData(data as DirectoryItem[]);
+          setDataSource('cache');
+          console.log(`✅ Directorio cargado: ${data.length} items`);
         }
       } catch (err) {
-        console.error('❌ Error loading directory:', err);
-        setDirectoryData(DIRECTORY_DATA as DirectoryItem[]);
+        console.log('ℹ️ Usando datos de fallback local:', err);
+        setDataSource('fallback');
       }
-      setIsLoading(false);
     };
 
     loadDirectoryData();
   }, []);
+
+  // Función para refrescar datos manualmente
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const data = await cachedApi.getDirectory({ forceRefresh: true });
+      if (data && data.length > 0) {
+        setDirectoryData(data as DirectoryItem[]);
+        setDataSource('api');
+        console.log(`🔄 Datos actualizados: ${data.length} items`);
+      }
+    } catch (err) {
+      console.warn('Error al refrescar:', err);
+    }
+    setIsRefreshing(false);
+  };
 
   // Inicializar mapa
   useEffect(() => {
@@ -251,8 +278,33 @@ const DirectoryMapbox: React.FC<DirectoryMapboxProps> = ({ activeCategory = 'Tod
     window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}&query_place_id=${name}`, '_blank');
   };
 
+  // Si no hay token válido, mostrar mensaje de configuración
+  if (!isValidToken) {
+    return (
+      <div className="relative w-full h-full min-h-[400px] rounded-3xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+        <div className="text-center p-8 max-w-md">
+          <AlertCircle size={64} className="text-amber-500 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-gray-800 mb-2">Configurar Mapbox</h3>
+          <p className="text-gray-600 text-sm mb-4">
+            Para visualizar el mapa, configura tu token de Mapbox en el archivo <code className="bg-gray-200 px-2 py-1 rounded">.env.local</code>
+          </p>
+          <div className="bg-gray-800 text-green-400 p-4 rounded-xl text-left text-xs font-mono">
+            VITE_MAPBOX_API_KEY=pk.eyJ1...
+          </div>
+          <p className="text-gray-500 text-xs mt-4">
+            Obtén tu token gratis en <a href="https://mapbox.com" target="_blank" className="text-emerald-600 underline">mapbox.com</a>
+          </p>
+          <div className="mt-6 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+            <p className="text-emerald-700 font-bold text-sm">📍 {directoryData.length} lugares disponibles</p>
+            <p className="text-emerald-600 text-xs">Los datos están listos, solo falta el mapa</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative w-full h-full rounded-3xl overflow-hidden">
+    <div className="relative w-full h-full min-h-[400px] rounded-3xl overflow-hidden">
       {/* Loading overlay */}
       {isLoading && (
         <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-20 flex items-center justify-center">
@@ -270,19 +322,47 @@ const DirectoryMapbox: React.FC<DirectoryMapboxProps> = ({ activeCategory = 'Tod
             <MapPin size={48} className="text-red-400 mx-auto mb-4" />
             <p className="text-red-600 font-bold">{mapError}</p>
             <p className="text-red-400 text-sm mt-2">Verifica tu conexión a internet</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-red-100 text-red-600 rounded-xl text-sm font-bold hover:bg-red-200 transition-colors"
+            >
+              Reintentar
+            </button>
           </div>
         </div>
       )}
 
       {/* Mapa */}
-      <div ref={mapContainerRef} className="w-full h-full" />
+      <div ref={mapContainerRef} className="w-full h-full absolute inset-0" style={{ minHeight: '400px' }} />
 
-      {/* Contador de puntos */}
-      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg z-10">
+      {/* Contador de puntos y estado del caché */}
+      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg z-10 flex items-center gap-2">
         <span className="text-xs font-bold text-gray-700">
           📍 {directoryData.length} lugares
         </span>
+        <span className={`text-xs px-2 py-0.5 rounded-full ${
+          dataSource === 'api' ? 'bg-green-100 text-green-700' :
+          dataSource === 'cache' ? 'bg-blue-100 text-blue-700' :
+          'bg-yellow-100 text-yellow-700'
+        }`}>
+          {dataSource === 'api' ? '🌐 Online' : 
+           dataSource === 'cache' ? '💾 Cache' : 
+           '📦 Local'}
+        </span>
       </div>
+
+      {/* Botón de refrescar */}
+      <button
+        onClick={handleRefresh}
+        disabled={isRefreshing}
+        className="absolute top-3 right-14 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg z-10 hover:bg-white transition-colors disabled:opacity-50"
+        title="Actualizar datos"
+      >
+        <RefreshCw 
+          size={18} 
+          className={`text-emerald-600 ${isRefreshing ? 'animate-spin' : ''}`} 
+        />
+      </button>
 
       {/* Modal de detalles */}
       {selectedMarker && (

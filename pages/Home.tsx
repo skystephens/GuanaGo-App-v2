@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
-import { Search, MapPin, Anchor, Bed, Package as PackageIcon, ShoppingBag, Car, Map, Utensils, Loader2, Clock } from 'lucide-react';
-import { api } from '../services/api';
+import { Search, MapPin, Anchor, Bed, Package as PackageIcon, ShoppingBag, Car, Map, Utensils, Loader2, Clock, RefreshCw } from 'lucide-react';
+import { cachedApi } from '../services/cachedApi';
 import { AppRoute, Tour } from '../types';
 import { GUANA_LOGO } from '../constants';
 import CaribbeanNightSection from '../components/CaribbeanNightSection';
@@ -13,9 +13,11 @@ interface HomeProps {
 const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   const [services, setServices] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [dataSource, setDataSource] = useState<'cache' | 'api' | 'fallback'>('cache');
 
   useEffect(() => {
     fetchData();
@@ -24,16 +26,29 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Conexión real con Airtable vía API gestionada por el Admin
-      const data = await api.services.listPublic();
-      // Solo mostramos los servicios que el Admin marcó como activos
-      setServices(data?.filter(s => s.active) || []); 
+      // Usar sistema de caché - carga instantánea desde local
+      const data = await cachedApi.getServices();
+      // Solo mostramos los servicios que están activos
+      setServices(data?.filter(s => s.active) || []);
+      setDataSource('cache');
     } catch (error) {
-      console.error("Error al sincronizar con el catálogo central", error);
+      console.error("Error al cargar servicios", error);
       setServices([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const data = await cachedApi.getServices({ forceRefresh: true });
+      setServices(data?.filter(s => s.active) || []);
+      setDataSource('api');
+    } catch (error) {
+      console.error("Error al refrescar", error);
+    }
+    setIsRefreshing(false);
   };
 
   const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,7 +56,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
     setSearchQuery(q);
     if (q.length > 2) {
       setIsSearching(true);
-      const results = await api.directory.search(q);
+      const results = await cachedApi.searchDirectory(q);
       if (results && Array.isArray(results)) {
          // Integración de resultados de búsqueda
       }
@@ -145,11 +160,75 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         {/* RIMM Caribbean Night Section */}
         <CaribbeanNightSection onNavigate={onNavigate} />
 
+        {/* Sección Planifica tu Viaje - Accesos directos a categorías */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">Planifica tu Viaje</h3>
+            <button 
+              onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY)}
+              className="text-emerald-600 text-xs font-bold"
+            >
+              Ver todo →
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <button 
+              onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'package' })}
+              className="bg-gradient-to-br from-purple-500 to-pink-500 text-white p-4 rounded-2xl text-left shadow-md hover:shadow-lg transition-all active:scale-95"
+            >
+              <PackageIcon size={24} className="mb-2" />
+              <h4 className="font-bold text-sm">Paquetes</h4>
+              <p className="text-xs opacity-80">Todo incluido</p>
+            </button>
+            <button 
+              onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'tour' })}
+              className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white p-4 rounded-2xl text-left shadow-md hover:shadow-lg transition-all active:scale-95"
+            >
+              <Anchor size={24} className="mb-2" />
+              <h4 className="font-bold text-sm">Tours</h4>
+              <p className="text-xs opacity-80">Explora la isla</p>
+            </button>
+            <button 
+              onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'hotel' })}
+              className="bg-gradient-to-br from-amber-500 to-orange-500 text-white p-4 rounded-2xl text-left shadow-md hover:shadow-lg transition-all active:scale-95"
+            >
+              <Bed size={24} className="mb-2" />
+              <h4 className="font-bold text-sm">Hoteles</h4>
+              <p className="text-xs opacity-80">Donde quedarte</p>
+            </button>
+            <button 
+              onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'taxi' })}
+              className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white p-4 rounded-2xl text-left shadow-md hover:shadow-lg transition-all active:scale-95"
+            >
+              <Car size={24} className="mb-2" />
+              <h4 className="font-bold text-sm">Traslados</h4>
+              <p className="text-xs opacity-80">Movilidad fácil</p>
+            </button>
+          </div>
+        </div>
+
         <div>
           <div className="flex items-center justify-between mb-6">
              <h3 className="text-lg font-black text-gray-800">
                 {selectedCategory === 'all' ? 'Recomendados para ti' : `Lo mejor en ${categories.find(c => c.id === selectedCategory)?.label}`}
              </h3>
+             <div className="flex items-center gap-2">
+               <span className={`text-xs px-2 py-1 rounded-full ${
+                 dataSource === 'api' ? 'bg-green-100 text-green-700' :
+                 dataSource === 'cache' ? 'bg-blue-100 text-blue-700' :
+                 'bg-yellow-100 text-yellow-700'
+               }`}>
+                 {dataSource === 'api' ? '🌐' : dataSource === 'cache' ? '💾' : '📦'}
+               </span>
+               <button
+                 onClick={handleRefresh}
+                 disabled={isRefreshing}
+                 className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                 title="Actualizar servicios"
+               >
+                 <RefreshCw size={16} className={`text-gray-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+               </button>
+             </div>
           </div>
           
           {loading ? (

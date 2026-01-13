@@ -49,20 +49,22 @@
 
 ```
 GuanaGo-App/
-├── App.tsx                    # Router principal
+├── App.tsx                    # Router principal + inicialización caché
 ├── constants.tsx              # Datos mock y configuración
 ├── types.ts                   # Interfaces TypeScript
 ├── services/
 │   ├── api.ts                 # API central (Make.com + Backend)
+│   ├── cachedApi.ts           # ⭐ API con caché integrado (nuevo)
+│   ├── cacheService.ts        # ⭐ Sistema de caché local v2.0
 │   └── chatService.ts         # Chatbot Groq AI
 ├── components/
 │   ├── GuanaChatbot.tsx       # Chat flotante con Groq
-│   ├── DirectoryMapbox.tsx    # Mapa interactivo (31 puntos)
+│   ├── DirectoryMapbox.tsx    # Mapa interactivo (40+ puntos, con caché)
 │   ├── SanAndresMap.tsx       # Mapa SVG zonas de taxi
 │   ├── GroupQuote.tsx         # Cotizador grupal
 │   └── Navigation.tsx         # Navegación inferior
 ├── pages/
-│   ├── Home.tsx               # Inicio con categorías
+│   ├── Home.tsx               # Inicio con categorías (caché)
 │   ├── TourList.tsx           # Lista de tours (Airtable)
 │   ├── Detail.tsx             # Detalle + reserva + carrito
 │   ├── Taxi.tsx               # Calculadora de tarifas
@@ -81,6 +83,88 @@ GuanaGo-App/
 │       └── chatbot.js         # Rutas de chatbot
 └── .env                       # API Keys (no en repo)
 ```
+
+---
+
+## 💾 2.5. Sistema de Caché Local (Nuevo v2.0)
+
+### Estrategia: Stale-While-Revalidate
+
+El sistema de caché garantiza que **siempre haya datos disponibles**, incluso offline:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ 1. Datos de FALLBACK local (hardcodeados en código)    │
+│    ↓ (instantáneo)                                      │
+│ 2. Verificar CACHÉ en localStorage                      │
+│    ↓                                                    │
+│ 3. Si caché fresco → usar directamente                  │
+│ 4. Si caché viejo → usar + actualizar en background     │
+│ 5. Si sin caché → usar fallback + intentar API          │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Archivos Clave
+
+| Archivo | Descripción |
+|---------|-------------|
+| `services/cacheService.ts` | Core del sistema de caché, datos fallback |
+| `services/cachedApi.ts` | Wrapper de la API con caché integrado |
+
+### Tipos de Datos Cacheados
+
+| CacheKey | TTL | Descripción |
+|----------|-----|-------------|
+| `services_turisticos` | 6 horas | Tours, hoteles, paquetes |
+| `directory_map` | 24 horas | Puntos del mapa (40+) |
+| `artistas_rimm` | 12 horas | Artistas Caribbean Night |
+| `taxi_zones` | 7 días | Zonas y tarifas de taxi |
+| `caribbean_events` | 4 horas | Eventos RIMM |
+
+### Uso en Componentes
+
+```typescript
+// ❌ Antes (sin caché, dependiente de red)
+import { api } from './services/api';
+const data = await api.services.listPublic();
+
+// ✅ Ahora (con caché, siempre funciona)
+import { cachedApi } from './services/cachedApi';
+const data = await cachedApi.getServices(); // Instantáneo desde caché/fallback
+```
+
+### Funciones Principales
+
+```typescript
+// Inicializar al arrancar la app (App.tsx)
+import { initializeCachedApi } from './services/cachedApi';
+useEffect(() => { initializeCachedApi(); }, []);
+
+// Obtener datos con fallback garantizado
+const services = await cachedApi.getServices();
+const directory = await cachedApi.getDirectory();
+const artists = await cachedApi.getArtists();
+
+// Forzar actualización desde API
+const fresh = await cachedApi.getServices({ forceRefresh: true });
+
+// Estadísticas del caché
+import cache from './services/cacheService';
+console.log(cache.getStats()); // { totalSize: '45.2 KB', entries: {...} }
+```
+
+### Datos de Fallback
+
+El sistema incluye **40+ puntos** hardcodeados en `cacheService.ts`:
+- 3 Farmacias/Droguerías
+- 4 Cajeros/Bancos  
+- 8 Restaurantes
+- 6 Hoteles
+- 4 Tiendas
+- 7 Puntos turísticos
+- 3 Transporte
+- 2 Hospitales
+- 3 Entretenimiento
 
 ---
 

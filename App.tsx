@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Home from './pages/Home';
 import Detail from './pages/Detail';
 import Taxi from './pages/Taxi';
@@ -11,6 +11,7 @@ import MapboxRestaurants from './components/MapboxRestaurants';
 import GroupQuote from './components/GroupQuote';
 import MyItinerary from './pages/MyItinerary';
 import DynamicItineraryBuilder from './pages/admin/DynamicItineraryBuilder';
+import Planner from './pages/Planner';
 
 // List Pages
 import TourList from './pages/TourList';
@@ -53,6 +54,9 @@ import DirectoryMapbox from './components/DirectoryMapbox';
 import { AppRoute, UserRole } from './types';
 import { GUANA_LOGO } from './constants';
 
+// Sistema de caché local
+import { initializeCachedApi } from './services/cachedApi';
+
 const App: React.FC = () => {
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(AppRoute.HOME);
   const [history, setHistory] = useState<AppRoute[]>([]);
@@ -61,6 +65,11 @@ const App: React.FC = () => {
   const [userRole, setUserRole] = useState<UserRole>('tourist');
   const [isAuthenticated, setIsAuthenticated] = useState(false); 
   const [detailData, setDetailData] = useState<any>(null);
+
+  // Inicializar sistema de caché al arrancar la app
+  useEffect(() => {
+    initializeCachedApi();
+  }, []);
 
   const navigateTo = (route: AppRoute, data?: any) => {
     if (data) setDetailData(data);
@@ -111,7 +120,7 @@ const App: React.FC = () => {
   const renderScreen = () => {
     switch (currentRoute) {
       case AppRoute.HOME: return <Home onNavigate={navigateTo} />;
-      case AppRoute.DYNAMIC_ITINERARY: return <DynamicItineraryBuilder />;
+      case AppRoute.DYNAMIC_ITINERARY: return <Planner onNavigate={navigateTo} initialCategory={routeData?.category} />;
       case AppRoute.MY_ITINERARY: return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.PROFILE: return (
         <AccountDashboard 

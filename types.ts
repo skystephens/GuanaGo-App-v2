@@ -47,8 +47,14 @@ export interface GuanaLocation {
   name: string;
   latitude: number;
   longitude: number;
-  category: 'Tour' | 'Hotel' | 'Restaurante' | 'Transporte';
+  category: string; // Flexible: Tour, Hotel, Restaurante, Droguería, Cajero, etc.
   price?: number;
+  description?: string;
+  phone?: string;
+  address?: string;
+  hours?: string;
+  image?: string;
+  rating?: number;
 }
 
 export interface Restaurant {

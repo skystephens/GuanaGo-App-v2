@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Filter, Star, Clock, Anchor, MapPin, Users, Calendar } from 'lucide-react';
 import { api } from '../services/api';
 import { AppRoute, Tour } from '../types';
+import { POPULAR_TOURS } from '../constants';
 
 interface TourListProps {
   onBack: () => void;
@@ -10,26 +11,27 @@ interface TourListProps {
 }
 
 const TourList: React.FC<TourListProps> = ({ onBack, onNavigate }) => {
-  const [tours, setTours] = useState<Tour[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Iniciar con tours de fallback para que siempre haya contenido visible
+  const [tours, setTours] = useState<Tour[]>(POPULAR_TOURS);
+  const [loading, setLoading] = useState(false);
   const [activeTag, setActiveTag] = useState('Todos');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-     setLoading(true);
-     setError(null);
+     // Cargar tours de API en segundo plano
      api.services.listPublic()
        .then(allServices => {
          // Filtrar solo tours activos
          const tourServices = allServices.filter(s => s.category === 'tour' && s.active !== false);
-         console.log('Tours cargados:', tourServices.length);
-         setTours(tourServices);
-         setLoading(false);
+         console.log('Tours cargados de API:', tourServices.length);
+         if (tourServices.length > 0) {
+           setTours(tourServices);
+         } else {
+           console.log('ℹ️ API sin tours, manteniendo tours de fallback');
+         }
        })
        .catch(err => {
-         console.error('Error cargando tours:', err);
-         setError('No se pudieron cargar los tours');
-         setLoading(false);
+         console.log('ℹ️ API unavailable, usando tours de fallback:', err);
        });
   }, []);
 

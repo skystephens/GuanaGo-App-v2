@@ -61,46 +61,15 @@ export const getServices = async (req, res, next) => {
   try {
     const { category, featured, search } = req.query;
     
-    // Si se solicitan eventos musicales, devolver mock de RIMM
+    // Eventos musicales RIMM Caribbean Night - siempre usar datos locales
+    // (No están en Airtable, son gestionados internamente por RIMM)
     if (category === 'music_event') {
-      console.log('🎵 Solicitando eventos musicales RIMM Caribbean Night');
-      
-      if (!isMakeConfigured()) {
-        return res.json({
-          success: true,
-          data: MOCK_MUSIC_EVENTS,
-          total: MOCK_MUSIC_EVENTS.length,
-          source: 'mock'
-        });
-      }
-      
-      // Intentar obtener de Make/Airtable
-      try {
-        const result = await makeRequest(
-          config.makeWebhooks.services,
-          {
-            action: 'list',
-            filters: { category: 'music_event' }
-          },
-          'GET_MUSIC_EVENTS'
-        );
-        
-        if (result.services && result.services.length > 0) {
-          return res.json({
-            success: true,
-            data: result.services,
-            total: result.total || result.services.length
-          });
-        }
-      } catch (makeError) {
-        console.log('⚠️ Make error, usando mock para music_event:', makeError.message);
-      }
-      
+      console.log('🎵 Cargando eventos RIMM Caribbean Night (datos locales)');
       return res.json({
         success: true,
         data: MOCK_MUSIC_EVENTS,
         total: MOCK_MUSIC_EVENTS.length,
-        source: 'mock-fallback'
+        source: 'rimm-internal'
       });
     }
     
