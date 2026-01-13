@@ -17,7 +17,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
   // MENU TURISTA ACTUALIZADO: 5 Items
   const touristNavItems = [
     { route: AppRoute.HOME, icon: <Compass size={22} />, label: 'Explora' },
-    { route: AppRoute.DIRECTORY, icon: <MapIcon size={22} />, label: 'Mapa' },
+    { route: AppRoute.INTERACTIVE_MAP, icon: <MapIcon size={22} />, label: 'Mapa' },
     { route: AppRoute.DYNAMIC_ITINERARY, icon: <CalendarDays size={22} />, label: 'Planifica' },
     { route: AppRoute.CHECKOUT, icon: <ShoppingCart size={22} />, label: 'Carrito' },
     { route: AppRoute.PROFILE, icon: <UserCircle size={22} />, label: 'Cuenta' },
