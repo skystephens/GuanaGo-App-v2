@@ -2,7 +2,13 @@
 import { TAXI_ZONES, POPULAR_TOURS, HOTEL_LIST, POPULAR_PACKAGES, PARTNER_CLIENTS } from '../constants';
 import { Tour, Hotel, TaxiZone, Reservation, Package, Campaign, Message, Restaurant, GuanaLocation, GroupQuoteConfig, Client } from '../types';
 
-const MAKE_PROXY_URL = 'https://hook.us1.make.com/gleyxf83giw4xqr7i6i94mb7syclmh2o';
+// Webhooks de Make.com
+const MAKE_WEBHOOK_DIRECTORY = 'https://hook.us1.make.com/gleyxf83giw4xqr7i6i94mb7syclmh2o';
+const MAKE_WEBHOOK_SERVICES = 'https://hook.us1.make.com/klnf8ruz7znu31mlig5y7osajbney2p3';
+const MAKE_WEBHOOK_USERS = 'https://hook.us1.make.com/8lz93j5qs3m5qu4cakeukxeq6hhgx6hc';
+
+// Backend URL
+const BACKEND_URL = 'https://guanago-backend.onrender.com';
 
 const safeJson = async (response: Response) => {
   try {
@@ -21,7 +27,7 @@ export const api = {
   users: {
     getProfile: async (userId: string): Promise<Client | null> => {
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
+        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'GET_USER_PROFILE', userId, table: 'Usuarios_SAI' })
@@ -39,7 +45,7 @@ export const api = {
   inventory: {
     checkAvailability: async (serviceId: string, date: string): Promise<{ available: number, isBlocked: boolean }> => {
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
+        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -64,7 +70,7 @@ export const api = {
     },
     updateInventory: async (items: { id: string, date: string, quantity: number }[]): Promise<void> => {
       try {
-        await fetch(MAKE_PROXY_URL, {
+        await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -122,7 +128,7 @@ export const api = {
   directory: {
     search: async (query: string): Promise<any[]> => {
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
+        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -264,7 +270,7 @@ export const api = {
   services: {
     listPublic: async (): Promise<Tour[]> => {
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
+        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -284,7 +290,7 @@ export const api = {
     },
     listAll: async (): Promise<Tour[]> => {
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
+        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -304,7 +310,7 @@ export const api = {
     },
     listByPartner: async (partnerId: string): Promise<Tour[]> => {
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
+        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -323,7 +329,7 @@ export const api = {
       }
     },
     update: async (id: string, updates: Partial<Tour>): Promise<void> => {
-       await fetch(MAKE_PROXY_URL, {
+       await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -338,7 +344,7 @@ export const api = {
        }).catch(() => {});
     },
     delete: async (id: string): Promise<void> => {
-       await fetch(MAKE_PROXY_URL, {
+       await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -356,7 +362,7 @@ export const api = {
   blockchain: {
     verifyOnLedger: async (transactionId: string): Promise<{ hederaTransactionId: string, status: 'verified' }> => {
       try {
-        await fetch(MAKE_PROXY_URL, {
+        await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -377,7 +383,7 @@ export const api = {
   campaigns: {
     list: async (): Promise<Campaign[]> => {
        try {
-         const response = await fetch(MAKE_PROXY_URL, {
+         const response = await fetch(MAKE_WEBHOOK_SERVICES, {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
@@ -392,7 +398,7 @@ export const api = {
        }
     },
     create: async (campaign: Campaign): Promise<void> => {
-       await fetch(MAKE_PROXY_URL, {
+       await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -402,7 +408,7 @@ export const api = {
        }).catch(() => {});
     },
     update: async (id: string, updates: Partial<Campaign>): Promise<void> => {
-       await fetch(MAKE_PROXY_URL, {
+       await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -412,7 +418,7 @@ export const api = {
        }).catch(() => {});
     },
     delete: async (id: string): Promise<void> => {
-       await fetch(MAKE_PROXY_URL, {
+       await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -426,7 +432,7 @@ export const api = {
   chat: {
     sendMessage: async (senderId: string, receiverId: string, text: string): Promise<Message> => {
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
+        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -442,7 +448,7 @@ export const api = {
     },
     getMessages: async (senderId: string, receiverId: string): Promise<Message[]> => {
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
+        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -467,7 +473,7 @@ export const api = {
   airtable: {
     getServiciosMap: async (): Promise<GuanaLocation[]> => {
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
+        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -516,7 +522,7 @@ export const api = {
         }
         
         // Fallback: intentar con Make proxy
-        const makeResponse = await fetch(MAKE_PROXY_URL, {
+        const makeResponse = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -547,7 +553,7 @@ export const api = {
   rimmArtists: {
     list: async (): Promise<any[]> => {
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
+        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -570,7 +576,7 @@ export const api = {
     },
     getById: async (artistId: string): Promise<any | null> => {
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
+        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -594,7 +600,7 @@ export const api = {
   rimmPackages: {
     list: async (): Promise<any[]> => {
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
+        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -622,7 +628,7 @@ export const api = {
   rimmGallery: {
     list: async (): Promise<string[]> => {
       try {
-        const response = await fetch(MAKE_PROXY_URL, {
+        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
