@@ -142,13 +142,72 @@ export const api = {
     },
 
     getDirectoryMap: async (): Promise<any[]> => {
-      // Llamada directa a Airtable API para obtener los 31 puntos del directorio
+      // Primero intentar con el backend de Render
+      const BACKEND_URL = 'https://guanago-backend.onrender.com';
+      
+      try {
+        console.log('📍 Fetching directory from Render backend...');
+        const response = await fetch(`${BACKEND_URL}/api/directory`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('📍 Backend response:', result);
+          
+          if (result.success && result.data && Array.isArray(result.data)) {
+            // Normalizar datos del backend
+            const items = result.data.map((item: any) => ({
+              id: item.id || item.Id || '',
+              nombre: item.name || item.nombre || item.Name || '',
+              name: item.name || item.nombre || item.Name || '',
+              categoria: item.category || item.categoria || item.Category || 'General',
+              category: item.category || item.categoria || item.Category || 'General',
+              latitude: parseFloat(item.lat || item.latitude || item.Latitude || 0),
+              lat: parseFloat(item.lat || item.latitude || item.Latitude || 0),
+              longitude: parseFloat(item.lng || item.longitude || item.Longitude || 0),
+              lng: parseFloat(item.lng || item.longitude || item.Longitude || 0),
+              telefono: item.phone || item.telefono || item.Phone || '',
+              phone: item.phone || item.telefono || item.Phone || '',
+              direccion: item.address || item.direccion || item.Address || '',
+              address: item.address || item.direccion || item.Address || '',
+              horario: item.hours || item.horario || item.Hours || '',
+              hours: item.hours || item.horario || item.Hours || '',
+              descripcion: item.description || item.descripcion || item.Description || '',
+              description: item.description || item.descripcion || item.Description || '',
+              imagen: item.image || item.imagen || '',
+              image: item.image || item.imagen || '',
+              rating: item.rating || 0
+            }));
+            
+            console.log(`✅ Loaded ${items.length} directory items from backend`);
+            return items;
+          }
+        }
+        
+        // Fallback a Airtable directo si el backend falla
+        console.log('⚠️ Backend failed, trying Airtable directly...');
+        return await api.directory.getDirectoryFromAirtable();
+        
+      } catch (e) {
+        console.error('❌ Error fetching from backend:', e);
+        // Fallback a Airtable directo
+        return await api.directory.getDirectoryFromAirtable();
+      }
+    },
+    
+    getDirectoryFromAirtable: async (): Promise<any[]> => {
+      // Llamada directa a Airtable API como fallback
       const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY || 'patDWx13o3qtNjLqv.37cd343946b889d2044f1f5fa9039c06931d38a192f794c115f0efd21cca1658';
       const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
       const TABLE_NAME = 'Directorio_Mapa';
       
       try {
-        console.log('📍 Fetching directory from Airtable...');
+        console.log('📍 Fetching directory from Airtable directly...');
         const response = await fetch(
           `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(TABLE_NAME)}?maxRecords=100`,
           {
@@ -166,10 +225,8 @@ export const api = {
         }
         
         const data = await response.json();
-        console.log('📍 Airtable raw response:', data);
         
         if (data && data.records && Array.isArray(data.records)) {
-          // Transformar registros de Airtable al formato esperado
           const items = data.records.map((record: any) => ({
             id: record.id,
             nombre: record.fields.Nombre || record.fields.nombre || record.fields.Name || '',
@@ -198,7 +255,7 @@ export const api = {
         
         return [];
       } catch (e) {
-        console.error('❌ Error fetching directory map from Airtable:', e);
+        console.error('❌ Error fetching from Airtable:', e);
         return [];
       }
     }
