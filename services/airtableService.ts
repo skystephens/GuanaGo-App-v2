@@ -23,7 +23,11 @@ const TABLES = {
   LEADS: 'Leads',
   RIMM_MUSICOS: 'Rimm_musicos',
   RETOS: 'Retos_GUANA',
-  TRANSACCIONES: 'GUANA_Transacciones' // Nueva tabla para historial de puntos
+  TRANSACCIONES: 'GUANA_Transacciones',
+  // Nuevas tablas para gestión de artistas y NFTs
+  ARTISTAS_PORTAFOLIO: 'Artistas_Portafolio',
+  PRODUCTOS_ARTISTA: 'Productos_Artista',
+  VENTAS_ARTISTA: 'Ventas_Artista'
 };
 
 // Interfaz para usuario con GUANA Points
@@ -115,6 +119,157 @@ export interface CreateTransactionData {
   servicioId?: string;
   // Para futuro Hedera
   syncToBlockchain?: boolean;
+}
+
+// =========================================================
+// 🎵 SISTEMA DE GESTIÓN DE ARTISTAS Y NFTs
+// =========================================================
+
+// Estado de gestión del artista
+export type EstadoGestion = 'prospecto' | 'en_negociacion' | 'activo' | 'pausado' | 'terminado';
+
+// Tipos de productos de artista
+export type TipoProducto = 
+  | 'nft_musica' 
+  | 'nft_video' 
+  | 'nft_arte'
+  | 'usb_coleccion' 
+  | 'vinilo'
+  | 'poster_firmado'
+  | 'cena_artista' 
+  | 'tour_privado' 
+  | 'clase_musica'
+  | 'meet_greet' 
+  | 'backstage'
+  | 'vip_caribbean'
+  | 'ensayo_abierto'
+  | 'sesion_fotos'
+  | 'mencion_cancion';
+
+// Categorías de productos
+export type CategoriaProducto = 'digital' | 'fisico' | 'experiencia' | 'acceso';
+
+// Estado de pago
+export type EstadoPago = 'pendiente' | 'pagado' | 'reembolsado' | 'fallido';
+
+// Métodos de pago
+export type MetodoPago = 'efectivo' | 'tarjeta' | 'nequi' | 'daviplata' | 'guana_points' | 'crypto';
+
+// Interfaz para artista en portafolio (gestión comercial)
+export interface ArtistaPortafolio {
+  id: string;                          // ID de Airtable
+  artistaId: string;                   // Link a Rimm_musicos
+  nombreArtistico: string;             // Nombre para display
+  estadoGestion: EstadoGestion;        // Estado del acuerdo
+  porcentajeArtista: number;           // % que recibe artista (default 70)
+  porcentajeGuanaGO: number;           // % GuanaGO (default 15)
+  porcentajeCluster: number;           // % Clúster RIMM (default 15)
+  contratoFirmado: boolean;            // ✅ Si hay contrato
+  documentoContrato?: string;          // URL del PDF
+  fechaInicio?: string;                // Inicio de alianza
+  fechaFin?: string;                   // Fin (si aplica)
+  walletHedera?: string;               // 0.0.XXXXX
+  walletTradicional?: string;          // Nequi, cuenta banco
+  productosActivos: number;            // Count de productos
+  ventasTotales: number;               // Suma de ventas $
+  gananciasArtista: number;            // Total ganado por artista
+  gananciasGuanaGO: number;            // Tu comisión total
+  notasPrivadas?: string;              // Notas internas
+  contactoManager?: string;            // Representante
+  telefono?: string;                   // Contacto directo
+  fechaCreacion: string;               // Created time
+}
+
+// Interfaz para productos de artista
+export interface ProductoArtista {
+  id: string;                          // ID de Airtable
+  nombre: string;                      // Nombre del producto
+  artistaId: string;                   // Link a Artistas_Portafolio
+  artistaNombre?: string;              // Nombre del artista (lookup)
+  tipo: TipoProducto;                  // nft_musica, cena_artista, etc.
+  categoria: CategoriaProducto;        // digital, fisico, experiencia, acceso
+  descripcion: string;                 // Descripción para turista
+  precioCOP: number;                   // Precio en pesos
+  precioUSD?: number;                  // Para extranjeros
+  precioGUANA?: number;                // En puntos GUANA
+  costoProduccion?: number;            // Para calcular margen
+  stock: number;                       // -1 = ilimitado
+  stockVendido: number;                // Cuántos vendidos
+  imagenPrincipal?: string;            // URL imagen
+  galeria?: string[];                  // Más imágenes
+  archivoDigital?: string;             // URL del archivo
+  ipfsCID?: string;                    // Hash IPFS
+  hederaTokenId?: string;              // Token NFT minteado
+  hederaSerial?: number;               // Serial del NFT
+  royaltyPorcentaje: number;           // % en reventas (default 10)
+  duracion?: string;                   // Para experiencias: "3 horas"
+  ubicacion?: string;                  // Dónde se realiza
+  capacidad?: number;                  // Cuántas personas
+  disponibilidad?: string[];           // Días disponibles
+  requiereReserva: boolean;            // Con anticipación
+  diasAnticipacion?: number;           // Mínimo días
+  activo: boolean;                     // Visible en app
+  destacado: boolean;                  // Aparece primero
+  fechaCreacion: string;               // Created time
+}
+
+// Interfaz para ventas de artista
+export interface VentaArtista {
+  id: string;                          // ID de Airtable
+  idVenta: string;                     // VTA-0001
+  productoId: string;                  // Link a Productos_Artista
+  productoNombre?: string;             // Nombre producto (lookup)
+  artistaNombre?: string;              // Nombre artista (lookup)
+  compradorId: string;                 // Link a Leads
+  compradorNombre?: string;            // Nombre comprador
+  compradorEmail?: string;             // Email comprador
+  fecha: string;                       // Created time
+  cantidad: number;                    // Default 1
+  precioUnitario: number;              // Del producto
+  precioTotal: number;                 // cantidad * precio
+  metodoPago: MetodoPago;              // efectivo, crypto, etc.
+  estadoPago: EstadoPago;              // pendiente, pagado
+  montoArtista: number;                // Calculado
+  montoGuanaGO: number;                // Tu comisión
+  montoCluster: number;                // Para RIMM
+  estadoPagoArtista: EstadoPago;       // Si ya se le pagó
+  fechaPagoArtista?: string;           // Cuándo se le pagó
+  hederaTxHash?: string;               // Hash blockchain
+  hederaTimestamp?: string;            // Timestamp consenso
+  nftTransferido: boolean;             // Si ya se transfirió NFT
+  experienciaFecha?: string;           // Para experiencias
+  experienciaCompletada: boolean;      // Si ya se realizó
+  ratingCliente?: number;              // 1-5 estrellas
+  comentarioCliente?: string;          // Feedback
+  notas?: string;                      // Notas internas
+}
+
+// Datos para crear un producto
+export interface CreateProductoData {
+  nombre: string;
+  artistaId: string;
+  tipo: TipoProducto;
+  categoria: CategoriaProducto;
+  descripcion: string;
+  precioCOP: number;
+  precioGUANA?: number;
+  stock?: number;
+  imagenPrincipal?: string;
+  duracion?: string;
+  ubicacion?: string;
+  capacidad?: number;
+  requiereReserva?: boolean;
+  diasAnticipacion?: number;
+}
+
+// Datos para registrar una venta
+export interface CreateVentaData {
+  productoId: string;
+  compradorId: string;
+  cantidad?: number;
+  metodoPago: MetodoPago;
+  precioTotal: number;
+  experienciaFecha?: string;
 }
 
 // Interfaz genérica para registros de Airtable
@@ -993,6 +1148,689 @@ function mapRecordToTransaction(record: any): GuanaTransaction {
   };
 }
 
+// =========================================================
+// 🎵 FUNCIONES DE GESTIÓN DE ARTISTAS Y NFTs
+// =========================================================
+
+/**
+ * Obtener todos los artistas en portafolio
+ */
+export async function getArtistasPortafolio(
+  options?: { estado?: EstadoGestion; limit?: number }
+): Promise<ArtistaPortafolio[]> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return [];
+  }
+
+  try {
+    let url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.ARTISTAS_PORTAFOLIO)}?`;
+    
+    if (options?.estado) {
+      url += `filterByFormula={Estado_Gestion}="${options.estado}"&`;
+    }
+    if (options?.limit) {
+      url += `pageSize=${options.limit}&`;
+    }
+    url += `sort[0][field]=Fecha_Creacion&sort[0][direction]=desc`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error('Error fetching artistas portafolio');
+    }
+
+    const data = await response.json();
+    return data.records.map(mapRecordToArtistaPortafolio);
+  } catch (error) {
+    console.error('❌ Error obteniendo artistas portafolio:', error);
+    return [];
+  }
+}
+
+/**
+ * Obtener un artista del portafolio por ID
+ */
+export async function getArtistaPortafolioById(id: string): Promise<ArtistaPortafolio | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.ARTISTAS_PORTAFOLIO)}/${id}`,
+      { method: 'GET', headers: getHeaders() }
+    );
+
+    if (!response.ok) {
+      throw new Error('Artista not found');
+    }
+
+    const record = await response.json();
+    return mapRecordToArtistaPortafolio(record);
+  } catch (error) {
+    console.error('❌ Error obteniendo artista:', error);
+    return null;
+  }
+}
+
+/**
+ * Crear/agregar artista al portafolio
+ */
+export async function addArtistaToPortafolio(data: {
+  artistaId: string;
+  nombreArtistico: string;
+  porcentajeArtista?: number;
+  porcentajeGuanaGO?: number;
+  porcentajeCluster?: number;
+  walletHedera?: string;
+  walletTradicional?: string;
+  telefono?: string;
+  notasPrivadas?: string;
+}): Promise<ArtistaPortafolio | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.ARTISTAS_PORTAFOLIO)}`,
+      {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          fields: {
+            Artista_ID: data.artistaId,
+            Nombre_Artistico: data.nombreArtistico,
+            Estado_Gestion: 'prospecto',
+            Porcentaje_Artista: data.porcentajeArtista || 70,
+            Porcentaje_GuanaGO: data.porcentajeGuanaGO || 15,
+            Porcentaje_Cluster: data.porcentajeCluster || 15,
+            Contrato_Firmado: false,
+            Wallet_Hedera: data.walletHedera || '',
+            Wallet_Tradicional: data.walletTradicional || '',
+            Telefono: data.telefono || '',
+            Notas_Privadas: data.notasPrivadas || '',
+            Productos_Activos: 0,
+            Ventas_Totales: 0,
+            Ganancias_Artista: 0,
+            Ganancias_GuanaGO: 0
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Error adding artista');
+    }
+
+    const record = await response.json();
+    console.log(`✅ Artista agregado al portafolio: ${data.nombreArtistico}`);
+    return mapRecordToArtistaPortafolio(record);
+  } catch (error) {
+    console.error('❌ Error agregando artista:', error);
+    throw error;
+  }
+}
+
+/**
+ * Actualizar estado de artista en portafolio
+ */
+export async function updateArtistaPortafolio(
+  recordId: string,
+  updates: Partial<{
+    estadoGestion: EstadoGestion;
+    contratoFirmado: boolean;
+    porcentajeArtista: number;
+    porcentajeGuanaGO: number;
+    porcentajeCluster: number;
+    walletHedera: string;
+    walletTradicional: string;
+    notasPrivadas: string;
+  }>
+): Promise<boolean> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return false;
+  }
+
+  try {
+    const fields: any = {};
+    if (updates.estadoGestion) fields.Estado_Gestion = updates.estadoGestion;
+    if (updates.contratoFirmado !== undefined) fields.Contrato_Firmado = updates.contratoFirmado;
+    if (updates.porcentajeArtista) fields.Porcentaje_Artista = updates.porcentajeArtista;
+    if (updates.porcentajeGuanaGO) fields.Porcentaje_GuanaGO = updates.porcentajeGuanaGO;
+    if (updates.porcentajeCluster) fields.Porcentaje_Cluster = updates.porcentajeCluster;
+    if (updates.walletHedera) fields.Wallet_Hedera = updates.walletHedera;
+    if (updates.walletTradicional) fields.Wallet_Tradicional = updates.walletTradicional;
+    if (updates.notasPrivadas) fields.Notas_Privadas = updates.notasPrivadas;
+
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.ARTISTAS_PORTAFOLIO)}/${recordId}`,
+      {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ fields })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to update artista');
+    }
+
+    console.log(`✅ Artista actualizado: ${recordId}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Error actualizando artista:', error);
+    return false;
+  }
+}
+
+// =========================================================
+// 🛍️ PRODUCTOS DE ARTISTA
+// =========================================================
+
+/**
+ * Obtener productos de un artista o todos
+ */
+export async function getProductosArtista(
+  options?: { artistaId?: string; categoria?: CategoriaProducto; activos?: boolean; limit?: number }
+): Promise<ProductoArtista[]> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return [];
+  }
+
+  try {
+    let filterParts: string[] = [];
+    
+    if (options?.artistaId) {
+      filterParts.push(`{Artista_ID}="${options.artistaId}"`);
+    }
+    if (options?.categoria) {
+      filterParts.push(`{Categoria}="${options.categoria}"`);
+    }
+    if (options?.activos) {
+      filterParts.push(`{Activo}=TRUE()`);
+    }
+
+    let url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PRODUCTOS_ARTISTA)}?`;
+    
+    if (filterParts.length > 0) {
+      const formula = filterParts.length === 1 
+        ? filterParts[0] 
+        : `AND(${filterParts.join(',')})`;
+      url += `filterByFormula=${encodeURIComponent(formula)}&`;
+    }
+    
+    if (options?.limit) {
+      url += `pageSize=${options.limit}&`;
+    }
+    url += `sort[0][field]=Destacado&sort[0][direction]=desc`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error('Error fetching productos');
+    }
+
+    const data = await response.json();
+    return data.records.map(mapRecordToProducto);
+  } catch (error) {
+    console.error('❌ Error obteniendo productos:', error);
+    return [];
+  }
+}
+
+/**
+ * Obtener un producto por ID
+ */
+export async function getProductoById(id: string): Promise<ProductoArtista | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PRODUCTOS_ARTISTA)}/${id}`,
+      { method: 'GET', headers: getHeaders() }
+    );
+
+    if (!response.ok) {
+      throw new Error('Producto not found');
+    }
+
+    const record = await response.json();
+    return mapRecordToProducto(record);
+  } catch (error) {
+    console.error('❌ Error obteniendo producto:', error);
+    return null;
+  }
+}
+
+/**
+ * Crear un nuevo producto de artista
+ */
+export async function createProducto(data: CreateProductoData): Promise<ProductoArtista | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PRODUCTOS_ARTISTA)}`,
+      {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          fields: {
+            Nombre: data.nombre,
+            Artista_ID: data.artistaId,
+            Tipo: data.tipo,
+            Categoria: data.categoria,
+            Descripcion: data.descripcion,
+            Precio_COP: data.precioCOP,
+            Precio_GUANA: data.precioGUANA || 0,
+            Stock: data.stock ?? -1,
+            Stock_Vendido: 0,
+            Imagen_Principal: data.imagenPrincipal || '',
+            Duracion: data.duracion || '',
+            Ubicacion: data.ubicacion || '',
+            Capacidad: data.capacidad || 1,
+            Requiere_Reserva: data.requiereReserva || false,
+            Dias_Anticipacion: data.diasAnticipacion || 0,
+            Royalty_Porcentaje: 10,
+            Activo: true,
+            Destacado: false
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Error creating producto');
+    }
+
+    const record = await response.json();
+    console.log(`✅ Producto creado: ${data.nombre}`);
+    return mapRecordToProducto(record);
+  } catch (error) {
+    console.error('❌ Error creando producto:', error);
+    throw error;
+  }
+}
+
+/**
+ * Actualizar producto
+ */
+export async function updateProducto(
+  recordId: string,
+  updates: Partial<ProductoArtista>
+): Promise<boolean> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return false;
+  }
+
+  try {
+    const fields: any = {};
+    if (updates.nombre) fields.Nombre = updates.nombre;
+    if (updates.descripcion) fields.Descripcion = updates.descripcion;
+    if (updates.precioCOP) fields.Precio_COP = updates.precioCOP;
+    if (updates.precioGUANA) fields.Precio_GUANA = updates.precioGUANA;
+    if (updates.stock !== undefined) fields.Stock = updates.stock;
+    if (updates.imagenPrincipal) fields.Imagen_Principal = updates.imagenPrincipal;
+    if (updates.ipfsCID) fields.IPFS_CID = updates.ipfsCID;
+    if (updates.hederaTokenId) fields.Hedera_Token_ID = updates.hederaTokenId;
+    if (updates.activo !== undefined) fields.Activo = updates.activo;
+    if (updates.destacado !== undefined) fields.Destacado = updates.destacado;
+
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PRODUCTOS_ARTISTA)}/${recordId}`,
+      {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ fields })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to update producto');
+    }
+
+    console.log(`✅ Producto actualizado: ${recordId}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Error actualizando producto:', error);
+    return false;
+  }
+}
+
+// =========================================================
+// 💰 VENTAS DE ARTISTA
+// =========================================================
+
+/**
+ * Registrar una venta
+ */
+export async function registrarVenta(data: CreateVentaData): Promise<VentaArtista | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return null;
+  }
+
+  try {
+    // 1. Obtener producto para calcular porcentajes
+    const producto = await getProductoById(data.productoId);
+    if (!producto) {
+      throw new Error('Producto no encontrado');
+    }
+
+    // 2. Obtener artista para porcentajes
+    const artista = await getArtistaPortafolioById(producto.artistaId);
+    const porcArtista = artista?.porcentajeArtista || 70;
+    const porcGuanaGO = artista?.porcentajeGuanaGO || 15;
+    const porcCluster = artista?.porcentajeCluster || 15;
+
+    // 3. Calcular montos
+    const cantidad = data.cantidad || 1;
+    const precioTotal = data.precioTotal;
+    const montoArtista = Math.round(precioTotal * (porcArtista / 100));
+    const montoGuanaGO = Math.round(precioTotal * (porcGuanaGO / 100));
+    const montoCluster = Math.round(precioTotal * (porcCluster / 100));
+
+    // 4. Generar ID de venta
+    const ventaId = `VTA-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+
+    // 5. Crear registro
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.VENTAS_ARTISTA)}`,
+      {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          fields: {
+            ID_Venta: ventaId,
+            Producto_ID: data.productoId,
+            Comprador_ID: data.compradorId,
+            Cantidad: cantidad,
+            Precio_Total: precioTotal,
+            Metodo_Pago: data.metodoPago,
+            Estado_Pago: 'pendiente',
+            Monto_Artista: montoArtista,
+            Monto_GuanaGO: montoGuanaGO,
+            Monto_Cluster: montoCluster,
+            Estado_Pago_Artista: 'pendiente',
+            NFT_Transferido: false,
+            Experiencia_Fecha: data.experienciaFecha || '',
+            Experiencia_Completada: false
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Error registrando venta');
+    }
+
+    const record = await response.json();
+
+    // 6. Actualizar stock del producto si no es ilimitado
+    if (producto.stock !== -1) {
+      await updateProducto(producto.id, {
+        stock: Math.max(0, producto.stock - cantidad)
+      });
+    }
+
+    console.log(`✅ Venta registrada: ${ventaId} | $${precioTotal.toLocaleString()}`);
+    return mapRecordToVenta(record);
+  } catch (error) {
+    console.error('❌ Error registrando venta:', error);
+    throw error;
+  }
+}
+
+/**
+ * Obtener historial de ventas
+ */
+export async function getVentasArtista(
+  options?: { artistaId?: string; compradorId?: string; estado?: EstadoPago; limit?: number }
+): Promise<VentaArtista[]> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return [];
+  }
+
+  try {
+    let filterParts: string[] = [];
+    
+    if (options?.estado) {
+      filterParts.push(`{Estado_Pago}="${options.estado}"`);
+    }
+
+    let url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.VENTAS_ARTISTA)}?`;
+    
+    if (filterParts.length > 0) {
+      url += `filterByFormula=${encodeURIComponent(filterParts[0])}&`;
+    }
+    
+    if (options?.limit) {
+      url += `pageSize=${options.limit}&`;
+    }
+    url += `sort[0][field]=Fecha&sort[0][direction]=desc`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error('Error fetching ventas');
+    }
+
+    const data = await response.json();
+    return data.records.map(mapRecordToVenta);
+  } catch (error) {
+    console.error('❌ Error obteniendo ventas:', error);
+    return [];
+  }
+}
+
+/**
+ * Actualizar estado de venta (confirmar pago, etc.)
+ */
+export async function updateVenta(
+  recordId: string,
+  updates: Partial<{
+    estadoPago: EstadoPago;
+    estadoPagoArtista: EstadoPago;
+    fechaPagoArtista: string;
+    hederaTxHash: string;
+    nftTransferido: boolean;
+    experienciaCompletada: boolean;
+    ratingCliente: number;
+    comentarioCliente: string;
+  }>
+): Promise<boolean> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return false;
+  }
+
+  try {
+    const fields: any = {};
+    if (updates.estadoPago) fields.Estado_Pago = updates.estadoPago;
+    if (updates.estadoPagoArtista) fields.Estado_Pago_Artista = updates.estadoPagoArtista;
+    if (updates.fechaPagoArtista) fields.Fecha_Pago_Artista = updates.fechaPagoArtista;
+    if (updates.hederaTxHash) fields.Hedera_TxHash = updates.hederaTxHash;
+    if (updates.nftTransferido !== undefined) fields.NFT_Transferido = updates.nftTransferido;
+    if (updates.experienciaCompletada !== undefined) fields.Experiencia_Completada = updates.experienciaCompletada;
+    if (updates.ratingCliente) fields.Rating_Cliente = updates.ratingCliente;
+    if (updates.comentarioCliente) fields.Comentario_Cliente = updates.comentarioCliente;
+
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.VENTAS_ARTISTA)}/${recordId}`,
+      {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ fields })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to update venta');
+    }
+
+    console.log(`✅ Venta actualizada: ${recordId}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Error actualizando venta:', error);
+    return false;
+  }
+}
+
+/**
+ * Obtener resumen de ventas (para dashboard)
+ */
+export async function getResumenVentas(artistaId?: string): Promise<{
+  totalVentas: number;
+  ventasCount: number;
+  gananciasArtista: number;
+  gananciasGuanaGO: number;
+  gananciasCluster: number;
+  pendientesPago: number;
+}> {
+  const ventas = await getVentasArtista({ artistaId, limit: 1000 });
+  
+  let totalVentas = 0;
+  let gananciasArtista = 0;
+  let gananciasGuanaGO = 0;
+  let gananciasCluster = 0;
+  let pendientesPago = 0;
+
+  ventas.forEach(v => {
+    if (v.estadoPago === 'pagado') {
+      totalVentas += v.precioTotal;
+      gananciasArtista += v.montoArtista;
+      gananciasGuanaGO += v.montoGuanaGO;
+      gananciasCluster += v.montoCluster;
+    }
+    if (v.estadoPagoArtista === 'pendiente' && v.estadoPago === 'pagado') {
+      pendientesPago += v.montoArtista;
+    }
+  });
+
+  return {
+    totalVentas,
+    ventasCount: ventas.length,
+    gananciasArtista,
+    gananciasGuanaGO,
+    gananciasCluster,
+    pendientesPago
+  };
+}
+
+// =========================================================
+// 🔧 HELPERS / MAPPERS
+// =========================================================
+
+function mapRecordToArtistaPortafolio(record: any): ArtistaPortafolio {
+  const f = record.fields;
+  return {
+    id: record.id,
+    artistaId: f.Artista_ID || '',
+    nombreArtistico: f.Nombre_Artistico || '',
+    estadoGestion: f.Estado_Gestion || 'prospecto',
+    porcentajeArtista: parseFloat(f.Porcentaje_Artista) || 70,
+    porcentajeGuanaGO: parseFloat(f.Porcentaje_GuanaGO) || 15,
+    porcentajeCluster: parseFloat(f.Porcentaje_Cluster) || 15,
+    contratoFirmado: Boolean(f.Contrato_Firmado),
+    documentoContrato: f.Documento_Contrato?.[0]?.url || undefined,
+    fechaInicio: f.Fecha_Inicio || undefined,
+    fechaFin: f.Fecha_Fin || undefined,
+    walletHedera: f.Wallet_Hedera || undefined,
+    walletTradicional: f.Wallet_Tradicional || undefined,
+    productosActivos: parseInt(f.Productos_Activos) || 0,
+    ventasTotales: parseFloat(f.Ventas_Totales) || 0,
+    gananciasArtista: parseFloat(f.Ganancias_Artista) || 0,
+    gananciasGuanaGO: parseFloat(f.Ganancias_GuanaGO) || 0,
+    notasPrivadas: f.Notas_Privadas || undefined,
+    contactoManager: f.Contacto_Manager || undefined,
+    telefono: f.Telefono || undefined,
+    fechaCreacion: record.createdTime
+  };
+}
+
+function mapRecordToProducto(record: any): ProductoArtista {
+  const f = record.fields;
+  return {
+    id: record.id,
+    nombre: f.Nombre || '',
+    artistaId: f.Artista_ID || '',
+    artistaNombre: f.Artista_Nombre || undefined,
+    tipo: f.Tipo || 'nft_musica',
+    categoria: f.Categoria || 'digital',
+    descripcion: f.Descripcion || '',
+    precioCOP: parseFloat(f.Precio_COP) || 0,
+    precioUSD: parseFloat(f.Precio_USD) || undefined,
+    precioGUANA: parseInt(f.Precio_GUANA) || undefined,
+    costoProduccion: parseFloat(f.Costo_Produccion) || undefined,
+    stock: parseInt(f.Stock) ?? -1,
+    stockVendido: parseInt(f.Stock_Vendido) || 0,
+    imagenPrincipal: f.Imagen_Principal?.[0]?.url || f.Imagen_Principal || undefined,
+    galeria: f.Galeria?.map((g: any) => g.url) || undefined,
+    archivoDigital: f.Archivo_Digital?.[0]?.url || undefined,
+    ipfsCID: f.IPFS_CID || undefined,
+    hederaTokenId: f.Hedera_Token_ID || undefined,
+    hederaSerial: parseInt(f.Hedera_Serial) || undefined,
+    royaltyPorcentaje: parseFloat(f.Royalty_Porcentaje) || 10,
+    duracion: f.Duracion || undefined,
+    ubicacion: f.Ubicacion || undefined,
+    capacidad: parseInt(f.Capacidad) || undefined,
+    disponibilidad: f.Disponibilidad || undefined,
+    requiereReserva: Boolean(f.Requiere_Reserva),
+    diasAnticipacion: parseInt(f.Dias_Anticipacion) || undefined,
+    activo: Boolean(f.Activo),
+    destacado: Boolean(f.Destacado),
+    fechaCreacion: record.createdTime
+  };
+}
+
+function mapRecordToVenta(record: any): VentaArtista {
+  const f = record.fields;
+  return {
+    id: record.id,
+    idVenta: f.ID_Venta || '',
+    productoId: f.Producto_ID || '',
+    productoNombre: f.Producto_Nombre || undefined,
+    artistaNombre: f.Artista_Nombre || undefined,
+    compradorId: f.Comprador_ID || '',
+    compradorNombre: f.Comprador_Nombre || undefined,
+    compradorEmail: f.Comprador_Email || undefined,
+    fecha: f.Fecha || record.createdTime,
+    cantidad: parseInt(f.Cantidad) || 1,
+    precioUnitario: parseFloat(f.Precio_Unitario) || 0,
+    precioTotal: parseFloat(f.Precio_Total) || 0,
+    metodoPago: f.Metodo_Pago || 'efectivo',
+    estadoPago: f.Estado_Pago || 'pendiente',
+    montoArtista: parseFloat(f.Monto_Artista) || 0,
+    montoGuanaGO: parseFloat(f.Monto_GuanaGO) || 0,
+    montoCluster: parseFloat(f.Monto_Cluster) || 0,
+    estadoPagoArtista: f.Estado_Pago_Artista || 'pendiente',
+    fechaPagoArtista: f.Fecha_Pago_Artista || undefined,
+    hederaTxHash: f.Hedera_TxHash || undefined,
+    hederaTimestamp: f.Hedera_Timestamp || undefined,
+    nftTransferido: Boolean(f.NFT_Transferido),
+    experienciaFecha: f.Experiencia_Fecha || undefined,
+    experienciaCompletada: Boolean(f.Experiencia_Completada),
+    ratingCliente: parseInt(f.Rating_Cliente) || undefined,
+    comentarioCliente: f.Comentario_Cliente || undefined,
+    notas: f.Notas || undefined
+  };
+}
+
 /**
  * Servicio principal de Airtable
  */
@@ -1026,6 +1864,24 @@ export const airtableService = {
   getTransactionSummary,
   updateTransactionBlockchainStatus,
   getPendingBlockchainTransactions,
+  
+  // 🎵 Gestión de Artistas (Portafolio)
+  getArtistasPortafolio,
+  getArtistaPortafolioById,
+  addArtistaToPortafolio,
+  updateArtistaPortafolio,
+  
+  // 🛍️ Productos de Artista (NFTs, experiencias, etc.)
+  getProductosArtista,
+  getProductoById,
+  createProducto,
+  updateProducto,
+  
+  // 💵 Ventas de Artista
+  registrarVenta,
+  getVentasArtista,
+  updateVenta,
+  getResumenVentas,
   
   // Acceso genérico a tablas
   fetchTable,
