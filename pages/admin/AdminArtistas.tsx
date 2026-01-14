@@ -65,6 +65,22 @@ const AdminArtistas: React.FC<AdminArtistasProps> = ({ onBack, onNavigate }) => 
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingSteps, setOnboardingSteps] = useState<OnboardingStep[]>(DEFAULT_ONBOARDING_STEPS);
   
+  // Modal crear producto
+  const [showCreateProduct, setShowCreateProduct] = useState(false);
+  const [productForm, setProductForm] = useState({
+    artistaId: '',
+    nombre: '',
+    descripcion: '',
+    categoria: 'digital' as CategoriaProducto,
+    tipo: 'nft_musica' as TipoProducto,
+    precioCOP: 0,
+    precioGUANA: 0,
+    stock: -1,
+    fechaExperiencia: '',
+    ubicacion: '',
+    duracion: ''
+  });
+
   // Resumen financiero
   const [resumen, setResumen] = useState({
     totalVentas: 0,
@@ -352,6 +368,15 @@ const AdminArtistas: React.FC<AdminArtistasProps> = ({ onBack, onNavigate }) => 
             {/* Tab: Productos */}
             {activeTab === 'productos' && (
               <div className="space-y-3">
+                {/* Botón crear producto */}
+                <button
+                  onClick={() => setShowCreateProduct(true)}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 p-4 rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                >
+                  <Plus size={20} />
+                  <span className="font-bold">Crear Nuevo Producto</span>
+                </button>
+
                 {productos.length === 0 ? (
                   <div className="text-center py-12">
                     <Package size={48} className="mx-auto text-gray-600 mb-4" />
@@ -672,6 +697,263 @@ const AdminArtistas: React.FC<AdminArtistasProps> = ({ onBack, onNavigate }) => 
                 <button className="w-full bg-gray-800 p-3 rounded-xl font-medium flex items-center justify-center gap-2">
                   <Package size={18} />
                   Ver Productos
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Crear Producto */}
+      {showCreateProduct && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-end justify-center">
+          <div className="bg-gray-900 w-full max-w-lg rounded-t-3xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold">Crear Producto</h2>
+                <button onClick={() => setShowCreateProduct(false)} className="p-2 hover:bg-gray-800 rounded-full">
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Seleccionar Artista */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-400 mb-2">Artista *</label>
+                <select
+                  value={productForm.artistaId}
+                  onChange={(e) => setProductForm({ ...productForm, artistaId: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                >
+                  <option value="">Seleccionar artista...</option>
+                  {artistas.filter(a => a.estadoGestion === 'activo').map(a => (
+                    <option key={a.id} value={a.id}>{a.nombreArtistico}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Categoría */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-400 mb-2">Categoría *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'digital', label: '🎵 Digital / NFT', desc: 'Música, arte, video' },
+                    { id: 'experiencia', label: '⭐ Experiencia', desc: 'Cenas, clases, tours' },
+                    { id: 'acceso', label: '🎫 Acceso', desc: 'Membresías, backstage' },
+                    { id: 'fisico', label: '📦 Físico', desc: 'Merch, vinilos, posters' }
+                  ].map(cat => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setProductForm({ 
+                        ...productForm, 
+                        categoria: cat.id as CategoriaProducto,
+                        tipo: cat.id === 'digital' ? 'nft_musica' :
+                              cat.id === 'experiencia' ? 'cena_artista' :
+                              cat.id === 'acceso' ? 'membresia' : 'merchandise'
+                      })}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        productForm.categoria === cat.id
+                          ? 'bg-purple-900/50 border-purple-500'
+                          : 'bg-gray-800 border-gray-700 hover:border-gray-600'
+                      }`}
+                    >
+                      <p className="font-bold text-sm">{cat.label}</p>
+                      <p className="text-[10px] text-gray-400">{cat.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tipo específico según categoría */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-400 mb-2">Tipo de Producto *</label>
+                <select
+                  value={productForm.tipo}
+                  onChange={(e) => setProductForm({ ...productForm, tipo: e.target.value as TipoProducto })}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                >
+                  {productForm.categoria === 'digital' && (
+                    <>
+                      <option value="nft_musica">🎵 NFT Música - Canción tokenizada</option>
+                      <option value="nft_arte">🎨 NFT Arte - Obra visual digital</option>
+                      <option value="nft_video">🎬 NFT Video - Video musical exclusivo</option>
+                      <option value="nft_coleccionable">💎 NFT Coleccionable - Edición limitada</option>
+                    </>
+                  )}
+                  {productForm.categoria === 'experiencia' && (
+                    <>
+                      <option value="cena_artista">🍽️ Cena con Artista - Cena privada</option>
+                      <option value="clase_privada">🎓 Clase Privada - Masterclass 1:1</option>
+                      <option value="tour_privado">🚶 Tour Privado - Recorrido exclusivo</option>
+                      <option value="backstage">🎤 Backstage - Acceso a concierto</option>
+                      <option value="meet_greet">🤝 Meet & Greet - Encuentro con artista</option>
+                    </>
+                  )}
+                  {productForm.categoria === 'acceso' && (
+                    <>
+                      <option value="membresia">🌟 Membresía - Fan club anual</option>
+                      <option value="early_access">⚡ Early Access - Acceso anticipado</option>
+                    </>
+                  )}
+                  {productForm.categoria === 'fisico' && (
+                    <>
+                      <option value="merchandise">👕 Merchandise - Productos firmados</option>
+                      <option value="vinilo">💿 Vinilo - Disco edición limitada</option>
+                      <option value="poster_firmado">🖼️ Póster Firmado - Autografiado</option>
+                      <option value="usb_coleccion">💾 USB Colección - Discografía completa</option>
+                    </>
+                  )}
+                </select>
+              </div>
+
+              {/* Nombre y Descripción */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-400 mb-2">Nombre del Producto *</label>
+                <input
+                  type="text"
+                  value={productForm.nombre}
+                  onChange={(e) => setProductForm({ ...productForm, nombre: e.target.value })}
+                  placeholder="Ej: Reggae Sunrise - Edición Coleccionista"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-400 mb-2">Descripción</label>
+                <textarea
+                  value={productForm.descripcion}
+                  onChange={(e) => setProductForm({ ...productForm, descripcion: e.target.value })}
+                  placeholder="Describe el producto..."
+                  rows={3}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 resize-none"
+                />
+              </div>
+
+              {/* Campos específicos para Experiencias */}
+              {productForm.categoria === 'experiencia' && (
+                <>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Fecha de la Experiencia</label>
+                    <input
+                      type="date"
+                      value={productForm.fechaExperiencia}
+                      onChange={(e) => setProductForm({ ...productForm, fechaExperiencia: e.target.value })}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Ubicación</label>
+                    <input
+                      type="text"
+                      value={productForm.ubicacion}
+                      onChange={(e) => setProductForm({ ...productForm, ubicacion: e.target.value })}
+                      placeholder="Ej: Restaurante Miss Celia, San Andrés"
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Duración</label>
+                    <input
+                      type="text"
+                      value={productForm.duracion}
+                      onChange={(e) => setProductForm({ ...productForm, duracion: e.target.value })}
+                      placeholder="Ej: 2 horas"
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Precios */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Precio COP *</label>
+                  <input
+                    type="number"
+                    value={productForm.precioCOP || ''}
+                    onChange={(e) => setProductForm({ ...productForm, precioCOP: parseInt(e.target.value) || 0 })}
+                    placeholder="150000"
+                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Precio GUANA (opcional)</label>
+                  <input
+                    type="number"
+                    value={productForm.precioGUANA || ''}
+                    onChange={(e) => setProductForm({ ...productForm, precioGUANA: parseInt(e.target.value) || 0 })}
+                    placeholder="1500"
+                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+              </div>
+
+              {/* Stock */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-400 mb-2">Stock (-1 = ilimitado)</label>
+                <input
+                  type="number"
+                  value={productForm.stock}
+                  onChange={(e) => setProductForm({ ...productForm, stock: parseInt(e.target.value) })}
+                  placeholder="-1"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              {/* Preview de distribución */}
+              <div className="bg-gray-800/50 rounded-xl p-4 mb-6 border border-gray-700">
+                <h4 className="text-sm font-bold text-gray-400 mb-3">Distribución por venta:</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Artista (70%)</span>
+                    <span className="text-purple-400 font-bold">${(productForm.precioCOP * 0.7).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">GuanaGO (15%)</span>
+                    <span className="text-green-400 font-bold">${(productForm.precioCOP * 0.15).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Clúster RIMM (15%)</span>
+                    <span className="text-blue-400 font-bold">${(productForm.precioCOP * 0.15).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botones */}
+              <div className="space-y-3">
+                <button 
+                  onClick={async () => {
+                    try {
+                      await airtableService.createProducto({
+                        artistaId: productForm.artistaId,
+                        nombre: productForm.nombre,
+                        descripcion: productForm.descripcion,
+                        tipo: productForm.tipo,
+                        categoria: productForm.categoria,
+                        precioCOP: productForm.precioCOP,
+                        precioGUANA: productForm.precioGUANA || undefined,
+                        stock: productForm.stock,
+                        fechaExperiencia: productForm.fechaExperiencia || undefined,
+                        ubicacion: productForm.ubicacion || undefined,
+                        duracion: productForm.duracion || undefined
+                      });
+                      setShowCreateProduct(false);
+                      loadData();
+                    } catch (error) {
+                      console.error('Error creando producto:', error);
+                    }
+                  }}
+                  disabled={!productForm.artistaId || !productForm.nombre || !productForm.precioCOP}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 p-4 rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus size={20} />
+                  Crear Producto
+                </button>
+                <button 
+                  onClick={() => setShowCreateProduct(false)}
+                  className="w-full bg-gray-800 p-3 rounded-xl font-medium"
+                >
+                  Cancelar
                 </button>
               </div>
             </div>
