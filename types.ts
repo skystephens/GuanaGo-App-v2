@@ -263,6 +263,8 @@ export enum AppRoute {
   // Gestión de Socios Multi-perfil
   ADMIN_SOCIOS = 'ADMIN_SOCIOS',
   SOCIO_PORTAL = 'SOCIO_PORTAL',
+  // Panel de Tareas del Proyecto
+  ADMIN_TASKS = 'ADMIN_TASKS',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin';
@@ -320,3 +322,96 @@ export interface Socio {
   createdAt: string;
   updatedAt: string;
 }
+// ============================================================
+// SISTEMA DE TAREAS (Admin Tasks / To-Do Panel)
+// ============================================================
+
+export type TaskStatus = 'pendiente' | 'en_progreso' | 'urgente_pendiente' | 'terminado' | 'bloqueado';
+export type TaskPriority = 'baja' | 'media' | 'alta' | 'critica';
+export type TaskCategory = 
+  | 'frontend' 
+  | 'backend' 
+  | 'blockchain' 
+  | 'integracion' 
+  | 'diseno' 
+  | 'documentacion'
+  | 'testing'
+  | 'devops'
+  | 'negocio'
+  | 'marketing';
+
+export interface ProjectTask {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  status: TaskStatus;
+  prioridad: TaskPriority;
+  categoria: TaskCategory;
+  // Trazabilidad
+  archivoReferencia?: string; // Ej: "ARCHITECTURE_MAP.md", "RIMM_NFT_STRATEGY.md"
+  seccionReferencia?: string; // Ej: "Fase 2: Contenido"
+  // Estimaciones
+  estimacionHoras?: number;
+  horasReales?: number;
+  fechaLimite?: string;
+  // Asignación
+  asignadoA?: string;
+  creadoPor: string;
+  // Dependencias
+  dependeDe?: string[]; // IDs de tareas que bloquean esta
+  bloquea?: string[]; // IDs de tareas que esta bloquea
+  // Metadata
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string;
+  // Para IA/Make
+  notasIA?: string; // Sugerencias de la IA
+  ultimoAnalisis?: string; // Fecha del último análisis
+}
+
+export interface TaskFilter {
+  status?: TaskStatus[];
+  prioridad?: TaskPriority[];
+  categoria?: TaskCategory[];
+  archivoReferencia?: string;
+  asignadoA?: string;
+}
+
+export interface TaskStats {
+  total: number;
+  pendientes: number;
+  enProgreso: number;
+  urgentesPendientes: number;
+  terminadas: number;
+  bloqueadas: number;
+  porCategoria: Record<TaskCategory, number>;
+}
+
+// Configuración de colores y etiquetas para el UI
+export const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; color: string; bgColor: string }> = {
+  pendiente: { label: 'Pendiente', color: 'text-yellow-400', bgColor: 'bg-yellow-900/30' },
+  en_progreso: { label: 'En Progreso', color: 'text-blue-400', bgColor: 'bg-blue-900/30' },
+  urgente_pendiente: { label: '⚠️ Urgente', color: 'text-red-400', bgColor: 'bg-red-900/30' },
+  terminado: { label: 'Terminado', color: 'text-green-400', bgColor: 'bg-green-900/30' },
+  bloqueado: { label: 'Bloqueado', color: 'text-gray-400', bgColor: 'bg-gray-900/30' }
+};
+
+export const TASK_PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string; icon: string }> = {
+  baja: { label: 'Baja', color: 'text-gray-400', icon: '○' },
+  media: { label: 'Media', color: 'text-yellow-400', icon: '◐' },
+  alta: { label: 'Alta', color: 'text-orange-400', icon: '●' },
+  critica: { label: 'Crítica', color: 'text-red-500', icon: '🔥' }
+};
+
+export const TASK_CATEGORY_CONFIG: Record<TaskCategory, { label: string; color: string; icon: string }> = {
+  frontend: { label: 'Frontend', color: 'text-cyan-400', icon: '🎨' },
+  backend: { label: 'Backend', color: 'text-green-400', icon: '⚙️' },
+  blockchain: { label: 'Blockchain', color: 'text-purple-400', icon: '⛓️' },
+  integracion: { label: 'Integración', color: 'text-blue-400', icon: '🔗' },
+  diseno: { label: 'Diseño', color: 'text-pink-400', icon: '✏️' },
+  documentacion: { label: 'Docs', color: 'text-yellow-400', icon: '📄' },
+  testing: { label: 'Testing', color: 'text-orange-400', icon: '🧪' },
+  devops: { label: 'DevOps', color: 'text-red-400', icon: '🚀' },
+  negocio: { label: 'Negocio', color: 'text-emerald-400', icon: '💼' },
+  marketing: { label: 'Marketing', color: 'text-fuchsia-400', icon: '📢' }
+};

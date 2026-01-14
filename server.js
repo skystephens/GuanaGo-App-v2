@@ -12,6 +12,7 @@ import reservationsRoutes from './backend/routes/reservations.js';
 import directoryRoutes from './backend/routes/directory.js';
 import chatbotRoutes from './backend/routes/chatbot.js';
 import taxisRoutes from './backend/routes/taxis.js';
+import tasksRoutes from './backend/routes/tasks.js';
 
 // Import middleware
 import { requestLogger } from './backend/middleware/logger.js';
@@ -75,6 +76,9 @@ app.use('/api/chatbot', chatbotRoutes);
 
 // Taxi routes
 app.use('/api/taxis', taxisRoutes);
+
+// Tasks routes (Panel de Tareas + Make.com)
+app.use('/api/tasks', tasksRoutes);
 
 console.log('✅ Rutas API configuradas');
 

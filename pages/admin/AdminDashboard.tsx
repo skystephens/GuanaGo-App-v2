@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList } from 'lucide-react';
 import { ADMIN_STATS, PARTNER_RESERVATIONS, POPULAR_TOURS } from '../../constants';
 import { AppRoute } from '../../types';
 
@@ -140,6 +140,14 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                <div className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                <Server size={24} className="text-purple-400" />
                <span className="text-xs font-bold">Backend</span>
+             </button>
+             <button 
+               onClick={() => onNavigate(AppRoute.ADMIN_TASKS)}
+               className="bg-gradient-to-br from-cyan-900 to-blue-900 p-4 rounded-xl border border-cyan-600 hover:border-cyan-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"
+             >
+               <div className="absolute top-1 right-1 w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+               <ClipboardList size={24} className="text-cyan-400" />
+               <span className="text-xs font-bold">Tareas</span>
              </button>
          </div>
       </div>
