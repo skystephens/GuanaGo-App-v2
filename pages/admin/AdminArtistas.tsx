@@ -690,6 +690,16 @@ const AdminArtistas: React.FC<AdminArtistasProps> = ({ onBack, onNavigate }) => 
 
               {/* Acciones */}
               <div className="space-y-3">
+                <button 
+                  onClick={() => {
+                    setShowDetail(false);
+                    onNavigate(AppRoute.ARTISTA_PORTAL, { artistaId: selectedArtista.id });
+                  }}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 p-3 rounded-xl font-bold flex items-center justify-center gap-2"
+                >
+                  <Eye size={18} />
+                  Ver Portal del Artista
+                </button>
                 <button className="w-full bg-purple-600 p-3 rounded-xl font-bold flex items-center justify-center gap-2">
                   <Edit3 size={18} />
                   Editar Artista

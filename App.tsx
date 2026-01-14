@@ -48,6 +48,7 @@ import AdminServices from './pages/admin/AdminServices';
 import AdminBackend from './pages/admin/AdminBackend';
 import AdminCaribbeanNight from './pages/admin/AdminCaribbeanNight';
 import AdminArtistas from './pages/admin/AdminArtistas';
+import AdminSocios from './pages/admin/AdminSocios';
 
 // Artista Portal
 import ArtistaPortal from './pages/ArtistaPortal';
@@ -172,6 +173,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_CARIBBEAN_NIGHT: return <AdminCaribbeanNight onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_ARTISTAS: return <AdminArtistas onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ARTISTA_PORTAL: return <ArtistaPortal onBack={goBack} onNavigate={navigateTo} artistaId={detailData?.artistaId} />;
+      case AppRoute.ADMIN_SOCIOS: return <AdminSocios onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };

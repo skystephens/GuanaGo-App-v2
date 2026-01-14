@@ -260,6 +260,63 @@ export enum AppRoute {
   ADMIN_ARTISTAS = 'ADMIN_ARTISTAS',
   ARTISTA_ONBOARDING = 'ARTISTA_ONBOARDING',
   ARTISTA_PORTAL = 'ARTISTA_PORTAL',
+  // Gestión de Socios Multi-perfil
+  ADMIN_SOCIOS = 'ADMIN_SOCIOS',
+  SOCIO_PORTAL = 'SOCIO_PORTAL',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin';
+
+// Tipos de Socio/Partner - cada uno tiene su propio portal y campos
+export type TipoSocio = 
+  | 'artista_musical'      // Artistas del RIMM Cluster
+  | 'tour_operador'        // Operadores de tours y excursiones
+  | 'alojamiento'          // Hoteles, hostales, Airbnb
+  | 'restaurante'          // Restaurantes y bares
+  | 'transporte'           // Taxis, lanchas, rentacars
+  | 'comercio'             // Tiendas y artesanías
+  | 'experiencia'          // Actividades (buceo, snorkel, etc.)
+  | 'evento';              // Organizadores de eventos
+
+// Configuración de campos requeridos por tipo de socio
+export interface SocioConfig {
+  tipo: TipoSocio;
+  label: string;
+  icon: string;
+  color: string;
+  camposRequeridos: string[];
+  camposOpcionales: string[];
+  portalRoute: AppRoute;
+}
+
+// Datos del Socio
+export interface Socio {
+  id: string;
+  nombre: string;
+  nombreComercial: string;
+  tipo: TipoSocio;
+  email: string;
+  telefono: string;
+  // Estado
+  estado: 'prospecto' | 'activo' | 'pausado' | 'suspendido';
+  verificado: boolean;
+  // Financiero
+  comisionGuanaGO: number; // Porcentaje que cobra GuanaGO
+  walletHedera?: string;
+  datosBancarios?: {
+    banco: string;
+    tipoCuenta: string;
+    numeroCuenta: string;
+    titular: string;
+  };
+  // Documentos
+  documentosCompletados: string[];
+  documentosPendientes: string[];
+  // Stats
+  productosActivos: number;
+  ventasTotales: number;
+  calificacionPromedio: number;
+  // Metadata
+  createdAt: string;
+  updatedAt: string;
+}
