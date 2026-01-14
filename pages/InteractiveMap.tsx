@@ -284,7 +284,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
   };
 
   return (
-    <div className=\"min-h-screen w-full bg-gray-100 flex flex-col overflow-hidden\">
+    <div className="min-h-screen w-full bg-gray-100 flex flex-col overflow-hidden">
       {/* Header compacto */}
       <header className="bg-white px-4 pt-10 pb-3 shadow-sm z-20 flex-shrink-0">
         <div className="flex items-center gap-3 mb-3">

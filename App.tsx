@@ -47,6 +47,7 @@ import AdminFinance from './pages/admin/AdminFinance';
 import AdminServices from './pages/admin/AdminServices';
 import AdminBackend from './pages/admin/AdminBackend';
 import AdminCaribbeanNight from './pages/admin/AdminCaribbeanNight';
+import AdminArtistas from './pages/admin/AdminArtistas';
 
 import Navigation from './components/Navigation';
 import GuanaChatbot from './components/GuanaChatbot';
@@ -166,6 +167,7 @@ const App: React.FC = () => {
       case AppRoute.MUSIC_EVENT_DETAIL: return <MusicEventDetail data={detailData} onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ARTIST_DETAIL: return <ArtistDetail data={detailData} onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_CARIBBEAN_NIGHT: return <AdminCaribbeanNight onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_ARTISTAS: return <AdminArtistas onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };

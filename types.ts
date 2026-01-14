@@ -256,6 +256,10 @@ export enum AppRoute {
   MUSIC_EVENT_DETAIL = 'MUSIC_EVENT_DETAIL',
   ARTIST_DETAIL = 'ARTIST_DETAIL',
   ADMIN_CARIBBEAN_NIGHT = 'ADMIN_CARIBBEAN_NIGHT',
+  // Gestión de Artistas y NFTs
+  ADMIN_ARTISTAS = 'ADMIN_ARTISTAS',
+  ARTISTA_ONBOARDING = 'ARTISTA_ONBOARDING',
+  ARTISTA_PORTAL = 'ARTISTA_PORTAL',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin';
