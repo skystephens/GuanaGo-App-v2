@@ -18,19 +18,44 @@ console.log('🔧 Airtable Config:', {
 
 // Nombres de las tablas
 const TABLES = {
-  DIRECTORIO: 'Directorio_Mapa',
+  // Sistema de Usuarios y Empresas
+  USUARIOS: 'Leads',              // Tabla Leads renombrada conceptualmente a Usuarios
+  LEADS: 'Leads',                 // Alias legacy para compatibilidad
+  EMPRESAS: 'Directorio_Mapa',    // Directorio_Mapa también funciona como Empresas/Aliados
+  DIRECTORIO: 'Directorio_Mapa',  // Alias para el mapa
+  
+  // Servicios turísticos
   SERVICIOS: 'ServiciosTuristicos_SAI',
-  LEADS: 'Leads',
+  
+  // RIMM Caribbean Night
   RIMM_MUSICOS: 'Rimm_musicos',
+  
+  // Sistema GUANA Points
   RETOS: 'Retos_GUANA',
   TRANSACCIONES: 'GUANA_Transacciones',
-  // Nuevas tablas para gestión de artistas y NFTs
+  
+  // Gestión de artistas y NFTs
   ARTISTAS_PORTAFOLIO: 'Artistas_Portafolio',
   PRODUCTOS_ARTISTA: 'Productos_Artista',
   VENTAS_ARTISTA: 'Ventas_Artista'
 };
 
-// Interfaz para usuario con GUANA Points
+// Roles de usuario en el sistema
+export type UserRole = 'Turista' | 'Operador' | 'Aliado' | 'Socio' | 'Artista' | 'SuperAdmin';
+
+// Tipos de establecimiento para socios
+export type EstablishmentType = 
+  | 'Hotel' 
+  | 'Restaurante' 
+  | 'Tour Operador' 
+  | 'Comercio' 
+  | 'Artista RIMM' 
+  | 'Transporte' 
+  | 'Buceo' 
+  | 'Entretenimiento'
+  | 'Otro';
+
+// Interfaz para usuario con GUANA Points (tabla Leads/Usuarios)
 export interface GuanaUser {
   id: string;
   guanaId: string;
@@ -38,13 +63,63 @@ export interface GuanaUser {
   email: string;
   telefono?: string;
   whatsapp?: string;
+  
+  // Sistema GUANA Points
   saldoGuana: number;
   puntosAcumulados: number;
   puntosCanjeados: number;
   nivel: 'Explorador' | 'Aventurero' | 'Experto' | 'Leyenda';
   retosCompletados: number;
   qrEscaneados: number;
+  
+  // Sistema Multi-Perfil (nuevos campos)
+  role: UserRole;                      // Turista, Operador, Aliado, etc.
+  establishmentType?: EstablishmentType; // Tipo de negocio si es socio
+  businessId?: string;                 // Link a Directorio_Mapa/Empresas
+  esRaizal?: boolean;                  // Residente raizal
+  cedulaRut?: string;                  // Documento identidad (para socios)
+  verificado?: boolean;                // KYC completado
+  
+  // Metadata
   fechaRegistro: string;
+  ultimaActividad?: string;
+}
+
+// Interfaz para Empresa/Aliado (tabla Directorio_Mapa)
+export interface GuanaEmpresa {
+  id: string;
+  nombre: string;
+  categoria: string;                   // Hotel, Restaurante, etc.
+  
+  // Ubicación
+  latitud: number;
+  longitud: number;
+  direccion: string;
+  
+  // Contacto
+  telefono?: string;
+  email?: string;
+  website?: string;
+  horario?: string;
+  
+  // Media
+  imagen?: string;
+  descripcion?: string;
+  rating?: number;
+  
+  // Datos de Aliado GuanaGO (campos nuevos)
+  responsableId?: string;              // Link a Leads/Usuarios
+  responsableNombre?: string;          // Nombre del contacto
+  rnt?: string;                        // Registro Nacional de Turismo
+  camaraComercio?: string;             // NIT
+  esAliadoGuanaGO: boolean;            // Tiene convenio activo
+  comisionPactada?: number;            // % que paga a GuanaGO
+  saldoPuntosEmpresa?: number;         // GUANA Points de la empresa
+  estadoAliado: 'prospecto' | 'activo' | 'pausado' | 'inactivo';
+  walletHedera?: string;               // Para pagos crypto
+  
+  // Metadata
+  fechaRegistro?: string;
 }
 
 // Interfaz para retos GUANA
@@ -634,7 +709,8 @@ export async function getUserByGuanaId(guanaId: string): Promise<GuanaUser | nul
 }
 
 /**
- * Mapear registro de Lead a usuario GUANA
+ * Mapear registro de Lead/Usuario a GuanaUser
+ * Soporta sistema multi-rol: la misma persona puede ser turista y operador
  */
 function mapLeadToUser(record: any): GuanaUser {
   const f = record.fields;
@@ -647,6 +723,10 @@ function mapLeadToUser(record: any): GuanaUser {
   if (acumulados >= 5000) nivel = 'Leyenda';
   else if (acumulados >= 2000) nivel = 'Experto';
   else if (acumulados >= 500) nivel = 'Aventurero';
+
+  // Mapear rol (puede ser string o array en Airtable)
+  const roleField = f.Role || f.Rol || 'Turista';
+  const role = Array.isArray(roleField) ? roleField[0] : roleField;
   
   return {
     id: record.id,
@@ -661,7 +741,15 @@ function mapLeadToUser(record: any): GuanaUser {
     nivel: nivel,
     retosCompletados: parseInt(f.Retos_Completados || '0') || 0,
     qrEscaneados: parseInt(f.QR_Escaneados || '0') || 0,
-    fechaRegistro: f.Fecha || record.createdTime || new Date().toISOString()
+    fechaRegistro: f.Fecha || record.createdTime || new Date().toISOString(),
+    // Nuevos campos multi-rol
+    role: (role as UserRole) || 'Turista',
+    establishmentType: f.Establishment_Type || f.Tipo_Establecimiento || undefined,
+    businessId: f.Business_ID || f.Empresa_ID || undefined,
+    esRaizal: f.Es_Raizal === true || f.Es_Raizal === 'true',
+    cedulaRut: f.Cedula_RUT || f.Cedula || undefined,
+    verificado: f.Verificado === true || f.Verificado === 'true',
+    ultimaActividad: f.Ultima_Actividad || f.Last_Activity || undefined
   };
 }
 
@@ -769,6 +857,274 @@ export async function updateGuanaBalance(
     return false;
   }
 }
+
+// ==================== FUNCIONES MULTI-ROL ====================
+
+/**
+ * Obtener usuarios por rol
+ * Útil para dashboard de admin: "mostrar todos los operadores"
+ */
+export async function getUsersByRole(role: UserRole): Promise<GuanaUser[]> {
+  try {
+    const records = await fetchTable(TABLES.USUARIOS, {
+      filterByFormula: `{Role} = '${role}'`
+    });
+    
+    return records.map(mapLeadToUser);
+  } catch (error) {
+    console.error(`❌ Error getting users by role ${role}:`, error);
+    return [];
+  }
+}
+
+/**
+ * Obtener usuarios verificados (para aliados/socios activos)
+ */
+export async function getVerifiedUsers(): Promise<GuanaUser[]> {
+  try {
+    const records = await fetchTable(TABLES.USUARIOS, {
+      filterByFormula: `{Verificado} = TRUE()`
+    });
+    
+    return records.map(mapLeadToUser);
+  } catch (error) {
+    console.error('❌ Error getting verified users:', error);
+    return [];
+  }
+}
+
+/**
+ * Actualizar rol de usuario
+ * Permite que un turista se convierta en operador/aliado
+ */
+export async function updateUserRole(
+  recordId: string,
+  newRole: UserRole,
+  additionalFields?: {
+    establishmentType?: EstablishmentType;
+    businessId?: string;
+    cedulaRut?: string;
+  }
+): Promise<boolean> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return false;
+  }
+
+  try {
+    const fields: any = {
+      Role: newRole,
+      Ultima_Actividad: new Date().toISOString()
+    };
+
+    if (additionalFields?.establishmentType) {
+      fields.Establishment_Type = additionalFields.establishmentType;
+    }
+    if (additionalFields?.businessId) {
+      fields.Business_ID = additionalFields.businessId;
+    }
+    if (additionalFields?.cedulaRut) {
+      fields.Cedula_RUT = additionalFields.cedulaRut;
+    }
+
+    const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.USUARIOS)}/${recordId}`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify({ fields })
+    });
+
+    if (!response.ok) throw new Error('Failed to update role');
+    
+    console.log(`✅ User role updated to: ${newRole}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Error updating user role:', error);
+    return false;
+  }
+}
+
+// ==================== FUNCIONES EMPRESAS (Directorio_Mapa) ====================
+
+/**
+ * Mapear registro de Directorio_Mapa a GuanaEmpresa
+ */
+function mapRecordToEmpresa(record: any): GuanaEmpresa {
+  const f = record.fields;
+  
+  // Mapear estado de aliado
+  let estadoAliado: GuanaEmpresa['estadoAliado'] = 'prospecto';
+  const estadoField = f.Estado_Aliado || f.Estado || '';
+  if (['activo', 'pausado', 'inactivo', 'prospecto'].includes(estadoField.toLowerCase())) {
+    estadoAliado = estadoField.toLowerCase() as GuanaEmpresa['estadoAliado'];
+  } else if (f.Es_Aliado === true || f.Es_Aliado === 'true') {
+    estadoAliado = 'activo';
+  }
+
+  return {
+    id: record.id,
+    nombre: f.Nombre || f.nombre || '',
+    categoria: f.Categoria || f.Tipo || 'Otro',
+    descripcion: f.Descripcion || f.descripcion || '',
+    direccion: f.Direccion || f.direccion || '',
+    
+    // Ubicación
+    latitud: parseFloat(f.Lat || f.Latitud || '0') || 0,
+    longitud: parseFloat(f.Lng || f.Longitud || '0') || 0,
+    
+    // Contacto
+    telefono: f.Telefono || f.telefono || '',
+    email: f.Email || f.email || '',
+    website: f.Website || f.Sitio_Web || '',
+    horario: f.Horarios || f.Horario || '',
+    
+    // Media
+    imagen: f.Imagen_URL || f.Foto || '',
+    rating: parseFloat(f.Calificacion || f.Rating || '0') || 0,
+    
+    // Datos de Aliado GuanaGO
+    responsableId: f.Responsable_ID || f.Operador_ID || undefined,
+    responsableNombre: f.Responsable_Nombre || f.Contacto || undefined,
+    rnt: f.RNT || undefined,
+    camaraComercio: f.Camara_Comercio || f.NIT || undefined,
+    esAliadoGuanaGO: f.Es_Aliado === true || f.Es_Aliado === 'true' || f.Es_Socio === true,
+    comisionPactada: parseFloat(f.Comision_Porcentaje || f.Comision || '0') || undefined,
+    saldoPuntosEmpresa: parseFloat(f.Saldo_Puntos || '0') || undefined,
+    estadoAliado: estadoAliado,
+    walletHedera: f.Wallet_Hedera || undefined,
+    
+    // Metadata
+    fechaRegistro: f.Fecha_Registro || record.createdTime || undefined
+  };
+}
+
+/**
+ * Obtener todas las empresas/establecimientos
+ */
+export async function getEmpresas(options?: {
+  categoria?: string;
+  soloAliados?: boolean;
+  soloSocios?: boolean;
+  soloVerificados?: boolean;
+}): Promise<GuanaEmpresa[]> {
+  try {
+    const filters: string[] = [];
+    
+    if (options?.categoria) {
+      filters.push(`{Categoria} = '${options.categoria}'`);
+    }
+    if (options?.soloAliados) {
+      filters.push(`{Es_Aliado} = TRUE()`);
+    }
+    if (options?.soloSocios) {
+      filters.push(`{Es_Socio} = TRUE()`);
+    }
+    if (options?.soloVerificados) {
+      filters.push(`{Verificado} = TRUE()`);
+    }
+
+    const filterByFormula = filters.length > 0 
+      ? (filters.length === 1 ? filters[0] : `AND(${filters.join(', ')})`)
+      : undefined;
+
+    const records = await fetchTable(TABLES.EMPRESAS, { filterByFormula });
+    return records.map(mapRecordToEmpresa);
+  } catch (error) {
+    console.error('❌ Error getting empresas:', error);
+    return [];
+  }
+}
+
+/**
+ * Obtener empresa por ID
+ */
+export async function getEmpresaById(empresaId: string): Promise<GuanaEmpresa | null> {
+  try {
+    const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.EMPRESAS)}/${empresaId}`, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!response.ok) return null;
+
+    const record = await response.json();
+    return mapRecordToEmpresa(record);
+  } catch (error) {
+    console.error('❌ Error getting empresa:', error);
+    return null;
+  }
+}
+
+/**
+ * Obtener empresas por responsable (operador/aliado)
+ * Para mostrar "mis establecimientos" en el dashboard del operador
+ */
+export async function getEmpresasByResponsable(responsableId: string): Promise<GuanaEmpresa[]> {
+  try {
+    const records = await fetchTable(TABLES.EMPRESAS, {
+      filterByFormula: `{Responsable_ID} = '${responsableId}'`
+    });
+    
+    return records.map(mapRecordToEmpresa);
+  } catch (error) {
+    console.error('❌ Error getting empresas by responsable:', error);
+    return [];
+  }
+}
+
+/**
+ * Registrar nuevo establecimiento como aliado
+ */
+export async function registerEmpresaAliada(empresaData: {
+  nombre: string;
+  categoria: string;
+  direccion: string;
+  telefono?: string;
+  email?: string;
+  responsableId: string;
+  lat?: number;
+  lng?: number;
+}): Promise<GuanaEmpresa | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.EMPRESAS)}`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        records: [{
+          fields: {
+            Nombre: empresaData.nombre,
+            Categoria: empresaData.categoria,
+            Direccion: empresaData.direccion,
+            Telefono: empresaData.telefono || '',
+            Email: empresaData.email || '',
+            Responsable_ID: empresaData.responsableId,
+            Lat: empresaData.lat || 0,
+            Lng: empresaData.lng || 0,
+            Es_Aliado: true,
+            Verificado: false, // Requiere aprobación
+            Activo: true,
+            Fecha_Registro: new Date().toISOString()
+          }
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error registering empresa: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ Empresa aliada registrada:', data.records[0].id);
+    return mapRecordToEmpresa(data.records[0]);
+  } catch (error) {
+    console.error('❌ Error registering empresa:', error);
+    throw error;
+  }
+}
+
+// ==================== FIN FUNCIONES MULTI-ROL/EMPRESAS ====================
 
 /**
  * Obtener retos disponibles (mock por ahora, luego de Airtable)
