@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import { validateAdminPin } from '../../services/adminService.js';
+
 const router = express.Router();
-const { validateAdminPin } = require('../../services/adminService');
 
 router.post('/', async (req, res) => {
   const { pin } = req.body;
@@ -17,4 +18,4 @@ router.post('/', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
