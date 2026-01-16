@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, User, Briefcase, ShieldCheck, LogIn, UserPlus, AlertCircle, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, User, Briefcase, ShieldCheck, LogIn, UserPlus, AlertCircle, Mail, Lock, Loader2, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { AppRoute, UserRole } from '../types';
 
 interface AuthGateProps {
@@ -7,7 +7,7 @@ interface AuthGateProps {
   onNavigate?: (route: AppRoute) => void;
 }
 
-type AuthStep = 'select-type' | 'login' | 'register';
+type AuthStep = 'select-type' | 'login' | 'register' | 'admin-pin';
 type UserType = 'turista' | 'local' | 'socio' | 'admin' | null;
 
 const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
@@ -19,6 +19,11 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isLogin, setIsLogin] = useState(true); // true = login, false = register
+  
+  // Para el PIN de admin
+  const [adminPin, setAdminPin] = useState('');
+  const [pinAttempts, setPinAttempts] = useState(0);
+  const MAX_PIN_ATTEMPTS = 5;
 
   const userTypeConfig = {
     turista: {
@@ -56,7 +61,14 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
     setError('');
     setEmail('');
     setPassword('');
-    setCurrentStep('login');
+    setAdminPin('');
+    
+    // Si es admin, mostrar panel de PIN
+    if (type === 'admin') {
+      setCurrentStep('admin-pin');
+    } else {
+      setCurrentStep('login');
+    }
   };
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
@@ -136,11 +148,92 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
   };
 
   const goBack = () => {
-    if (currentStep === 'login' || currentStep === 'register') {
+    if (currentStep === 'login' || currentStep === 'register' || currentStep === 'admin-pin') {
       setCurrentStep('select-type');
       setUserType(null);
       setError('');
+      setAdminPin('');
     }
+  };
+
+  // Handler para PIN de administrador
+  const handleAdminPinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!adminPin || adminPin.length === 0) {
+      setError('Por favor ingresa tu PIN');
+      return;
+    }
+
+    if (pinAttempts >= MAX_PIN_ATTEMPTS) {
+      setError('Demasiados intentos fallidos. Intenta más tarde.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      console.log(`🔐 Enviando PIN a /api/validate-admin-pin`);
+      
+      const res = await fetch('/api/validate-admin-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: adminPin.trim() })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Error del servidor');
+      }
+
+      const data = await res.json();
+
+      if (data.success && data.user) {
+        // Guardar sesión admin
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + 8);
+        
+        const session = {
+          user: data.user,
+          expiresAt: expiresAt.toISOString(),
+          loginTime: new Date().toISOString()
+        };
+        
+        localStorage.setItem('admin_session', JSON.stringify(session));
+        localStorage.setItem('admin_authenticated', 'true');
+        
+        onAuthenticated('SuperAdmin');
+      } else {
+        setPinAttempts(prev => prev + 1);
+        setError(data.error || 'PIN incorrecto');
+        setAdminPin('');
+      }
+    } catch (err: any) {
+      console.error('Error validando PIN:', err);
+      setPinAttempts(prev => prev + 1);
+      setError(err.message || 'Error conectando con el servidor');
+      setAdminPin('');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePinDigit = (digit: string) => {
+    if (adminPin.length < 10) {
+      setAdminPin(prev => prev + digit);
+      setError('');
+    }
+  };
+
+  const handlePinDelete = () => {
+    setAdminPin(prev => prev.slice(0, -1));
+    setError('');
+  };
+
+  const handlePinClear = () => {
+    setAdminPin('');
+    setError('');
   };
 
   // PASO 1: Seleccionar tipo de usuario
@@ -207,7 +300,128 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
     );
   }
 
-  // PASO 2: Login / Registro
+  // PASO 2A: Panel PIN para Administrador
+  if (currentStep === 'admin-pin') {
+    return (
+      <div className="bg-gradient-to-br from-purple-50 to-white min-h-screen flex flex-col px-4 pb-24 font-sans">
+        {/* Header */}
+        <div className="flex items-center justify-between pt-4 pb-6 border-b border-gray-200">
+          <button
+            onClick={goBack}
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+          >
+            <ArrowLeft size={24} className="text-gray-700" />
+          </button>
+          <h2 className="font-black text-gray-900 text-lg">Administrador</h2>
+          <div className="w-10" />
+        </div>
+
+        {/* Contenedor principal */}
+        <div className="flex-1 flex items-center justify-center w-full max-w-sm mx-auto my-8">
+          <div className="w-full">
+            {/* Icono y título */}
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <KeyRound size={40} className="text-purple-600" />
+              </div>
+              <h1 className="text-2xl font-black text-gray-900 mb-2">Acceso Admin</h1>
+              <p className="text-sm text-gray-600">Ingresa tu PIN de administrador</p>
+            </div>
+
+            {/* Display PIN */}
+            <div className="flex justify-center gap-3 mb-6">
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center text-xl font-bold
+                    ${adminPin.length > i 
+                      ? 'bg-purple-100 border-purple-500 text-purple-700' 
+                      : 'bg-gray-100 border-gray-200 text-gray-400'}`}
+                >
+                  {adminPin.length > i ? '•' : ''}
+                </div>
+              ))}
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex gap-3 mb-4">
+                <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-red-800">{error}</p>
+              </div>
+            )}
+
+            {/* Teclado numérico */}
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((digit) => (
+                <button
+                  key={digit}
+                  type="button"
+                  onClick={() => {
+                    if (digit === 'C') handlePinClear();
+                    else if (digit === '⌫') handlePinDelete();
+                    else handlePinDigit(digit);
+                  }}
+                  disabled={loading}
+                  className={`h-14 rounded-xl text-xl font-bold transition-all active:scale-95
+                    ${digit === 'C' 
+                      ? 'bg-gray-200 text-gray-600 hover:bg-gray-300' 
+                      : digit === '⌫' 
+                        ? 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                        : 'bg-white border-2 border-gray-200 text-gray-800 hover:bg-purple-50 hover:border-purple-300'}
+                    ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {digit}
+                </button>
+              ))}
+            </div>
+
+            {/* Botón Acceder */}
+            <button
+              onClick={handleAdminPinSubmit}
+              disabled={loading || adminPin.length < 4}
+              className={`w-full py-4 rounded-xl font-black uppercase text-sm tracking-wider transition-all
+                bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-200
+                flex items-center justify-center gap-2
+                ${(loading || adminPin.length < 4) ? 'opacity-60 cursor-not-allowed' : 'active:scale-95'}`}
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Validando...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck size={18} />
+                  Acceder
+                </>
+              )}
+            </button>
+
+            {/* Intentos restantes */}
+            {pinAttempts > 0 && (
+              <p className="text-center text-xs text-red-500 mt-4">
+                Intentos fallidos: {pinAttempts}/{MAX_PIN_ATTEMPTS}
+              </p>
+            )}
+
+            {/* Opción de login con email */}
+            <div className="text-center border-t border-gray-200 pt-6 mt-6">
+              <p className="text-xs text-gray-600 mb-2">¿Prefieres usar email?</p>
+              <button
+                onClick={() => setCurrentStep('login')}
+                className="text-purple-600 font-bold text-sm hover:text-purple-700 transition-colors"
+              >
+                Acceder con Email y PIN
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // PASO 2B: Login / Registro (email + password/pin)
   const config = userType ? userTypeConfig[userType] : null;
 
   return (
@@ -265,10 +479,10 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
               </div>
             </div>
 
-            {/* Contraseña */}
+            {/* Contraseña o PIN */}
             <div>
               <label className="block text-xs font-black text-gray-700 mb-2 ml-1">
-                Contraseña
+                {userType === 'admin' ? 'PIN' : 'Contraseña'}
               </label>
               <div className="relative">
                 <Lock size={18} className="absolute left-4 top-3.5 text-gray-400" />
@@ -276,7 +490,7 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={isLogin ? '••••••••' : '••••••••(mínimo 8)'}
+                  placeholder={userType === 'admin' ? '••••••' : (isLogin ? '••••••••' : '••••••••(mínimo 8)')}
                   className="w-full pl-11 pr-12 py-3 border-2 border-gray-200 rounded-xl outline-none transition-all focus:border-emerald-500 text-gray-900 text-sm"
                 />
                 <button

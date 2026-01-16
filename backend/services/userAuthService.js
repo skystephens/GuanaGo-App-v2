@@ -29,7 +29,7 @@ async function detectUserFields() {
     };
 
     const emailField = pick(['Email', 'Correo', 'E-mail', 'Mail', 'email']);
-    const passwordField = pick(['Password', 'Contraseña', 'Clave', 'password']);
+    const passwordField = pick(['Pin', 'PIN', 'Password', 'Contraseña', 'Clave', 'password']);
     const roleField = pick(['Rol', 'Role', 'Tipo', 'Perfil']);
     const activeField = pick(['Activo', 'Estado', 'Active', 'Verificado']);
     const nameField = pick(['Nombre', 'Name', 'Full Name']);
@@ -232,24 +232,26 @@ export async function loginUser({ email, password }) {
     const userRecord = emailData.records[0];
     const fields = userRecord.fields;
     
-    // Verificar credenciales: intentar con Password primero, luego PIN
+    // Verificar credenciales: intentar con Pin primero (como está en Airtable)
+    const storedPin = fields.Pin || fields.PIN || fields.pin;
     const storedPassword = fields.Password || fields.password || fields.Contraseña;
-    const storedPin = fields.PIN || fields.Pin || fields.pin;
     
     console.log('🔑 Verificando credenciales...');
+    console.log('   - Tiene Pin:', Boolean(storedPin));
     console.log('   - Tiene Password:', Boolean(storedPassword));
-    console.log('   - Tiene PIN:', Boolean(storedPin));
     
     let credentialsMatch = false;
     
-    if (storedPassword) {
-      // Comparar con Password
+    // Intentar primero con Pin (como lo tienes en Airtable)
+    if (storedPin) {
+      credentialsMatch = String(storedPin).trim() === String(password).trim();
+      console.log('   - Comparando con Pin:', credentialsMatch ? '✅' : '❌');
+    }
+    
+    // Si no hay Pin o no coincide, intentar con Password
+    if (!credentialsMatch && storedPassword) {
       credentialsMatch = String(storedPassword).trim() === String(password).trim();
       console.log('   - Comparando con Password:', credentialsMatch ? '✅' : '❌');
-    } else if (storedPin) {
-      // Comparar con PIN
-      credentialsMatch = String(storedPin).trim() === String(password).trim();
-      console.log('   - Comparando con PIN:', credentialsMatch ? '✅' : '❌');
     }
     
     if (!credentialsMatch) {
