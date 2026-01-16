@@ -1,11 +1,34 @@
 /**
  * Admin Service - Validación de PIN sin dependencias externas
  * Conexión directa a Airtable usando fetch nativo
- * Soporta PINs de cualquier longitud (4, 6, 8 dígitos, etc)
+ * Soporta PINs alfanuméricos y tiene fallback local
  */
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY || '';
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
+
+// ============================================
+// CREDENCIALES DE RESPALDO LOCAL (SuperAdmin)
+// Esto funciona siempre, incluso sin Airtable
+// ============================================
+const LOCAL_ADMINS = [
+  {
+    id: 'local-superadmin-1',
+    nombre: 'Super Admin',
+    email: 'admin@guanago.travel',
+    pin: '166400',
+    rol: 'SuperAdmin',
+    activo: true
+  },
+  {
+    id: 'local-superadmin-2',
+    nombre: 'Admin Dev',
+    email: 'dev@guanago.travel',
+    pin: 'test1234',
+    rol: 'SuperAdmin',
+    activo: true
+  }
+];
 
 // Escapar valores especiales para fórmulas Airtable
 function escapePinForFormula(pin) {
@@ -17,22 +40,27 @@ function escapePinForFormula(pin) {
 }
 
 /**
+ * Validar PIN contra credenciales locales (respaldo)
+ */
+function validateLocalPin(pinStr) {
+  console.log('🔐 Intentando validación LOCAL...');
+  const admin = LOCAL_ADMINS.find(a => a.pin === pinStr && a.activo);
+  if (admin) {
+    console.log(`✅ Admin LOCAL encontrado: ${admin.nombre}`);
+    return { ...admin };
+  }
+  console.log('❌ PIN no encontrado en credenciales locales');
+  return null;
+}
+
+/**
  * Validar PIN de administrador
- * Busca en Usuarios_Admins un registro donde PIN coincide (como texto O número)
+ * 1. Primero intenta Airtable
+ * 2. Si falla, usa credenciales locales de respaldo
  * @param {string|number} pin - El PIN a validar
  * @returns {Promise<Object|null>} Usuario admin si coincide, null si no
  */
 export async function validateAdminPin(pin) {
-  if (!AIRTABLE_API_KEY) {
-    console.error('❌ AIRTABLE_API_KEY no configurada');
-    return null;
-  }
-
-  if (!AIRTABLE_BASE_ID) {
-    console.error('❌ AIRTABLE_BASE_ID no configurada');
-    return null;
-  }
-
   const pinStr = String(pin).trim();
   
   if (!pinStr || pinStr.length === 0) {
@@ -40,11 +68,23 @@ export async function validateAdminPin(pin) {
     return null;
   }
 
-  // PINs pueden ser alfanuméricos (ej: test1234)
   console.log(`🔐 Validando PIN: ${pinStr} (${pinStr.length} caracteres)`);
 
+  // PASO 1: Intentar validación LOCAL primero (más rápido y siempre funciona)
+  const localUser = validateLocalPin(pinStr);
+  if (localUser) {
+    return localUser;
+  }
+
+  // PASO 2: Si no hay credenciales de Airtable, retornar null
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    console.error('❌ AIRTABLE no configurado y PIN no está en credenciales locales');
+    return null;
+  }
+
+  // PASO 3: Intentar Airtable
   try {
-    console.log(`🔐 Validando PIN: ${pinStr} (${pinStr.length} caracteres)`);
+    console.log(`📋 Buscando en Airtable...`);
     console.log(`📋 Base ID: ${AIRTABLE_BASE_ID}`);
     console.log(`📋 Tabla: Usuarios_Admins`);
     

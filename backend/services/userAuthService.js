@@ -1,11 +1,87 @@
 /**
  * User Authentication Service
  * Maneja registro y login de usuarios con Airtable
+ * Incluye credenciales locales de respaldo
  */
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-const USUARIOS_TABLE = 'Usuarios_Admins'; // Tabla de usuarios principal (Email/Password/Rol/Activo)
+const USUARIOS_TABLE = 'Usuarios_Admins'; // Tabla de usuarios principal (Email/Pin/Rol/Activo)
+
+// ============================================
+// CREDENCIALES DE RESPALDO LOCAL
+// Esto funciona siempre, incluso sin Airtable
+// ============================================
+const LOCAL_USERS = [
+  {
+    id: 'local-superadmin-1',
+    nombre: 'Super Admin',
+    email: 'admin@guanago.travel',
+    pin: '166400',
+    rol: 'SuperAdmin',
+    activo: true
+  },
+  {
+    id: 'local-admin-2',
+    nombre: 'Admin Dev',
+    email: 'dev@guanago.travel',
+    pin: 'test1234',
+    rol: 'SuperAdmin',
+    activo: true
+  },
+  {
+    id: 'local-turista-1',
+    nombre: 'Turista Demo',
+    email: 'turista@demo.com',
+    pin: 'turista123',
+    rol: 'Turista',
+    activo: true
+  },
+  {
+    id: 'local-local-1',
+    nombre: 'Residente Demo',
+    email: 'local@demo.com',
+    pin: 'local123',
+    rol: 'Residente Local',
+    activo: true
+  },
+  {
+    id: 'local-socio-1',
+    nombre: 'Socio Demo',
+    email: 'socio@demo.com',
+    pin: 'socio123',
+    rol: 'Socio',
+    activo: true
+  }
+];
+
+/**
+ * Validar credenciales contra usuarios locales
+ */
+function validateLocalUser(email, password) {
+  console.log('🔐 Intentando validación LOCAL para:', email);
+  const user = LOCAL_USERS.find(u => 
+    u.email.toLowerCase() === email.toLowerCase() && 
+    u.pin === password && 
+    u.activo
+  );
+  if (user) {
+    console.log(`✅ Usuario LOCAL encontrado: ${user.nombre} (${user.rol})`);
+    return {
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        nombre: user.nombre,
+        role: user.rol,
+        activo: true
+      }
+    };
+  }
+  return null;
+}
+
+// Detectar nombres de campos reales en la tabla Usuarios_Admins
 
 // Detectar nombres de campos reales en la tabla Usuarios_Admins
 async function detectUserFields() {
@@ -181,17 +257,28 @@ export async function registerUser({ email, password, userType, nombre }) {
 
 /**
  * Login de usuario
- * Verifica credenciales en Airtable
+ * Verifica credenciales primero localmente, luego en Airtable
  * Soporta tanto Password como PIN para autenticación
  */
 export async function loginUser({ email, password }) {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
-    console.error('❌ AIRTABLE_API_KEY o AIRTABLE_BASE_ID no configurado');
-    return { success: false, error: 'Configuración de servidor incompleta' };
+  console.log('🔐 Intentando login:', email);
+
+  // PASO 1: Intentar credenciales locales PRIMERO (siempre funciona)
+  const localResult = validateLocalUser(email, password);
+  if (localResult) {
+    console.log('✅ Login LOCAL exitoso');
+    return localResult;
   }
 
+  // PASO 2: Si no hay Airtable configurado, retornar error
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    console.error('❌ AIRTABLE no configurado y credenciales locales no coinciden');
+    return { success: false, error: 'Credenciales incorrectas' };
+  }
+
+  // PASO 3: Intentar Airtable
   try {
-    console.log('🔐 Intentando login:', email);
+    console.log('📋 Buscando en Airtable...');
     const fieldsMap = await detectUserFields();
 
     const escapedEmail = String(email || '').replace(/'/g, "''");
