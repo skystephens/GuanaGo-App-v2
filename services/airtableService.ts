@@ -40,50 +40,7 @@ const TABLES = {
   VENTAS_ARTISTA: 'Ventas_Artista'
 };
 
-// Roles de usuario en el sistema
-export type UserRole = 'Turista' | 'Operador' | 'Aliado' | 'Socio' | 'Artista' | 'SuperAdmin';
-
-// Tipos de establecimiento para socios
-export type EstablishmentType = 
-  | 'Hotel' 
-  | 'Restaurante' 
-  | 'Tour Operador' 
-  | 'Comercio' 
-  | 'Artista RIMM' 
-  | 'Transporte' 
-  | 'Buceo' 
-  | 'Entretenimiento'
-  | 'Otro';
-
-// Interfaz para usuario con GUANA Points (tabla Leads/Usuarios)
-export interface GuanaUser {
-  id: string;
-  guanaId: string;
-  nombre: string;
-  email: string;
-  telefono?: string;
-  whatsapp?: string;
-  
-  // Sistema GUANA Points
-  saldoGuana: number;
-  puntosAcumulados: number;
-  puntosCanjeados: number;
-  nivel: 'Explorador' | 'Aventurero' | 'Experto' | 'Leyenda';
-  retosCompletados: number;
-  qrEscaneados: number;
-  
-  // Sistema Multi-Perfil (nuevos campos)
-  role: UserRole;                      // Turista, Operador, Aliado, etc.
-  establishmentType?: EstablishmentType; // Tipo de negocio si es socio
-  businessId?: string;                 // Link a Directorio_Mapa/Empresas
-  esRaizal?: boolean;                  // Residente raizal
-  cedulaRut?: string;                  // Documento identidad (para socios)
-  verificado?: boolean;                // KYC completado
-  
-  // Metadata
-  fechaRegistro: string;
-  ultimaActividad?: string;
-}
+import type { GuanaUser, UserRole, EstablishmentType } from '../types';
 
 // Interfaz para Empresa/Aliado (tabla Directorio_Mapa)
 export interface GuanaEmpresa {
@@ -569,9 +526,9 @@ export async function getServices(category?: string) {
       
       // Proveedor
       provider: f['Nombre Operador Aliado']?.[0] || 'GuanaGO',
-      
-      // Spread de campos adicionales
-      ...f
+        image: f['Imagenurl']?.[0]?.url || f['Imagen']?.[0]?.url || f['Fotos']?.[0]?.url || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
+        images: f['Imagenurl']?.map((img: any) => img.url) || f['Imagen']?.map((img: any) => img.url) || f['Fotos']?.map((img: any) => img.url) || [],
+        gallery: f['Imagenurl']?.map((img: any) => img.url) || f['Imagen']?.map((img: any) => img.url) || f['Fotos']?.map((img: any) => img.url) || [],
     };
   }).filter(s => s.active && (s.ubicacion === 'San Andres' || s.ubicacion === 'San Andrés' || !s.ubicacion)); // Solo servicios publicados de San Andrés
 }

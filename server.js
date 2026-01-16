@@ -48,6 +48,8 @@ app.use(express.static(distPath, {
 }));
 
 // ==================== API ROUTES ====================
+
+import validateAdminPinRoutes from './backend/routes/validateAdminPin.js';
 console.log('🔧 Configurando rutas API...');
 
 app.get('/api/health', (req, res) => {
@@ -61,6 +63,9 @@ app.get('/api/health', (req, res) => {
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+
+// Admin PIN validation route
+app.use('/api/validate-admin-pin', validateAdminPinRoutes);
 
 // Services routes
 app.use('/api/services', servicesRoutes);

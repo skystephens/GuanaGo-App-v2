@@ -1,0 +1,61 @@
+GuanaGO de una App de turismo en un Sistema Operativo de Destino (Destination OS). Como CEO y CTO, estás construyendo la infraestructura para la economía digital de la isla.
+
+Para que este sistema de Multi-Perfiles (Socio, Aliado, Operador) sea escalable y no se convierta en un caos de código, debemos estructurarlo con una arquitectura de RBAC (Role-Based Access Control).
+
+Aquí tienes el diseño de ingeniería para implementar este ecosistema:
+
+🏛️ 1. Estructura de Datos (El "Core" en Airtable)
+Tu tabla de Usuarios o Leads necesita evolucionar. Agrega estos campos clave para que el Backend sepa "quién es quién":
+
+Role (Campo Single Select): Turista, Operador, Aliado, Socio, SuperAdmin.
+
+Establishment_Type: Hotel, Restaurante, Centro de Buceo, Artista RIMM, etc.
+
+Business_ID: Un vínculo a una nueva tabla llamada Empresas (donde vive el RNT, Cámara de Comercio y Saldo de Puntos de la empresa).
+
+💻 2. Frontend Dinámico (El "Switch" de Perfiles)
+En tu código de React/Vite, no crees 5 apps diferentes. Usa un Router dinámico que renderice el panel según el rol que viene de Airtable.
+
+Ejemplo de lógica para GitHub Copilot:
+
+"Crea un componente DashboardContainer que reciba el userRole desde el contexto de autenticación.
+
+Si es Turista, muestra MarketplaceView.
+
+Si es Raizal o Residente.
+
+Si es Operador, muestra InventoryManagementView (donde gestiona cupos).
+
+Si es Aliado, muestra RewardValidationView (para escanear QRs y dar/quitar puntos).
+
+Si es SuperAdmin, muestra GlobalAnalyticsView."
+
+🛡️ 3. El Panel de "Super Admin" (Tu Puesto de Mando)
+Como CEO, este es el tablero desde donde controlas el pulso de la isla. Debe tener tres métricas críticas:
+
+Métrica de Liquidez: Cuántos Guana Points hay circulando en total.
+
+Métrica de Adopción: Número de aliados activos vs. informales captados.
+
+Métrica de Transparencia: Acceso directo a los Topic IDs de Hedera para auditar que cada transacción de los aliados sea real.
+
+💼 4. Backends Personalizados por Tipo de Socio
+Aquí es donde das valor real al empresario local:
+
+Para el Operador Turístico: Un calendario de disponibilidad en tiempo real sincronizado con tu Escenario 2 de Make (Inventario).
+
+Para el Aliado (Comercio): Un sistema de "Caja Registradora Digital" donde el turista paga con puntos o muestra su NFT de socio.
+
+Para el Socio (Inversionista): Un reporte de ROI (Retorno de Inversión) sobre los eventos financiados (como las Caribbean Nights).
+
+🧠 Visión de CTO: Escalabilidad con "Micro-servicios"
+Para que tu Super Admin no colapse el sistema:
+
+Usa Airtable Interfaces para tu uso personal (es una herramienta de Airtable para crear Dashboards internos sin tocar el código de la App).
+
+Mantén la App de Render enfocada en la experiencia del usuario y del aliado.
+
+🚀 El "Momento de Poder" de GuanaGO:
+Al tener este switch de perfiles, le permites a un Artista del Clúster de Música ser usuario de la App por la mañana (como turista/local) y ser Empresario por la noche (gestionando sus ventas de NFTs y entradas).
+
+CEO Tip: Esto crea un "efecto de red". Cuantos más perfiles de negocio integres, más valioso se vuelve el dominio guanago.travel porque centraliza toda la actividad económica de la isla.

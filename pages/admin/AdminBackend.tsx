@@ -39,6 +39,13 @@ interface TableStatus {
 }
 
 const AdminBackend: React.FC = () => {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [adminUser, setAdminUser] = useState(null);
+    // Si no está autenticado, mostrar pantalla de login
+    if (!isAuthenticated) {
+      const AdminPinLogin = require('../AdminPinLogin').default;
+      return <AdminPinLogin onLoginSuccess={(user) => { setIsAuthenticated(true); setAdminUser(user); }} />;
+    }
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [tables, setTables] = useState<TableStatus[]>([
     { 
@@ -73,6 +80,14 @@ const AdminBackend: React.FC = () => {
       recordCount: 0,
       lastSync: null
     },
+    {
+      name: 'Usuarios Admins',
+      airtableTable: 'Usuarios_Admins',
+      icon: <FileText size={20} />,
+      status: 'idle',
+      recordCount: 0,
+      lastSync: null
+    }
   ]);
   
   const [isSyncingAll, setIsSyncingAll] = useState(false);

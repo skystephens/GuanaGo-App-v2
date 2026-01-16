@@ -1,3 +1,48 @@
+// ==================== GUANA USER MULTI-ROL ====================
+
+// Roles de usuario en el sistema
+export type UserRole = 'Turista' | 'Operador' | 'Aliado' | 'Socio' | 'Artista' | 'SuperAdmin';
+
+// Tipos de establecimiento para socios
+export type EstablishmentType = 
+  | 'Hotel' 
+  | 'Restaurante' 
+  | 'Tour Operador' 
+  | 'Comercio' 
+  | 'Artista RIMM' 
+  | 'Transporte' 
+  | 'Buceo' 
+  | 'Entretenimiento'
+  | 'Otro';
+
+// Interfaz para usuario con GUANA Points (tabla Leads/Usuarios)
+export interface GuanaUser {
+  id: string;
+  guanaId: string;
+  nombre: string;
+  email: string;
+  telefono?: string;
+  whatsapp?: string;
+  // Sistema GUANA Points
+  saldoGuana: number;
+  puntosAcumulados: number;
+  puntosCanjeados: number;
+  nivel: 'Explorador' | 'Aventurero' | 'Experto' | 'Leyenda';
+  retosCompletados: number;
+  qrEscaneados: number;
+  // Sistema Multi-Perfil (nuevos campos)
+  role: UserRole;                      // Turista, Operador, Aliado, etc.
+  establishmentType?: EstablishmentType; // Tipo de negocio si es socio
+  businessId?: string;                 // Link a Directorio_Mapa/Empresas
+  esRaizal?: boolean;                  // Residente raizal
+  cedulaRut?: string;                  // Documento identidad (para socios)
+  verificado?: boolean;                // KYC completado
+  // Metadata
+  fechaRegistro: string;
+  ultimaActividad?: string;
+}
+// Exportar tipos de usuario globales desde airtableService
+export type { GuanaUser, UserRole } from './services/airtableService';
 
 export interface Tour {
   id: string;
