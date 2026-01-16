@@ -133,7 +133,9 @@ Responde de forma concisa y amigable.`;
 export const sendMessage = async (req, res, next) => {
   try {
     const { message, context, conversationId } = req.body;
-    
+    if (!message) {
+      return res.status(400).json({
+        success: false,
         error: 'El mensaje es requerido'
       });
     }
@@ -141,6 +143,9 @@ export const sendMessage = async (req, res, next) => {
     const result = await makeRequest(
       config.makeWebhooks.chatbot,
       {
+        action: 'chat',
+        message,
+        context,
         conversationId,
         userId: req.user?.id,
         timestamp: new Date().toISOString()
