@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { User, Settings, Award, Lock, ChevronRight, LogOut, CheckCircle, Shield, Target, Tag, Trophy, Phone, MapPin, LogIn, MessageCircle, Briefcase, Mail, CreditCard, Globe, Building, X, Save, ShieldCheck, Copy, ExternalLink, Calendar, Users, LayoutDashboard } from 'lucide-react';
+import { User, Settings, Award, Lock, ChevronRight, LogOut, CheckCircle, Shield, Target, Tag, Trophy, Phone, MapPin, LogIn, MessageCircle, Briefcase, Mail, CreditCard, Globe, Building, X, Save, ShieldCheck, Copy, ExternalLink, Calendar, Users, LayoutDashboard, Eye, Key } from 'lucide-react';
 import { BADGES, PARTNER_CLIENTS } from '../constants';
 import { UserRole, Campaign, Client, AppRoute } from '../types';
 import { api } from '../services/api';
@@ -20,24 +20,65 @@ const Profile: React.FC<ProfileProps> = ({ role, isAuthenticated, onLogin, onSwi
   const [loadingCampaigns, setLoadingCampaigns] = useState(true);
   const [showSupportChat, setShowSupportChat] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Detectar si es admin (incluye 'admin' y 'SuperAdmin')
+  const isAdmin = role === 'admin' || role === 'SuperAdmin';
+  
+  // Obtener datos del admin desde localStorage si está autenticado
+  const getAdminData = () => {
+    try {
+      const session = localStorage.getItem('admin_session');
+      if (session) {
+        const parsed = JSON.parse(session);
+        return parsed.user || null;
+      }
+    } catch (e) {
+      console.error('Error parsing admin session:', e);
+    }
+    return null;
+  };
+
+  const adminData = getAdminData();
 
   const initialUser: Client = role === 'partner' 
       ? PARTNER_CLIENTS.find(c => c.id === 'partner-1')! 
-      : (role === 'admin' 
-          ? { id:'admin', name: 'Super Admin', email: 'admin@guanago.com', role: 'admin', image: 'https://ui-avatars.com/api/?name=Admin&background=purple&color=fff', status: 'active', walletBalance: 0, reservations: 0 } as Client
+      : (isAdmin
+          ? { 
+              id: adminData?.id || 'admin', 
+              name: adminData?.nombre || 'Super Admin', 
+              email: adminData?.email || 'admin@guanago.travel', 
+              role: 'admin', 
+              image: `https://ui-avatars.com/api/?name=${encodeURIComponent(adminData?.nombre || 'Admin')}&background=8B5CF6&color=fff&bold=true`, 
+              status: 'active', 
+              walletBalance: 0, 
+              reservations: 0 
+            } as Client
           : PARTNER_CLIENTS.find(c => c.id === 'c1')!);
 
   const [currentUser, setCurrentUser] = useState<Client>(initialUser);
   const [formData, setFormData] = useState<Partial<Client>>({});
 
   useEffect(() => {
-     const newUser = role === 'partner' 
+    const adminInfo = getAdminData();
+    const newUser = role === 'partner' 
       ? PARTNER_CLIENTS.find(c => c.id === 'partner-1')! 
-      : (role === 'admin' 
-          ? { id:'admin', name: 'Super Admin', email: 'admin@guanago.com', role: 'admin', image: 'https://ui-avatars.com/api/?name=Admin&background=purple&color=fff', status: 'active', walletBalance: 0, reservations: 0 } as Client
+      : (isAdmin 
+          ? { 
+              id: adminInfo?.id || 'admin', 
+              name: adminInfo?.nombre || 'Super Admin', 
+              email: adminInfo?.email || 'admin@guanago.travel', 
+              role: 'admin', 
+              image: `https://ui-avatars.com/api/?name=${encodeURIComponent(adminInfo?.nombre || 'Admin')}&background=8B5CF6&color=fff&bold=true`, 
+              status: 'active', 
+              walletBalance: 0, 
+              reservations: 0 
+            } as Client
           : PARTNER_CLIENTS.find(c => c.id === 'c1')!);
-     setCurrentUser(newUser);
-  }, [role]);
+    setCurrentUser(newUser);
+  }, [role, isAdmin]);
 
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
@@ -81,10 +122,46 @@ const Profile: React.FC<ProfileProps> = ({ role, isAuthenticated, onLogin, onSwi
   const getRoleLabel = () => {
     if (role === 'tourist') return 'Explorador Raizal';
     if (role === 'partner') return 'Operador Verificado';
-    return 'Super Administrador';
+    if (role === 'SuperAdmin' || role === 'admin') return 'Super Administrador';
+    return 'Usuario';
   };
 
   const isDark = role !== 'tourist';
+
+  // Handler para cerrar sesión admin y volver al lobby
+  const handleAdminLogout = () => {
+    localStorage.removeItem('admin_session');
+    localStorage.removeItem('admin_authenticated');
+    onLogout();
+  };
+
+  // Handler para explorar como turista (sin cerrar sesión admin)
+  const handleExploreAsTourist = () => {
+    onSwitchRole('tourist');
+  };
+
+  // Handler para explorar como local
+  const handleExploreAsLocal = () => {
+    onSwitchRole('Local' as UserRole);
+  };
+
+  // Handler para cambiar contraseña (mock)
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      alert('Las contraseñas no coinciden');
+      return;
+    }
+    if (newPassword.length < 6) {
+      alert('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+    // TODO: Implementar cambio de contraseña en backend
+    alert('Contraseña actualizada exitosamente');
+    setShowChangePassword(false);
+    setNewPassword('');
+    setConfirmPassword('');
+  };
 
   // --- VISTA GUEST (No Autenticado) ---
   if (role === 'tourist' && !isAuthenticated) {
@@ -228,7 +305,7 @@ const Profile: React.FC<ProfileProps> = ({ role, isAuthenticated, onLogin, onSwi
                      <Trophy size={14} className="fill-current" />
                      <span className="text-[10px] font-black uppercase">Nivel 4</span>
                   </div>
-                  {role === 'admin' && (
+                  {isAdmin && (
                     <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-xl flex items-center gap-1.5">
                        <ShieldCheck size={14} />
                        <span className="text-[10px] font-black uppercase">Root Access</span>
@@ -294,6 +371,34 @@ const Profile: React.FC<ProfileProps> = ({ role, isAuthenticated, onLogin, onSwi
             </div>
          </div>
 
+         {/* ADMIN QUICK ACTIONS - Solo visible para admins */}
+         {isAdmin && (
+            <div className="bg-purple-900/50 border border-purple-500/30 rounded-[32px] p-6">
+               <h3 className="text-xs font-black uppercase tracking-widest mb-4 text-purple-300 flex items-center gap-2">
+                  <Eye size={16} /> Explorar App Como Usuario
+               </h3>
+               <div className="grid grid-cols-2 gap-3">
+                  <button 
+                     onClick={handleExploreAsTourist}
+                     className="bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-2xl transition-all flex flex-col items-center gap-2 active:scale-95"
+                  >
+                     <User size={24} />
+                     <span className="text-[10px] font-black uppercase">Ver como Turista</span>
+                  </button>
+                  <button 
+                     onClick={() => onSwitchRole('partner')}
+                     className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl transition-all flex flex-col items-center gap-2 active:scale-95"
+                  >
+                     <Briefcase size={24} />
+                     <span className="text-[10px] font-black uppercase">Ver como Socio</span>
+                  </button>
+               </div>
+               <p className="text-[10px] text-purple-300/70 mt-3 text-center">
+                  Explora la app desde diferentes perspectivas sin cerrar tu sesión de admin.
+               </p>
+            </div>
+         )}
+
          {/* Settings & Support Links */}
          <div className={`${isDark ? 'bg-gray-800 border-gray-700 divide-gray-700' : 'bg-white border-gray-100 shadow-sm divide-gray-50'} rounded-[32px] overflow-hidden border divide-y`}>
              <button 
@@ -321,16 +426,34 @@ const Profile: React.FC<ProfileProps> = ({ role, isAuthenticated, onLogin, onSwi
                </div>
                <ChevronRight size={18} className="text-gray-300" />
             </button>
+
+            {/* Cambiar Contraseña/PIN - Solo para Admin */}
+            {isAdmin && (
+               <button 
+                  onClick={() => setShowChangePassword(true)}
+                  className="w-full p-5 flex items-center justify-between hover:bg-purple-500/10 transition-colors"
+               >
+                  <div className="flex items-center gap-4">
+                     <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
+                        <Key size={20} />
+                     </div>
+                     <span className={`font-bold text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Cambiar PIN/Contraseña</span>
+                  </div>
+                  <ChevronRight size={18} className="text-gray-300" />
+               </button>
+            )}
             
             <button 
-               onClick={onLogout}
+               onClick={isAdmin ? handleAdminLogout : onLogout}
                className="w-full p-5 flex items-center justify-between hover:bg-red-500/10 transition-colors"
             >
                <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-500">
                      <LogOut size={20} />
                   </div>
-                  <span className="font-bold text-sm text-red-600">Cerrar Sesión</span>
+                  <span className="font-bold text-sm text-red-600">
+                     {isAdmin ? 'Cerrar Sesión Admin' : 'Cerrar Sesión'}
+                  </span>
                </div>
                <ChevronRight size={18} className="text-red-200" />
             </button>
@@ -368,6 +491,60 @@ const Profile: React.FC<ProfileProps> = ({ role, isAuthenticated, onLogin, onSwi
                      </div>
                      <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-5 rounded-2xl shadow-xl shadow-emerald-100 transition-all flex items-center justify-center gap-2 mt-4 uppercase text-sm tracking-widest">
                         <Save size={20} /> Guardar Perfil
+                     </button>
+                  </form>
+               </div>
+            </div>
+         </div>
+      )}
+
+      {/* Change Password Modal - Solo Admin */}
+      {showChangePassword && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="w-full max-w-md bg-gray-900 border border-purple-500/30 rounded-[40px] overflow-hidden">
+               <div className="p-6 flex items-center justify-between border-b border-gray-800 bg-purple-900/30">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                     <Key size={20} className="text-purple-400" />
+                     Cambiar PIN/Contraseña
+                  </h2>
+                  <button 
+                     onClick={() => {
+                        setShowChangePassword(false);
+                        setNewPassword('');
+                        setConfirmPassword('');
+                     }} 
+                     className="p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition-colors"
+                  >
+                     <X size={20} className="text-gray-400" />
+                  </button>
+               </div>
+               <div className="p-8">
+                  <form onSubmit={handleChangePassword} className="space-y-6">
+                     <div>
+                        <label className="text-[10px] font-black text-purple-300 uppercase ml-1 mb-2 block">Nuevo PIN/Contraseña</label>
+                        <input 
+                           type="password" 
+                           value={newPassword} 
+                           onChange={e => setNewPassword(e.target.value)} 
+                           placeholder="••••••••"
+                           className="w-full rounded-2xl px-5 py-4 text-sm font-bold border-2 transition-all outline-none bg-gray-800 border-gray-700 focus:border-purple-500 text-white"
+                        />
+                     </div>
+                     <div>
+                        <label className="text-[10px] font-black text-purple-300 uppercase ml-1 mb-2 block">Confirmar PIN/Contraseña</label>
+                        <input 
+                           type="password" 
+                           value={confirmPassword} 
+                           onChange={e => setConfirmPassword(e.target.value)} 
+                           placeholder="••••••••"
+                           className="w-full rounded-2xl px-5 py-4 text-sm font-bold border-2 transition-all outline-none bg-gray-800 border-gray-700 focus:border-purple-500 text-white"
+                        />
+                     </div>
+                     <button 
+                        type="submit" 
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-5 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2 mt-4 uppercase text-sm tracking-widest"
+                     >
+                        <Lock size={20} /> Actualizar Contraseña
                      </button>
                   </form>
                </div>
