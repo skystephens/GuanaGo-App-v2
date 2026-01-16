@@ -40,23 +40,19 @@ export async function validateAdminPin(pin) {
     return null;
   }
 
-  // Verificar que solo contiene números
-  if (!/^\d+$/.test(pinStr)) {
-    console.warn('⚠️ PIN contiene caracteres no numéricos');
-    return null;
-  }
+  // PINs pueden ser alfanuméricos (ej: test1234)
+  console.log(`🔐 Validando PIN: ${pinStr} (${pinStr.length} caracteres)`);
 
   try {
-    console.log(`🔐 Validando PIN: ${pinStr} (${pinStr.length} dígitos)`);
+    console.log(`🔐 Validando PIN: ${pinStr} (${pinStr.length} caracteres)`);
     console.log(`📋 Base ID: ${AIRTABLE_BASE_ID}`);
     console.log(`📋 Tabla: Usuarios_Admins`);
     
     // Escapar el PIN para evitar injection
     const escapedPin = escapePinForFormula(pinStr);
     
-    // Construir fórmula Airtable que busque PIN como TEXTO o NÚMERO
-    // Esto es importante porque Airtable puede guardar como texto o número
-    const filterFormula = `AND(OR({PIN} = '${escapedPin}', {PIN} = ${pinStr}), {Activo} = TRUE())`;
+    // Buscar PIN como texto (soporta alfanuméricos como test1234)
+    const filterFormula = `AND({Pin} = '${escapedPin}', {Activo} = TRUE())`;
     
     console.log(`📋 Fórmula: ${filterFormula}`);
     
@@ -149,10 +145,10 @@ async function validateAdminPinFallback(pinStr) {
     const data = await response.json();
     console.log(`📦 Fallback: ${data.records?.length || 0} admins activos encontrados`);
     
-    // Buscar manualmente el PIN (como texto o número)
+    // Buscar manualmente el PIN (como texto)
     for (const record of (data.records || [])) {
       const user = record.fields;
-      const recordPin = String(user.PIN).trim();
+      const recordPin = String(user.Pin || user.PIN || '').trim();
       
       console.log(`   Comparando: "${pinStr}" === "${recordPin}" ?`);
       

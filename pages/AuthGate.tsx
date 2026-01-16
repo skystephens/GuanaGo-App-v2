@@ -328,75 +328,60 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
               <p className="text-sm text-gray-600">Ingresa tu PIN de administrador</p>
             </div>
 
-            {/* Display PIN */}
-            <div className="flex justify-center gap-3 mb-6">
-              {[...Array(6)].map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center text-xl font-bold
-                    ${adminPin.length > i 
-                      ? 'bg-purple-100 border-purple-500 text-purple-700' 
-                      : 'bg-gray-100 border-gray-200 text-gray-400'}`}
-                >
-                  {adminPin.length > i ? '•' : ''}
-                </div>
-              ))}
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex gap-3 mb-4">
-                <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-red-800">{error}</p>
-              </div>
-            )}
-
-            {/* Teclado numérico */}
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((digit) => (
-                <button
-                  key={digit}
-                  type="button"
-                  onClick={() => {
-                    if (digit === 'C') handlePinClear();
-                    else if (digit === '⌫') handlePinDelete();
-                    else handlePinDigit(digit);
+            {/* Campo de PIN (texto) */}
+            <form onSubmit={handleAdminPinSubmit} className="space-y-4">
+              <div className="relative">
+                <Lock size={18} className="absolute left-4 top-3.5 text-gray-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={adminPin}
+                  onChange={(e) => {
+                    setAdminPin(e.target.value);
+                    setError('');
                   }}
-                  disabled={loading}
-                  className={`h-14 rounded-xl text-xl font-bold transition-all active:scale-95
-                    ${digit === 'C' 
-                      ? 'bg-gray-200 text-gray-600 hover:bg-gray-300' 
-                      : digit === '⌫' 
-                        ? 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                        : 'bg-white border-2 border-gray-200 text-gray-800 hover:bg-purple-50 hover:border-purple-300'}
-                    ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  placeholder="Ingresa tu PIN"
+                  className="w-full pl-11 pr-12 py-3 border-2 border-purple-200 rounded-xl outline-none transition-all focus:border-purple-500 text-gray-900 text-sm"
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  {digit}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
-              ))}
-            </div>
+              </div>
 
-            {/* Botón Acceder */}
-            <button
-              onClick={handleAdminPinSubmit}
-              disabled={loading || adminPin.length < 4}
-              className={`w-full py-4 rounded-xl font-black uppercase text-sm tracking-wider transition-all
-                bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-200
-                flex items-center justify-center gap-2
-                ${(loading || adminPin.length < 4) ? 'opacity-60 cursor-not-allowed' : 'active:scale-95'}`}
-            >
-              {loading ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  Validando...
-                </>
-              ) : (
-                <>
-                  <ShieldCheck size={18} />
-                  Acceder
-                </>
+              {/* Error */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex gap-3">
+                  <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-800">{error}</p>
+                </div>
               )}
-            </button>
+
+              {/* Botón Acceder */}
+              <button
+                type="submit"
+                disabled={loading || adminPin.length < 4}
+                className={`w-full py-4 rounded-xl font-black uppercase text-sm tracking-wider transition-all
+                  bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-200
+                  flex items-center justify-center gap-2
+                  ${(loading || adminPin.length < 4) ? 'opacity-60 cursor-not-allowed' : 'active:scale-95'}`}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Validando...
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck size={18} />
+                    Acceder
+                  </>
+                )}
+              </button>
+            </form>
 
             {/* Intentos restantes */}
             {pinAttempts > 0 && (
