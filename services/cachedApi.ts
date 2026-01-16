@@ -10,7 +10,7 @@
  */
 
 import { api } from './api';
-import { airtableService } from './airtableService';
+import airtableService from './airtableService';
 import cache, { 
   getDataWithFallback,
   getFromCache,
