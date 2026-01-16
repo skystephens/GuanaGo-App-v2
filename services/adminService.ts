@@ -1,5 +1,7 @@
 // Servicio para validar acceso admin por PIN contra Airtable
-import { fetchTable } from './airtableService';
+import airtableService from './airtableService';
+const { fetchTable } = airtableService;
+import type { GuanaUser, UserRole } from '../types';
 
 export interface AdminUser {
   id: string;
@@ -20,12 +22,12 @@ export async function validateAdminPin(pin: string): Promise<AdminUser | null> {
     const user = records[0].fields;
     return {
       id: records[0].id,
-      nombre: user.Nombre,
-      email: user.Email,
-      pin: user.PIN,
-      rol: user.Rol,
-      activo: user.Activo,
-      permisos_especificos: user.Permisos_Especificos
+      nombre: user.nombre,
+      email: user.email,
+      pin: user.pin,
+      rol: user.rol,
+      activo: user.activo,
+      permisos_especificos: user.permisos_especificos
     };
   }
   return null;

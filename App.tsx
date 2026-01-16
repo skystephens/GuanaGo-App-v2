@@ -68,7 +68,7 @@ const App: React.FC = () => {
   const [history, setHistory] = useState<AppRoute[]>([]);
   
   // Auth State
-  const [userRole, setUserRole] = useState<UserRole>('tourist');
+  const [userRole, setUserRole] = useState<UserRole>('Turista');
   const [isAuthenticated, setIsAuthenticated] = useState(false); 
   const [detailData, setDetailData] = useState<any>(null);
 
@@ -90,22 +90,22 @@ const App: React.FC = () => {
       setCurrentRoute(prevRoute);
       setHistory((prev) => prev.slice(0, -1));
     } else {
-      if (userRole === 'tourist') setCurrentRoute(AppRoute.HOME);
-      else if (userRole === 'partner') setCurrentRoute(AppRoute.PARTNER_DASHBOARD);
+      if (userRole === 'Turista') setCurrentRoute(AppRoute.HOME);
+      else if (userRole === 'Socio' || userRole === 'Aliado' || userRole === 'Operador' || userRole === 'Artista') setCurrentRoute(AppRoute.PARTNER_DASHBOARD);
       else setCurrentRoute(AppRoute.ADMIN_DASHBOARD);
     }
   };
 
   const switchRole = (newRole: UserRole) => {
     setUserRole(newRole);
-    if (newRole === 'tourist') {
+     if (newRole === 'Turista') {
        setIsAuthenticated(false);
        setCurrentRoute(AppRoute.HOME);
-    } else {
+     } else {
        setIsAuthenticated(true);
-       if (newRole === 'partner') setCurrentRoute(AppRoute.PARTNER_DASHBOARD);
-       if (newRole === 'admin') setCurrentRoute(AppRoute.ADMIN_DASHBOARD);
-    }
+       if (newRole === 'Socio' || newRole === 'Aliado' || newRole === 'Operador' || newRole === 'Artista') setCurrentRoute(AppRoute.PARTNER_DASHBOARD);
+       if (newRole === 'SuperAdmin') setCurrentRoute(AppRoute.ADMIN_DASHBOARD);
+     }
     setHistory([]);
     window.scrollTo(0, 0);
   };
@@ -117,7 +117,7 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    setUserRole('tourist');
+    setUserRole('Turista');
     setHistory([]);
     setCurrentRoute(AppRoute.HOME);
     window.scrollTo(0, 0);

@@ -80,15 +80,14 @@ const ArtistaPortal: React.FC<ArtistaPortalProps> = ({ onBack, onNavigate, artis
         porcentajeGuanaGO: 15,
         porcentajeCluster: 15,
         contratoFirmado: true,
-        fechaContrato: '2026-01-10',
+        fechaInicio: '2026-01-10',
         walletHedera: '0.0.123456',
         productosActivos: 3,
         ventasTotales: 2500000,
         gananciasArtista: 1750000,
         gananciasGuanaGO: 375000,
-        gananciasCluster: 375000,
-        createdAt: '2026-01-10T10:00:00Z',
-        updatedAt: '2026-01-13T15:00:00Z'
+        // gananciasCluster no existe en el tipo original, se omite
+        fechaCreacion: '2026-01-10T10:00:00Z'
       };
 
       const demoProductos: ProductoArtista[] = [
@@ -103,10 +102,13 @@ const ArtistaPortal: React.FC<ArtistaPortalProps> = ({ onBack, onNavigate, artis
           precioCOP: 150000,
           precioGUANA: 1500,
           stock: 100,
-          vendidos: 23,
+          stockVendido: 23,
           imagenPrincipal: '',
           activo: true,
-          createdAt: '2026-01-10T10:00:00Z'
+          destacado: false,
+          requiereReserva: false,
+          royaltyPorcentaje: 10,
+          fechaCreacion: '2026-01-10T10:00:00Z'
         },
         {
           id: 'prod-002',
@@ -118,11 +120,14 @@ const ArtistaPortal: React.FC<ArtistaPortalProps> = ({ onBack, onNavigate, artis
           categoria: 'experiencia',
           precioCOP: 800000,
           stock: 10,
-          vendidos: 2,
-          fechaExperiencia: '2026-02-14',
+          stockVendido: 2,
+          duracion: '2 horas',
           ubicacion: 'Restaurante Miss Celia, San Andrés',
           activo: true,
-          createdAt: '2026-01-11T10:00:00Z'
+          destacado: false,
+          requiereReserva: true,
+          royaltyPorcentaje: 10,
+          fechaCreacion: '2026-01-11T10:00:00Z'
         },
         {
           id: 'prod-003',
@@ -130,13 +135,16 @@ const ArtistaPortal: React.FC<ArtistaPortalProps> = ({ onBack, onNavigate, artis
           artistaNombre: 'Jah Melody',
           nombre: 'Membresía Fan Club 2026',
           descripcion: 'Acceso exclusivo a contenido, early access y descuentos',
-          tipo: 'membresia',
+          tipo: 'vip_caribbean',
           categoria: 'acceso',
           precioCOP: 200000,
           stock: -1, // Ilimitado
-          vendidos: 45,
+          stockVendido: 45,
           activo: true,
-          createdAt: '2026-01-12T10:00:00Z'
+          destacado: false,
+          requiereReserva: false,
+          royaltyPorcentaje: 10,
+          fechaCreacion: '2026-01-12T10:00:00Z'
         }
       ];
 
@@ -146,7 +154,6 @@ const ArtistaPortal: React.FC<ArtistaPortalProps> = ({ onBack, onNavigate, artis
           idVenta: 'VNT-20260113-0001',
           productoId: 'prod-001',
           productoNombre: 'Reggae Sunrise',
-          artistaId: 'art-001',
           artistaNombre: 'Jah Melody',
           compradorId: 'usr-001',
           precioTotal: 150000,
@@ -155,23 +162,32 @@ const ArtistaPortal: React.FC<ArtistaPortalProps> = ({ onBack, onNavigate, artis
           montoCluster: 22500,
           metodoPago: 'tarjeta',
           estadoPago: 'pagado',
-          createdAt: '2026-01-13T10:00:00Z'
+          cantidad: 1,
+          fecha: '2026-01-13T10:00:00Z',
+          precioUnitario: 150000,
+          estadoPagoArtista: 'pagado',
+          nftTransferido: false,
+          experienciaCompletada: false
         },
         {
           id: 'vnt-002',
           idVenta: 'VNT-20260113-0002',
           productoId: 'prod-003',
           productoNombre: 'Membresía Fan Club 2026',
-          artistaId: 'art-001',
           artistaNombre: 'Jah Melody',
           compradorId: 'usr-002',
           precioTotal: 200000,
           montoArtista: 140000,
           montoGuanaGO: 30000,
           montoCluster: 30000,
-          metodoPago: 'pse',
+          metodoPago: 'nequi',
           estadoPago: 'pendiente',
-          createdAt: '2026-01-13T14:00:00Z'
+          cantidad: 1,
+          fecha: '2026-01-13T14:00:00Z',
+          precioUnitario: 200000,
+          estadoPagoArtista: 'pendiente',
+          nftTransferido: false,
+          experienciaCompletada: false
         }
       ];
 

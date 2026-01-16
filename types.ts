@@ -41,8 +41,6 @@ export interface GuanaUser {
   fechaRegistro: string;
   ultimaActividad?: string;
 }
-// Exportar tipos de usuario globales desde airtableService
-export type { GuanaUser, UserRole } from './services/airtableService';
 
 export interface Tour {
   id: string;
@@ -312,7 +310,6 @@ export enum AppRoute {
   ADMIN_TASKS = 'ADMIN_TASKS',
 }
 
-export type UserRole = 'tourist' | 'partner' | 'admin';
 
 // Tipos de Socio/Partner - cada uno tiene su propio portal y campos
 export type TipoSocio = 

@@ -943,7 +943,7 @@ const AdminArtistas: React.FC<AdminArtistasProps> = ({ onBack, onNavigate }) => 
                         precioCOP: productForm.precioCOP,
                         precioGUANA: productForm.precioGUANA || undefined,
                         stock: productForm.stock,
-                        fechaExperiencia: productForm.fechaExperiencia || undefined,
+                        experienciaFecha: productForm.fechaExperiencia || undefined,
                         ubicacion: productForm.ubicacion || undefined,
                         duracion: productForm.duracion || undefined
                       });

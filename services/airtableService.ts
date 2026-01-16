@@ -292,6 +292,7 @@ export interface CreateProductoData {
   capacidad?: number;
   requiereReserva?: boolean;
   diasAnticipacion?: number;
+  experienciaFecha?: string;
 }
 
 // Datos para registrar una venta

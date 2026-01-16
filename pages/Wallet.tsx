@@ -4,7 +4,8 @@ import { ArrowLeft, QrCode, ArrowUpRight, ArrowDownLeft, PlusCircle, Gift, Lock,
 import { WALLET_TRANSACTIONS } from '../constants';
 import { AppRoute } from '../types';
 import BlockchainBadge from '../components/BlockchainBadge';
-import { airtableService, GuanaUser, GuanaReto } from '../services/airtableService';
+import { airtableService, GuanaReto } from '../services/airtableService';
+import type { GuanaUser } from '../types';
 
 interface WalletProps {
    onNavigate?: (route: AppRoute) => void;

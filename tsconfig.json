@@ -23,7 +23,8 @@
         "./*"
       ]
     },
-    "allowImportingTsExtensions": true,
-    "noEmit": true
+    "outDir": "dist",
+    "rootDir": ".",
+    "noEmit": false
   }
 }

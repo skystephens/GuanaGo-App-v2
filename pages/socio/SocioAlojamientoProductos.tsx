@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import GenericProductForm from '../components/GenericProductForm';
+import GenericProductForm from '../components/GenericProductForm.tsx';
 
 const SocioAlojamientoProductos: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);

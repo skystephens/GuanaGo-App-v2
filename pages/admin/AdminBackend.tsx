@@ -23,7 +23,11 @@ import {
   WifiOff,
   HardDrive,
   Zap,
-  Server
+  Server,
+  DollarSign,
+  Calendar,
+  Star,
+  ShoppingBag
 } from 'lucide-react';
 import { airtableService } from '../../services/airtableService';
 import { clearAllCache } from '../../services/cachedApi';
