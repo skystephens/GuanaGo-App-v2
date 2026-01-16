@@ -182,6 +182,7 @@ export async function registerUser({ email, password, userType, nombre }) {
 /**
  * Login de usuario
  * Verifica credenciales en Airtable
+ * Soporta tanto Password como PIN para autenticación
  */
 export async function loginUser({ email, password }) {
   if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
@@ -193,60 +194,69 @@ export async function loginUser({ email, password }) {
     console.log('🔐 Intentando login:', email);
     const fieldsMap = await detectUserFields();
 
-    // 1. Buscar usuario por email y password (sin filtro de activo primero)
     const escapedEmail = String(email || '').replace(/'/g, "''");
     const escapedPass = String(password || '').replace(/'/g, "''");
     const emailField = fieldsMap.emailField || 'Email';
-    const passField = fieldsMap.passwordField || 'Password';
     
-    // Primero buscar solo por email+password para dar mensajes apropiados
-    const formula = `AND({${emailField}}='${escapedEmail}', {${passField}}='${escapedPass}')`;
-    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(USUARIOS_TABLE)}?filterByFormula=${encodeURIComponent(formula)}`;
+    // Detectar si la tabla usa Password o PIN
+    const passField = fieldsMap.passwordField || 'Password';
+    const hasPinField = passField === 'PIN' || !fieldsMap.passwordField;
     
     console.log('📋 Buscando en:', USUARIOS_TABLE);
-    console.log('📋 Fórmula:', formula);
+    console.log('📋 Campo email:', emailField, '| Campo password/pin:', passField);
     
-    const response = await fetch(url, {
+    // Primero buscar solo por email para verificar si el usuario existe
+    const emailFormula = `{${emailField}}='${escapedEmail}'`;
+    const emailUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(USUARIOS_TABLE)}?filterByFormula=${encodeURIComponent(emailFormula)}`;
+    
+    const emailResponse = await fetch(emailUrl, {
       headers: {
         'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
         'Content-Type': 'application/json'
       }
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('❌ Airtable API error:', response.status, errText);
-      throw new Error(`Airtable API error: ${response.status}`);
+    if (!emailResponse.ok) {
+      const errText = await emailResponse.text();
+      console.error('❌ Airtable API error:', emailResponse.status, errText);
+      throw new Error(`Airtable API error: ${emailResponse.status}`);
     }
 
-    const data = await response.json();
-    console.log('📦 Registros encontrados:', data.records?.length || 0);
+    const emailData = await emailResponse.json();
+    console.log('📦 Usuarios encontrados con ese email:', emailData.records?.length || 0);
     
-    if (!data.records || data.records.length === 0) {
-      // Si no hay coincidencia, buscar solo por email para dar mejor mensaje
-      const emailOnlyFormula = `{${emailField}}='${escapedEmail}'`;
-      const emailCheckUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(USUARIOS_TABLE)}?filterByFormula=${encodeURIComponent(emailOnlyFormula)}`;
-      
-      const emailCheckResponse = await fetch(emailCheckUrl, {
-        headers: {
-          'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      const emailCheckData = await emailCheckResponse.json();
-      
-      if (emailCheckData.records && emailCheckData.records.length > 0) {
-        return { success: false, error: 'Contraseña incorrecta' };
-      }
-      
+    if (!emailData.records || emailData.records.length === 0) {
       return { success: false, error: 'Usuario no encontrado. ¿Ya te registraste?' };
     }
 
-    const userRecord = data.records[0];
+    const userRecord = emailData.records[0];
     const fields = userRecord.fields;
     
-    // 2. Verificar estado del usuario
+    // Verificar credenciales: intentar con Password primero, luego PIN
+    const storedPassword = fields.Password || fields.password || fields.Contraseña;
+    const storedPin = fields.PIN || fields.Pin || fields.pin;
+    
+    console.log('🔑 Verificando credenciales...');
+    console.log('   - Tiene Password:', Boolean(storedPassword));
+    console.log('   - Tiene PIN:', Boolean(storedPin));
+    
+    let credentialsMatch = false;
+    
+    if (storedPassword) {
+      // Comparar con Password
+      credentialsMatch = String(storedPassword).trim() === String(password).trim();
+      console.log('   - Comparando con Password:', credentialsMatch ? '✅' : '❌');
+    } else if (storedPin) {
+      // Comparar con PIN
+      credentialsMatch = String(storedPin).trim() === String(password).trim();
+      console.log('   - Comparando con PIN:', credentialsMatch ? '✅' : '❌');
+    }
+    
+    if (!credentialsMatch) {
+      return { success: false, error: 'Contraseña/PIN incorrecto' };
+    }
+    
+    // Verificar estado del usuario
     const activeField = fieldsMap.activeField || 'Activo';
     const isActive = fields[activeField] === true || 
                      fields[activeField] === 'Activo' || 
@@ -254,9 +264,8 @@ export async function loginUser({ email, password }) {
                      fields[activeField] === 'Verificado' ||
                      fields.Activo === true;
     
-    console.log(`👤 Usuario encontrado: ${fields[emailField]}, Activo: ${fields[activeField]}, isActive: ${isActive}`);
+    console.log(`👤 Usuario: ${fields[emailField]}, Activo: ${fields[activeField]}, isActive: ${isActive}`);
 
-    // Para compatibilidad si hay campo Estado
     if (fields.Estado === 'Inactivo') {
       return { success: false, error: 'Cuenta desactivada. Contacta a soporte.' };
     }
@@ -264,11 +273,10 @@ export async function loginUser({ email, password }) {
     if (fields.Estado === 'Pendiente') {
       return { 
         success: false, 
-        error: 'Tu cuenta está pendiente de aprobación. Te notificaremos cuando sea aprobada.' 
+        error: 'Tu cuenta está pendiente de aprobación.' 
       };
     }
     
-    // Si el campo Activo es false, informar
     if (!isActive && fields[activeField] !== undefined) {
       return { 
         success: false, 
@@ -276,19 +284,23 @@ export async function loginUser({ email, password }) {
       };
     }
 
-    // 3. Actualizar última actividad
-    await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(USUARIOS_TABLE)}/${userRecord.id}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        fields: {
-          Ultima_Actividad: new Date().toISOString()
-        }
-      })
-    });
+    // Actualizar última actividad
+    try {
+      await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(USUARIOS_TABLE)}/${userRecord.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fields: {
+            Ultima_Actividad: new Date().toISOString()
+          }
+        })
+      });
+    } catch (e) {
+      console.warn('⚠️ No se pudo actualizar última actividad:', e.message);
+    }
 
     console.log('✅ Login exitoso:', fields[emailField] || fields.Email);
 
