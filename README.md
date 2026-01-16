@@ -53,6 +53,7 @@ La aplicación estará disponible en:
 - Backend API: http://localhost:5000/api
 - API Tester: Abrir `backend/api-tester.html` en el navegador
 
+
 ## 📚 Documentación
 
 - **[GUIA_INICIO_BACKEND.md](GUIA_INICIO_BACKEND.md)** - Guía rápida del backend
@@ -61,6 +62,7 @@ La aplicación estará disponible en:
 - **[backend/README.md](backend/README.md)** - Documentación completa de la API
 - **[backend/INTEGRACION_FRONTEND.ts](backend/INTEGRACION_FRONTEND.ts)** - Ejemplos de integración
 - **[ARCHITECTURE_MAP.md](ARCHITECTURE_MAP.md)** - Arquitectura técnica
+- **[backend/ESCENARIOS_MAKE_AIRTABLE.md](backend/ESCENARIOS_MAKE_AIRTABLE.md)** - Escenarios de integración Backend ↔ Make.com ↔ Airtable
 
 ## 🏗️ Estructura del Proyecto
 

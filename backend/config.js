@@ -23,6 +23,7 @@ export const config = {
     chatbot: process.env.MAKE_WEBHOOK_CHATBOT || 'https://hook.us1.make.com/YOUR_CHATBOT_WEBHOOK',
     taxis: process.env.MAKE_WEBHOOK_TAXIS || 'https://hook.us1.make.com/YOUR_TAXIS_WEBHOOK',
     users: process.env.MAKE_WEBHOOK_USERS || 'https://hook.us1.make.com/8lz93j5qs3m5qu4cakeukxeq6hhgx6hc'
+    ,logsTrazabilidad: process.env.MAKE_WEBHOOK_LOGS_TRAZABILIDAD || 'https://hook.us1.make.com/YOUR_LOGS_TRAZABILIDAD_WEBHOOK'
   },
   
   // Hedera Blockchain

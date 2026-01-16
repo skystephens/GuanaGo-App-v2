@@ -1,4 +1,4 @@
-import { makeRequest } from '../utils/helpers.js';
+import { makeRequest, registrarLogTrazabilidad } from '../utils/helpers.js';
 import { config } from '../config.js';
 
 // Groq AI para cotizaciones inteligentes
@@ -134,9 +134,6 @@ export const sendMessage = async (req, res, next) => {
   try {
     const { message, context, conversationId } = req.body;
     
-    if (!message) {
-      return res.status(400).json({
-        success: false,
         error: 'El mensaje es requerido'
       });
     }
@@ -176,6 +173,17 @@ export const getConversationHistory = async (req, res, next) => {
       config.makeWebhooks.chatbot,
       {
         action: 'getHistory',
+    // Registrar log de cotización
+    await registrarLogTrazabilidad({
+      tipo: 'cotizacion',
+      usuarioId: usuario_id || 'anonimo',
+      descripcion: `Cotización solicitada: ${mensaje}`,
+      extra: {
+        respuesta,
+        historial,
+        fecha: fechaHoy
+      }
+    });
         conversationId,
         userId: req.user?.id
       },

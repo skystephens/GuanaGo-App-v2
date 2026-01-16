@@ -1,3 +1,5 @@
+// Obtener todas las reservas (admin/chatbot)
+router.get('/all', reservationsController.getAllReservations);
 import express from 'express';
 import * as reservationsController from '../controllers/reservationsController.js';
 import { authenticateToken, authorizeRole } from '../middleware/auth.js';

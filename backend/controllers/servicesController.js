@@ -1,4 +1,4 @@
-import { makeRequest } from '../utils/helpers.js';
+import { makeRequest, registrarLogTrazabilidad } from '../utils/helpers.js';
 import { config } from '../config.js';
 
 // Datos mock para cuando Make no está configurado
@@ -197,6 +197,17 @@ export const createOrUpdateService = async (req, res, next) => {
       },
       id ? 'UPDATE_SERVICE' : 'CREATE_SERVICE'
     );
+
+    // Registrar log de trazabilidad para creación/actualización de servicio
+    await registrarLogTrazabilidad({
+      tipo: id ? 'servicio_actualizado' : 'servicio_creado',
+      usuarioId: req.user?.id || 'anonimo',
+      descripcion: `${id ? 'Actualización' : 'Creación'} de servicio: ${serviceData.title || serviceData.Nombre || 'sin nombre'}`,
+      extra: {
+        service: result.service,
+        userRole: req.user.role
+      }
+    });
 
     res.json({
       success: true,

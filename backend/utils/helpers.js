@@ -1,5 +1,8 @@
 import { config } from '../config.js';
 
+// Exportar funciones de logs y notificaciones
+export * from './logs.js';
+
 /**
  * Utilidad para hacer requests a Make.com
  */

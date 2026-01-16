@@ -1,4 +1,4 @@
-import { makeRequest } from '../utils/helpers.js';
+import { makeRequest, registrarLogTrazabilidad } from '../utils/helpers.js';
 import { config } from '../config.js';
 import { generateToken } from '../middleware/auth.js';
 
@@ -102,27 +102,42 @@ export const getProfile = async (req, res, next) => {
     const result = await makeRequest(
       config.makeWebhooks.users,
       {
-        action: 'getProfile',
-        userId: req.user.id
+        action: 'login',
+        email,
+        password
       },
-      'GET_USER_PROFILE'
+      'USER_LOGIN'
     );
+
+    if (!result.user) {
+      // Registrar intento fallido
+      await registrarLogTrazabilidad({
+        tipo: 'login_fallido',
+        usuarioId: email,
+        descripcion: 'Intento de login fallido',
+        extra: { email }
+      });
+      return res.status(401).json({
+        success: false,
+        error: 'Credenciales inválidas'
+      });
+    }
+
+    const token = generateToken(result.user);
+
+    // Registrar login exitoso
+    await registrarLogTrazabilidad({
+      tipo: 'login_exitoso',
+      usuarioId: result.user.id || email,
+      descripcion: 'Login exitoso',
+      extra: { user: result.user }
+    });
 
     res.json({
       success: true,
-      data: result.user
+      token,
+      user: result.user
     });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Actualizar perfil
- */
-export const updateProfile = async (req, res, next) => {
-  try {
-    const updates = req.body;
     
     const result = await makeRequest(
       config.makeWebhooks.users,

@@ -1,4 +1,19 @@
-import { makeRequest } from '../utils/helpers.js';
+/**
+ * Obtener todas las reservas (para admin/chatbot)
+ */
+export const getAllReservations = async (req, res, next) => {
+  try {
+    const result = await makeRequest(
+      config.makeWebhooks.reservations,
+      { action: 'getAll' },
+      'GET_ALL_RESERVAS'
+    );
+    res.json({ success: true, data: result.reservas || [] });
+  } catch (error) {
+    next(error);
+  }
+};
+import { makeRequest, registrarLogTrazabilidad } from '../utils/helpers.js';
 import { config } from '../config.js';
 
 /**
@@ -28,6 +43,19 @@ export const createReservation = async (req, res, next) => {
       },
       'CREATE_RESERVATION'
     );
+
+    // Registrar log de trazabilidad para la reserva
+    await registrarLogTrazabilidad({
+      tipo: 'reserva',
+      usuarioId: req.user?.id || 'anonimo',
+      descripcion: `Reserva creada para servicio ${serviceId} el ${date} (${people} personas)`,
+      extra: {
+        customerInfo,
+        paymentMethod,
+        reservation: result.reservation,
+        transactionId: result.hederaTransactionId
+      }
+    });
 
     res.status(201).json({
       success: true,

@@ -526,9 +526,7 @@ export async function getServices(category?: string) {
       
       // Proveedor
       provider: f['Nombre Operador Aliado']?.[0] || 'GuanaGO',
-        image: f['Imagenurl']?.[0]?.url || f['Imagen']?.[0]?.url || f['Fotos']?.[0]?.url || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
-        images: f['Imagenurl']?.map((img: any) => img.url) || f['Imagen']?.map((img: any) => img.url) || f['Fotos']?.map((img: any) => img.url) || [],
-        gallery: f['Imagenurl']?.map((img: any) => img.url) || f['Imagen']?.map((img: any) => img.url) || f['Fotos']?.map((img: any) => img.url) || [],
+      // Las claves image, images y gallery ya están definidas antes, no repetir aquí
     };
   }).filter(s => s.active && (s.ubicacion === 'San Andres' || s.ubicacion === 'San Andrés' || !s.ubicacion)); // Solo servicios publicados de San Andrés
 }
