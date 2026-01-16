@@ -1,5 +1,5 @@
 // Servicio para validar acceso admin por PIN contra Airtable
-import airtableService from './airtableService';
+import { airtableService } from './airtableService';
 const { fetchTable } = airtableService;
 import type { GuanaUser, UserRole } from '../types';
 

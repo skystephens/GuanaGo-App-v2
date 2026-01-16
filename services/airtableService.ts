@@ -2203,4 +2203,3 @@ export const airtableService = {
   tables: TABLES
 };
 
-export default airtableService;
