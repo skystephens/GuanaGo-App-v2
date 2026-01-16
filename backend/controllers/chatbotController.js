@@ -175,17 +175,6 @@ export const getConversationHistory = async (req, res, next) => {
       config.makeWebhooks.chatbot,
       {
         action: 'getHistory',
-    // Registrar log de cotización
-    await registrarLogTrazabilidad({
-      tipo: 'cotizacion',
-      usuarioId: usuario_id || 'anonimo',
-      descripcion: `Cotización solicitada: ${mensaje}`,
-      extra: {
-        respuesta,
-        historial,
-        fecha: fechaHoy
-      }
-    });
         conversationId,
         userId: req.user?.id
       },
