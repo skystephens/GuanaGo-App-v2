@@ -141,9 +141,6 @@ export const sendMessage = async (req, res, next) => {
     const result = await makeRequest(
       config.makeWebhooks.chatbot,
       {
-        action: 'chat',
-        message,
-        context,
         conversationId,
         userId: req.user?.id,
         timestamp: new Date().toISOString()
