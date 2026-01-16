@@ -193,17 +193,18 @@ export async function loginUser({ email, password }) {
     console.log('🔐 Intentando login:', email);
     const fieldsMap = await detectUserFields();
 
-    // 1. Buscar usuario por email
-    // Autenticación por Email + Password en Usuarios_Admins y que esté Activo
+    // 1. Buscar usuario por email y password (sin filtro de activo primero)
     const escapedEmail = String(email || '').replace(/'/g, "''");
     const escapedPass = String(password || '').replace(/'/g, "''");
     const emailField = fieldsMap.emailField || 'Email';
     const passField = fieldsMap.passwordField || 'Password';
-    const activeClause = buildActiveFormula(fieldsMap.activeField || 'Activo');
-    const clauses = [`{${emailField}}='${escapedEmail}'`, `{${passField}}='${escapedPass}'`];
-    if (activeClause) clauses.push(activeClause);
-    const formula = clauses.length > 1 ? `AND(${clauses.join(', ')})` : clauses[0];
+    
+    // Primero buscar solo por email+password para dar mensajes apropiados
+    const formula = `AND({${emailField}}='${escapedEmail}', {${passField}}='${escapedPass}')`;
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(USUARIOS_TABLE)}?filterByFormula=${encodeURIComponent(formula)}`;
+    
+    console.log('📋 Buscando en:', USUARIOS_TABLE);
+    console.log('📋 Fórmula:', formula);
     
     const response = await fetch(url, {
       headers: {
@@ -213,20 +214,49 @@ export async function loginUser({ email, password }) {
     });
 
     if (!response.ok) {
+      const errText = await response.text();
+      console.error('❌ Airtable API error:', response.status, errText);
       throw new Error(`Airtable API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('📦 Registros encontrados:', data.records?.length || 0);
     
     if (!data.records || data.records.length === 0) {
-      return { success: false, error: 'Credenciales incorrectas o cuenta inactiva' };
+      // Si no hay coincidencia, buscar solo por email para dar mejor mensaje
+      const emailOnlyFormula = `{${emailField}}='${escapedEmail}'`;
+      const emailCheckUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(USUARIOS_TABLE)}?filterByFormula=${encodeURIComponent(emailOnlyFormula)}`;
+      
+      const emailCheckResponse = await fetch(emailCheckUrl, {
+        headers: {
+          'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const emailCheckData = await emailCheckResponse.json();
+      
+      if (emailCheckData.records && emailCheckData.records.length > 0) {
+        return { success: false, error: 'Contraseña incorrecta' };
+      }
+      
+      return { success: false, error: 'Usuario no encontrado. ¿Ya te registraste?' };
     }
 
     const userRecord = data.records[0];
     const fields = userRecord.fields;
-
+    
     // 2. Verificar estado del usuario
-    // Para compatibilidad si hay campos Estado/Rol
+    const activeField = fieldsMap.activeField || 'Activo';
+    const isActive = fields[activeField] === true || 
+                     fields[activeField] === 'Activo' || 
+                     fields[activeField] === 'Aprobado' ||
+                     fields[activeField] === 'Verificado' ||
+                     fields.Activo === true;
+    
+    console.log(`👤 Usuario encontrado: ${fields[emailField]}, Activo: ${fields[activeField]}, isActive: ${isActive}`);
+
+    // Para compatibilidad si hay campo Estado
     if (fields.Estado === 'Inactivo') {
       return { success: false, error: 'Cuenta desactivada. Contacta a soporte.' };
     }
@@ -235,6 +265,14 @@ export async function loginUser({ email, password }) {
       return { 
         success: false, 
         error: 'Tu cuenta está pendiente de aprobación. Te notificaremos cuando sea aprobada.' 
+      };
+    }
+    
+    // Si el campo Activo es false, informar
+    if (!isActive && fields[activeField] !== undefined) {
+      return { 
+        success: false, 
+        error: 'Tu cuenta no está activa. Contacta a soporte.' 
       };
     }
 
@@ -252,7 +290,7 @@ export async function loginUser({ email, password }) {
       })
     });
 
-    console.log('✅ Login exitoso:', fields.Email);
+    console.log('✅ Login exitoso:', fields[emailField] || fields.Email);
 
     return {
       success: true,
