@@ -6,6 +6,8 @@ import { AppRoute, UserRole, Client, Campaign, GuanaUser } from '../types';
 import DashboardContainer from '../components/DashboardContainer';
 import { api } from '../services/api';
 import ChatWindow from '../components/ChatWindow';
+import AdminPinLogin from './AdminPinLogin';
+import AuthGate from './AuthGate';
 
 interface AccountDashboardProps {
   isAuthenticated: boolean;
@@ -22,6 +24,9 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [userData, setUserData] = useState<Client | GuanaUser | null>(null);
   const [loadingUser, setLoadingUser] = useState(false);
+  const [showAdminPin, setShowAdminPin] = useState(false);
+  const [adminUser, setAdminUser] = useState<any>(null);
+  const [showAuthGate, setShowAuthGate] = useState(!isAuthenticated);
   
   // ID de usuario de prueba persistente (Mateo Vargas)
   const TEST_USER_ID = 'c1';
@@ -29,6 +34,18 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
   useEffect(() => {
      if (isAuthenticated) {
         fetchInitialData();
+        // Verificar si hay sesión de admin guardada
+        const savedSession = localStorage.getItem('admin_session');
+        if (savedSession) {
+          try {
+            const session = JSON.parse(savedSession);
+            const expiresAt = new Date(session.expiresAt);
+            if (expiresAt > new Date()) {
+              setAdminUser(session.user);
+              setShowAdminPin(false);
+            }
+          } catch {}
+        }
      }
   }, [isAuthenticated]);
 
@@ -54,6 +71,34 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
   };
 
   if (!isAuthenticated) {
+    // Si AuthGate está abierto, mostrarlo
+    if (showAuthGate) {
+      return (
+        <AuthGate 
+          onAuthenticated={(role) => {
+            console.log('✅ Usuario autenticado con rol:', role);
+            onSwitchRole(role);
+            setShowAuthGate(false);
+          }}
+        />
+      );
+    }
+
+    // Si hay PIN modal abierto, mostrar login de admin
+    if (showAdminPin) {
+      return (
+        <AdminPinLogin 
+          onLoginSuccess={(user) => {
+            console.log('✅ Admin login exitoso:', user);
+            setAdminUser(user);
+            setShowAdminPin(false);
+            // Cambiar rol a SuperAdmin después de autenticar
+            onSwitchRole('SuperAdmin');
+          }}
+        />
+      );
+    }
+
     return (
       <div className="bg-white min-h-screen flex flex-col justify-center px-8 text-center font-sans pb-24">
         <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600 border border-emerald-100 shadow-sm">
@@ -66,14 +111,14 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
         
         <div className="space-y-4 w-full">
           <button 
-            onClick={onLogin}
+            onClick={() => setShowAuthGate(true)}
             className="w-full bg-emerald-600 text-white font-black py-5 rounded-[24px] shadow-xl shadow-emerald-100 uppercase text-sm tracking-widest active:scale-95 transition-all"
           >
-            Iniciar Sesión Turista
+            Iniciar Sesión o Registrarse
           </button>
 
           <div className="pt-10">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[3px] mb-6">Accesos de Gestión</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[3px] mb-6">Acceso Directo</p>
             <div className="flex gap-4">
               <button 
                 onClick={() => onSwitchRole('Socio')}
@@ -86,7 +131,7 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
               </button>
               
               <button 
-                onClick={() => onSwitchRole('SuperAdmin')}
+                onClick={() => setShowAdminPin(true)}
                 className="flex-1 bg-gray-50 p-5 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center gap-2 hover:bg-purple-50 hover:border-purple-100 transition-all active:scale-95 group"
               >
                 <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-purple-500 shadow-sm group-hover:bg-purple-500 group-hover:text-white transition-colors">

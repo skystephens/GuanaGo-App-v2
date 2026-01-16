@@ -432,6 +432,33 @@ export async function getServices(category?: string) {
     filterByFormula: filterFormula || undefined
   });
   
+  // Helpers para imágenes provenientes de distintos campos posibles
+  const extractImageUrls = (f: any): string[] => {
+    const candidates = [
+      f['Imagen'], f['Imagen Principal'], f['Imagen_Principal'], f['Image'], f['Images'],
+      f['Foto'], f['Fotos'], f['Galeria'], f['Galería'], f['Gallery']
+    ];
+    const urls: string[] = [];
+    candidates.forEach((c: any) => {
+      if (!c) return;
+      if (Array.isArray(c)) {
+        c.forEach((item: any) => {
+          const u = item?.url || (typeof item === 'string' ? item : null);
+          if (u) urls.push(u);
+        });
+      } else if (typeof c === 'string') {
+        urls.push(c);
+      }
+    });
+    // Eliminar duplicados
+    return Array.from(new Set(urls));
+  };
+
+  const extractPrimaryImage = (f: any): string => {
+    const all = extractImageUrls(f);
+    return all[0] || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800';
+  };
+
   return records.map(record => {
     // Mapeo ajustado a los campos reales de Airtable
     const f = record.fields;
@@ -479,10 +506,10 @@ export async function getServices(category?: string) {
       meetingPoint: f['Punto de encuentro - Lugar de recogida "Pickup at hotel"'] || f['Punto de Encuentro'] || '',
       puntoEncuentro: f['Punto de encuentro - Lugar de recogida "Pickup at hotel"'] || f['Punto de Encuentro'] || '',
       
-      // Imágenes
-      image: f['Imagen']?.[0]?.url || f['Fotos']?.[0]?.url || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
-      images: f['Imagen']?.map((img: any) => img.url) || f['Fotos']?.map((img: any) => img.url) || [],
-      gallery: f['Imagen']?.map((img: any) => img.url) || f['Fotos']?.map((img: any) => img.url) || [],
+      // Imágenes (detección automática de múltiples campos)
+      image: extractPrimaryImage(f),
+      images: extractImageUrls(f),
+      gallery: extractImageUrls(f),
       
       // Horarios de operación
       schedule: f['Horarios de Operacion'] || f['Horarios de Operación'] || '',

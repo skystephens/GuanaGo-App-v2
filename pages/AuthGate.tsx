@@ -1,0 +1,345 @@
+import React, { useState } from 'react';
+import { ArrowLeft, User, Briefcase, ShieldCheck, LogIn, UserPlus, AlertCircle, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+import { AppRoute, UserRole } from '../types';
+
+interface AuthGateProps {
+  onAuthenticated: (role: UserRole) => void;
+  onNavigate?: (route: AppRoute) => void;
+}
+
+type AuthStep = 'select-type' | 'login' | 'register';
+type UserType = 'turista' | 'local' | 'socio' | 'admin' | null;
+
+const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
+  const [currentStep, setCurrentStep] = useState<AuthStep>('select-type');
+  const [userType, setUserType] = useState<UserType>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [isLogin, setIsLogin] = useState(true); // true = login, false = register
+
+  const userTypeConfig = {
+    turista: {
+      label: 'Turista',
+      description: 'Explora y disfruta San Andrés',
+      icon: <User size={32} />,
+      color: 'emerald',
+      role: 'Tourist' as UserRole,
+    },
+    local: {
+      label: 'Residente Local',
+      description: 'Vive en la isla y accede a beneficios locales',
+      icon: <User size={32} />,
+      color: 'blue',
+      role: 'Local' as UserRole,
+    },
+    socio: {
+      label: 'Socio Operador',
+      description: 'Gestiona tu negocio turístico',
+      icon: <Briefcase size={32} />,
+      color: 'indigo',
+      role: 'Socio' as UserRole,
+    },
+    admin: {
+      label: 'Administrador',
+      description: 'Acceso a panel administrativo',
+      icon: <ShieldCheck size={32} />,
+      color: 'purple',
+      role: 'SuperAdmin' as UserRole,
+    },
+  };
+
+  const handleSelectUserType = (type: UserType) => {
+    setUserType(type);
+    setError('');
+    setEmail('');
+    setPassword('');
+    setCurrentStep('login');
+  };
+
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    // Validación básica
+    if (!email || !password) {
+      setError('Por favor completa todos los campos');
+      setLoading(false);
+      return;
+    }
+
+    // Validación adicional para registro
+    if (!isLogin) {
+      if (!email.includes('@')) {
+        setError('El correo debe ser válido');
+        setLoading(false);
+        return;
+      }
+      if (password.length < 8) {
+        setError('La contraseña debe tener mínimo 8 caracteres');
+        setLoading(false);
+        return;
+      }
+    }
+
+    try {
+      const endpoint = isLogin ? '/api/user-auth/login' : '/api/user-auth/register';
+      const payload = isLogin 
+        ? { email, password }
+        : { email, password, userType, nombre: email.split('@')[0] };
+
+      const response = await fetch(`http://localhost:5000${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        setError(data.error || 'Error en la autenticación');
+        setLoading(false);
+        return;
+      }
+
+      // Guardar sesión en localStorage
+      const session = {
+        user: data.user,
+        email: data.user.email,
+        userType,
+        role: data.user.role,
+        loginTime: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      };
+      localStorage.setItem('user_session', JSON.stringify(session));
+      
+      // Mostrar mensaje si requiere aprobación
+      if (data.user.requiresApproval) {
+        alert(data.message);
+      }
+      
+      // Cambiar rol según tipo de usuario
+      onAuthenticated(data.user.role);
+      
+    } catch (err) {
+      console.error('Error en autenticación:', err);
+      setError('Error conectando con el servidor. Verifica que el backend esté corriendo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const goBack = () => {
+    if (currentStep === 'login' || currentStep === 'register') {
+      setCurrentStep('select-type');
+      setUserType(null);
+      setError('');
+    }
+  };
+
+  // PASO 1: Seleccionar tipo de usuario
+  if (currentStep === 'select-type') {
+    return (
+      <div className="bg-gradient-to-b from-gray-50 to-white min-h-screen flex flex-col justify-center px-4 pb-24 font-sans">
+        <div className="w-full max-w-md mx-auto">
+          {/* Logo/Header */}
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-black text-gray-900 mb-2">GuanaGO</h1>
+            <p className="text-gray-600 text-sm">Elige tu tipo de cuenta</p>
+          </div>
+
+          {/* Descripción */}
+          <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-4 mb-8">
+            <div className="flex gap-3">
+              <div className="text-emerald-600 flex-shrink-0 mt-0.5">
+                <AlertCircle size={20} />
+              </div>
+              <p className="text-sm text-emerald-800 leading-relaxed">
+                Selecciona el tipo de cuenta que mejor se adapte a ti para acceder con beneficios personalizados.
+              </p>
+            </div>
+          </div>
+
+          {/* Opciones de usuario */}
+          <div className="space-y-3 mb-6">
+            {Object.entries(userTypeConfig).map(([key, config]) => (
+              <button
+                key={key}
+                onClick={() => handleSelectUserType(key as UserType)}
+                className={`w-full p-5 rounded-3xl border-2 transition-all text-left
+                  ${config.color === 'emerald' ? 'hover:border-emerald-500 hover:bg-emerald-50 border-emerald-200' : ''}
+                  ${config.color === 'blue' ? 'hover:border-blue-500 hover:bg-blue-50 border-blue-200' : ''}
+                  ${config.color === 'indigo' ? 'hover:border-indigo-500 hover:bg-indigo-50 border-indigo-200' : ''}
+                  ${config.color === 'purple' ? 'hover:border-purple-500 hover:bg-purple-50 border-purple-200' : ''}
+                  active:scale-95`}
+              >
+                <div className="flex gap-4">
+                  <div className={`
+                    w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0
+                    ${config.color === 'emerald' ? 'bg-emerald-100 text-emerald-600' : ''}
+                    ${config.color === 'blue' ? 'bg-blue-100 text-blue-600' : ''}
+                    ${config.color === 'indigo' ? 'bg-indigo-100 text-indigo-600' : ''}
+                    ${config.color === 'purple' ? 'bg-purple-100 text-purple-600' : ''}
+                  `}>
+                    {config.icon}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-black text-gray-900 text-sm mb-0.5">{config.label}</h3>
+                    <p className="text-xs text-gray-600 leading-snug">{config.description}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Info adicional */}
+          <p className="text-center text-xs text-gray-500 leading-relaxed">
+            Puedes cambiar tu tipo de cuenta más adelante en la configuración de tu perfil.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // PASO 2: Login / Registro
+  const config = userType ? userTypeConfig[userType] : null;
+
+  return (
+    <div className={`bg-gradient-to-br min-h-screen flex flex-col px-4 pb-24 font-sans
+      ${config?.color === 'emerald' ? 'from-emerald-50 to-white' : ''}
+      ${config?.color === 'blue' ? 'from-blue-50 to-white' : ''}
+      ${config?.color === 'indigo' ? 'from-indigo-50 to-white' : ''}
+      ${config?.color === 'purple' ? 'from-purple-50 to-white' : ''}
+    `}>
+      {/* Header con botón atrás */}
+      <div className="flex items-center justify-between pt-4 pb-6 border-b border-gray-200">
+        <button
+          onClick={goBack}
+          className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+        >
+          <ArrowLeft size={24} className="text-gray-700" />
+        </button>
+        <h2 className="font-black text-gray-900 text-lg">
+          {config?.label}
+        </h2>
+        <div className="w-10" />
+      </div>
+
+      {/* Contenedor principal */}
+      <div className="flex-1 flex items-center justify-center w-full max-w-md mx-auto my-8">
+        <div className="w-full">
+          {/* Título */}
+          <div className="mb-8 text-center">
+            <h1 className="text-2xl font-black text-gray-900 mb-2">
+              {isLogin ? 'Inicia Sesión' : 'Crea tu Cuenta'}
+            </h1>
+            <p className="text-sm text-gray-600">
+              {isLogin 
+                ? `Bienvenido ${config?.label}` 
+                : `Únete como ${config?.label}`}
+            </p>
+          </div>
+
+          {/* Formulario */}
+          <form onSubmit={handleAuthSubmit} className="space-y-5 mb-6">
+            {/* Email */}
+            <div>
+              <label className="block text-xs font-black text-gray-700 mb-2 ml-1">
+                Correo Electrónico
+              </label>
+              <div className="relative">
+                <Mail size={18} className="absolute left-4 top-3.5 text-gray-400" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="tu@correo.com"
+                  className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl outline-none transition-all focus:border-emerald-500 text-gray-900 text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Contraseña */}
+            <div>
+              <label className="block text-xs font-black text-gray-700 mb-2 ml-1">
+                Contraseña
+              </label>
+              <div className="relative">
+                <Lock size={18} className="absolute left-4 top-3.5 text-gray-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={isLogin ? '••••••••' : '••••••••(mínimo 8)'}
+                  className="w-full pl-11 pr-12 py-3 border-2 border-gray-200 rounded-xl outline-none transition-all focus:border-emerald-500 text-gray-900 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex gap-3">
+                <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-red-800">{error}</p>
+              </div>
+            )}
+
+            {/* Botón Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full py-4 rounded-xl font-black uppercase text-sm tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2
+                ${isLogin 
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200' 
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200'}
+                ${loading ? 'opacity-75 cursor-not-allowed' : ''}
+              `}
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Procesando...
+                </>
+              ) : (
+                <>
+                  {isLogin ? <LogIn size={18} /> : <UserPlus size={18} />}
+                  {isLogin ? 'Inicia Sesión' : 'Crear Cuenta'}
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Toggle Login/Register */}
+          <div className="text-center border-t border-gray-200 pt-6">
+            <p className="text-xs text-gray-600 mb-3">
+              {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
+            </p>
+            <button
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setError('');
+              }}
+              className="text-emerald-600 font-black text-sm hover:text-emerald-700 transition-colors"
+            >
+              {isLogin ? 'Registrate aquí' : 'Inicia sesión aquí'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AuthGate;

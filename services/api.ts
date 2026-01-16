@@ -31,8 +31,20 @@ const transformAirtableService = (record: any): Tour => {
     title: fields.Nombre || fields.title || fields.name || 'Tour sin nombre',
     description: fields.Descripcion || fields.description || fields.Description || '',
     price: parseFloat(fields.Precio || fields.price || 0),
-    image: fields.Imagen?.[0]?.url || fields.Imagen || fields.image || fields.Image || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400',
-    gallery: fields.Galeria?.map((img: any) => img.url || img) || fields.gallery || [],
+    image: (fields.Imagen?.[0]?.url 
+      || fields.Fotos?.[0]?.url 
+      || fields.Foto?.[0]?.url 
+      || fields['Imagen Principal']?.[0]?.url 
+      || fields.Imagen 
+      || fields.image 
+      || fields.Image 
+      || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400'),
+    gallery: (
+      (Array.isArray(fields.Galeria) ? fields.Galeria.map((img: any) => img.url || img) : [])
+      || (Array.isArray(fields.Fotos) ? fields.Fotos.map((img: any) => img.url || img) : [])
+      || fields.gallery 
+      || []
+    ),
     category: (fields.Categoria || fields.category || 'tour').toLowerCase() as Tour['category'],
     duration: fields.Duracion || fields.duration || '4 horas',
     rating: parseFloat(fields.Rating || fields.rating || '4.5'),

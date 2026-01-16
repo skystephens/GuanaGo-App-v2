@@ -1,46 +1,3 @@
-// ==================== GUANA USER MULTI-ROL ====================
-
-// Roles de usuario en el sistema
-export type UserRole = 'Turista' | 'Operador' | 'Aliado' | 'Socio' | 'Artista' | 'SuperAdmin';
-
-// Tipos de establecimiento para socios
-export type EstablishmentType = 
-  | 'Hotel' 
-  | 'Restaurante' 
-  | 'Tour Operador' 
-  | 'Comercio' 
-  | 'Artista RIMM' 
-  | 'Transporte' 
-  | 'Buceo' 
-  | 'Entretenimiento'
-  | 'Otro';
-
-// Interfaz para usuario con GUANA Points (tabla Leads/Usuarios)
-export interface GuanaUser {
-  id: string;
-  guanaId: string;
-  nombre: string;
-  email: string;
-  telefono?: string;
-  whatsapp?: string;
-  // Sistema GUANA Points
-  saldoGuana: number;
-  puntosAcumulados: number;
-  puntosCanjeados: number;
-  nivel: 'Explorador' | 'Aventurero' | 'Experto' | 'Leyenda';
-  retosCompletados: number;
-  qrEscaneados: number;
-  // Sistema Multi-Perfil (nuevos campos)
-  role: UserRole;                      // Turista, Operador, Aliado, etc.
-  establishmentType?: EstablishmentType; // Tipo de negocio si es socio
-  businessId?: string;                 // Link a Directorio_Mapa/Empresas
-  esRaizal?: boolean;                  // Residente raizal
-  cedulaRut?: string;                  // Documento identidad (para socios)
-  verificado?: boolean;                // KYC completado
-  // Metadata
-  fechaRegistro: string;
-  ultimaActividad?: string;
-}
 
 export interface Tour {
   id: string;
@@ -49,8 +6,7 @@ export interface Tour {
   reviews: number;
   price: number; 
   image: string;
-  gallery?: string[];
-  images?: string[];
+  gallery?: string[]; 
   category: 'tour' | 'hotel' | 'taxi' | 'package' | 'handicraft';
   description?: string;
   duration?: string;
@@ -60,26 +16,6 @@ export interface Tour {
   raizalHistory?: string;
   latitude?: number;
   longitude?: number;
-  
-  // Campos de Airtable
-  ubicacion?: string;
-  isla?: string;
-  location?: string;
-  schedule?: string;
-  horario?: string;
-  operatingHours?: string;
-  operatingDays?: string;
-  diasOperacion?: string;
-  includes?: string;
-  incluye?: string;
-  activityCategory?: string;
-  categoriaActividad?: string;
-  tags?: string[];
-  serviceType?: string;
-  tipoServicio?: string;
-  meetingPoint?: string;
-  puntoEncuentro?: string;
-  provider?: string;
 }
 
 export interface ItineraryDay {
@@ -111,14 +47,8 @@ export interface GuanaLocation {
   name: string;
   latitude: number;
   longitude: number;
-  category: string; // Flexible: Tour, Hotel, Restaurante, Droguería, Cajero, etc.
+  category: 'Tour' | 'Hotel' | 'Restaurante' | 'Transporte';
   price?: number;
-  description?: string;
-  phone?: string;
-  address?: string;
-  hours?: string;
-  image?: string;
-  rating?: number;
 }
 
 export interface Restaurant {
@@ -290,97 +220,17 @@ export enum AppRoute {
   ADMIN_FINANCE = 'ADMIN_FINANCE',
   ADMIN_SERVICES = 'ADMIN_SERVICES',
   ADMIN_BACKEND = 'ADMIN_BACKEND',
+  ADMIN_TASKS = 'ADMIN_TASKS',
   GROUP_QUOTE = 'GROUP_QUOTE',
   MY_ITINERARY = 'MY_ITINERARY',
   DYNAMIC_ITINERARY = 'DYNAMIC_ITINERARY',
-  DIRECTORY = 'DIRECTORY',
-  // RIMM Caribbean Night Routes
-  RIMM_CLUSTER = 'RIMM_CLUSTER',
-  MUSIC_EVENT_DETAIL = 'MUSIC_EVENT_DETAIL',
-  ARTIST_DETAIL = 'ARTIST_DETAIL',
-  ADMIN_CARIBBEAN_NIGHT = 'ADMIN_CARIBBEAN_NIGHT',
-  // Gestión de Artistas y NFTs
-  ADMIN_ARTISTAS = 'ADMIN_ARTISTAS',
-  ARTISTA_ONBOARDING = 'ARTISTA_ONBOARDING',
-  ARTISTA_PORTAL = 'ARTISTA_PORTAL',
-  // Gestión de Socios Multi-perfil
-  ADMIN_SOCIOS = 'ADMIN_SOCIOS',
-  SOCIO_PORTAL = 'SOCIO_PORTAL',
-  // Panel de Tareas del Proyecto
-  ADMIN_TASKS = 'ADMIN_TASKS',
 }
 
+export type UserRole = 'tourist' | 'partner' | 'admin' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';
 
-// Tipos de Socio/Partner - cada uno tiene su propio portal y campos
-export type TipoSocio = 
-  | 'artista_musical'      // Artistas del RIMM Cluster
-  | 'tour_operador'        // Operadores de tours y excursiones
-  | 'alojamiento'          // Hoteles, hostales, Airbnb
-  | 'restaurante'          // Restaurantes y bares
-  | 'transporte'           // Taxis, lanchas, rentacars
-  | 'comercio'             // Tiendas y artesanías
-  | 'experiencia'          // Actividades (buceo, snorkel, etc.)
-  | 'evento';              // Organizadores de eventos
-
-// Configuración de campos requeridos por tipo de socio
-export interface SocioConfig {
-  tipo: TipoSocio;
-  label: string;
-  icon: string;
-  color: string;
-  camposRequeridos: string[];
-  camposOpcionales: string[];
-  portalRoute: AppRoute;
-}
-
-// Datos del Socio
-export interface Socio {
-  id: string;
-  nombre: string;
-  nombreComercial: string;
-  tipo: TipoSocio;
-  email: string;
-  telefono: string;
-  // Estado
-  estado: 'prospecto' | 'activo' | 'pausado' | 'suspendido';
-  verificado: boolean;
-  // Financiero
-  comisionGuanaGO: number; // Porcentaje que cobra GuanaGO
-  walletHedera?: string;
-  datosBancarios?: {
-    banco: string;
-    tipoCuenta: string;
-    numeroCuenta: string;
-    titular: string;
-  };
-  // Documentos
-  documentosCompletados: string[];
-  documentosPendientes: string[];
-  // Stats
-  productosActivos: number;
-  ventasTotales: number;
-  calificacionPromedio: number;
-  // Metadata
-  createdAt: string;
-  updatedAt: string;
-}
-// ============================================================
-// SISTEMA DE TAREAS (Admin Tasks / To-Do Panel)
-// ============================================================
-
-export type TaskStatus = 'pendiente' | 'en_progreso' | 'urgente_pendiente' | 'terminado' | 'bloqueado';
+export type TaskStatus = 'pendiente' | 'en progreso' | 'completada' | 'bloqueada';
 export type TaskPriority = 'baja' | 'media' | 'alta' | 'critica';
-export type TaskCategory = 
-  | 'frontend' 
-  | 'backend' 
-  | 'blockchain' 
-  | 'integracion' 
-  | 'diseno' 
-  | 'documentacion'
-  | 'testing'
-  | 'devops'
-  | 'negocio'
-  | 'marketing';
+export type TaskCategory = 'backend' | 'frontend' | 'infraestructura' | 'diseño' | 'documentacion' | 'testing';
 
 export interface ProjectTask {
   id: string;
@@ -389,71 +239,56 @@ export interface ProjectTask {
   status: TaskStatus;
   prioridad: TaskPriority;
   categoria: TaskCategory;
-  // Trazabilidad
-  archivoReferencia?: string; // Ej: "ARCHITECTURE_MAP.md", "RIMM_NFT_STRATEGY.md"
-  seccionReferencia?: string; // Ej: "Fase 2: Contenido"
-  // Estimaciones
-  estimacionHoras?: number;
-  horasReales?: number;
-  fechaLimite?: string;
-  // Asignación
-  asignadoA?: string;
-  creadoPor: string;
-  // Dependencias
-  dependeDe?: string[]; // IDs de tareas que bloquean esta
-  bloquea?: string[]; // IDs de tareas que esta bloquea
-  // Metadata
-  createdAt: string;
-  updatedAt: string;
-  completedAt?: string;
-  // Para IA/Make
-  notasIA?: string; // Sugerencias de la IA
-  ultimoAnalisis?: string; // Fecha del último análisis
-}
-
-export interface TaskFilter {
-  status?: TaskStatus[];
-  prioridad?: TaskPriority[];
-  categoria?: TaskCategory[];
   archivoReferencia?: string;
+  seccionReferencia?: string;
+  estimacionHoras?: number;
+  creadoPor?: string;
   asignadoA?: string;
+  fechaCreacion?: string;
+  fechaVencimiento?: string;
+  dependencias?: string[];
+  completadaEn?: string;
+  notas?: string;
 }
 
 export interface TaskStats {
   total: number;
-  pendientes: number;
+  completadas: number;
   enProgreso: number;
-  urgentesPendientes: number;
-  terminadas: number;
+  pendientes: number;
   bloqueadas: number;
-  porCategoria: Record<TaskCategory, number>;
+  porcentajeCompletacion: number;
 }
 
-// Configuración de colores y etiquetas para el UI
-export const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; color: string; bgColor: string }> = {
-  pendiente: { label: 'Pendiente', color: 'text-yellow-400', bgColor: 'bg-yellow-900/30' },
-  en_progreso: { label: 'En Progreso', color: 'text-blue-400', bgColor: 'bg-blue-900/30' },
-  urgente_pendiente: { label: '⚠️ Urgente', color: 'text-red-400', bgColor: 'bg-red-900/30' },
-  terminado: { label: 'Terminado', color: 'text-green-400', bgColor: 'bg-green-900/30' },
-  bloqueado: { label: 'Bloqueado', color: 'text-gray-400', bgColor: 'bg-gray-900/30' }
-};
+export const TASK_STATUS_CONFIG = {
+  pendiente: { label: 'Pendiente', color: 'bg-gray-100', textColor: 'text-gray-700', icon: 'Circle' },
+  'en progreso': { label: 'En Progreso', color: 'bg-blue-100', textColor: 'text-blue-700', icon: 'Clock' },
+  completada: { label: 'Completada', color: 'bg-green-100', textColor: 'text-green-700', icon: 'CheckCircle2' },
+  bloqueada: { label: 'Bloqueada', color: 'bg-red-100', textColor: 'text-red-700', icon: 'AlertCircle' }
+} as const;
 
-export const TASK_PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string; icon: string }> = {
-  baja: { label: 'Baja', color: 'text-gray-400', icon: '○' },
-  media: { label: 'Media', color: 'text-yellow-400', icon: '◐' },
-  alta: { label: 'Alta', color: 'text-orange-400', icon: '●' },
-  critica: { label: 'Crítica', color: 'text-red-500', icon: '🔥' }
-};
+export const TASK_PRIORITY_CONFIG = {
+  baja: { label: 'Baja', color: 'bg-gray-50', textColor: 'text-gray-600', order: 1 },
+  media: { label: 'Media', color: 'bg-yellow-50', textColor: 'text-yellow-600', order: 2 },
+  alta: { label: 'Alta', color: 'bg-orange-50', textColor: 'text-orange-600', order: 3 },
+  critica: { label: 'Crítica', color: 'bg-red-50', textColor: 'text-red-600', order: 4 }
+} as const;
 
-export const TASK_CATEGORY_CONFIG: Record<TaskCategory, { label: string; color: string; icon: string }> = {
-  frontend: { label: 'Frontend', color: 'text-cyan-400', icon: '🎨' },
-  backend: { label: 'Backend', color: 'text-green-400', icon: '⚙️' },
-  blockchain: { label: 'Blockchain', color: 'text-purple-400', icon: '⛓️' },
-  integracion: { label: 'Integración', color: 'text-blue-400', icon: '🔗' },
-  diseno: { label: 'Diseño', color: 'text-pink-400', icon: '✏️' },
-  documentacion: { label: 'Docs', color: 'text-yellow-400', icon: '📄' },
-  testing: { label: 'Testing', color: 'text-orange-400', icon: '🧪' },
-  devops: { label: 'DevOps', color: 'text-red-400', icon: '🚀' },
-  negocio: { label: 'Negocio', color: 'text-emerald-400', icon: '💼' },
-  marketing: { label: 'Marketing', color: 'text-fuchsia-400', icon: '📢' }
-};
+export const TASK_CATEGORY_CONFIG = {
+  backend: { label: 'Backend', color: '#3B82F6', icon: 'Server' },
+  frontend: { label: 'Frontend', color: '#8B5CF6', icon: 'Palette' },
+  infraestructura: { label: 'Infraestructura', color: '#EF4444', icon: 'Zap' },
+  diseño: { label: 'Diseño', color: '#EC4899', icon: 'Sparkles' },
+  documentacion: { label: 'Documentación', color: '#10B981', icon: 'FileText' },
+  testing: { label: 'Testing', color: '#F59E0B', icon: 'CheckCircle2' }
+} as const;
+
+export interface Admin {
+  id: string;
+  nombre: string;
+  email: string;
+  pin: string;
+  rol: UserRole;
+  activo: boolean;
+  permisos_especificos?: string[];
+}

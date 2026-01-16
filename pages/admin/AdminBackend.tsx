@@ -68,6 +68,34 @@ const AdminBackend: React.FC = () => {
   const [cacheInfo, setCacheInfo] = useState({ size: 0, items: 0 });
   const [lastGlobalSync, setLastGlobalSync] = useState<string | null>(null);
 
+  // Verificar sesión al cargar el componente
+  useEffect(() => {
+    const savedSession = localStorage.getItem('admin_session');
+    if (savedSession) {
+      try {
+        const session = JSON.parse(savedSession);
+        const expiresAt = new Date(session.expiresAt);
+        
+        if (expiresAt > new Date()) {
+          // Sesión válida
+          console.log('✅ Sesión de admin válida');
+          setIsAuthenticated(true);
+          setAdminUser(session.user);
+        } else {
+          // Sesión expirada
+          console.log('⏰ Sesión expirada');
+          localStorage.removeItem('admin_session');
+          localStorage.removeItem('admin_authenticated');
+          setIsAuthenticated(false);
+        }
+      } catch (err) {
+        console.error('Error parsing session:', err);
+        localStorage.removeItem('admin_session');
+        setIsAuthenticated(false);
+      }
+    }
+  }, []);
+
   // Verificar conexión con Airtable al cargar (solo cuando autenticado)
   useEffect(() => {
     if (isAuthenticated) {
@@ -215,8 +243,10 @@ const AdminBackend: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <AdminPinLogin 
-        onLoginSuccess={() => { 
-          setIsAuthenticated(true); 
+        onLoginSuccess={(user) => { 
+          console.log('✅ Login exitoso, usuario:', user);
+          setAdminUser(user);
+          setIsAuthenticated(true);
         }} 
       />
     );
