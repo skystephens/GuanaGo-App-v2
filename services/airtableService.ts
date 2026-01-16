@@ -37,7 +37,10 @@ const TABLES = {
   // Gestión de artistas y NFTs
   ARTISTAS_PORTAFOLIO: 'Artistas_Portafolio',
   PRODUCTOS_ARTISTA: 'Productos_Artista',
-  VENTAS_ARTISTA: 'Ventas_Artista'
+  VENTAS_ARTISTA: 'Ventas_Artista',
+  
+  // Gestión de tareas del proyecto
+  TAREAS: 'Tareas_To_do'
 };
 
 import type { GuanaUser, UserRole, EstablishmentType } from '../types';
@@ -2222,6 +2225,12 @@ export const airtableService = {
   updateVenta,
   getResumenVentas,
   
+  // 📋 Tareas del Proyecto
+  getTareas,
+  createTarea,
+  updateTarea,
+  deleteTarea,
+  
   // Acceso genérico a tablas
   fetchTable,
   
@@ -2230,3 +2239,232 @@ export const airtableService = {
   tables: TABLES
 };
 
+// =========================================================
+// 📋 TAREAS DEL PROYECTO - CRUD con Airtable
+// =========================================================
+
+import type { ProjectTask, TaskStatus, TaskPriority, TaskCategory } from '../types';
+
+/**
+ * Obtener todas las tareas desde Airtable
+ */
+export async function getTareas(): Promise<ProjectTask[]> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    console.warn('⚠️ Airtable no configurado, retornando tareas vacías');
+    return [];
+  }
+
+  try {
+    const records = await fetchTable(TABLES.TAREAS);
+    console.log(`📋 Cargadas ${records.length} tareas desde Airtable`);
+    
+    return records.map(record => mapRecordToTarea(record));
+  } catch (error) {
+    console.error('❌ Error obteniendo tareas:', error);
+    return [];
+  }
+}
+
+/**
+ * Crear nueva tarea en Airtable
+ */
+export async function createTarea(tarea: Omit<ProjectTask, 'id'>): Promise<ProjectTask | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    console.warn('⚠️ Airtable no configurado');
+    return null;
+  }
+
+  try {
+    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.TAREAS)}`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        records: [{
+          fields: mapTareaToFields(tarea)
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error creando tarea: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const created = data.records?.[0];
+    
+    if (created) {
+      console.log('✅ Tarea creada:', created.id);
+      return mapRecordToTarea(created);
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('❌ Error creando tarea:', error);
+    return null;
+  }
+}
+
+/**
+ * Actualizar tarea existente en Airtable
+ */
+export async function updateTarea(id: string, updates: Partial<ProjectTask>): Promise<ProjectTask | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    console.warn('⚠️ Airtable no configurado');
+    return null;
+  }
+
+  try {
+    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.TAREAS)}/${id}`;
+    
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        fields: mapTareaToFields(updates)
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error actualizando tarea: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ Tarea actualizada:', id);
+    return mapRecordToTarea(data);
+  } catch (error) {
+    console.error('❌ Error actualizando tarea:', error);
+    return null;
+  }
+}
+
+/**
+ * Eliminar tarea de Airtable
+ */
+export async function deleteTarea(id: string): Promise<boolean> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    console.warn('⚠️ Airtable no configurado');
+    return false;
+  }
+
+  try {
+    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.TAREAS)}/${id}`;
+    
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error eliminando tarea: ${response.status}`);
+    }
+
+    console.log('✅ Tarea eliminada:', id);
+    return true;
+  } catch (error) {
+    console.error('❌ Error eliminando tarea:', error);
+    return false;
+  }
+}
+
+/**
+ * Mapear registro de Airtable a ProjectTask
+ * Detecta automáticamente nombres de campos en español o inglés
+ */
+function mapRecordToTarea(record: any): ProjectTask {
+  const f = record.fields;
+  
+  // Detección automática de campos
+  const titulo = f.Titulo || f.titulo || f.Title || f.Nombre || f.Name || '';
+  const descripcion = f.Descripcion || f.descripcion || f.Description || f.Detalles || '';
+  const status = normalizeStatus(f.Status || f.Estado || f.status || 'pendiente');
+  const prioridad = normalizePriority(f.Prioridad || f.prioridad || f.Priority || 'media');
+  const categoria = normalizeCategory(f.Categoria || f.categoria || f.Category || f.Tipo || 'backend');
+  
+  return {
+    id: record.id,
+    titulo,
+    descripcion,
+    status,
+    prioridad,
+    categoria,
+    archivoReferencia: f.Archivo_Referencia || f.ArchivoReferencia || f.File || undefined,
+    seccionReferencia: f.Seccion_Referencia || f.SeccionReferencia || f.Section || undefined,
+    estimacionHoras: parseInt(f.Estimacion_Horas || f.EstimacionHoras || f.Hours || '0') || undefined,
+    horasReales: parseInt(f.Horas_Reales || f.HorasReales || f.ActualHours || '0') || undefined,
+    creadoPor: f.Creado_Por || f.CreadoPor || f.CreatedBy || undefined,
+    asignadoA: f.Asignado_A || f.AsignadoA || f.AssignedTo || undefined,
+    createdAt: f.Fecha_Creacion || f.FechaCreacion || f.Created || record.createdTime,
+    updatedAt: f.Fecha_Actualizacion || f.FechaActualizacion || f.Updated || undefined,
+    fechaVencimiento: f.Fecha_Vencimiento || f.FechaVencimiento || f.DueDate || undefined,
+    dependeDe: parseDependencias(f.Depende_De || f.DependeDe || f.Dependencies),
+    notasIA: f.Notas_IA || f.NotasIA || f.AINote || undefined,
+    completedAt: f.Fecha_Completado || f.FechaCompletado || f.CompletedAt || undefined
+  };
+}
+
+/**
+ * Mapear ProjectTask a campos de Airtable
+ */
+function mapTareaToFields(tarea: Partial<ProjectTask>): Record<string, any> {
+  const fields: Record<string, any> = {};
+  
+  if (tarea.titulo !== undefined) fields.Titulo = tarea.titulo;
+  if (tarea.descripcion !== undefined) fields.Descripcion = tarea.descripcion;
+  if (tarea.status !== undefined) fields.Status = tarea.status;
+  if (tarea.prioridad !== undefined) fields.Prioridad = tarea.prioridad;
+  if (tarea.categoria !== undefined) fields.Categoria = tarea.categoria;
+  if (tarea.archivoReferencia !== undefined) fields.Archivo_Referencia = tarea.archivoReferencia;
+  if (tarea.seccionReferencia !== undefined) fields.Seccion_Referencia = tarea.seccionReferencia;
+  if (tarea.estimacionHoras !== undefined) fields.Estimacion_Horas = tarea.estimacionHoras;
+  if (tarea.horasReales !== undefined) fields.Horas_Reales = tarea.horasReales;
+  if (tarea.creadoPor !== undefined) fields.Creado_Por = tarea.creadoPor;
+  if (tarea.asignadoA !== undefined) fields.Asignado_A = tarea.asignadoA;
+  if (tarea.fechaVencimiento !== undefined) fields.Fecha_Vencimiento = tarea.fechaVencimiento;
+  if (tarea.dependeDe !== undefined) fields.Depende_De = tarea.dependeDe?.join(',');
+  if (tarea.notasIA !== undefined) fields.Notas_IA = tarea.notasIA;
+  if (tarea.completedAt !== undefined) fields.Fecha_Completado = tarea.completedAt;
+  if (tarea.updatedAt !== undefined) fields.Fecha_Actualizacion = tarea.updatedAt;
+  
+  return fields;
+}
+
+function normalizeStatus(status: string): TaskStatus {
+  const s = status.toLowerCase().replace(/[_\s]/g, '');
+  if (s.includes('pendiente') || s === 'pending' || s === 'todo') return 'pendiente';
+  if (s.includes('progreso') || s === 'inprogress' || s === 'doing') return 'en_progreso';
+  if (s.includes('urgente')) return 'urgente_pendiente';
+  if (s.includes('terminad') || s.includes('complet') || s === 'done') return 'terminado';
+  if (s.includes('bloquead') || s === 'blocked') return 'bloqueado';
+  return 'pendiente';
+}
+
+function normalizePriority(priority: string): TaskPriority {
+  const p = priority.toLowerCase();
+  if (p.includes('baja') || p === 'low') return 'baja';
+  if (p.includes('media') || p === 'medium') return 'media';
+  if (p.includes('alta') || p === 'high') return 'alta';
+  if (p.includes('critic') || p === 'critical') return 'critica';
+  return 'media';
+}
+
+function normalizeCategory(category: string): TaskCategory {
+  const c = category.toLowerCase();
+  if (c.includes('backend') || c.includes('server')) return 'backend';
+  if (c.includes('frontend') || c.includes('ui')) return 'frontend';
+  if (c.includes('infra') || c.includes('devops')) return 'infraestructura';
+  if (c.includes('diseno') || c.includes('design')) return 'diseno';
+  if (c.includes('doc')) return 'documentacion';
+  if (c.includes('test')) return 'testing';
+  if (c.includes('blockchain') || c.includes('crypto')) return 'blockchain';
+  if (c.includes('negocio') || c.includes('business')) return 'negocio';
+  return 'backend';
+}
+
+function parseDependencias(deps: any): string[] | undefined {
+  if (!deps) return undefined;
+  if (Array.isArray(deps)) return deps;
+  if (typeof deps === 'string') return deps.split(',').map(d => d.trim()).filter(Boolean);
+  return undefined;
+}

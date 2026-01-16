@@ -1,13 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   ArrowLeft, Plus, Filter, Search, Clock, AlertCircle, CheckCircle2, 
   Circle, Pause, RefreshCw, FileText, Sparkles, ChevronDown, ChevronUp,
-  Calendar, User, Link2, Trash2, Edit3, Save, X, Bot, Send
+  Calendar, User, Link2, Trash2, Edit3, Save, X, Bot, Send, Cloud, CloudOff, Loader2
 } from 'lucide-react';
 import { 
   AppRoute, ProjectTask, TaskStatus, TaskPriority, TaskCategory,
   TASK_STATUS_CONFIG, TASK_PRIORITY_CONFIG, TASK_CATEGORY_CONFIG, TaskStats
 } from '../../types';
+import { airtableService, getTareas, createTarea, updateTarea, deleteTarea } from '../../services/airtableService';
 
 interface AdminTasksProps {
   onBack: () => void;
@@ -552,7 +553,11 @@ const INITIAL_TASKS: ProjectTask[] = [
 ];
 
 const AdminTasks: React.FC<AdminTasksProps> = ({ onBack, onNavigate }) => {
-  const [tasks, setTasks] = useState<ProjectTask[]>(INITIAL_TASKS);
+  const [tasks, setTasks] = useState<ProjectTask[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [lastSync, setLastSync] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'todos'>('todos');
   const [filterCategoria, setFilterCategoria] = useState<TaskCategory | 'todas'>('todas');
@@ -564,6 +569,35 @@ const AdminTasks: React.FC<AdminTasksProps> = ({ onBack, onNavigate }) => {
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // Cargar tareas desde Airtable al montar el componente
+  const loadTasks = useCallback(async () => {
+    setIsSyncing(true);
+    try {
+      const airtableTasks = await getTareas();
+      if (airtableTasks.length > 0) {
+        setTasks(airtableTasks);
+        setIsOnline(true);
+        setLastSync(new Date());
+        console.log(`✅ Sincronizadas ${airtableTasks.length} tareas desde Airtable`);
+      } else {
+        // Si Airtable está vacío, usar tareas locales como fallback
+        setTasks(INITIAL_TASKS);
+        console.log('📋 Usando tareas locales (Airtable vacío)');
+      }
+    } catch (error) {
+      console.error('❌ Error cargando tareas:', error);
+      setIsOnline(false);
+      setTasks(INITIAL_TASKS);
+    } finally {
+      setIsLoading(false);
+      setIsSyncing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
 
   // Archivos de referencia únicos
   const archivosReferencia = useMemo(() => {
@@ -614,19 +648,36 @@ const AdminTasks: React.FC<AdminTasksProps> = ({ onBack, onNavigate }) => {
     });
   }, [filteredTasks]);
 
-  // Cambiar estado de tarea
-  const updateTaskStatus = (taskId: string, newStatus: TaskStatus) => {
+  // Cambiar estado de tarea (con sincronización a Airtable)
+  const updateTaskStatus = async (taskId: string, newStatus: TaskStatus) => {
+    const updatedAt = new Date().toISOString().split('T')[0];
+    const completedAt = newStatus === 'terminado' ? updatedAt : undefined;
+    
+    // Actualizar localmente primero (optimistic update)
     setTasks(prev => prev.map(task => {
       if (task.id === taskId) {
         return {
           ...task,
           status: newStatus,
-          updatedAt: new Date().toISOString().split('T')[0],
-          completedAt: newStatus === 'terminado' ? new Date().toISOString().split('T')[0] : undefined
+          updatedAt,
+          completedAt
         };
       }
       return task;
     }));
+
+    // Sincronizar con Airtable
+    try {
+      await updateTarea(taskId, { 
+        status: newStatus, 
+        updatedAt,
+        completedAt 
+      });
+      console.log(`✅ Tarea ${taskId} actualizada en Airtable`);
+    } catch (error) {
+      console.error('❌ Error sincronizando tarea:', error);
+      // No revertimos el cambio local para mejor UX
+    }
   };
 
   // Análisis local inteligente de tareas
@@ -731,6 +782,16 @@ ${sinDependencias[0] ? `Enfocarse en: **"${sinDependencias[0].titulo}"** - es la
     }
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="bg-gray-900 min-h-screen text-white flex flex-col items-center justify-center">
+        <Loader2 size={40} className="animate-spin text-cyan-400 mb-4" />
+        <p className="text-gray-400">Cargando tareas desde Airtable...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gray-900 min-h-screen text-white pb-24 font-sans">
       {/* Header */}
@@ -741,8 +802,27 @@ ${sinDependencias[0] ? `Enfocarse en: **"${sinDependencias[0].titulo}"** - es la
           </button>
           <div className="flex-1">
             <h1 className="text-xl font-bold">📋 Panel de Tareas</h1>
-            <p className="text-gray-400 text-xs">Roadmap & To-Do del Proyecto</p>
+            <div className="flex items-center gap-2">
+              <p className="text-gray-400 text-xs">Roadmap & To-Do del Proyecto</p>
+              {isOnline ? (
+                <span className="flex items-center gap-1 text-[10px] text-green-400">
+                  <Cloud size={12} /> Sincronizado
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-[10px] text-yellow-400">
+                  <CloudOff size={12} /> Offline
+                </span>
+              )}
+            </div>
           </div>
+          <button 
+            onClick={loadTasks}
+            disabled={isSyncing}
+            className={`p-2 rounded-lg flex items-center gap-1 ${isSyncing ? 'bg-gray-700' : 'bg-emerald-600 hover:bg-emerald-500'}`}
+            title="Sincronizar con Airtable"
+          >
+            <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} />
+          </button>
           <button 
             onClick={() => setShowAIPanel(!showAIPanel)}
             className="p-2 bg-purple-600 hover:bg-purple-500 rounded-lg flex items-center gap-1"
@@ -757,6 +837,13 @@ ${sinDependencias[0] ? `Enfocarse en: **"${sinDependencias[0].titulo}"** - es la
             <Plus size={18} />
           </button>
         </div>
+
+        {/* Sync Status */}
+        {lastSync && (
+          <p className="text-[10px] text-gray-500 mb-2">
+            Última sincronización: {lastSync.toLocaleTimeString()}
+          </p>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-5 gap-2 mb-4">
