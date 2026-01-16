@@ -49,7 +49,7 @@ app.use(express.static(distPath, {
 
 // ==================== API ROUTES ====================
 
-import validateAdminPinRoutes from './backend/routes/validateAdminPin.js';
+const validateAdminPinRoutes = require('./backend/routes/validateAdminPin.js');
 console.log('🔧 Configurando rutas API...');
 
 app.get('/api/health', (req, res) => {
