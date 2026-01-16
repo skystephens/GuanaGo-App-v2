@@ -63,6 +63,25 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Diagnóstico de configuración (para verificar variables de entorno en producción)
+app.get('/api/config-check', (req, res) => {
+  const airtableKey = process.env.AIRTABLE_API_KEY;
+  const airtableBase = process.env.AIRTABLE_BASE_ID;
+  
+  res.json({
+    timestamp: new Date().toISOString(),
+    environment: config.nodeEnv,
+    airtable: {
+      hasApiKey: Boolean(airtableKey),
+      apiKeyLength: airtableKey?.length || 0,
+      apiKeyPrefix: airtableKey?.substring(0, 6) || 'N/A',
+      hasBaseId: Boolean(airtableBase),
+      baseId: airtableBase || 'NOT_SET'
+    },
+    envVarsLoaded: Object.keys(process.env).filter(k => k.startsWith('AIRTABLE') || k.startsWith('VITE')).length
+  });
+});
+
 // Auth routes
 app.use('/api/auth', authRoutes);
 
