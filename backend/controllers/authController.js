@@ -138,22 +138,7 @@ export const getProfile = async (req, res, next) => {
       token,
       user: result.user
     });
-    
-    const result = await makeRequest(
-      config.makeWebhooks.users,
-      {
-        action: 'updateProfile',
-        userId: req.user.id,
-        updates
-      },
-      'UPDATE_USER_PROFILE'
-    );
-
-    res.json({
-      success: true,
-      data: result.user,
-      message: 'Perfil actualizado'
-    });
+    // Si necesitas actualizar el perfil, usa otro endpoint o función separada.
   } catch (error) {
     next(error);
   }
