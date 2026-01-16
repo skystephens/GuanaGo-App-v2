@@ -91,7 +91,8 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
         ? { email, password }
         : { email, password, userType, nombre: email.split('@')[0] };
 
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      // Usar URL relativa para que funcione tanto en local como en producción
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

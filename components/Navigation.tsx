@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Compass, CalendarDays, ShoppingCart, UserCircle, LayoutDashboard, QrCode, Wallet, Settings, PieChart, Map as MapIcon, Database } from 'lucide-react';
+import { Compass, CalendarDays, ShoppingCart, UserCircle, LayoutDashboard, QrCode, Wallet, Settings, PieChart, Map as MapIcon, Database, Trophy } from 'lucide-react';
 import { AppRoute, UserRole } from '../types';
 import { useCart } from '../context/CartContext';
 
@@ -15,12 +15,21 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
   const { itemCount } = useCart();
   
   // MENU TURISTA: 5 Items
-  const touristNavItems = [
+  const touristNavItemsAuth = [
     { route: AppRoute.HOME, icon: <Compass size={22} />, label: 'Explora' },
     { route: AppRoute.INTERACTIVE_MAP, icon: <MapIcon size={22} />, label: 'Mapa' },
     { route: AppRoute.DYNAMIC_ITINERARY, icon: <CalendarDays size={22} />, label: 'Planifica' },
     { route: AppRoute.CHECKOUT, icon: <ShoppingCart size={22} />, label: 'Carrito' },
     { route: AppRoute.WALLET, icon: <Wallet size={22} />, label: 'Cuenta' },
+  ];
+
+  // Versión para usuarios sin registro: cambiamos Carrito por GUANA Points/Retos
+  const touristNavItemsGuest = [
+    { route: AppRoute.HOME, icon: <Compass size={22} />, label: 'Explora' },
+    { route: AppRoute.INTERACTIVE_MAP, icon: <MapIcon size={22} />, label: 'Mapa' },
+    { route: AppRoute.DYNAMIC_ITINERARY, icon: <CalendarDays size={22} />, label: 'Planifica' },
+    { route: AppRoute.WALLET, icon: <Trophy size={22} />, label: 'GUANA' },
+    { route: AppRoute.PROFILE, icon: <UserCircle size={22} />, label: 'Cuenta' },
   ];
 
   // MENU SOCIO/ALIADO: 5 Items
@@ -42,13 +51,15 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
   ];
 
   // Determinar qué menú mostrar según el rol
-  let navItems = touristNavItems;
   const isPartner = role === 'Socio' || role === 'Aliado' || role === 'Operador' || role === 'Artista';
   const isAdmin = role === 'SuperAdmin';
   const isLocal = role === 'Local';
-  
+  const isTourist = !isPartner && !isAdmin;
+
+  let navItems = touristNavItemsAuth;
   if (isPartner) navItems = partnerNavItems;
   if (isAdmin) navItems = adminNavItems;
+  if (isTourist && !isAuthenticated) navItems = touristNavItemsGuest;
 
   const isDark = isPartner || isAdmin;
   const activeLightClasses = isLocal ? 'text-yellow-600 md:bg-yellow-50' : 'text-emerald-600 md:bg-emerald-50';
