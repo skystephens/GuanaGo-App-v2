@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Compass, CalendarDays, ShoppingCart, UserCircle, LayoutDashboard, QrCode, Wallet, Settings, PieChart, Map as MapIcon } from 'lucide-react';
+import { Compass, CalendarDays, ShoppingCart, UserCircle, LayoutDashboard, QrCode, Wallet, Settings, PieChart, Map as MapIcon, Database } from 'lucide-react';
 import { AppRoute, UserRole } from '../types';
 import { useCart } from '../context/CartContext';
 
@@ -14,36 +14,42 @@ interface NavigationProps {
 const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role, isAuthenticated }) => {
   const { itemCount } = useCart();
   
-  // MENU TURISTA ACTUALIZADO: 5 Items
+  // MENU TURISTA: 5 Items
   const touristNavItems = [
     { route: AppRoute.HOME, icon: <Compass size={22} />, label: 'Explora' },
     { route: AppRoute.INTERACTIVE_MAP, icon: <MapIcon size={22} />, label: 'Mapa' },
     { route: AppRoute.DYNAMIC_ITINERARY, icon: <CalendarDays size={22} />, label: 'Planifica' },
     { route: AppRoute.CHECKOUT, icon: <ShoppingCart size={22} />, label: 'Carrito' },
-    { route: AppRoute.PROFILE, icon: <UserCircle size={22} />, label: 'Cuenta' },
+    { route: AppRoute.WALLET, icon: <Wallet size={22} />, label: 'Cuenta' },
   ];
 
+  // MENU SOCIO/ALIADO: 5 Items
   const partnerNavItems = [
     { route: AppRoute.PARTNER_DASHBOARD, icon: <LayoutDashboard size={22} />, label: 'Panel' },
     { route: AppRoute.PARTNER_RESERVATIONS, icon: <CalendarDays size={22} />, label: 'Reservas' },
     { route: AppRoute.PARTNER_OPERATIONS, icon: <QrCode size={22} />, label: 'Canje' },
     { route: AppRoute.PARTNER_WALLET, icon: <Wallet size={22} />, label: 'Caja' },
-    { route: AppRoute.PROFILE, icon: <Settings size={22} />, label: 'Perfil' }, 
+    { route: AppRoute.PROFILE, icon: <UserCircle size={22} />, label: 'Perfil' }, 
   ];
 
+  // MENU ADMIN: Panel, Backend (sincronización), Finanzas, Socios, Perfil
   const adminNavItems = [
     { route: AppRoute.ADMIN_DASHBOARD, icon: <PieChart size={22} />, label: 'Panel' },
-    { route: AppRoute.ADMIN_SERVICES, icon: <Settings size={22} />, label: 'Gestión' },
+    { route: AppRoute.ADMIN_BACKEND, icon: <Database size={22} />, label: 'Datos' },
     { route: AppRoute.ADMIN_FINANCE, icon: <Wallet size={22} />, label: 'Finanzas' },
     { route: AppRoute.ADMIN_USERS, icon: <UserCircle size={22} />, label: 'Socios' },
     { route: AppRoute.PROFILE, icon: <Settings size={22} />, label: 'Perfil' },
   ];
 
+  // Determinar qué menú mostrar según el rol
   let navItems = touristNavItems;
-  if (role === 'partner') navItems = partnerNavItems;
-  if (role === 'admin') navItems = adminNavItems;
+  const isPartner = role === 'Socio' || role === 'Aliado' || role === 'Operador' || role === 'Artista';
+  const isAdmin = role === 'SuperAdmin';
+  
+  if (isPartner) navItems = partnerNavItems;
+  if (isAdmin) navItems = adminNavItems;
 
-  const isDark = role === 'partner' || role === 'admin';
+  const isDark = isPartner || isAdmin;
 
   return (
     <div className={`fixed bottom-0 left-1/2 -translate-x-1/2 py-3 px-1 md:px-4 flex justify-around items-center z-50 

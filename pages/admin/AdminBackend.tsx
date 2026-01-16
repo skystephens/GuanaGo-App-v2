@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { airtableService } from '../../services/airtableService';
 import { clearAllCache } from '../../services/cachedApi';
+import AdminPinLogin from '../AdminPinLogin';
 
 interface TableStatus {
   name: string;
@@ -43,13 +44,9 @@ interface TableStatus {
 }
 
 const AdminBackend: React.FC = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [adminUser, setAdminUser] = useState(null);
-    // Si no está autenticado, mostrar pantalla de login
-    if (!isAuthenticated) {
-      const AdminPinLogin = require('../AdminPinLogin').default;
-      return <AdminPinLogin onLoginSuccess={(user) => { setIsAuthenticated(true); setAdminUser(user); }} />;
-    }
+  // TODOS los hooks PRIMERO, antes de cualquier return condicional
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminUser, setAdminUser] = useState<any>(null);
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [tables, setTables] = useState<TableStatus[]>([
     { name: 'Servicios Turísticos', airtableTable: 'ServiciosTuristicos_SAI', icon: <Package size={20} />, status: 'idle', recordCount: 0, lastSync: null },
@@ -71,12 +68,14 @@ const AdminBackend: React.FC = () => {
   const [cacheInfo, setCacheInfo] = useState({ size: 0, items: 0 });
   const [lastGlobalSync, setLastGlobalSync] = useState<string | null>(null);
 
-  // Verificar conexión con Airtable al cargar
+  // Verificar conexión con Airtable al cargar (solo cuando autenticado)
   useEffect(() => {
-    checkConnection();
-    loadCacheInfo();
-    loadLastSyncTimes();
-  }, []);
+    if (isAuthenticated) {
+      checkConnection();
+      loadCacheInfo();
+      loadLastSyncTimes();
+    }
+  }, [isAuthenticated]);
 
   const checkConnection = async () => {
     setIsConnected(null);
@@ -211,6 +210,17 @@ const AdminBackend: React.FC = () => {
 
   const totalRecords = tables.reduce((sum, t) => sum + t.recordCount, 0);
   const successCount = tables.filter(t => t.status === 'success').length;
+
+  // Si no está autenticado, mostrar pantalla de login (DESPUÉS de todos los hooks)
+  if (!isAuthenticated) {
+    return (
+      <AdminPinLogin 
+        onLoginSuccess={() => { 
+          setIsAuthenticated(true); 
+        }} 
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-32">

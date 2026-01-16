@@ -76,7 +76,7 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-[3px] mb-6">Accesos de Gestión</p>
             <div className="flex gap-4">
               <button 
-                onClick={() => onSwitchRole('partner')}
+                onClick={() => onSwitchRole('Socio')}
                 className="flex-1 bg-gray-50 p-5 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center gap-2 hover:bg-blue-50 hover:border-blue-100 transition-all active:scale-95 group"
               >
                 <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-blue-500 shadow-sm group-hover:bg-blue-500 group-hover:text-white transition-colors">
@@ -86,7 +86,7 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
               </button>
               
               <button 
-                onClick={() => onSwitchRole('admin')}
+                onClick={() => onSwitchRole('SuperAdmin')}
                 className="flex-1 bg-gray-50 p-5 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center gap-2 hover:bg-purple-50 hover:border-purple-100 transition-all active:scale-95 group"
               >
                 <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-purple-500 shadow-sm group-hover:bg-purple-500 group-hover:text-white transition-colors">
