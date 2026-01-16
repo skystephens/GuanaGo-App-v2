@@ -9,6 +9,15 @@ const AIRTABLE_BASE_ID = config.airtable.baseId;
 const AIRTABLE_API_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
 
 /**
+ * Escape special characters for Airtable formula to prevent injection
+ */
+function escapeFormulaValue(value) {
+  if (typeof value !== 'string') return value;
+  // Escape single quotes and backslashes for Airtable formula
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+/**
  * Fetch records from an Airtable table
  */
 async function fetchTable(tableName, options = {}) {
@@ -32,7 +41,7 @@ async function fetchTable(tableName, options = {}) {
   });
   
   if (!response.ok) {
-    throw new Error(`Airtable error: ${response.status} ${response.statusText}`);
+    throw new Error('Database request failed');
   }
   
   const data = await response.json();
@@ -44,12 +53,15 @@ async function fetchTable(tableName, options = {}) {
  */
 export async function validateAdminPin(pin) {
   if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
-    console.error('❌ Airtable not configured for admin validation');
+    console.error('Admin validation service not available');
     return null;
   }
   
+  // Sanitize PIN to prevent formula injection
+  const sanitizedPin = escapeFormulaValue(pin);
+  
   const records = await fetchTable('Usuarios_Admins', {
-    filterByFormula: `AND({PIN} = '${pin}', {Activo} = TRUE())`,
+    filterByFormula: `AND({PIN} = '${sanitizedPin}', {Activo} = TRUE())`,
     maxRecords: 1
   });
   
