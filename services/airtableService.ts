@@ -437,23 +437,42 @@ export async function getServices(category?: string) {
   
   // Helpers para imágenes provenientes de distintos campos posibles
   const extractImageUrls = (f: any): string[] => {
+    // 🔧 Campo correcto encontrado: "Imagenurl" (en Airtable es un attachment)
     const candidates = [
+      f['Imagenurl'], f['ImagenUrl'], f['imagenurl'], f['imagenUrl'], // Campo real de Airtable
       f['Imagen'], f['Imagen Principal'], f['Imagen_Principal'], f['Image'], f['Images'],
-      f['Foto'], f['Fotos'], f['Galeria'], f['Galería'], f['Gallery']
+      f['Foto'], f['Fotos'], f['Galeria'], f['Galería'], f['Gallery'],
+      f['imagen'], f['imagen principal'], f['foto'], f['fotos'], // minúsculas
+      f['Attachments'], f['Attachment'], f['Media'], f['media'], // campos comunes de Airtable
+      f['Pictures'], f['pictures'], f['Photo'], f['photo'], f['Photos'], f['photos']
     ];
     const urls: string[] = [];
+    
     candidates.forEach((c: any) => {
       if (!c) return;
       if (Array.isArray(c)) {
         c.forEach((item: any) => {
-          const u = item?.url || (typeof item === 'string' ? item : null);
-          if (u) urls.push(u);
+          // Airtable attachments tienen estructura: { url, filename, thumbnails: { small, large, full } }
+          const u = item?.url || item?.thumbnails?.large?.url || (typeof item === 'string' ? item : null);
+          if (u && !urls.includes(u)) urls.push(u);
         });
-      } else if (typeof c === 'string') {
+      } else if (typeof c === 'string' && !urls.includes(c)) {
         urls.push(c);
       }
     });
-    // Eliminar duplicados
+    
+    // Si aún no hay URLs, buscar en cualquier campo que parezca attachment
+    if (urls.length === 0) {
+      Object.keys(f).forEach(key => {
+        const value = f[key];
+        if (Array.isArray(value) && value.length > 0 && value[0]?.url) {
+          value.forEach((item: any) => {
+            if (item?.url && !urls.includes(item.url)) urls.push(item.url);
+          });
+        }
+      });
+    }
+    
     return Array.from(new Set(urls));
   };
 

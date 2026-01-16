@@ -145,8 +145,8 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* GUANA Points - Retos y Recompensas */}
-        <GuanaPointsSection onNavigate={onNavigate} isAuthenticated={false} userPoints={0} />
+        {/* GUANA Points - Preview compacto con link a sección completa */}
+        <GuanaPointsSection onNavigate={onNavigate} isAuthenticated={false} userPoints={0} compact={true} />
 
         {/* RIMM Caribbean Night Section */}
         <CaribbeanNightSection onNavigate={onNavigate} />

@@ -4,6 +4,7 @@ import { ArrowLeft, QrCode, ArrowUpRight, ArrowDownLeft, Search, PlusCircle, Gif
 import { WALLET_TRANSACTIONS } from '../constants';
 import { AppRoute } from '../types';
 import BlockchainBadge from '../components/BlockchainBadge';
+import GuanaPointsSection from '../components/GuanaPointsSection';
 
 interface WalletProps {
    onNavigate?: (route: AppRoute) => void;
@@ -110,7 +111,7 @@ const Wallet: React.FC<WalletProps> = ({ onNavigate, isAuthenticated, onLogin })
           )}
 
           <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Actividad Reciente</h2>
-          <div className="space-y-4">
+          <div className="space-y-4 mb-8">
              {WALLET_TRANSACTIONS.map(tx => (
                 <div key={tx.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                    <div className="flex items-center justify-between mb-3">
@@ -133,6 +134,10 @@ const Wallet: React.FC<WalletProps> = ({ onNavigate, isAuthenticated, onLogin })
                 </div>
              ))}
           </div>
+
+          {/* Sección completa de GUANA Points con info de retos y cómo funciona */}
+          <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Retos y Recompensas</h2>
+          <GuanaPointsSection onNavigate={onNavigate} isAuthenticated={true} userPoints={1250} />
        </div>
     </div>
   );

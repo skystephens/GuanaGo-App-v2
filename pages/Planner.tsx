@@ -153,28 +153,36 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, initialCategory = 'all' }
               </h2>
             </div>
             <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-              {featured.map((item) => (
+              {featured.map((item) => {
+                const fallbackImage = 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80';
+                return (
                 <div
                   key={item.id}
                   onClick={() => handleServiceClick(item)}
                   className="min-w-[280px] bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all active:scale-[0.98]"
                 >
-                  <div className="relative h-40">
-                    <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                  <div className="relative h-40 bg-gray-100">
+                    <img 
+                      src={item.image || fallbackImage} 
+                      alt={item.title} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).src = fallbackImage; }}
+                      loading="lazy"
+                    />
                     <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1">
                       <Star size={12} className="text-amber-500 fill-amber-500" />
-                      <span className="text-xs font-bold">{item.rating}</span>
+                      <span className="text-xs font-bold">{item.rating || 4.5}</span>
                     </div>
                     <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-4">
                       <span className="text-white font-bold text-sm">{item.title}</span>
                     </div>
                   </div>
                   <div className="p-4 flex items-center justify-between">
-                    <span className="text-emerald-600 font-black text-lg">${item.price.toLocaleString()}</span>
+                    <span className="text-emerald-600 font-black text-lg">${(item.price || 0).toLocaleString()}</span>
                     <span className="text-xs text-gray-400">{item.duration || 'Por noche'}</span>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </section>
         )}
@@ -292,6 +300,8 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, initialCategory = 'all' }
 
 // Componente de tarjeta de servicio
 const ServiceCard: React.FC<{ service: Tour; onClick: () => void }> = ({ service, onClick }) => {
+  const [imageError, setImageError] = React.useState(false);
+  
   const getCategoryBadge = (category: string) => {
     switch (category) {
       case 'tour': return { label: 'Tour', color: 'bg-blue-500' };
@@ -302,14 +312,35 @@ const ServiceCard: React.FC<{ service: Tour; onClick: () => void }> = ({ service
   };
 
   const badge = getCategoryBadge(service.category);
+  
+  // Imagen con fallback
+  const getImageUrl = () => {
+    if (imageError || !service.image) {
+      // Fallbacks por categoría
+      const fallbacks: Record<string, string> = {
+        tour: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80',
+        hotel: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80',
+        package: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80',
+        taxi: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400&q=80',
+      };
+      return fallbacks[service.category] || fallbacks.tour;
+    }
+    return service.image;
+  };
 
   return (
     <div
       onClick={onClick}
       className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all active:scale-[0.98] flex flex-col"
     >
-      <div className="relative h-32">
-        <img src={service.image} alt={service.title} className="w-full h-full object-cover" />
+      <div className="relative h-32 bg-gray-100">
+        <img 
+          src={getImageUrl()} 
+          alt={service.title} 
+          className="w-full h-full object-cover"
+          onError={() => setImageError(true)}
+          loading="lazy"
+        />
         <div className={`absolute top-2 right-2 ${badge.color} text-white px-2 py-1 rounded-lg`}>
           <span className="text-[8px] font-black uppercase">{badge.label}</span>
         </div>
@@ -323,12 +354,12 @@ const ServiceCard: React.FC<{ service: Tour; onClick: () => void }> = ({ service
         <h3 className="font-bold text-gray-800 text-xs leading-tight line-clamp-2 mb-2">{service.title}</h3>
         <div className="flex items-center gap-2 mb-2">
           <Star size={12} className="text-amber-500 fill-amber-500" />
-          <span className="text-xs font-bold text-gray-600">{service.rating}</span>
-          <span className="text-xs text-gray-400">({service.reviews})</span>
+          <span className="text-xs font-bold text-gray-600">{service.rating || 4.5}</span>
+          <span className="text-xs text-gray-400">({service.reviews || 0})</span>
         </div>
         <div className="mt-auto flex items-end justify-between">
           <div>
-            <span className="text-emerald-600 font-black text-sm">${service.price.toLocaleString()}</span>
+            <span className="text-emerald-600 font-black text-sm">${(service.price || 0).toLocaleString()}</span>
             <span className="text-[10px] text-gray-400 block">
               {service.category === 'hotel' ? '/noche' : '/persona'}
             </span>
