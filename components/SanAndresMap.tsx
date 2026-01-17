@@ -14,12 +14,12 @@ const SanAndresMap: React.FC<MapProps> = ({ selectedZoneId, onSelectZone }) => {
 
   return (
     <div className="w-full flex justify-center my-4">
-      <div className="w-full rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-sm p-2">
-        <div className="w-full" style={{ transform: 'rotate(270deg)', transformOrigin: 'center', overflow: 'hidden' }}>
+      <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm p-2">
+        <div className="w-full" style={{ transform: 'rotate(270deg)', transformOrigin: 'center' }}>
           <img
             src="https://guiasanandresislas.com/wp-content/uploads/2026/01/Mapa-traslados-taxi-1.png"
             alt="Mapa de traslados en San Andrés"
-            className="w-full h-full object-contain"
+            className="w-full h-auto object-contain"
             loading="lazy"
           />
         </div>

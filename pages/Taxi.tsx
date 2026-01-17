@@ -169,7 +169,7 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
                           </h2>
                        </div>
                        <div className="w-14 h-14 bg-gray-800 rounded-full flex items-center justify-center text-green-500 shadow-inner">
-                          {isLargeGroup ? <Truck size={28} /> : <Car size={28} />}
+                          {taxisNeeded > 1 ? <Truck size={28} /> : <Car size={28} />}
                        </div>
                     </div>
 
@@ -184,7 +184,7 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
                        </div>
                        <div className="flex justify-between">
                           <span className="text-gray-400">Tipo Servicio</span>
-                          <span className="font-bold">{isLargeGroup ? 'Van / Microbús' : 'Taxi Estándar'}</span>
+                          <span className="font-bold">{taxisNeeded > 1 ? `${taxisNeeded} Taxis` : 'Taxi Estándar'}</span>
                        </div>
                     </div>
                 </div>
