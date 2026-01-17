@@ -215,6 +215,7 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
             {artists.map((artist, index) => (
               <div 
                 key={index}
+                onClick={() => onNavigate(AppRoute.ARTIST_DETAIL, { name: artist.name, image: artist.image, spotifyLink: artist.spotifyLink })}
                 className="flex-shrink-0 w-28 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden hover:bg-white/20 transition-all cursor-pointer group"
               >
                 {/* Artist Image */}

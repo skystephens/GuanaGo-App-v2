@@ -224,6 +224,9 @@ export enum AppRoute {
   GROUP_QUOTE = 'GROUP_QUOTE',
   MY_ITINERARY = 'MY_ITINERARY',
   DYNAMIC_ITINERARY = 'DYNAMIC_ITINERARY',
+  RIMM_CLUSTER = 'RIMM_CLUSTER',
+  MUSIC_EVENT_DETAIL = 'MUSIC_EVENT_DETAIL',
+  ARTIST_DETAIL = 'ARTIST_DETAIL',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';

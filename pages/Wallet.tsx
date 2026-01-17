@@ -18,7 +18,7 @@ const Wallet: React.FC<WalletProps> = ({ onNavigate, isAuthenticated, onLogin })
   // --- GUEST WALLET VIEW ---
   if (!isAuthenticated) {
      return (
-        <div className="bg-gray-50 min-h-screen pb-24 font-sans flex flex-col">
+        <div className="bg-gray-50 min-h-screen pb-24 font-sans">
            <div className="bg-white p-6 pb-2">
                <div className="flex items-center gap-4 mb-6">
                {onNavigate && (
@@ -26,29 +26,32 @@ const Wallet: React.FC<WalletProps> = ({ onNavigate, isAuthenticated, onLogin })
                      <ArrowLeft className="text-gray-800" />
                   </button>
                )}
-               <h1 className="text-lg font-bold text-gray-900">Mi Billetera</h1>
+               <h1 className="text-lg font-bold text-gray-900">GUANA Points</h1>
                </div>
            </div>
            
-           <div className="flex-1 flex flex-col items-center justify-center px-8 text-center -mt-10">
-              <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-6 relative">
-                 <Lock size={40} className="text-gray-400" />
-                 <div className="absolute top-0 right-0 bg-green-500 rounded-full p-2 border-4 border-gray-50">
-                    <Gift size={16} className="text-white" />
-                 </div>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Desbloquea tus Recompensas!</h2>
-              <p className="text-gray-500 text-sm mb-8 leading-relaxed">
-                 Regístrate para comenzar a ganar <span className="font-bold text-green-600">$GUANA</span> en cada tour y canjearlos por cenas, descuentos y aventuras.
-              </p>
+           {/* Sección de GUANA Points - Prioridad: Mostrar info primero */}
+           <div className="px-6 py-4">
+              <GuanaPointsSection onNavigate={onNavigate!} isAuthenticated={false} userPoints={0} />
               
-              <button 
-                 onClick={onLogin}
-                 className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-green-200 transition-all flex items-center justify-center gap-2"
-              >
-                 <UserPlus size={20} />
-                 Crear Cuenta Gratis
-              </button>
+              {/* CTA de registro - Más abajo */}
+              <div className="mt-6 bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-100">
+                 <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 mx-auto">
+                    <Lock size={28} className="text-emerald-600" />
+                 </div>
+                 <h3 className="text-lg font-bold text-gray-900 mb-2">¡Comienza a ganar puntos!</h3>
+                 <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                    Regístrate gratis y recibe <span className="font-bold text-emerald-600">100 GUANA Points</span> de bienvenida
+                 </p>
+                 
+                 <button 
+                    onClick={onLogin}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+                 >
+                    <UserPlus size={20} />
+                    Crear Cuenta Gratis
+                 </button>
+              </div>
            </div>
         </div>
      );
