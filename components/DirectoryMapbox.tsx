@@ -109,7 +109,7 @@ const DirectoryMapbox: React.FC<DirectoryMapboxProps> = ({ activeCategory = 'Tod
       
       const map = new mapboxgl.Map({
         container: mapContainerRef.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
+        style: 'mapbox://styles/mapbox/light-v11', // Estilo light con menos POIs visibles
         center: SAN_ANDRES_CENTER,
         zoom: DEFAULT_ZOOM,
         attributionControl: false
@@ -125,8 +125,8 @@ const DirectoryMapbox: React.FC<DirectoryMapboxProps> = ({ activeCategory = 'Tod
         console.log('✅ Map loaded successfully');
         setMapError(null);
         
-        // Ocultar etiquetas de POIs (alojamientos, restaurantes, comercios, etc.)
-        // Solo mostrar nombres de calles
+        // Ocultar todas las capas de etiquetas de POIs
+        // Solo mostrar nombre de calles y estructuras básicas
         const layersToHide = [
           'poi-label',
           'poi-maki',
@@ -136,9 +136,15 @@ const DirectoryMapbox: React.FC<DirectoryMapboxProps> = ({ activeCategory = 'Tod
           'settlement-label',
           'settlement-subdivision-label',
           'water-label',
-          'waterway-label'
+          'waterway-label',
+          'poi-scalerank0',
+          'poi-scalerank1',
+          'poi-scalerank2',
+          'poi-scalerank3',
+          'poi-scalerank4'
         ];
         
+        // Intentar ocultar cada capa
         layersToHide.forEach(layerId => {
           try {
             if (map.getLayer(layerId)) {
@@ -146,7 +152,24 @@ const DirectoryMapbox: React.FC<DirectoryMapboxProps> = ({ activeCategory = 'Tod
               console.log(`✓ Ocultada capa: ${layerId}`);
             }
           } catch (e) {
-            console.log(`ℹ️ Capa no encontrada: ${layerId}`);
+            // Silenciar errores de capas que no existen
+          }
+        });
+        
+        // Filtro adicional: ocultar cualquier capa que contenga 'poi' o 'label'
+        const allLayers = map.getStyle().layers || [];
+        allLayers.forEach((layer: any) => {
+          const layerId = layer.id;
+          if (layerId.includes('poi') || 
+              (layerId.includes('label') && !layerId.includes('road') && !layerId.includes('street'))) {
+            try {
+              if (map.getLayer(layerId)) {
+                map.setLayoutProperty(layerId, 'visibility', 'none');
+                console.log(`✓ Ocultada capa: ${layerId}`);
+              }
+            } catch (e) {
+              // Silenciar errores
+            }
           }
         });
       });
