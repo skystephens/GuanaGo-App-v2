@@ -124,6 +124,31 @@ const DirectoryMapbox: React.FC<DirectoryMapboxProps> = ({ activeCategory = 'Tod
       map.on('load', () => {
         console.log('✅ Map loaded successfully');
         setMapError(null);
+        
+        // Ocultar etiquetas de POIs (alojamientos, restaurantes, comercios, etc.)
+        // Solo mostrar nombres de calles
+        const layersToHide = [
+          'poi-label',
+          'poi-maki',
+          'business-label',
+          'establishment-label',
+          'transit-label',
+          'settlement-label',
+          'settlement-subdivision-label',
+          'water-label',
+          'waterway-label'
+        ];
+        
+        layersToHide.forEach(layerId => {
+          try {
+            if (map.getLayer(layerId)) {
+              map.setLayoutProperty(layerId, 'visibility', 'none');
+              console.log(`✓ Ocultada capa: ${layerId}`);
+            }
+          } catch (e) {
+            console.log(`ℹ️ Capa no encontrada: ${layerId}`);
+          }
+        });
       });
 
       map.on('error', (e) => {

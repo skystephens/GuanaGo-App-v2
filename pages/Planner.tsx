@@ -27,6 +27,7 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, initialCategory = 'all' }
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<CategoryType>(initialCategory);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedAccommodationType, setSelectedAccommodationType] = useState<string | null>(null);
   const { addToCart, itemCount } = useCart();
 
   // Cargar datos usando el sistema de caché
@@ -57,17 +58,30 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, initialCategory = 'all' }
   const categories = [
     { id: 'all', label: 'Todos', icon: <Sparkles size={18} />, color: 'bg-gradient-to-r from-emerald-500 to-teal-500' },
     { id: 'tour', label: 'Tours', icon: <Anchor size={18} />, color: 'bg-gradient-to-r from-blue-500 to-cyan-500' },
-    { id: 'hotel', label: 'Hoteles', icon: <Bed size={18} />, color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
+    { id: 'hotel', label: 'Alojamientos', icon: <Bed size={18} />, color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
     { id: 'taxi', label: 'Traslados', icon: <Car size={18} />, color: 'bg-gradient-to-r from-amber-500 to-orange-500' },
     { id: 'package', label: 'Paquetes', icon: <TrendingUp size={18} />, color: 'bg-gradient-to-r from-rose-500 to-red-500' },
   ];
+
+  // Obtener tipos de alojamiento únicos
+  const accommodationTypes = Array.from(
+    new Set(
+      services
+        .filter(s => s.category === 'hotel')
+        .map(s => (s as any).accommodationType || 'Hotel')
+    )
+  ).sort();
 
   // Filtrar servicios
   const filteredServices = services.filter(service => {
     const matchesCategory = activeCategory === 'all' || service.category === activeCategory;
     const matchesSearch = service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           service.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    const matchesAccommodationType = 
+      activeCategory !== 'hotel' ||
+      !selectedAccommodationType ||
+      (service as any).accommodationType === selectedAccommodationType;
+    return matchesCategory && matchesSearch && matchesAccommodationType;
   });
 
   // Destacados (rating > 4.7)
@@ -239,16 +253,47 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, initialCategory = 'all' }
         {/* Lista de Servicios */}
         {activeCategory !== 'taxi' && (
           <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-black text-gray-900">
-                {activeCategory === 'all' ? 'Todos los servicios' : 
-                 activeCategory === 'tour' ? 'Tours y experiencias' :
-                 activeCategory === 'hotel' ? 'Alojamientos' :
-                 activeCategory === 'package' ? 'Paquetes todo incluido' : 'Servicios'}
-              </h2>
-              <span className="text-xs text-gray-400 font-medium">
-                {filteredServices.length} opciones
-              </span>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-black text-gray-900">
+                  {activeCategory === 'all' ? 'Todos los servicios' : 
+                   activeCategory === 'tour' ? 'Tours y experiencias' :
+                   activeCategory === 'hotel' ? 'Alojamientos' :
+                   activeCategory === 'package' ? 'Paquetes todo incluido' : 'Servicios'}
+                </h2>
+                <span className="text-xs text-gray-400 font-medium">
+                  {filteredServices.length} opciones
+                </span>
+              </div>
+              
+              {/* Filtro de tipos de alojamiento */}
+              {activeCategory === 'hotel' && accommodationTypes.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                  <button
+                    onClick={() => setSelectedAccommodationType(null)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                      selectedAccommodationType === null
+                        ? 'bg-purple-500 text-white shadow-md'
+                        : 'bg-white text-gray-600 border border-gray-100 hover:border-gray-200'
+                    }`}
+                  >
+                    Ver todos
+                  </button>
+                  {accommodationTypes.map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setSelectedAccommodationType(type)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                        selectedAccommodationType === type
+                          ? 'bg-purple-500 text-white shadow-md'
+                          : 'bg-white text-gray-600 border border-gray-100 hover:border-gray-200'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {loading ? (
@@ -302,16 +347,16 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, initialCategory = 'all' }
 const ServiceCard: React.FC<{ service: Tour; onClick: () => void }> = ({ service, onClick }) => {
   const [imageError, setImageError] = React.useState(false);
   
-  const getCategoryBadge = (category: string) => {
+  const getCategoryBadge = (category: string, accommodationType?: string) => {
     switch (category) {
       case 'tour': return { label: 'Tour', color: 'bg-blue-500' };
-      case 'hotel': return { label: 'Hotel', color: 'bg-purple-500' };
+      case 'hotel': return { label: accommodationType || 'Alojamiento', color: 'bg-purple-500' };
       case 'package': return { label: 'Paquete', color: 'bg-rose-500' };
       default: return { label: 'Servicio', color: 'bg-gray-500' };
     }
   };
 
-  const badge = getCategoryBadge(service.category);
+  const badge = getCategoryBadge(service.category, (service as any).accommodationType);
   
   // Imagen con fallback
   const getImageUrl = () => {
