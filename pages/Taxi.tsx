@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ArrowLeft, MapPin, ChevronDown, Car, Truck, Info, Ticket } from 'lucide-react';
 import { TAXI_ZONES } from '../constants';
-import TaxiZonesMapbox from '../components/TaxiZonesMapbox';
+import SanAndresMap from '../components/SanAndresMap';
 
 interface TaxiProps {
   onBack: () => void;
@@ -54,7 +54,7 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
          {/* Map Visualization */}
          <div className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 mb-6">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Mapa de Zonas</h3>
-            <TaxiZonesMapbox 
+            <SanAndresMap 
               selectedZoneId={selectedZoneId} 
               onSelectZone={(id) => setSelectedZoneId(id)} 
             />
