@@ -4,6 +4,7 @@ import { cachedApi } from '../services/cachedApi';
 import { AppRoute, Tour } from '../types';
 import { GUANA_LOGO } from '../constants';
 import CaribbeanNightSection from '../components/CaribbeanNightSection';
+import CocoArtSection from '../components/CocoArtSection';
 import GuanaPointsSection from '../components/GuanaPointsSection';
 
 interface HomeProps {
@@ -151,6 +152,9 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         {/* RIMM Caribbean Night Section */}
         <CaribbeanNightSection onNavigate={onNavigate} />
 
+        {/* Coco Art Section */}
+        <CocoArtSection onNavigate={onNavigate} />
+
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
              <h3 className="text-lg font-black text-gray-800">Recomendados para ti</h3>
@@ -181,7 +185,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 pb-4">
-              {services.length > 0 ? services.map((item) => (
+              {services.length > 0 ? services.slice(0, 4).map((item) => (
                 <div 
                   key={item.id} 
                   className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col cursor-pointer border border-gray-100 hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95 group" 
