@@ -48,89 +48,110 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
              </p>
          </div>
 
-         {/* Map Visualization */}
+         {/* Mapa + Leyenda + Formulario */}
          <div className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 mb-6 mt-4">
-            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Mapa de Zonas</h3>
-            <SanAndresMap 
-              selectedZoneId={selectedZoneId} 
-              onSelectZone={(id) => setSelectedZoneId(id)} 
-            />
-            <p className="text-xs text-gray-400 mt-3 text-center">Usa la lista para seleccionar tu destino</p>
-         </div>
+            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Mapa de Zonas y Cálculo</h3>
+            <div className="grid md:grid-cols-2 gap-4 items-start">
+               <SanAndresMap 
+                 selectedZoneId={selectedZoneId} 
+                 onSelectZone={(id) => setSelectedZoneId(id)} 
+               />
 
-         {/* Calculator Form */}
-         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
-            
-            {/* 1. Zone Selector */}
-            <div className="mb-6">
-               <label className="block text-sm font-bold text-gray-900 mb-2">¿Cuál es tu destino?</label>
-               <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                     <MapPin size={20} />
+               <div className="space-y-4">
+                  {/* Leyenda de zonas */}
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-2">Zonas de Taxi</p>
+                    <div className="space-y-2">
+                      {TAXI_ZONES.map((zone) => {
+                        const zoneNumber = zone.id.replace('z', '');
+                        const zoneLabel = zone.name.replace(/^Zona\s*\d+\s*-\s*/i, '');
+                        return (
+                          <div key={zone.id} className="flex items-start gap-2">
+                            <div className={`w-3 h-3 mt-1 rounded-full border border-gray-300 ${zone.color}`}></div>
+                            <div className="text-xs text-gray-700 leading-tight">
+                              <span className="font-bold mr-1">Zona {zoneNumber}</span>
+                              <span>{zoneLabel}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <select 
-                     value={selectedZoneId}
-                     onChange={(e) => setSelectedZoneId(e.target.value)}
-                     className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-green-500 focus:border-green-500 block p-4 pl-12 pr-10 appearance-none outline-none transition-all font-medium"
-                  >
-                     <option value="" disabled>Selecciona una zona...</option>
-                     {TAXI_ZONES.map(zone => (
-                        <option key={zone.id} value={zone.id}>
-                           {zone.name}
-                        </option>
-                     ))}
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                     <ChevronDown size={20} />
+
+                  {/* Formulario de destino y pasajeros */}
+                  <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                    {/* 1. Zone Selector */}
+                    <div className="mb-4">
+                       <label className="block text-sm font-bold text-gray-900 mb-2">¿Cuál es tu destino?</label>
+                       <div className="relative">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                             <MapPin size={20} />
+                          </div>
+                          <select 
+                             value={selectedZoneId}
+                             onChange={(e) => setSelectedZoneId(e.target.value)}
+                             className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-green-500 focus:border-green-500 block p-4 pl-12 pr-10 appearance-none outline-none transition-all font-medium"
+                          >
+                             <option value="" disabled>Selecciona una zona...</option>
+                             {TAXI_ZONES.map(zone => (
+                                <option key={zone.id} value={zone.id}>
+                                   {zone.name}
+                                </option>
+                             ))}
+                          </select>
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                             <ChevronDown size={20} />
+                          </div>
+                       </div>
+                       {selectedZone && (
+                          <div className="mt-3 flex items-start gap-2 bg-gray-50 p-2 rounded-lg transition-all animate-in fade-in">
+                              <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${selectedZone.color}`}></div>
+                              <p className="text-xs text-gray-500">
+                                 <span className="font-bold">Sectores:</span> {selectedZone.sectors}
+                              </p>
+                          </div>
+                       )}
+                    </div>
+
+                    {/* 2. Passenger Counter */}
+                    <div>
+                       <label className="block text-sm font-bold text-gray-900 mb-2">Cantidad de Pasajeros</label>
+                       <div className="flex items-center justify-between bg-gray-50 rounded-xl p-2 border border-gray-200">
+                          <button 
+                             onClick={handleDecrement}
+                             className="w-12 h-12 bg-white rounded-lg shadow-sm flex items-center justify-center text-gray-600 hover:text-green-600 font-bold text-xl active:scale-95 transition-all disabled:opacity-50"
+                             disabled={passengers <= 1}
+                          >
+                             -
+                          </button>
+                          <div className="flex flex-col items-center">
+                             <span className="text-xl font-bold text-gray-900">{passengers}</span>
+                             <span className="text-xs text-gray-400">personas</span>
+                          </div>
+                          <button 
+                             onClick={handleIncrement}
+                             className="w-12 h-12 bg-white rounded-lg shadow-sm flex items-center justify-center text-gray-600 hover:text-green-600 font-bold text-xl active:scale-95 transition-all disabled:opacity-50"
+                             disabled={passengers >= 15}
+                          >
+                             +
+                          </button>
+                       </div>
+                       
+                       {taxisNeeded > 1 ? (
+                          <p className="text-xs text-blue-600 mt-2 ml-1 flex items-center gap-1 font-medium">
+                             <Info size={12} />
+                             Se asignan {taxisNeeded} taxis (4 pax c/u). Tarifa por taxi: ${pricePerTaxi.toLocaleString()} COP.
+                          </p>
+                       ) : (
+                          <p className="text-xs text-gray-400 mt-2 ml-1 flex items-center gap-1">
+                             <Info size={12} />
+                             Tarifa estándar de Taxi (hasta 4 pasajeros)
+                          </p>
+                       )}
+                    </div>
                   </div>
                </div>
-               {selectedZone && (
-                  <div className="mt-3 flex items-start gap-2 bg-gray-50 p-2 rounded-lg transition-all animate-in fade-in">
-                      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${selectedZone.color}`}></div>
-                      <p className="text-xs text-gray-500">
-                         <span className="font-bold">Sectores:</span> {selectedZone.sectors}
-                      </p>
-                  </div>
-               )}
             </div>
-
-            {/* 2. Passenger Counter */}
-            <div>
-               <label className="block text-sm font-bold text-gray-900 mb-2">Cantidad de Pasajeros</label>
-               <div className="flex items-center justify-between bg-gray-50 rounded-xl p-2 border border-gray-200">
-                  <button 
-                     onClick={handleDecrement}
-                     className="w-12 h-12 bg-white rounded-lg shadow-sm flex items-center justify-center text-gray-600 hover:text-green-600 font-bold text-xl active:scale-95 transition-all disabled:opacity-50"
-                     disabled={passengers <= 1}
-                  >
-                     -
-                  </button>
-                  <div className="flex flex-col items-center">
-                     <span className="text-xl font-bold text-gray-900">{passengers}</span>
-                     <span className="text-xs text-gray-400">personas</span>
-                  </div>
-                  <button 
-                     onClick={handleIncrement}
-                     className="w-12 h-12 bg-white rounded-lg shadow-sm flex items-center justify-center text-gray-600 hover:text-green-600 font-bold text-xl active:scale-95 transition-all disabled:opacity-50"
-                     disabled={passengers >= 15}
-                  >
-                     +
-                  </button>
-               </div>
-               
-               {taxisNeeded > 1 ? (
-                  <p className="text-xs text-blue-600 mt-2 ml-1 flex items-center gap-1 font-medium">
-                     <Info size={12} />
-                     Se asignan {taxisNeeded} taxis (4 pax c/u). Tarifa por taxi: ${pricePerTaxi.toLocaleString()} COP.
-                  </p>
-               ) : (
-                  <p className="text-xs text-gray-400 mt-2 ml-1 flex items-center gap-1">
-                     <Info size={12} />
-                     Tarifa estándar de Taxi (hasta 4 pasajeros)
-                  </p>
-               )}
-            </div>
-
          </div>
 
          {/* Result Preview (Ticket Style) */}
