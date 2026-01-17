@@ -12,8 +12,8 @@ const SanAndresMap: React.FC<MapProps> = ({ selectedZoneId, onSelectZone }) => {
   void selectedZoneId;
   void onSelectZone;
   return (
-    <div className="w-full flex justify-center my-6 relative rounded-2xl overflow-hidden border border-gray-200 bg-blue-50">
-      <div className="w-full" style={{ aspectRatio: '2 / 3' }}>
+    <div className="w-full flex justify-center my-4">
+      <div className="w-full max-w-md rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-sm">
         <img
           src="https://guiasanandresislas.com/wp-content/uploads/2026/01/Mapa-traslados-taxi.png"
           alt="Mapa de traslados en San Andrés"
