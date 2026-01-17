@@ -15,13 +15,10 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
     TAXI_ZONES.find(z => z.id === selectedZoneId), 
   [selectedZoneId]);
 
-  // Pricing Logic (San Andres specific rules)
-  // 1-4 Pax = Taxi Price (Small)
-  // 5+ Pax = Van/Microbus Price (Large)
-  const isLargeGroup = passengers > 4;
-  const price = selectedZone 
-    ? (isLargeGroup ? selectedZone.priceLarge : selectedZone.priceSmall) 
-    : 0;
+   // Pricing Logic: cada taxi lleva hasta 4 pax, se suman taxis adicionales con la misma tarifa base
+   const taxisNeeded = Math.ceil(passengers / 4);
+   const pricePerTaxi = selectedZone?.priceSmall || 0;
+   const price = selectedZone ? taxisNeeded * pricePerTaxi : 0;
 
   const handleIncrement = () => {
      if (passengers < 15) setPassengers(prev => prev + 1);
@@ -47,12 +44,12 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
          <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 mb-6 flex gap-3">
              <Info className="text-green-600 shrink-0 mt-0.5" size={20} />
              <p className="text-xs text-green-800">
-                Selecciona tu destino en el <strong>mapa</strong> o en la lista para ver la tarifa oficial regulada.
+                Usa la lista y el mapa de referencia para ver la tarifa oficial regulada.
              </p>
          </div>
 
          {/* Map Visualization */}
-         <div className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 mb-6">
+         <div className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 mb-6 mt-4">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Mapa de Zonas</h3>
             <SanAndresMap 
               selectedZoneId={selectedZoneId} 
@@ -121,15 +118,15 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
                   </button>
                </div>
                
-               {isLargeGroup ? (
+               {taxisNeeded > 1 ? (
                   <p className="text-xs text-blue-600 mt-2 ml-1 flex items-center gap-1 font-medium">
                      <Info size={12} />
-                     Tarifa de Microbús aplicada (5+ pasajeros)
+                     Se asignan {taxisNeeded} taxis (4 pax c/u). Tarifa por taxi: ${pricePerTaxi.toLocaleString()} COP.
                   </p>
                ) : (
                   <p className="text-xs text-gray-400 mt-2 ml-1 flex items-center gap-1">
                      <Info size={12} />
-                     Tarifa estándar de Taxi (1-4 pasajeros)
+                     Tarifa estándar de Taxi (hasta 4 pasajeros)
                   </p>
                )}
             </div>
