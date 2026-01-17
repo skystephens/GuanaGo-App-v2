@@ -131,14 +131,14 @@ const SanAndresMap: React.FC<MapProps> = ({ selectedZoneId, onSelectZone }) => {
         
         <rect width="400" height="600" fill="url(#oceanGradient)" />
 
-        {/* Imagen de fondo del mapa de San Andrés */}
+        {/* Imagen de fondo del mapa de San Andrés - Zonas de Taxi */}
         <image 
-          xlinkHref="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/San_Andr%C3%A9s_Island_map-en.svg/656px-San_Andr%C3%A9s_Island_map-en.svg.png"
+          xlinkHref="https://guiasanandresislas.com/wp-content/uploads/2026/01/Mapa-traslados-taxi.png"
           x="0" 
           y="0" 
           width="400" 
           height="600" 
-          opacity="0.35"
+          opacity="0.4"
           preserveAspectRatio="xMidYMid slice"
         />
 
