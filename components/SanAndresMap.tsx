@@ -119,6 +119,7 @@ const SanAndresMap: React.FC<MapProps> = ({ selectedZoneId, onSelectZone }) => {
         preserveAspectRatio="xMidYMid meet"
         className="w-full h-auto max-h-[600px]"
         xmlns="http://www.w3.org/2000/svg"
+        xmlnsXlink="http://www.w3.org/1999/xlink"
       >
         {/* Fondo gradiente del océano */}
         <defs>
@@ -129,6 +130,17 @@ const SanAndresMap: React.FC<MapProps> = ({ selectedZoneId, onSelectZone }) => {
         </defs>
         
         <rect width="400" height="600" fill="url(#oceanGradient)" />
+
+        {/* Imagen de fondo del mapa de San Andrés */}
+        <image 
+          xlinkHref="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/San_Andr%C3%A9s_Island_map-en.svg/656px-San_Andr%C3%A9s_Island_map-en.svg.png"
+          x="0" 
+          y="0" 
+          width="400" 
+          height="600" 
+          opacity="0.35"
+          preserveAspectRatio="xMidYMid slice"
+        />
 
         {/* ZONA 1: Centro/Norte (Amarillo) */}
         <polygon 
@@ -205,11 +217,12 @@ const SanAndresMap: React.FC<MapProps> = ({ selectedZoneId, onSelectZone }) => {
       {/* Leyenda Flotante */}
       <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm p-3 rounded-lg border border-gray-200 shadow-md text-[10px]">
          <p className="font-bold text-gray-600 mb-2">Zonas de Taxi</p>
-         <div className="flex items-center gap-1.5 mb-1"><div className="w-3 h-3 rounded-full bg-yellow-400 border border-gray-300"></div> <span>Z1 Centro</span></div>
-         <div className="flex items-center gap-1.5 mb-1"><div className="w-3 h-3 rounded-full bg-green-500 border border-gray-300"></div> <span>Z2 San Luis</span></div>
-         <div className="flex items-center gap-1.5 mb-1"><div className="w-3 h-3 rounded-full bg-pink-500 border border-gray-300"></div> <span>Z3 La Loma</span></div>
-         <div className="flex items-center gap-1.5 mb-1"><div className="w-3 h-3 rounded-full bg-blue-400 border border-gray-300"></div> <span>Z4 Punta Sur</span></div>
-         <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-red-500 border border-gray-300"></div> <span>Z5 West View</span></div>
+         {TAXI_ZONES.map(zone => (
+           <div key={zone.id} className="flex items-center gap-1.5 mb-1">
+             <div className={`w-3 h-3 rounded-full border border-gray-300 ${zone.color}`}></div> 
+             <span>{zone.name.split(' - ')[0]}</span>
+           </div>
+         ))}
       </div>
     </div>
   );
