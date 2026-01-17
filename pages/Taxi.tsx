@@ -58,7 +58,7 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
               selectedZoneId={selectedZoneId} 
               onSelectZone={(id) => setSelectedZoneId(id)} 
             />
-            <p className="text-xs text-gray-400 mt-3 text-center">Toca una zona en el mapa para seleccionarla</p>
+            <p className="text-xs text-gray-400 mt-3 text-center">Usa la lista para seleccionar tu destino</p>
          </div>
 
          {/* Calculator Form */}
