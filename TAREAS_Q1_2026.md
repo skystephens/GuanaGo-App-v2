@@ -90,7 +90,7 @@ VITE_API_URL=https://guana-go-app.onrender.com  # O localhost en dev
 **Comandos útiles:**
 ```bash
 # Terminal 1: Backend
-cd GuanaGo-App-aistudio-main
+cd GuanaGo-App-Enero-main
 npm run dev:server
 
 # Terminal 2: Frontend

@@ -67,8 +67,41 @@ export interface Restaurant {
 export interface Hotel extends Tour {
   address: string;
   amenities: string[];
-  pricePerNight: Record<number, number>; 
+  pricePerNight: Record<number, number>;  // {1: 150000, 2: 200000, ...}
   maxGuests: number;
+  
+  // 🆕 Tipo de alojamiento
+  accommodationType?: 'Hotel' | 'Aparta Hotel' | 'Apartamentos' | 'Casa' | 'Habitacion' | 'Hostal' | 'Posada Nativa' | 'Hotel boutique';
+  
+  // 🆕 Política de bebés
+  allowBabies?: boolean;
+  babyPolicy?: string; // ej: "Menores de 4 años no cuentan como huésped"
+  
+  // 🆕 Detalles de camas y servicios
+  singleBeds?: number;
+  doubleBeds?: number;
+  queenBeds?: number;
+  kingBeds?: number;
+  hasKitchen?: boolean;
+  includesBreakfast?: boolean;
+  hasPool?: boolean;
+  hasJacuzzi?: boolean;
+  hasBar?: boolean;
+  minNights?: number;
+
+  // 🆕 Plan de alimentación (PE/PC/PAM/PA/TI)
+  mealPlanCode?: 'PE' | 'PC' | 'PAM' | 'PA' | 'TI';
+  mealPlanDescription?: string;
+  
+  // 🆕 Multi-moneda
+  currencyPrice?: string; // 'COP' | 'USD'
+  
+  // 🆕 Contacto
+  phoneContact?: string;
+  emailContact?: string;
+  
+  // 🆕 Formalidad empresarial
+  rnt?: string; // Registro Nacional de Turismo
 }
 
 export interface Package extends Tour {
@@ -166,7 +199,8 @@ export interface CartItem extends Tour {
   date?: string;
   time?: string; 
   nights?: number; 
-  pax?: number; 
+  pax?: number;
+  babies?: number;
 }
 
 export interface Message {
@@ -215,6 +249,7 @@ export enum AppRoute {
   PARTNER_MY_SERVICES = 'PARTNER_MY_SERVICES',
   PARTNER_CREATE_SERVICE = 'PARTNER_CREATE_SERVICE',
   PARTNER_SERVICE_DETAIL = 'PARTNER_SERVICE_DETAIL',
+  PARTNER_ACCOMMODATIONS = 'PARTNER_ACCOMMODATIONS',
   ADMIN_DASHBOARD = 'ADMIN_DASHBOARD',
   ADMIN_USERS = 'ADMIN_USERS',
   ADMIN_FINANCE = 'ADMIN_FINANCE',

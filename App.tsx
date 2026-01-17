@@ -39,6 +39,7 @@ import PartnerReservations from './pages/partner/PartnerReservations';
 import PartnerServices from './pages/partner/PartnerServices';
 import PartnerServiceForm from './pages/partner/PartnerServiceForm';
 import PartnerServiceDetail from './pages/partner/PartnerServiceDetail';
+import PartnerAccommodations from './pages/partner/PartnerAccommodations';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -162,6 +163,7 @@ const App: React.FC = () => {
       case AppRoute.PARTNER_MY_SERVICES: return <PartnerServices onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.PARTNER_CREATE_SERVICE: return <PartnerServiceForm onBack={goBack} />;
       case AppRoute.PARTNER_SERVICE_DETAIL: return <PartnerServiceDetail onBack={goBack} onNavigate={navigateTo} data={detailData} />;
+      case AppRoute.PARTNER_ACCOMMODATIONS: return <PartnerAccommodations onBack={goBack} />;
       case AppRoute.ADMIN_DASHBOARD: return <AdminDashboard onNavigate={navigateTo} />;
       case AppRoute.ADMIN_USERS: return <AdminUsers />;
       case AppRoute.ADMIN_FINANCE: return <AdminFinance />;

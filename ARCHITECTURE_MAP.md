@@ -1,3 +1,16 @@
+# Ideas para mejorar la app
+Reporte del clima en App
+Basado en Dimar y noticias de idea y otros
+Revisar compra de paquete superior de github Copilot, analizar y escalar el desarrollo usando la misma app para mejorar en tiempo real y ocultar paneles de administración.
+
+Oferta pata cobernackon y sec de turismo.
+Estrategia de GuiaSAI para registrar la feria y negocios.
+Mapeando los que estaremos allá podemos agregar su información si se vuelven socios y se afilian usando una de las membresías se les da descuento. Acceso a herramientas para administrar e informar a autoridafes data de los huéspedes para verificar identidad y generar transparencia, evitar trata de menores y temas sexuales en el turismo o de cosas que se manejan en cada destino turístico.
+
+Ver clases de surf como tour que se maneja según el clima y tienen una corta ventana para anticipar la disponibilidad.
+
+Usar el Copilot para trabajar alrededor de lo que se viene trabajando en gemini
+
 
 # 🗺️ Guana Go: Arquitectura Técnica (V4.0 - Enero 2026)
 

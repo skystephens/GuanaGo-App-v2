@@ -42,6 +42,25 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             </button>
          )}
 
+         {/* Accommodations Link (NUEVO) */}
+         {onNavigate && (
+            <button 
+               onClick={() => onNavigate(AppRoute.PARTNER_ACCOMMODATIONS)}
+               className="w-full bg-gray-800 p-4 rounded-xl flex items-center justify-between border border-gray-700 hover:bg-gray-750 transition-colors"
+            >
+               <div className="flex items-center gap-3">
+                  <div className="bg-blue-500/20 p-2 rounded-lg text-blue-500">
+                     <MapIcon size={20} />
+                  </div>
+                  <div className="text-left">
+                     <span className="block font-bold text-sm">🏨 Alojamientos</span>
+                     <span className="text-xs text-gray-400">Registrar hospedajes</span>
+                  </div>
+               </div>
+               <span className="text-gray-500">→</span>
+            </button>
+         )}
+
          {/* Taxi & Mapbox Placeholder */}
          <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 relative overflow-hidden">
             <div className="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4">

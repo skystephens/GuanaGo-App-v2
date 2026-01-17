@@ -207,7 +207,7 @@ Campos requeridos:
 ### 2. Probar localmente
 ```bash
 # Terminal 1: Backend
-cd "c:\Users\skysk\OneDrive\Documentos\GuanaGO 2026\GuanaGo-App-aistudio-main"
+cd "c:\Users\skysk\OneDrive\Documentos\GuanaGO 2026\GuanaGo-App-Enero-main"
 npm start
 # Debería ver: ✅ Rutas API configuradas + 🚀 Server listening
 

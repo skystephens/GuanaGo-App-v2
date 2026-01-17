@@ -13,7 +13,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Item count
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  const addToCart = (product: Tour | Hotel | Package, quantity: number, date?: string, time?: string, nights?: number, totalOverride?: number) => {
+  const addToCart = (product: Tour | Hotel | Package, quantity: number, date?: string, time?: string, nights?: number, totalOverride?: number, babies?: number) => {
     setItems((prevItems) => {
       const isHotel = product.category === 'hotel';
       // Para hoteles, cada reserva es única por fecha usualmente, pero aquí simplificamos
@@ -34,7 +34,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             date: date || 'Fecha abierta',
             time: time || 'Horario por definir',
             nights: nights,
-            pax: isHotel ? quantity : undefined 
+            pax: isHotel ? quantity : undefined,
+            babies: babies
         }];
       }
     });

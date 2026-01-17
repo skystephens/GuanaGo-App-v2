@@ -302,3 +302,9 @@ Para producción en Render/Railway/Heroku:
 1. Asegurar que `.env` está en `.gitignore`
 2. Configurar variables de entorno en el dashboard
 3. El comando `npm start` iniciará el servidor
+
+
+## Revisar los archivos .MD para contexto.
+debo usar una ia para analizar la tablas de airtable y los flujos de la misma herramienta, que la app apoye para facilitar el uso de la herramienta. tanto b2c como b2b.
+
+debo ver la tabla para usar escenarios de Make, por que aun no estan conectados con la app, y debemos mapear eso en el backend. 

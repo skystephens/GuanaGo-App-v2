@@ -71,7 +71,7 @@ Muestra puntos del directorio, zonas de taxi y mapa interactivo.
 ## 📁 Estructura del Proyecto
 
 ```
-GuanaGo-App-aistudio-main/
+GuanaGo-App-Enero-main/
 ├── 📄 App.tsx                    # Router principal
 ├── 📄 index.tsx                  # Entry point
 ├── 📄 types.ts                   # Interfaces TypeScript

@@ -17,6 +17,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1); 
   const [nights, setNights] = useState(1); 
+  const [babies, setBabies] = useState(0);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('08:00 AM');
   const [added, setAdded] = useState(false);
@@ -71,13 +72,18 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
   
   const handleNightIncrement = () => setNights(prev => Math.min(prev + 1, 30));
   const handleNightDecrement = () => setNights(prev => Math.max(prev - 1, 1));
+  
+  const handleBabiesIncrement = () => setBabies(prev => Math.min(prev + 1, 10));
+  const handleBabiesDecrement = () => setBabies(prev => Math.max(prev - 1, 0));
 
   let totalPrice = 0;
   let unitPriceDisplay = 0;
 
   if (isHotel && hotel.pricePerNight) {
+     // pricePerNight[quantity] ya es el precio POR NOCHE para esa cantidad de personas
      const pricePerNightForPax = hotel.pricePerNight[quantity] || hotel.pricePerNight[Object.keys(hotel.pricePerNight).length] || data.price;
      unitPriceDisplay = pricePerNightForPax;
+     // Solo multiplicar por noches (pricePerNightForPax ya incluye la cantidad de personas)
      totalPrice = pricePerNightForPax * nights;
   } else {
      unitPriceDisplay = data.price;
@@ -87,7 +93,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
   const handleAddToCart = () => {
     if (isExceeding || isUnavailable) return;
     const priceOverride = isHotel ? totalPrice : undefined;
-    addToCart(data, quantity, selectedDate, selectedTime, isHotel ? nights : undefined, priceOverride);
+    addToCart(data, quantity, selectedDate, selectedTime, isHotel ? nights : undefined, priceOverride, babies);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000); 
   };
@@ -285,6 +291,22 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                  ))}
                </div>
              )}
+
+             {/* Categoría de alojamiento */}
+             {isHotel && hotel.accommodationType && (
+               <div className="mb-4 bg-amber-50 border border-amber-200 rounded-2xl p-3">
+                 <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider">Tipo de Alojamiento:</span>
+                 <p className="text-sm font-bold text-amber-700 mt-1">{hotel.accommodationType}</p>
+               </div>
+             )}
+
+             {/* Política de bebés */}
+             {isHotel && hotel.babyPolicy && (
+               <div className="mb-4 bg-blue-50 border border-blue-200 rounded-2xl p-3">
+                 <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider">Política de Bebés:</span>
+                 <p className="text-sm font-bold text-blue-700 mt-1">{hotel.babyPolicy}</p>
+               </div>
+             )}
              
              <p className="text-gray-500 leading-relaxed text-sm font-medium mb-6">{data.description}</p>
              
@@ -365,6 +387,11 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                    </div>
                    <button onClick={handleIncrement} className="w-11 h-11 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-600 hover:text-emerald-600 active:scale-90 transition-all"><Plus size={18} /></button>
                 </div>
+                {isHotel && (
+                  <div className="text-[8px] text-gray-500 font-bold mt-2 px-2 leading-tight">
+                    ℹ️ Edades 4+ se cuentan como adulto • Bebés 0-3 años
+                  </div>
+                )}
              </div>
              {isHotel && (
                 <div className="flex-1">
@@ -375,6 +402,18 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                          <span className="text-[8px] font-bold text-gray-400 uppercase mt-0.5">Noches</span>
                       </div>
                       <button onClick={handleNightIncrement} className="w-11 h-11 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-600 hover:text-emerald-600 active:scale-90 transition-all"><Plus size={18} /></button>
+                   </div>
+                </div>
+             )}
+             {isHotel && hotel.allowBabies !== false && (
+                <div className="flex-1">
+                   <div className="flex items-center bg-blue-50/50 rounded-2xl p-1.5 h-16 justify-between border border-blue-200/50">
+                      <button onClick={handleBabiesDecrement} className="w-11 h-11 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-600 hover:text-blue-600 active:scale-90 transition-all"><Minus size={18} /></button>
+                      <div className="flex flex-col items-center">
+                         <span className="font-black text-gray-900 text-base leading-none">{babies}</span>
+                         <span className="text-[8px] font-bold text-gray-400 uppercase mt-0.5">Bebés</span>
+                      </div>
+                      <button onClick={handleBabiesIncrement} className="w-11 h-11 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-600 hover:text-blue-600 active:scale-90 transition-all"><Plus size={18} /></button>
                    </div>
                 </div>
              )}

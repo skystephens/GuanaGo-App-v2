@@ -184,7 +184,7 @@
 ### Local Testing
 ```bash
 # Terminal 1: Backend
-cd GuanaGo-App-aistudio-main
+cd GuanaGo-App-Enero-main
 npm start
 # Esperado: 🚀 Servidor escuchando en http://localhost:5000
 

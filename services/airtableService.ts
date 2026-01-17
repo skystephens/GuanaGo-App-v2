@@ -576,6 +576,52 @@ export async function getServices(category?: string) {
       
       // Proveedor
       provider: f['Nombre Operador Aliado']?.[0] || 'GuanaGO',
+      
+      // 🆕 CAMPOS PARA ALOJAMIENTOS
+      accommodationType: f['Tipo de Alojamiento'] || '',
+      allowBabies: f['Acepta Bebes'] === true || f['Acepta Bebés'] === true,
+      babyPolicy: f['Politica Bebes'] || f['Política Bebes'] || '',
+
+      // Plan de alimentación (PE/PC/PAM/PA/TI)
+      mealPlanCode: (() => {
+        const raw = (f['Plan de Alimentación'] || f['Plan Alimentacion'] || '').toString();
+        const code = raw.split('|')[0]?.trim();
+        if (['PE', 'PC', 'PAM', 'PA', 'TI'].includes(code)) return code as 'PE' | 'PC' | 'PAM' | 'PA' | 'TI';
+        return undefined;
+      })(),
+      mealPlanDescription: (f['Plan de Alimentación'] || f['Plan Alimentacion'] || '').toString(),
+      
+      // Precios por cantidad de huéspedes (para alojamientos)
+      pricePerNight: {
+        1: parseInt(String(f['Precio 1 Huesped'] || f['Precio'] || 0).replace(/[^0-9]/g, '')) || precio,
+        2: parseInt(String(f['Precio 2 Huespedes'] || 0).replace(/[^0-9]/g, '')) || precio,
+        3: parseInt(String(f['Precio 3 Huespedes'] || 0).replace(/[^0-9]/g, '')) || precio,
+        4: parseInt(String(f['Precio 4+ Huespedes'] || 0).replace(/[^0-9]/g, '')) || precio,
+      },
+      
+      // Detalles de la unidad de alojamiento
+      maxGuests: parseInt(f['Capacidad Maxima'] || f['Capacidad'] || '10') || 10,
+      singleBeds: parseInt(f['Camas Sencillas'] || '0') || 0,
+      doubleBeds: parseInt(f['Camas Dobles'] || '0') || 0,
+      queenBeds: parseInt(f['Cama Queen'] || f['Camas Queen'] || '0') || 0,
+      kingBeds: parseInt(f['Cama King'] || f['Camas King'] || '0') || 0,
+      hasKitchen: f['Tiene Cocina'] === true,
+      includesBreakfast: f['Incluye Desayuno'] === true,
+      hasPool: f['Acceso a Piscina'] === true || f['Piscina'] === true,
+      hasJacuzzi: f['Acceso a Jacuzzi'] === true || f['Jacuzzi'] === true,
+      hasBar: f['Acceso a Bar'] === true || f['Bar'] === true,
+      minNights: parseInt(f['Minimo Noches'] || '1') || 1,
+      
+      // Multi-moneda
+      currencyPrice: f['Moneda Precios'] || 'COP',
+      
+      // Contacto
+      phoneContact: f['Telefono Contacto'] || '',
+      emailContact: f['Email Contacto'] || '',
+      
+      // Formalidad empresarial
+      rnt: f['RNT'] || f['Rnt'] || '',
+      
       // Las claves image, images y gallery ya están definidas antes, no repetir aquí
     };
   }).filter(s => s.active && (s.ubicacion === 'San Andres' || s.ubicacion === 'San Andrés' || !s.ubicacion)); // Solo servicios publicados de San Andrés

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Filter, MapPin, Star, Wifi, Droplets, Calendar, Users, Search, ChevronDown, X } from 'lucide-react';
-import { cachedApi } from '../services/cachedApi';
+import { hotelCacheService } from '../services/hotelCacheService';
 import { Tour, AppRoute } from '../types';
 
 interface HotelListProps {
@@ -16,7 +16,19 @@ interface SearchFilters {
   singleBeds: number;
   doubleBeds: number;
   hasKitchen: boolean | null;
+  accommodationType: string | null;
 }
+
+const ACCOMMODATION_TYPES = [
+  'Hotel',
+  'Aparta Hotel',
+  'Apartamentos',
+  'Casa',
+  'Habitacion',
+  'Hostal',
+  'Posada Nativa',
+  'Hotel boutique'
+];
 
 const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
   const [accommodations, setAccommodations] = useState<Tour[]>([]);
@@ -30,6 +42,7 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
     singleBeds: 0,
     doubleBeds: 1,
     hasKitchen: null,
+    accommodationType: null,
   });
 
   // Cargar alojamientos desde Airtable
@@ -40,18 +53,22 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
   const loadAccommodations = async () => {
     setLoading(true);
     try {
-      const data = await cachedApi.getServices({ forceRefresh: true });
-      console.log('📍 Total servicios desde Airtable:', data.length);
-      console.log('📍 Servicios completos:', data);
+      // Usar nuevo servicio de caché con soporte offline
+      const result = await hotelCacheService.getHotels(false);
       
-      // Filtrar solo alojamientos (Tipo de Servicio = "Alojamiento")
-      const hotels = data.filter(
-        service => {
-          const isHotel = service.category === 'hotel' || (service.tipo && service.tipo.toLowerCase().includes('alojamiento'));
-          console.log(`📍 Verificando ${service.title}: category=${service.category}, tipo=${service.tipo}, isHotel=${isHotel}`);
-          return isHotel;
-        }
-      );
+      console.log('🏨 Alojamientos cargados:', {
+        cantidad: result.data.length,
+        fuente: result.source,
+        fresco: result.isFresh,
+        estado: result.metadata.apiStatus
+      });
+      
+      // Filtrar solo alojamientos
+      const hotels = result.data.filter(service => {
+        const isHotel = service.category === 'hotel' || (service.tipo && service.tipo.toLowerCase().includes('alojamiento'));
+        return isHotel;
+      });
+      
       console.log('🏨 Alojamientos encontrados:', hotels.length);
       setAccommodations(hotels);
       setFilteredAccommodations(hotels);
@@ -65,6 +82,13 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
   // Aplicar filtros
   const applyFilters = () => {
     let filtered = accommodations;
+
+    // Filtrar por tipo de alojamiento
+    if (filters.accommodationType) {
+      filtered = filtered.filter(hotel => {
+        return hotel.accommodationType === filters.accommodationType;
+      });
+    }
 
     // Filtrar por capacidad de huéspedes
     if (filters.guests > 0) {
@@ -215,6 +239,21 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
               <option value="">Sin preferencia</option>
               <option value="si">Con cocina</option>
               <option value="no">Sin cocina</option>
+            </select>
+          </div>
+
+          {/* Tipo de Alojamiento */}
+          <div>
+            <label className="text-xs font-bold text-gray-600 block mb-2">Tipo de Alojamiento</label>
+            <select
+              value={filters.accommodationType || ''}
+              onChange={(e) => handleFilterChange('accommodationType', e.target.value || null)}
+              className="w-full bg-gray-50 border-2 border-transparent rounded-lg px-3 py-2.5 text-sm font-bold text-gray-900 focus:border-amber-500 focus:bg-white outline-none"
+            >
+              <option value="">Todos los tipos</option>
+              {ACCOMMODATION_TYPES.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
             </select>
           </div>
 
