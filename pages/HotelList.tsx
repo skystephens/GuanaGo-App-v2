@@ -41,14 +41,22 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
     setLoading(true);
     try {
       const data = await cachedApi.getServices({ forceRefresh: true });
+      console.log('📍 Total servicios desde Airtable:', data.length);
+      console.log('📍 Servicios completos:', data);
+      
       // Filtrar solo alojamientos (Tipo de Servicio = "Alojamiento")
       const hotels = data.filter(
-        service => service.category === 'hotel' || (service.tipo && service.tipo.toLowerCase().includes('alojamiento'))
+        service => {
+          const isHotel = service.category === 'hotel' || (service.tipo && service.tipo.toLowerCase().includes('alojamiento'));
+          console.log(`📍 Verificando ${service.title}: category=${service.category}, tipo=${service.tipo}, isHotel=${isHotel}`);
+          return isHotel;
+        }
       );
+      console.log('🏨 Alojamientos encontrados:', hotels.length);
       setAccommodations(hotels);
       setFilteredAccommodations(hotels);
     } catch (error) {
-      console.error('Error cargando alojamientos:', error);
+      console.error('❌ Error cargando alojamientos:', error);
     } finally {
       setLoading(false);
     }

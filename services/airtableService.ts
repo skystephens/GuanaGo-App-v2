@@ -488,7 +488,7 @@ export async function getServices(category?: string) {
     // Determinar categoría basada en "Tipo de Servicio"
     const tipoServicio = (f['Tipo de Servicio'] || '').toLowerCase();
     let category = 'tour';
-    if (tipoServicio.includes('hotel')) category = 'hotel';
+    if (tipoServicio.includes('alojamiento') || tipoServicio.includes('hotel')) category = 'hotel';
     else if (tipoServicio.includes('traslado') || tipoServicio.includes('taxi')) category = 'taxi';
     else if (tipoServicio.includes('paquete')) category = 'package';
     
