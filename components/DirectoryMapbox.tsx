@@ -105,14 +105,15 @@ const DirectoryMapbox: React.FC<DirectoryMapboxProps> = ({ activeCategory = 'Tod
     if (!mapContainerRef.current || mapRef.current) return;
 
     try {
-      console.log('🗺️ Initializing Mapbox...');
+      console.log('🗺️ Initializing Mapbox - Version 2.1');
       
       const map = new mapboxgl.Map({
         container: mapContainerRef.current,
-        style: 'mapbox://styles/mapbox/light-v11', // Estilo light con menos POIs visibles
+        style: 'mapbox://styles/mapbox/outdoors-v12', // Estilo outdoors: mejor para mapas sin comercios
         center: SAN_ANDRES_CENTER,
         zoom: DEFAULT_ZOOM,
-        attributionControl: false
+        attributionControl: false,
+        preserveDrawingBuffer: true
       });
 
       map.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -122,56 +123,44 @@ const DirectoryMapbox: React.FC<DirectoryMapboxProps> = ({ activeCategory = 'Tod
       }), 'top-right');
 
       map.on('load', () => {
-        console.log('✅ Map loaded successfully');
+        console.log('✅ Map loaded - Oculltando POIs...');
         setMapError(null);
         
-        // Ocultar todas las capas de etiquetas de POIs
-        // Solo mostrar nombre de calles y estructuras básicas
-        const layersToHide = [
-          'poi-label',
-          'poi-maki',
-          'business-label',
-          'establishment-label',
-          'transit-label',
-          'settlement-label',
-          'settlement-subdivision-label',
-          'water-label',
-          'waterway-label',
-          'poi-scalerank0',
-          'poi-scalerank1',
-          'poi-scalerank2',
-          'poi-scalerank3',
-          'poi-scalerank4'
-        ];
-        
-        // Intentar ocultar cada capa
-        layersToHide.forEach(layerId => {
-          try {
-            if (map.getLayer(layerId)) {
-              map.setLayoutProperty(layerId, 'visibility', 'none');
-              console.log(`✓ Ocultada capa: ${layerId}`);
-            }
-          } catch (e) {
-            // Silenciar errores de capas que no existen
-          }
-        });
-        
-        // Filtro adicional: ocultar cualquier capa que contenga 'poi' o 'label'
+        // Estrategia agresiva: ocultar TODAS las capas de etiquetas de POIs
         const allLayers = map.getStyle().layers || [];
+        
         allLayers.forEach((layer: any) => {
           const layerId = layer.id;
+          const layerType = layer.type;
+          
+          // Ocultar cualquier capa que sea POI o negocio
           if (layerId.includes('poi') || 
-              (layerId.includes('label') && !layerId.includes('road') && !layerId.includes('street'))) {
+              layerId.includes('business') || 
+              layerId.includes('establishment') ||
+              layerId.includes('landmark')) {
             try {
-              if (map.getLayer(layerId)) {
+              map.setLayoutProperty(layerId, 'visibility', 'none');
+              console.log(`✓ Hidden: ${layerId}`);
+            } catch (e) {}
+          }
+          
+          // Para labels, ser selectivo: ocultar todo EXCEPTO road y water labels
+          if (layerId.includes('label')) {
+            const shouldHide = !layerId.includes('road') && 
+                              !layerId.includes('street') && 
+                              !layerId.includes('water') &&
+                              !layerId.includes('place');
+            
+            if (shouldHide) {
+              try {
                 map.setLayoutProperty(layerId, 'visibility', 'none');
-                console.log(`✓ Ocultada capa: ${layerId}`);
-              }
-            } catch (e) {
-              // Silenciar errores
+                console.log(`✓ Hidden: ${layerId}`);
+              } catch (e) {}
             }
           }
         });
+        
+        console.log('✅ POI ocultación completada');
       });
 
       map.on('error', (e) => {
