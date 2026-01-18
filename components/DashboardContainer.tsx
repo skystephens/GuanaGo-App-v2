@@ -1,5 +1,5 @@
 import React from 'react';
-import type { GuanaUser, UserRole } from '../types';
+import type { UserRole } from '../types';
 
 // Placeholder dashboards para cada rol
 function TuristaDashboard() {
@@ -39,7 +39,7 @@ function SuperAdminDashboard() {
 
 // Componente principal
 interface DashboardContainerProps {
-  user: GuanaUser | null;
+  user: any;
 }
 
 const DashboardContainer: React.FC<DashboardContainerProps> = ({ user }) => {

@@ -11,18 +11,20 @@ import AuthGate from './AuthGate';
 
 interface AccountDashboardProps {
   isAuthenticated: boolean;
+  userRole?: UserRole;
   onLogin: () => void;
   onLogout: () => void;
   onSwitchRole: (role: UserRole) => void;
   onNavigate?: (route: AppRoute) => void;
+  onBack?: () => void;
 }
 
-const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, onLogin, onLogout, onSwitchRole, onNavigate }) => {
+const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, userRole = 'Turista', onLogin, onLogout, onSwitchRole, onNavigate, onBack }) => {
   const [showSupportChat, setShowSupportChat] = useState(false);
   const [showDigitalId, setShowDigitalId] = useState(false);
   const [activeCampaigns, setActiveCampaigns] = useState<Campaign[]>([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
-  const [userData, setUserData] = useState<Client | GuanaUser | null>(null);
+  const [userData, setUserData] = useState<any>(null);
   const [loadingUser, setLoadingUser] = useState(false);
   const [showAdminPin, setShowAdminPin] = useState(false);
   const [adminUser, setAdminUser] = useState<any>(null);
@@ -48,7 +50,7 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
      if (isAuthenticated) {
         fetchInitialData();
      }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, userRole]);
 
   const fetchInitialData = async () => {
       setLoadingUser(true);
@@ -56,15 +58,16 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
       try {
          // 1. Sincronizar datos personales reales desde el proxy (Airtable)
          const profile = await api.users.getProfile(TEST_USER_ID);
-         setUserData(profile);
+         setUserData({ ...profile, role: userRole });
 
          // 2. Cargar campañas de marketing activas
          const camps = await api.campaigns.list();
          setActiveCampaigns(camps.filter(c => c.active).slice(0, 5));
       } catch (e) {
          console.error("Error sincronizando cuenta", e);
-         // Fallback a constante local
-         setUserData(PARTNER_CLIENTS.find(c => c.id === TEST_USER_ID) || PARTNER_CLIENTS[0]);
+         // Fallback a constante local con el rol correcto
+         const fallbackUser = PARTNER_CLIENTS.find(c => c.id === TEST_USER_ID) || PARTNER_CLIENTS[0];
+         setUserData({ ...fallbackUser, role: userRole });
       } finally {
          setLoadingUser(false);
          setLoadingCampaigns(false);
@@ -76,6 +79,16 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
     return (
       <div className="bg-gradient-to-br from-purple-50 via-white to-purple-50 min-h-screen pb-32 font-sans">
         <div className="px-6 pt-8">
+          {/* Back Button */}
+          {onBack && (
+            <button 
+              onClick={onBack}
+              className="mb-4 p-2 hover:bg-purple-100 rounded-lg transition-colors text-purple-600"
+              title="Volver"
+            >
+              <ArrowLeft size={24} />
+            </button>
+          )}
           {/* Header Admin */}
           <div className="bg-white rounded-3xl p-6 mb-6 shadow-xl border border-purple-100">
             <div className="flex items-center gap-4 mb-4">
@@ -213,7 +226,17 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
     }
 
     return (
-      <div className="bg-white min-h-screen flex flex-col justify-center px-8 text-center font-sans pb-24">
+      <div className="bg-white min-h-screen flex flex-col justify-center px-8 text-center font-sans pb-24 relative">
+        {/* Back Button */}
+        {onBack && (
+          <button 
+            onClick={onBack}
+            className="absolute top-8 left-6 p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
+            title="Volver"
+          >
+            <ArrowLeft size={24} />
+          </button>
+        )}
         <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600 border border-emerald-100 shadow-sm">
           <User size={48} />
         </div>
@@ -275,12 +298,12 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
   }
 
   // Fallback user en caso de carga lenta
-  const displayUser = userData || PARTNER_CLIENTS[0];
+  const displayUser = userData ? { ...userData, role: userRole } : { ...PARTNER_CLIENTS[0], role: userRole };
 
   // Render dinámico por rol
   return (
     <div className="bg-gray-50 min-h-screen pb-32 font-sans overflow-x-hidden">
-      <DashboardContainer user={userData as GuanaUser} />
+      <DashboardContainer user={displayUser as GuanaUser} />
       {/* ...puedes agregar aquí otros componentes globales si lo deseas... */}
     </div>
   );

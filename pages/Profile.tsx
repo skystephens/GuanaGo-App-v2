@@ -13,9 +13,10 @@ interface ProfileProps {
   onSwitchRole: (role: UserRole) => void;
   onLogout: () => void;
   onNavigate: (route: AppRoute) => void;
+  onBack?: () => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ role, isAuthenticated, onLogin, onSwitchRole, onLogout, onNavigate }) => {
+const Profile: React.FC<ProfileProps> = ({ role, isAuthenticated, onLogin, onSwitchRole, onLogout, onNavigate, onBack }) => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(true);
   const [showSupportChat, setShowSupportChat] = useState(false);
@@ -167,6 +168,16 @@ const Profile: React.FC<ProfileProps> = ({ role, isAuthenticated, onLogin, onSwi
   if (role === 'tourist' && !isAuthenticated) {
      return (
         <div className="bg-white min-h-screen pb-24 font-sans flex flex-col justify-center px-8 relative animate-in fade-in">
+           {/* Back Button */}
+           {onBack && (
+             <button 
+               onClick={onBack}
+               className="absolute top-8 left-6 p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
+               title="Volver"
+             >
+               <X size={24} />
+             </button>
+           )}
            <div className="mb-10 text-center">
               <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600 border-2 border-emerald-100 shadow-sm">
                  <User size={40} />

@@ -60,6 +60,7 @@ import ArtistaPortal from './pages/ArtistaPortal';
 
 // Unified Panel
 import UnifiedPanel from './components/UnifiedPanel';
+import UserProfileButton from './components/UserProfileButton';
 
 import Navigation from './components/Navigation';
 import GuanaChatbot from './components/GuanaChatbot';
@@ -77,6 +78,7 @@ const App: React.FC = () => {
   // Auth State
   const [userRole, setUserRole] = useState<UserRole>('Turista');
   const [isAuthenticated, setIsAuthenticated] = useState(false); 
+  const [userName, setUserName] = useState('Usuario');
   const [detailData, setDetailData] = useState<any>(null);
 
   // Inicializar sistema de caché al arrancar la app
@@ -125,6 +127,7 @@ const App: React.FC = () => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setUserRole('Turista');
+    setUserName('Usuario');
     setHistory([]);
     setCurrentRoute(AppRoute.HOME);
     window.scrollTo(0, 0);
@@ -138,11 +141,13 @@ const App: React.FC = () => {
       case AppRoute.MY_ITINERARY: return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.PROFILE: return (
         <AccountDashboard 
-          isAuthenticated={isAuthenticated} 
+          isAuthenticated={isAuthenticated}
+          userRole={userRole}
           onLogin={handleTouristLogin} 
           onLogout={handleLogout} 
           onSwitchRole={switchRole} 
           onNavigate={navigateTo}
+          onBack={goBack}
         />
       );
       case AppRoute.CHECKOUT: return <Checkout onBack={goBack} onNavigate={navigateTo} isAuthenticated={isAuthenticated} />;
@@ -204,6 +209,21 @@ const App: React.FC = () => {
         ${isDark ? 'bg-gray-900' : 'bg-gray-50'}
         md:shadow-2xl md:border-x
         ${isDark ? 'md:border-gray-800' : 'md:border-gray-200'}`}>
+        
+        {/* User Profile Header - Desktop & Tablet */}
+        {isAuthenticated && (
+          <header className={`sticky top-0 z-40 px-6 py-3 border-b
+            ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}
+            hidden sm:flex sm:items-center sm:justify-end`}>
+            <UserProfileButton
+              isAuthenticated={isAuthenticated}
+              userName={userName}
+              userRole={userRole}
+              onNavigate={navigateTo}
+              onLogout={handleLogout}
+            />
+          </header>
+        )}
         
         <main className="min-h-screen pb-20 md:pb-24 relative overflow-auto">
           {renderScreen()}
