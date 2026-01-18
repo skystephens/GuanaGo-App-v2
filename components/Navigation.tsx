@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Compass, CalendarDays, ShoppingCart, UserCircle, LayoutDashboard, QrCode, Wallet, Settings, PieChart, Map as MapIcon, Database, Trophy } from 'lucide-react';
+import { Compass, CalendarDays, ShoppingCart, UserCircle, LayoutDashboard, QrCode, Wallet, Settings, PieChart, Map as MapIcon, Database, Trophy, Grid3x3, LogOut } from 'lucide-react';
 import { AppRoute, UserRole } from '../types';
 import { useCart } from '../context/CartContext';
 
@@ -16,37 +16,37 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
   
   // MENU TURISTA: 5 Items
   const touristNavItemsAuth = [
+    { route: AppRoute.UNIFIED_PANEL, icon: <Grid3x3 size={22} />, label: 'Panel' },
     { route: AppRoute.HOME, icon: <Compass size={22} />, label: 'Explora' },
     { route: AppRoute.INTERACTIVE_MAP, icon: <MapIcon size={22} />, label: 'Mapa' },
     { route: AppRoute.DYNAMIC_ITINERARY, icon: <CalendarDays size={22} />, label: 'Planifica' },
     { route: AppRoute.CHECKOUT, icon: <ShoppingCart size={22} />, label: 'Carrito' },
-    { route: AppRoute.WALLET, icon: <Wallet size={22} />, label: 'Cuenta' },
   ];
 
   // Versión para usuarios sin registro: cambiamos Carrito por GUANA Points/Retos
   const touristNavItemsGuest = [
+    { route: AppRoute.UNIFIED_PANEL, icon: <Grid3x3 size={22} />, label: 'Panel' },
     { route: AppRoute.HOME, icon: <Compass size={22} />, label: 'Explora' },
     { route: AppRoute.INTERACTIVE_MAP, icon: <MapIcon size={22} />, label: 'Mapa' },
     { route: AppRoute.DYNAMIC_ITINERARY, icon: <CalendarDays size={22} />, label: 'Planifica' },
-    { route: AppRoute.WALLET, icon: <Trophy size={22} />, label: 'GUANA' },
     { route: AppRoute.PROFILE, icon: <UserCircle size={22} />, label: 'Cuenta' },
   ];
 
   // MENU SOCIO/ALIADO: 5 Items
   const partnerNavItems = [
-    { route: AppRoute.PARTNER_DASHBOARD, icon: <LayoutDashboard size={22} />, label: 'Panel' },
+    { route: AppRoute.UNIFIED_PANEL, icon: <Grid3x3 size={22} />, label: 'Panel' },
+    { route: AppRoute.PARTNER_DASHBOARD, icon: <LayoutDashboard size={22} />, label: 'Dashboard' },
     { route: AppRoute.PARTNER_RESERVATIONS, icon: <CalendarDays size={22} />, label: 'Reservas' },
-    { route: AppRoute.PARTNER_OPERATIONS, icon: <QrCode size={22} />, label: 'Canje' },
     { route: AppRoute.PARTNER_WALLET, icon: <Wallet size={22} />, label: 'Caja' },
-    { route: AppRoute.PROFILE, icon: <UserCircle size={22} />, label: 'Perfil' }, 
+    { route: AppRoute.PROFILE, icon: <UserCircle size={22} />, label: 'Perfil' },
   ];
 
   // MENU ADMIN: Panel, Backend (sincronización), Finanzas, Socios, Perfil
   const adminNavItems = [
-    { route: AppRoute.ADMIN_DASHBOARD, icon: <PieChart size={22} />, label: 'Panel' },
-    { route: AppRoute.ADMIN_BACKEND, icon: <Database size={22} />, label: 'Datos' },
-    { route: AppRoute.ADMIN_FINANCE, icon: <Wallet size={22} />, label: 'Finanzas' },
-    { route: AppRoute.ADMIN_USERS, icon: <UserCircle size={22} />, label: 'Socios' },
+    { route: AppRoute.UNIFIED_PANEL, icon: <Grid3x3 size={22} />, label: 'Panel' },
+    { route: AppRoute.ADMIN_DASHBOARD, icon: <PieChart size={22} />, label: 'Dashboard' },
+    { route: AppRoute.ADMIN_APPROVALS, icon: <UserCircle size={22} />, label: 'Aprobaciones' },
+    { route: AppRoute.ADMIN_RESERVATIONS, icon: <CalendarDays size={22} />, label: 'Reservas' },
     { route: AppRoute.PROFILE, icon: <Settings size={22} />, label: 'Perfil' },
   ];
 
