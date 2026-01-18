@@ -143,7 +143,13 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
             </button>
 
             <button 
-              onClick={() => onNavigate && onNavigate(AppRoute.HOME)}
+              onClick={() => {
+                // Logout del admin y volver a Home
+                localStorage.removeItem('admin_session');
+                setAdminUser(null);
+                onLogout();
+                if (onNavigate) onNavigate(AppRoute.HOME);
+              }}
               className="w-full bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:bg-gray-50 hover:border-gray-200 transition-all active:scale-95 group"
             >
               <div className="flex items-center gap-4">
@@ -151,8 +157,8 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
                   <Globe size={24} />
                 </div>
                 <div className="text-left">
-                  <div className="font-black text-gray-900">Ir al Inicio</div>
-                  <div className="text-xs text-gray-500">Página principal</div>
+                  <div className="font-black text-gray-900">Salir a Inicio</div>
+                  <div className="text-xs text-gray-500">Cerrar panel de admin</div>
                 </div>
               </div>
               <ChevronRight className="text-gray-400 group-hover:text-gray-600" size={20} />
@@ -238,7 +244,22 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, on
               </button>
               
               <button 
-                onClick={() => setShowAdminPin(true)}
+                onClick={() => {
+                  // Si hay sesión guardada, volver sin pedir password
+                  const savedSession = localStorage.getItem('admin_session');
+                  if (savedSession) {
+                    try {
+                      const session = JSON.parse(savedSession);
+                      const expiresAt = new Date(session.expiresAt);
+                      if (expiresAt > new Date()) {
+                        setAdminUser(session.user);
+                        return;
+                      }
+                    } catch {}
+                  }
+                  // Si no hay sesión o expiró, mostrar login
+                  setShowAdminPin(true);
+                }}
                 className="flex-1 bg-gray-50 p-5 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center gap-2 hover:bg-purple-50 hover:border-purple-100 transition-all active:scale-95 group"
               >
                 <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-purple-500 shadow-sm group-hover:bg-purple-500 group-hover:text-white transition-colors">

@@ -42,6 +42,7 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, initialCategory = 'all' }
           cachedApi.getTaxiZones()
         ]);
         console.log('✅ Planner: Servicios recibidos:', servicesData.length);
+        console.log('🖼️ Primeros 3 servicios con imágenes:', servicesData.slice(0, 3).map(s => ({ title: s.title, image: s.image })));
         setServices(servicesData.filter(s => s.active !== false));
         setTaxiZones(taxiData);
       } catch (error) {
