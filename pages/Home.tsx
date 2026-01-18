@@ -187,7 +187,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 pb-4">
               {services.length > 0 ? services.slice(0, 4).map((item) => (
                 <div 
-                  key={item.id} 
+                  key={`${item.id}-${dataSource}-${item.image?.substring(0, 20)}`}
                   className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col cursor-pointer border border-gray-100 hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95 group" 
                   onClick={() => {
                      if (item.category === 'hotel') onNavigate(AppRoute.HOTEL_DETAIL, item);
@@ -196,7 +196,19 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                   }}
                 >
                   <div className="w-full aspect-square relative overflow-hidden">
-                     <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                     <img 
+                       src={item.image} 
+                       alt={item.title} 
+                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                       onError={(e) => {
+                         const fallbacks: Record<string, string> = {
+                           tour: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80',
+                           hotel: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80',
+                           package: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80',
+                         };
+                         (e.target as HTMLImageElement).src = fallbacks[item.category] || fallbacks.tour;
+                       }} 
+                     />
                      <div className={`absolute top-2 right-2 ${getCategoryColor(item.category)} text-white px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm`}>
                         {getCategoryIcon(item.category)}
                         <span className="text-[8px] md:text-[10px] font-black uppercase">{getCategoryLabel(item.category)}</span>

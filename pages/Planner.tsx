@@ -306,7 +306,7 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, initialCategory = 'all' }
               <div className="grid grid-cols-2 gap-4">
                 {filteredServices.map((service) => (
                   <ServiceCard
-                    key={service.id}
+                    key={`${service.id}-${dataSource}-${service.image?.substring(0, 20)}`}
                     service={service}
                     onClick={() => handleServiceClick(service)}
                   />
@@ -347,6 +347,11 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, initialCategory = 'all' }
 const ServiceCard: React.FC<{ service: Tour; onClick: () => void }> = ({ service, onClick }) => {
   const [imageError, setImageError] = React.useState(false);
   
+  // Resetear imageError cuando cambie la URL de la imagen (después de sincronizar)
+  React.useEffect(() => {
+    setImageError(false);
+  }, [service.image]);
+  
   const getCategoryBadge = (category: string, accommodationType?: string) => {
     switch (category) {
       case 'tour': return { label: 'Tour', color: 'bg-blue-500' };
@@ -358,19 +363,21 @@ const ServiceCard: React.FC<{ service: Tour; onClick: () => void }> = ({ service
 
   const badge = getCategoryBadge(service.category, (service as any).accommodationType);
   
-  // Imagen con fallback
+  // Imagen con fallback - PRIORIZAR service.image sobre imageError
   const getImageUrl = () => {
-    if (imageError || !service.image) {
-      // Fallbacks por categoría
-      const fallbacks: Record<string, string> = {
-        tour: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80',
-        hotel: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80',
-        package: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80',
-        taxi: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400&q=80',
-      };
-      return fallbacks[service.category] || fallbacks.tour;
+    // Si hay imagen y NO hubo error, usarla
+    if (service.image && !imageError) {
+      return service.image;
     }
-    return service.image;
+    
+    // Fallbacks por categoría (solo si no hay imagen o hubo error)
+    const fallbacks: Record<string, string> = {
+      tour: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80',
+      hotel: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80',
+      package: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80',
+      taxi: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400&q=80',
+    };
+    return fallbacks[service.category] || fallbacks.tour;
   };
 
   return (
