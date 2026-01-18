@@ -15,6 +15,17 @@ interface DetailProps {
 
 const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigate }) => {
   const { addToCart } = useCart();
+  
+  // Debug para verificar qué data se recibe
+  useEffect(() => {
+    console.log('📋 Detail.tsx recibió:', {
+      type,
+      propDataPresent: !!propData,
+      propDataKeys: propData ? Object.keys(propData).slice(0, 10) : 'null',
+      propData: propData
+    });
+  }, [type, propData]);
+  
   const [quantity, setQuantity] = useState(1); 
   const [nights, setNights] = useState(1);
   const [checkIn, setCheckIn] = useState(''); // 🆕 Check-in date (ISO)
@@ -147,6 +158,27 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
     if (matches && matches.length > 0) return matches;
     return ['08:00 AM', '10:00 AM', '02:00 PM', '04:00 PM'];
   };
+
+  // 🆕 Mostrar un error si no hay datos
+  if (!data || !data.title) {
+    return (
+      <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <AlertTriangle size={32} className="text-gray-400" />
+          </div>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">Sin información disponible</h2>
+          <p className="text-sm text-gray-600 mb-6">Parece que los datos de este {type} no se cargaron correctamente. Por favor, vuelve e intenta de nuevo.</p>
+          <button 
+            onClick={onBack}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-bold text-sm"
+          >
+            ← Volver
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   const timeSlots = parseTimeSlots(data.schedule || data.horario || data.operatingHours || '');
 

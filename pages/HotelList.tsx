@@ -304,7 +304,15 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
             {filteredAccommodations.map(hotel => (
               <div
                 key={hotel.id}
-                onClick={() => onNavigate(AppRoute.HOTEL_DETAIL, hotel)}
+                onClick={() => {
+                  console.log('🏨 Navegando a HOTEL_DETAIL con:', {
+                    id: hotel.id,
+                    title: hotel.title,
+                    price: hotel.price,
+                    keys: Object.keys(hotel)
+                  });
+                  onNavigate(AppRoute.HOTEL_DETAIL, hotel);
+                }}
                 className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer flex flex-col"
               >
                 <div className="h-48 relative bg-gray-100">
