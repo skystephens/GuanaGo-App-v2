@@ -59,6 +59,62 @@ const transformAirtableService = (record: any): Tour => {
 };
 
 export const api = {
+  system: {
+    getStructure: async (): Promise<{ success: boolean; structure?: any; summary?: any }> => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/system/structure`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await safeJson(response);
+        return data || { success: false };
+      } catch (e) {
+        return { success: false };
+      }
+    }
+  },
+  reservations: {
+    syncToAirtable: async (payload: any): Promise<{ success: boolean; message?: string }> => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/reservations/sync-to-airtable`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await safeJson(response);
+        return data || { success: false };
+      } catch (e) {
+        return { success: false };
+      }
+    },
+    listAll: async (): Promise<any[]> => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/reservations/all`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await safeJson(response);
+        if (!data) return [];
+        const list = (data.data || data.reservas || data.reservations || []);
+        return Array.isArray(list) ? list : [];
+      } catch (e) {
+        return [];
+      }
+    },
+    getUserReservations: async (): Promise<any[]> => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/reservations/my-reservations`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await safeJson(response);
+        const list = (data?.data || data?.reservations || []);
+        return Array.isArray(list) ? list : [];
+      } catch (e) {
+        return [];
+      }
+    }
+  },
   availability: {
     createRequest: async (payload: {
       alojamientoId: string;

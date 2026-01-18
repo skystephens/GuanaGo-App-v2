@@ -1,14 +1,52 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList, Clock } from 'lucide-react';
-import { ADMIN_STATS, PARTNER_RESERVATIONS, POPULAR_TOURS } from '../../constants';
+import { ADMIN_STATS, POPULAR_TOURS } from '../../constants';
 import { AppRoute } from '../../types';
+import { api } from '../../services/api';
+import type { Reservation } from '../../types';
 
 interface DashboardProps {
    onNavigate: (route: AppRoute) => void;
 }
 
 const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
+   const [recentReservations, setRecentReservations] = useState<Reservation[]>([]);
+   const [loadingReservations, setLoadingReservations] = useState<boolean>(false);
+
+   const loadRecent = React.useCallback(async () => {
+      try {
+         setLoadingReservations(true);
+         const list = await (api.reservations as any).listAll?.();
+         const normalize = (raw: any): Reservation => ({
+            id: raw.id || raw.reservationId || `res-${Date.now()}`,
+            tourName: raw.tourName || raw.serviceName || raw.service?.name || 'Servicio',
+            clientName: raw.clientName || raw.customerName || raw.customer?.name || 'Cliente',
+            date: raw.date || raw.fecha || raw.createdAt || new Date().toISOString(),
+            status: (raw.status || raw.estado || 'pending').toLowerCase(),
+            people: raw.people || raw.pax || raw.quantity || 1,
+            price: raw.price || raw.valor || raw.total || undefined,
+            auditStatus: 'verified'
+         });
+         const normalized = Array.isArray(list) ? list.map(normalize) : [];
+         const sorted = normalized.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+         setRecentReservations(sorted.slice(0, 3));
+      } catch (e) {
+         setRecentReservations([]);
+      } finally {
+         setLoadingReservations(false);
+      }
+   }, []);
+
+   useEffect(() => {
+      loadRecent();
+   }, [loadRecent]);
+
+   useEffect(() => {
+      const id = setInterval(() => {
+         loadRecent();
+      }, 60000);
+      return () => clearInterval(id);
+   }, [loadRecent]);
   return (
     <div className="bg-gray-900 min-h-screen text-white pb-24 font-sans">
       {/* Header */}
@@ -43,27 +81,33 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                   <Calendar size={18} className="text-blue-500" />
                   <h3 className="font-bold text-sm">Reservas Recientes</h3>
                </div>
-               <button className="text-xs text-blue-400 hover:text-blue-300 font-bold">Ver Todas</button>
+               <button onClick={() => onNavigate(AppRoute.ADMIN_RESERVATIONS)} className="text-xs text-blue-400 hover:text-blue-300 font-bold">Ver Todas</button>
             </div>
             <div className="divide-y divide-gray-700">
-               {PARTNER_RESERVATIONS.slice(0, 3).map((res) => (
-                  <div key={res.id} className="p-4 flex justify-between items-center hover:bg-gray-750 transition-colors">
-                     <div>
-                        <p className="font-bold text-sm">{res.clientName}</p>
-                        <p className="text-xs text-gray-400">{res.tourName}</p>
-                     </div>
-                     <div className="text-right">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                           res.status === 'confirmed' ? 'bg-green-900/50 text-green-500' :
-                           res.status === 'pending' ? 'bg-yellow-900/50 text-yellow-500' :
-                           'bg-red-900/50 text-red-500'
-                        }`}>
-                           {res.status === 'confirmed' ? 'Confirmada' : res.status === 'pending' ? 'Pendiente' : 'Cancelada'}
-                        </span>
-                        <p className="text-[10px] text-gray-500 mt-1">{res.date}</p>
-                     </div>
-                  </div>
-               ))}
+                      {loadingReservations ? (
+                         <div className="p-4 text-xs text-gray-500">Cargando reservas...</div>
+                      ) : recentReservations.length === 0 ? (
+                         <div className="p-4 text-xs text-gray-500">Sin reservas recientes</div>
+                      ) : (
+                         recentReservations.map((res) => (
+                            <div key={res.id} className="p-4 flex justify-between items-center hover:bg-gray-750 transition-colors">
+                               <div>
+                                  <p className="font-bold text-sm">{res.clientName}</p>
+                                  <p className="text-xs text-gray-400">{res.tourName}</p>
+                               </div>
+                               <div className="text-right">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                     res.status === 'confirmed' ? 'bg-green-900/50 text-green-500' :
+                                     res.status === 'pending' ? 'bg-yellow-900/50 text-yellow-500' :
+                                     'bg-red-900/50 text-red-500'
+                                  }`}>
+                                     {res.status === 'confirmed' ? 'Confirmada' : res.status === 'pending' ? 'Pendiente' : 'Cancelada'}
+                                  </span>
+                                  <p className="text-[10px] text-gray-500 mt-1">{new Date(res.date).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' })}</p>
+                               </div>
+                            </div>
+                         ))
+                      )}
             </div>
          </div>
 
@@ -94,14 +138,28 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
          </div>
 
          {/* Quick Actions */}
-         <div className="grid grid-cols-4 gap-3 pt-2">
-             <button 
+             <div className="grid grid-cols-4 gap-3 pt-2">
+                   <button 
                onClick={() => onNavigate(AppRoute.ADMIN_USERS)}
                className="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:bg-gray-750 flex flex-col items-center gap-2 text-center"
              >
                <Users size={24} className="text-blue-500" />
                <span className="text-xs font-bold">Usuarios</span>
              </button>
+                   <button 
+                      onClick={() => onNavigate(AppRoute.ADMIN_STRUCTURE)}
+                      className="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:bg-gray-750 flex flex-col items-center gap-2 text-center"
+                   >
+                      <Server size={24} className="text-purple-400" />
+                      <span className="text-xs font-bold">Estructura</span>
+                   </button>
+                   <button 
+                      onClick={() => onNavigate(AppRoute.ADMIN_RESERVATIONS)}
+                      className="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:bg-gray-750 flex flex-col items-center gap-2 text-center"
+                   >
+                      <Calendar size={24} className="text-blue-400" />
+                      <span className="text-xs font-bold">Reservas</span>
+                   </button>
              <button 
                onClick={() => onNavigate(AppRoute.ADMIN_APPROVALS)}
                className="bg-gradient-to-br from-yellow-900 to-orange-900 p-4 rounded-xl border border-yellow-600 hover:border-yellow-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"

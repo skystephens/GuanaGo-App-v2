@@ -32,6 +32,7 @@ const AdminApprovals: React.FC<AdminApprovalsProps> = ({ onBack, onNavigate }) =
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [syncingId, setSyncingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadRequests();
@@ -93,6 +94,36 @@ const AdminApprovals: React.FC<AdminApprovalsProps> = ({ onBack, onNavigate }) =
       alert('Error al rechazar la solicitud: ' + (e as any).message);
     } finally {
       setProcessingId(null);
+    }
+  };
+
+  const handleSyncToAirtable = async (request: AvailabilityRequest) => {
+    try {
+      setSyncingId(request.id);
+      const payload = {
+        requestId: request.id,
+        servicioId: request.servicioId,
+        servicioNombre: request.servicioNombre,
+        tipoServicio: request.tipoServicio,
+        date: request.checkIn || request.createdAt,
+        checkOut: request.checkOut,
+        people: request.adultos,
+        clientName: request.contactName,
+        clientEmail: request.contactEmail,
+        clientWhatsapp: request.contactWhatsapp,
+        status: request.estado
+      };
+      const res = await (api.reservations as any).syncToAirtable?.(payload);
+      if (res?.success) {
+        setSuccessMessage('📤 Registrada en Airtable');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        alert('No se pudo registrar en Airtable');
+      }
+    } catch (e) {
+      alert('Error al registrar en Airtable');
+    } finally {
+      setSyncingId(null);
     }
   };
 
@@ -351,7 +382,16 @@ const AdminApprovals: React.FC<AdminApprovalsProps> = ({ onBack, onNavigate }) =
 
                 {request.estado !== 'pending' && (
                   <div className="p-4 border-t border-gray-800 text-xs text-gray-500 text-center font-medium">
-                    Procesada el {new Date(request.updatedAt || request.createdAt).toLocaleDateString('es-CO')}
+                    <div className="flex items-center justify-between">
+                      <span>Procesada el {new Date(request.updatedAt || request.createdAt).toLocaleDateString('es-CO')}</span>
+                      <button
+                        onClick={() => handleSyncToAirtable(request)}
+                        disabled={syncingId === request.id}
+                        className="px-3 py-1 text-xs bg-gray-800 border border-gray-700 rounded hover:bg-gray-750 disabled:opacity-50"
+                      >
+                        {syncingId === request.id ? 'Sincronizando...' : 'Registrar en Airtable'}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

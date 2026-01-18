@@ -11,19 +11,19 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
     {
       icon: <Package size={20} />,
       title: 'Piezas Artesanales',
-      description: 'Desde centros de mesa hasta figuras únicas',
-      price: 'Desde $125,000'
+      description: 'Desde centros Sombreros, canastos hasta figuras únicas',
+      price: 'Desde $50,000'
     },
     {
       icon: <Palette size={20} />,
       title: 'Kriol Vibe',
       description: 'Alquiler de ambientación decorativa',
-      price: 'Consultar'
+      price: '$100.000'
     },
     {
       icon: <Heart size={20} />,
       title: 'Coco Art Live',
-      description: 'Experiencia inmersiva y participativa',
+      description: 'Experiencia inmersiva y participativa que incluye relato historico',
       price: 'Desde $195,000'
     }
   ];
@@ -59,7 +59,7 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
               Transformar historias en experiencias
             </h3>
             <p className="text-amber-100/80 text-sm leading-relaxed mb-6">
-              El maestro Sky Stephens («Breda Sky») rescata la herencia de San Andrés transformando la palma de coco en arte auténtico. Desde venta de piezas artesanales hasta experiencias interactivas, cada creación es un homenaje a nuestras raíces Kriol.
+              El maestro («Breda Sky») rescata la herencia de San Andrés transformando la palma de coco en arte auténtico. Desde venta de piezas artesanales hasta experiencias interactivas, cada creación es un homenaje a nuestras raíces Kriol.
             </p>
             
             <div className="space-y-2 mb-6">

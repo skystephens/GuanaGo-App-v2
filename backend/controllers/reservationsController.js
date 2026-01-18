@@ -178,3 +178,25 @@ export const cancelReservation = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Sincronizar/Registrar una solicitud de reserva en Airtable
+ */
+export const syncToAirtable = async (req, res, next) => {
+  try {
+    const payload = req.body;
+    const result = await makeRequest(
+      config.makeWebhooks.reservations,
+      {
+        action: 'syncToAirtable',
+        reservation: payload,
+        requestedBy: req.user?.id
+      },
+      'SYNC_RESERVATION_TO_AIRTABLE'
+    );
+
+    res.json({ success: true, data: result?.reservation || payload, message: 'Reserva registrada en Airtable' });
+  } catch (error) {
+    next(error);
+  }
+};

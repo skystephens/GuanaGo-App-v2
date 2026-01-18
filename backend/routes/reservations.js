@@ -31,4 +31,10 @@ router.post('/validate',
   reservationsController.validateReservation
 );
 
+// Registrar solicitud/reserva en Airtable (solo admin)
+router.post('/sync-to-airtable', 
+  authorizeRole('admin'),
+  reservationsController.syncToAirtable
+);
+
 export default router;
