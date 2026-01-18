@@ -58,6 +58,9 @@ import AdminStructureMap from './pages/admin/AdminStructureMap';
 // Artista Portal
 import ArtistaPortal from './pages/ArtistaPortal';
 
+// Unified Panel
+import UnifiedPanel from './components/UnifiedPanel';
+
 import Navigation from './components/Navigation';
 import GuanaChatbot from './components/GuanaChatbot';
 import DirectoryMapbox from './components/DirectoryMapbox';
@@ -130,6 +133,7 @@ const App: React.FC = () => {
   const renderScreen = () => {
     switch (currentRoute) {
       case AppRoute.HOME: return <Home onNavigate={navigateTo} />;
+      case AppRoute.UNIFIED_PANEL: return <UnifiedPanel userRole={userRole} onNavigate={navigateTo} onBack={goBack} isAuthenticated={isAuthenticated} onLogout={handleLogout} />;
       case AppRoute.DYNAMIC_ITINERARY: return <Planner onNavigate={navigateTo} initialCategory={detailData?.category} />;
       case AppRoute.MY_ITINERARY: return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.PROFILE: return (
