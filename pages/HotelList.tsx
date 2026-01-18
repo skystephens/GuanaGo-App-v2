@@ -64,12 +64,32 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
       });
       
       // Filtrar solo alojamientos
-      const hotels = result.data.filter(service => {
+      let hotels = result.data.filter(service => {
         const isHotel = service.category === 'hotel' || (service.tipo && service.tipo.toLowerCase().includes('alojamiento'));
         return isHotel;
       });
       
+      // 🔧 Asegurar que cada hotel tiene las propiedades requeridas por Detail.tsx
+      hotels = hotels.map(hotel => ({
+        ...hotel,
+        // Asegurar que siempre hay una imagen principal
+        image: hotel.image || hotel.images?.[0] || hotel.gallery?.[0] || 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800',
+        // Asegurar que siempre hay un título
+        title: hotel.title || hotel.nombre || hotel.name || 'Alojamiento',
+        // Asegurar que siempre hay una descripción
+        description: hotel.description || hotel.descripcion || 'Alojamiento en San Andrés',
+        // Asegurar que siempre hay un price
+        price: hotel.price || 0,
+        // Asegurar que hay rating
+        rating: hotel.rating || 4.5,
+        // Asegurar que hay reviews
+        reviews: hotel.reviews || 10,
+        // Asegurar que hay categoría
+        category: 'hotel'
+      }));
+      
       console.log('🏨 Alojamientos encontrados:', hotels.length);
+      console.log('🏨 Primer alojamiento:', hotels[0]);
       setAccommodations(hotels);
       setFilteredAccommodations(hotels);
     } catch (error) {

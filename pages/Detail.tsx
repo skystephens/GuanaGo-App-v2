@@ -44,7 +44,19 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
   const [isDateBlocked, setIsDateBlocked] = useState(false);
 
   const data = propData || HOTEL_DATA;
-  const gallery = data.gallery || [data.image];
+  const gallery = data.gallery || data.images || (data.image ? [data.image] : []);
+  
+  // 🔧 Asegurar que data tiene los campos mínimos requeridos
+  const safeData = {
+    ...data,
+    id: data.id || crypto.randomUUID?.() || `hotel-${Date.now()}`,
+    title: data.title || data.nombre || 'Alojamiento',
+    image: data.image || (gallery && gallery[0]) || 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800',
+    description: data.description || data.descripcion || 'Descripción no disponible',
+    price: data.price || 0,
+    rating: data.rating || 4.5,
+    reviews: data.reviews || 0,
+  };
 
   useEffect(() => {
      const tomorrow = new Date();
@@ -62,13 +74,13 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
      }
      
      validateInventory(dateStr);
-  }, [data.id, checkIn, checkOut, isHotel]);
+  }, [safeData.id, checkIn, checkOut, isHotel]);
 
   const validateInventory = async (date: string) => {
-    if (!date || !data.id) return;
+    if (!date || !safeData.id) return;
     setCheckingAvailability(true);
     try {
-      const res = await api.inventory.checkAvailability(data.id, date);
+      const res = await api.inventory.checkAvailability(safeData.id, date);
       setAvailableSlots(res.available);
       setIsDateBlocked(res.isBlocked);
     } catch (e) {
@@ -85,7 +97,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
   };
   
   const isHotel = type === 'hotel';
-  const hotel = data as Hotel;
+  const hotel = safeData as Hotel;
   const maxAllowed = availableSlots !== null ? availableSlots : (isHotel && hotel.maxGuests ? hotel.maxGuests : 10);
   
   const isExceeding = quantity > maxAllowed && !isDateBlocked && availableSlots !== 0;
@@ -105,13 +117,13 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
 
   if (isHotel && hotel.pricePerNight) {
      // pricePerNight[quantity] ya es el precio POR NOCHE para esa cantidad de personas
-     const pricePerNightForPax = hotel.pricePerNight[quantity] || hotel.pricePerNight[Object.keys(hotel.pricePerNight).length] || data.price;
+     const pricePerNightForPax = hotel.pricePerNight[quantity] || hotel.pricePerNight[Object.keys(hotel.pricePerNight).length] || safeData.price;
      unitPriceDisplay = pricePerNightForPax;
      // Solo multiplicar por noches (pricePerNightForPax ya incluye la cantidad de personas)
      totalPrice = pricePerNightForPax * nights;
   } else {
-     unitPriceDisplay = data.price;
-     totalPrice = data.price * quantity;
+     unitPriceDisplay = safeData.price;
+     totalPrice = safeData.price * quantity;
   }
 
   const handleAddToCart = () => {
@@ -125,7 +137,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
       }
       const priceOverride = totalPrice;
       const itemToAdd = {
-        ...data,
+        ...safeData,
         checkIn,
         checkOut,
         requiresApproval: true // 🆕 Los hoteles siempre requieren aprobación
@@ -135,7 +147,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
     } else {
       // Tours/traslados: flujo normal
       const priceOverride = undefined;
-      addToCart(data, quantity, selectedDate, selectedTime, undefined, priceOverride, babies);
+      addToCart(safeData, quantity, selectedDate, selectedTime, undefined, priceOverride, babies);
     }
     
     setAdded(true);
@@ -160,7 +172,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
   };
 
   // 🆕 Mostrar un error si no hay datos
-  if (!data || !data.title) {
+  if (!safeData || !safeData.title) {
     return (
       <div className="bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md">
@@ -180,7 +192,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
     );
   }
   
-  const timeSlots = parseTimeSlots(data.schedule || data.horario || data.operatingHours || '');
+  const timeSlots = parseTimeSlots(safeData.schedule || safeData.horario || safeData.operatingHours || '');
 
   return (
     <div className="bg-gray-50 min-h-screen relative pb-64 font-sans overflow-x-hidden">
@@ -188,8 +200,8 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
       <div className="relative px-4 pt-4">
         <div className="relative h-[400px] w-full rounded-[40px] overflow-hidden shadow-2xl">
           <img 
-            src={gallery[0]} 
-            alt={data.title} 
+            src={safeData.image} 
+            alt={safeData.title} 
             className="w-full h-full object-cover transition-transform duration-700 hover:scale-110 cursor-pointer"
             onClick={() => openLightbox(0)}
           />
@@ -217,24 +229,24 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
         {/* Title & Stats Section */}
         <div className="mb-8">
            <div className="flex items-center gap-2 mb-3">
-              <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${data.isRaizal ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                 {data.isRaizal ? 'Experiencia Raizal' : 'Turismo Premium'}
+              <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${safeData.isRaizal ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                 {safeData.isRaizal ? 'Experiencia Raizal' : 'Turismo Premium'}
               </span>
               <div className="flex items-center gap-1.5 bg-yellow-50 px-3 py-1 rounded-full border border-yellow-100">
                 <Star size={12} className="text-yellow-500 fill-current" />
-                <span className="font-black text-[11px] text-yellow-700">{data.rating}</span>
-                <span className="text-[10px] text-yellow-600/60 font-medium">({data.reviews})</span>
+                <span className="font-black text-[11px] text-yellow-700">{safeData.rating}</span>
+                <span className="text-[10px] text-yellow-600/60 font-medium">({safeData.reviews})</span>
               </div>
            </div>
            
-           <h1 className="text-3xl font-extrabold text-gray-900 leading-tight mb-4">{data.title}</h1>
+           <h1 className="text-3xl font-extrabold text-gray-900 leading-tight mb-4">{safeData.title}</h1>
            
            <div className="flex items-start gap-2.5 text-gray-500 mb-6">
               <div className="mt-0.5 bg-emerald-50 p-1.5 rounded-lg text-emerald-600">
                 <MapPin size={16} />
               </div>
               <div>
-                <p className="text-xs font-bold leading-tight">{data.isla || data.ubicacion || 'San Andrés Isla, Colombia'}</p>
+                <p className="text-xs font-bold leading-tight">{safeData.isla || safeData.ubicacion || 'San Andrés Isla, Colombia'}</p>
                 <p className="text-[10px] text-gray-400 mt-1">La ubicación exacta se mostrará tras confirmar tu reserva</p>
               </div>
            </div>
