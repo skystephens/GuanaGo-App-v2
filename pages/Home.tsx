@@ -195,7 +195,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                      else onNavigate(AppRoute.TOUR_DETAIL, item);
                   }}
                 >
-                  <div className="h-32 md:h-40 lg:h-44 w-full relative overflow-hidden">
+                  <div className="w-full aspect-square relative overflow-hidden">
                      <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                      <div className={`absolute top-2 right-2 ${getCategoryColor(item.category)} text-white px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm`}>
                         {getCategoryIcon(item.category)}
