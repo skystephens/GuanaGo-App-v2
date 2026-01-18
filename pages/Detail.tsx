@@ -16,11 +16,14 @@ interface DetailProps {
 const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigate }) => {
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1); 
-  const [nights, setNights] = useState(1); 
+  const [nights, setNights] = useState(1);
+  const [checkIn, setCheckIn] = useState(''); // 🆕 Check-in date (ISO)
+  const [checkOut, setCheckOut] = useState(''); // 🆕 Check-out date (ISO)
   const [babies, setBabies] = useState(0);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('08:00 AM');
   const [added, setAdded] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false); // 🆕 Modal para hoteles
   
   const [showLightbox, setShowLightbox] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -37,8 +40,18 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
      tomorrow.setDate(tomorrow.getDate() + 1);
      const dateStr = tomorrow.toISOString().split('T')[0];
      setSelectedDate(dateStr);
+     
+     // 🆕 Para hoteles, calcular noches cuando cambian fechas
+     if (isHotel && checkIn && checkOut) {
+       const checkInDate = new Date(checkIn);
+       const checkOutDate = new Date(checkOut);
+       const diffTime = checkOutDate.getTime() - checkInDate.getTime();
+       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+       setNights(Math.max(1, diffDays));
+     }
+     
      validateInventory(dateStr);
-  }, [data.id]);
+  }, [data.id, checkIn, checkOut, isHotel]);
 
   const validateInventory = async (date: string) => {
     if (!date || !data.id) return;
@@ -92,8 +105,28 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
 
   const handleAddToCart = () => {
     if (isExceeding || isUnavailable) return;
-    const priceOverride = isHotel ? totalPrice : undefined;
-    addToCart(data, quantity, selectedDate, selectedTime, isHotel ? nights : undefined, priceOverride, babies);
+    
+    // 🆕 Para hoteles: agregar con checkIn, checkOut, y requiresApproval
+    if (isHotel) {
+      if (!checkIn || !checkOut) {
+        alert('Por favor selecciona fechas de entrada y salida');
+        return;
+      }
+      const priceOverride = totalPrice;
+      const itemToAdd = {
+        ...data,
+        checkIn,
+        checkOut,
+        requiresApproval: true // 🆕 Los hoteles siempre requieren aprobación
+      };
+      // Agregar al carrito con fechas
+      addToCart(itemToAdd, quantity, checkIn, selectedTime, nights, priceOverride, babies);
+    } else {
+      // Tours/traslados: flujo normal
+      const priceOverride = undefined;
+      addToCart(data, quantity, selectedDate, selectedTime, undefined, priceOverride, babies);
+    }
+    
     setAdded(true);
     setTimeout(() => setAdded(false), 2000); 
   };
@@ -226,37 +259,82 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
               </div>
               
               <div className="space-y-6">
-                 <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block px-1">Fecha de salida</label>
-                    <input 
-                       type="date" 
-                       value={selectedDate}
-                       onChange={handleDateChange}
-                       className={`w-full bg-gray-50 border-2 rounded-2xl px-5 py-4 text-sm font-bold outline-none transition-all ${isUnavailable ? 'border-red-100 bg-red-50 text-red-600' : 'border-transparent focus:border-emerald-500 focus:bg-white shadow-inner text-gray-900'}`}
-                       style={{ colorScheme: 'light' }}
-                    />
-                    
-                    {!checkingAvailability && (
-                      <div className="mt-3 px-1">
-                        {isUnavailable ? (
-                          <div className="flex items-center gap-2 text-red-500 bg-red-50 p-2 rounded-xl border border-red-100">
-                             <XCircle size={14} />
-                             <p className="text-[10px] font-bold leading-tight">Sin disponibilidad para este día.</p>
+                 {/* Para hoteles: mostrar check-in y check-out */}
+                 {isHotel ? (
+                    <>
+                       <div>
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block px-1">Fecha de entrada (Check-in 3:00 PM)</label>
+                          <input 
+                             type="date" 
+                             value={checkIn}
+                             onChange={(e) => setCheckIn(e.target.value)}
+                             className="w-full bg-gray-50 border-2 border-transparent rounded-2xl px-5 py-4 text-sm font-bold outline-none transition-all focus:border-emerald-500 focus:bg-white shadow-inner text-gray-900"
+                             style={{ colorScheme: 'light' }}
+                          />
+                       </div>
+
+                       <div>
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block px-1">Fecha de salida (Check-out 1:00 PM)</label>
+                          <input 
+                             type="date" 
+                             value={checkOut}
+                             onChange={(e) => setCheckOut(e.target.value)}
+                             min={checkIn}
+                             className="w-full bg-gray-50 border-2 border-transparent rounded-2xl px-5 py-4 text-sm font-bold outline-none transition-all focus:border-emerald-500 focus:bg-white shadow-inner text-gray-900"
+                             style={{ colorScheme: 'light' }}
+                          />
+                       </div>
+
+                       {/* Mensaje de disponibilidad para hoteles */}
+                       {checkIn && checkOut && (
+                          <div className="mt-3 px-1">
+                             {hotel.requiresApproval ? (
+                                <div className="flex items-center gap-2 text-yellow-600 bg-yellow-50 p-3 rounded-xl border border-yellow-200">
+                                   <AlertTriangle size={14} />
+                                   <p className="text-[10px] font-bold leading-tight">Sujeto a aprobación del propietario. Consultaremos disponibilidad.</p>
+                                </div>
+                             ) : (
+                                <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                                   <CheckCircle size={14} />
+                                   <p className="text-[10px] font-bold leading-tight">Confirmado: Hay disponibilidad.</p>
+                                </div>
+                             )}
                           </div>
-                        ) : availableSlots !== null && availableSlots <= 5 ? (
-                          <div className="flex items-center gap-2 text-orange-600 bg-orange-50 p-2 rounded-xl border border-orange-100">
-                             <AlertTriangle size={14} />
-                             <p className="text-[10px] font-bold leading-tight">¡Quedan pocos cupos ({availableSlots})!</p>
-                          </div>
-                        ) : availableSlots !== null && (
-                           <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 p-2 rounded-xl border border-emerald-100">
-                              <CheckCircle size={14} />
-                              <p className="text-[10px] font-bold leading-tight">Confirmado: Hay disponibilidad.</p>
-                           </div>
-                        )}
-                      </div>
-                    )}
-                 </div>
+                       )}
+                    </>
+                 ) : (
+                    <div>
+                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block px-1">Fecha</label>
+                       <input 
+                          type="date" 
+                          value={selectedDate}
+                          onChange={handleDateChange}
+                          className={`w-full bg-gray-50 border-2 rounded-2xl px-5 py-4 text-sm font-bold outline-none transition-all ${isUnavailable ? 'border-red-100 bg-red-50 text-red-600' : 'border-transparent focus:border-emerald-500 focus:bg-white shadow-inner text-gray-900'}`}
+                          style={{ colorScheme: 'light' }}
+                       />
+                       
+                       {!checkingAvailability && (
+                         <div className="mt-3 px-1">
+                           {isUnavailable ? (
+                             <div className="flex items-center gap-2 text-red-500 bg-red-50 p-2 rounded-xl border border-red-100">
+                                <XCircle size={14} />
+                                <p className="text-[10px] font-bold leading-tight">Sin disponibilidad para este día.</p>
+                             </div>
+                           ) : availableSlots !== null && availableSlots <= 5 ? (
+                             <div className="flex items-center gap-2 text-orange-600 bg-orange-50 p-2 rounded-xl border border-orange-100">
+                                <AlertTriangle size={14} />
+                                <p className="text-[10px] font-bold leading-tight">¡Quedan pocos cupos ({availableSlots})!</p>
+                             </div>
+                           ) : availableSlots !== null && (
+                              <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 p-2 rounded-xl border border-emerald-100">
+                                 <CheckCircle size={14} />
+                                 <p className="text-[10px] font-bold leading-tight">Confirmado: Hay disponibilidad.</p>
+                              </div>
+                           )}
+                         </div>
+                       )}
+                    </div>
+                 )}
 
                  {!isHotel && (
                     <div>
@@ -419,11 +497,109 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
              )}
         </div>
 
+        {/* 🆕 Modal de Fechas para Hoteles */}
+        {isHotel && showDateModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-end animate-in fade-in duration-200">
+            <div className="w-full bg-white rounded-t-[40px] p-8 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-2xl font-black text-gray-900">Selecciona tus fechas</h3>
+                <button onClick={() => setShowDateModal(false)} className="p-2 hover:bg-gray-100 rounded-full"><X size={24} /></button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Check-in */}
+                <div>
+                  <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-2 block">📅 Entrada (Check-in 3:00 PM)</label>
+                  <input
+                    type="date"
+                    value={checkIn}
+                    onChange={(e) => setCheckIn(e.target.value)}
+                    className="w-full bg-gray-50 border-2 border-transparent focus:border-emerald-500 rounded-2xl px-5 py-4 font-bold outline-none"
+                    style={{ colorScheme: 'light' }}
+                  />
+                </div>
+
+                {/* Check-out */}
+                <div>
+                  <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-2 block">📅 Salida (Check-out 1:00 PM)</label>
+                  <input
+                    type="date"
+                    value={checkOut}
+                    onChange={(e) => setCheckOut(e.target.value)}
+                    min={checkIn}
+                    className="w-full bg-gray-50 border-2 border-transparent focus:border-emerald-500 rounded-2xl px-5 py-4 font-bold outline-none"
+                    style={{ colorScheme: 'light' }}
+                  />
+                </div>
+
+                {/* Cálculo de noches */}
+                {checkIn && checkOut && (
+                  <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4">
+                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-wider mb-1">Duración de la estancia</p>
+                    <p className="text-2xl font-black text-emerald-700">{nights} Noche{nights > 1 ? 's' : ''}</p>
+                  </div>
+                )}
+
+                {/* Número de huéspedes */}
+                <div>
+                  <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-4 block">👥 Huéspedes</label>
+                  <div className="space-y-3">
+                    {/* Adultos */}
+                    <div className="flex items-center justify-between bg-gray-50 rounded-2xl p-4">
+                      <span className="text-sm font-bold text-gray-700">Adultos</span>
+                      <div className="flex items-center gap-4">
+                        <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-2 bg-white rounded-lg hover:bg-gray-100"><Minus size={16} /></button>
+                        <span className="font-black text-lg w-6 text-center">{quantity}</span>
+                        <button onClick={() => setQuantity(Math.min(hotel.maxGuests || 10, quantity + 1))} className="p-2 bg-white rounded-lg hover:bg-gray-100"><Plus size={16} /></button>
+                      </div>
+                    </div>
+
+                    {/* Bebés */}
+                    {hotel.allowBabies && (
+                      <div className="flex items-center justify-between bg-gray-50 rounded-2xl p-4">
+                        <span className="text-sm font-bold text-gray-700">Bebés</span>
+                        <div className="flex items-center gap-4">
+                          <button onClick={() => setBabies(Math.max(0, babies - 1))} className="p-2 bg-white rounded-lg hover:bg-gray-100"><Minus size={16} /></button>
+                          <span className="font-black text-lg w-6 text-center">{babies}</span>
+                          <button onClick={() => setBabies(Math.min(5, babies + 1))} className="p-2 bg-white rounded-lg hover:bg-gray-100"><Plus size={16} /></button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Botones de acción */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setShowDateModal(false)}
+                    className="flex-1 bg-gray-100 text-gray-700 font-black py-4 rounded-2xl hover:bg-gray-200 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!checkIn || !checkOut) {
+                        alert('Selecciona ambas fechas');
+                        return;
+                      }
+                      setShowDateModal(false);
+                    }}
+                    className="flex-1 bg-emerald-600 text-white font-black py-4 rounded-2xl hover:bg-emerald-700 transition-all"
+                  >
+                    Confirmar Fechas
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Botón de Reservar - Modificado para hoteles */}
         <button 
-          onClick={handleAddToCart}
-          disabled={added || isExceeding || isUnavailable || checkingAvailability}
+          onClick={isHotel ? () => setShowDateModal(true) : handleAddToCart}
+          disabled={added || (isHotel ? false : (isExceeding || isUnavailable || checkingAvailability))}
           className={`w-full font-black py-5 rounded-3xl shadow-2xl transition-all flex items-center justify-center gap-3 text-xs uppercase tracking-[2px]
-             ${isUnavailable || isExceeding || checkingAvailability
+             ${!isHotel && (isUnavailable || isExceeding || checkingAvailability)
                ? 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-100' 
                : added 
                  ? 'bg-gray-900 text-white' 
@@ -431,16 +607,16 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
              }
           `}
         >
-          {checkingAvailability ? (
+          {checkingAvailability && !isHotel ? (
              <><Loader2 size={18} className="animate-spin" /> <span>Validando...</span></>
           ) : added ? (
              <><CheckCircle size={18} /><span>Añadido al Carrito</span></>
-          ) : isUnavailable ? (
+          ) : !isHotel && isUnavailable ? (
              <span>Agotado para hoy</span>
-          ) : isExceeding ? (
+          ) : !isHotel && isExceeding ? (
              <span>Cupos Insuficientes</span>
           ) : (
-             <><ShoppingCart size={18} /><span>Reservar • ${totalPrice.toLocaleString()}</span></>
+             <><ShoppingCart size={18} /><span>{isHotel ? 'Seleccionar Fechas' : `Reservar • $${totalPrice.toLocaleString()}`}</span></>
           )}
         </button>
       </div>
