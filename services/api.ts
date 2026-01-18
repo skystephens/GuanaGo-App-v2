@@ -7,8 +7,10 @@ const MAKE_WEBHOOK_DIRECTORY = 'https://hook.us1.make.com/gleyxf83giw4xqr7i6i94m
 const MAKE_WEBHOOK_SERVICES = 'https://hook.us1.make.com/klnf8ruz7znu31mlig5y7osajbney2p3';
 const MAKE_WEBHOOK_USERS = 'https://hook.us1.make.com/8lz93j5qs3m5qu4cakeukxeq6hhgx6hc';
 
-// Backend URL
-const BACKEND_URL = 'https://guanago-backend.onrender.com';
+// Backend URL - usar relativo en producción, localhost en dev
+const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+  ? 'http://localhost:3002' 
+  : '';
 
 const safeJson = async (response: Response) => {
   try {
@@ -306,12 +308,14 @@ export const api = {
     },
 
     getDirectoryMap: async (): Promise<any[]> => {
-      // Primero intentar con el backend de Render
-      const BACKEND_URL = 'https://guanago-backend.onrender.com';
+      // Usar backend relativo (mismo servidor en producción, localhost en dev)
+      const backendUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+        ? 'http://localhost:3002' 
+        : '';
       
       try {
-        console.log('📍 Fetching directory from Render backend...');
-        const response = await fetch(`${BACKEND_URL}/api/directory`, {
+        console.log('📍 Fetching directory from backend...');
+        const response = await fetch(`${backendUrl}/api/directory`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
