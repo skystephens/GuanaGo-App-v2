@@ -13,6 +13,7 @@ import directoryRoutes from './backend/routes/directory.js';
 import chatbotRoutes from './backend/routes/chatbot.js';
 import taxisRoutes from './backend/routes/taxis.js';
 import tasksRoutes from './backend/routes/tasks.js';
+import availabilityRoutes from './backend/routes/availability.js';
 
 // Import middleware
 import { requestLogger } from './backend/middleware/logger.js';
@@ -99,6 +100,9 @@ app.use('/api/services', servicesRoutes);
 
 // Reservations routes
 app.use('/api/reservations', reservationsRoutes);
+
+// Availability Requests routes
+app.use('/api/availability-requests', availabilityRoutes);
 
 // Directory routes
 app.use('/api/directory', directoryRoutes);

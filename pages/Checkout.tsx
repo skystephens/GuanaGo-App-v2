@@ -15,7 +15,9 @@ interface CheckoutProps {
 
 const Checkout: React.FC<CheckoutProps> = ({ onBack, onNavigate, isAuthenticated }) => {
   const { items, totalPrice, clearCart, removeFromCart } = useCart();
-  const [step, setStep] = useState<'cart' | 'info' | 'payment' | 'processing' | 'success'>('cart');
+   const [step, setStep] = useState<'cart' | 'info' | 'payment' | 'processing' | 'success'>('cart');
+   const hasHotel = items.some(i => i.category === 'hotel');
+   const [availabilityStatus, setAvailabilityStatus] = useState<'not-requested' | 'pending' | 'approved'>('not-requested');
   const [paymentMethod, setPaymentMethod] = useState<'binance' | 'hedera' | 'payu'>('payu');
   const [auditInfo, setAuditInfo] = useState<{status: 'pending' | 'verified', txId?: string}>({status: 'pending'});
 
@@ -40,9 +42,37 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onNavigate, isAuthenticated
     setUserData({ ...userData, [e.target.name]: e.target.value });
   };
 
-  const handlePayment = async () => {
+   const handleRequestAvailability = async () => {
+      try {
+         setAvailabilityStatus('pending');
+         // Crear solicitudes para cada item de alojamiento
+         for (const item of items.filter(i => i.category === 'hotel')) {
+            await api.availability.createRequest({
+               alojamientoId: item.id,
+               checkIn: item.checkIn || item.date || '',
+               checkOut: item.checkOut || '',
+               adultos: item.pax || item.quantity || 1,
+               contactName: userData.fullName,
+               contactEmail: userData.email,
+               contactWhatsapp: userData.whatsapp
+            });
+         }
+         alert('Solicitud enviada. Te notificaremos cuando el socio apruebe.');
+      } catch (e) {
+         alert('No se pudo enviar la solicitud. Intenta nuevamente.');
+         setAvailabilityStatus('not-requested');
+      }
+   };
+
+   const handlePayment = async () => {
     setStep('processing');
     try {
+            if (hasHotel && availabilityStatus !== 'approved') {
+               // Bloquear pago hasta aprobación
+               setStep('payment');
+               alert('Debes contar con confirmación de disponibilidad antes de pagar.');
+               return;
+            }
         // 1. Notarización Blockchain
         const audit = await api.blockchain.verifyOnLedger(`TX-${paymentMethod.toUpperCase()}-${Date.now()}`);
         
@@ -144,8 +174,25 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onNavigate, isAuthenticated
                 </div>
                 <button disabled={!isFormValid()} onClick={() => setStep('payment')} className={`w-full py-4 rounded-2xl font-bold mt-4 transition-all flex items-center justify-center gap-2 ${isFormValid() ? 'bg-emerald-600 hover:bg-emerald-700 shadow-lg' : 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-50'}`}>{isFormValid() ? 'Elegir Método de Pago' : 'Completa todos los campos'}</button>
              </div>
-          ) : step === 'payment' ? (
+               ) : step === 'payment' ? (
              <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+                        {hasHotel && (
+                           <div className="bg-yellow-500/10 border border-yellow-600/30 p-4 rounded-2xl">
+                              <div className="flex items-start gap-3">
+                                 <ShieldAlert size={18} className="text-yellow-600 shrink-0" />
+                                 <div>
+                                    <p className="text-xs font-bold text-yellow-700">Verificación de Disponibilidad</p>
+                                    <p className="text-[11px] text-yellow-800">Para alojamientos, debes solicitar y recibir confirmación de disponibilidad antes de pagar.</p>
+                                    <div className="mt-3 flex items-center gap-2">
+                                       <span className="text-[10px] px-2 py-1 rounded-lg bg-yellow-600/20 text-yellow-800 font-bold uppercase tracking-widest">Estado: {availabilityStatus === 'not-requested' ? 'Sin Solicitud' : availabilityStatus === 'pending' ? 'Pendiente' : 'Aprobado'}</span>
+                                       {availabilityStatus !== 'approved' && (
+                                          <button onClick={handleRequestAvailability} className="text-xs bg-yellow-600 text-white px-3 py-1.5 rounded-xl font-bold">Solicitar Disponibilidad</button>
+                                       )}
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                        )}
                 <div className="flex items-center gap-4 bg-gray-900 p-4 rounded-2xl border border-gray-800"><div className="bg-emerald-500/10 p-2 rounded-lg"><ShoppingBag size={20} className="text-emerald-500" /></div><div><p className="text-[10px] text-gray-500 font-bold uppercase">Total a Pagar</p><p className="font-bold text-emerald-400">{prices.cop} ({prices.usdt})</p></div></div>
                 <div className="space-y-4">
                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Selecciona Método de Pago</h3>
@@ -153,7 +200,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onNavigate, isAuthenticated
                    <button onClick={() => setPaymentMethod('binance')} className={`w-full p-5 rounded-2xl border flex items-center justify-between transition-all ${paymentMethod === 'binance' ? 'bg-yellow-500/10 border-yellow-500' : 'bg-gray-900 border-gray-800'}`}><div className="flex items-center gap-4"><div className="bg-yellow-500 p-2.5 rounded-xl text-black shadow-lg"><Coins size={24} /></div><div className="text-left"><p className="font-bold text-sm">Binance Pay</p><p className="text-[10px] text-gray-500">Paga con Cripto (Bajo Fee)</p></div></div>{paymentMethod === 'binance' && <CheckCircle size={20} className="text-yellow-500" />}</button>
                    <button onClick={() => setPaymentMethod('hedera')} className={`w-full p-5 rounded-2xl border flex items-center justify-between transition-all ${paymentMethod === 'hedera' ? 'bg-blue-500/10 border-blue-500' : 'bg-gray-900 border-gray-800'}`}><div className="flex items-center gap-4"><div className="bg-blue-500 p-2.5 rounded-xl text-white shadow-lg"><ShieldCheck size={24} /></div><div className="text-left"><p className="font-bold text-sm">Hedera Network</p><p className="text-[10px] text-gray-500">Inmutable HBAR/USDC</p></div></div>{paymentMethod === 'hedera' && <CheckCircle size={20} className="text-blue-500" />}</button>
                 </div>
-                <button onClick={handlePayment} className="w-full bg-emerald-600 hover:bg-emerald-700 py-5 rounded-2xl font-bold mt-4 flex items-center justify-center gap-2 shadow-xl">
+                <button onClick={handlePayment} disabled={hasHotel && availabilityStatus !== 'approved'} className={`w-full py-5 rounded-2xl font-bold mt-4 flex items-center justify-center gap-2 shadow-xl ${hasHotel && availabilityStatus !== 'approved' ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
                    <Lock size={18} /> Pagar {paymentMethod === 'payu' ? prices.cop : prices.usdt}
                 </button>
              </div>

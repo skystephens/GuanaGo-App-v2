@@ -59,6 +59,43 @@ const transformAirtableService = (record: any): Tour => {
 };
 
 export const api = {
+  availability: {
+    createRequest: async (payload: {
+      alojamientoId: string;
+      socioId?: string;
+      checkIn: string;
+      checkOut: string;
+      adultos?: number;
+      ninos?: number;
+      bebes?: number;
+      notas?: string;
+      contactName?: string;
+      contactEmail?: string;
+      contactWhatsapp?: string;
+    }) => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/availability-requests`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        return await safeJson(response);
+      } catch (e) {
+        return { success: false, error: 'Network error' };
+      }
+    },
+    listMyRequests: async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/availability-requests/user`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        return await safeJson(response);
+      } catch (e) {
+        return { success: false, error: 'Network error' };
+      }
+    }
+  },
   // --- USUARIOS Y PERFILES ---
   users: {
     getProfile: async (userId: string): Promise<Client | null> => {
