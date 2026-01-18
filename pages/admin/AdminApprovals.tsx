@@ -63,10 +63,29 @@ const AdminApprovals: React.FC<AdminApprovalsProps> = ({ onBack, onNavigate }) =
         updatedAt: new Date().toISOString()
       });
       
-      setRequests(prev => 
-        prev.map(r => r.id === requestId ? { ...r, estado: 'approved' } : r)
-      );
-      setSuccessMessage('✅ Solicitud aprobada exitosamente');
+      const request = requests.find(r => r.id === requestId);
+      if (request) {
+        setRequests(prev => 
+          prev.map(r => r.id === requestId ? { ...r, estado: 'approved' } : r)
+        );
+        
+        // Auto-sync a Airtable después de aprobar
+        const payload = {
+          requestId: request.id,
+          servicioId: request.servicioId,
+          servicioNombre: request.servicioNombre,
+          tipoServicio: request.tipoServicio,
+          date: request.checkIn || request.createdAt,
+          checkOut: request.checkOut,
+          people: request.adultos,
+          clientName: request.contactName,
+          clientEmail: request.contactEmail,
+          clientWhatsapp: request.contactWhatsapp,
+          status: 'approved'
+        };
+        await (api.reservations as any).syncToAirtable?.(payload);
+        setSuccessMessage('✅ Aprobada y registrada en Airtable automáticamente');
+      }
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (e) {
       alert('Error al aprobar la solicitud: ' + (e as any).message);
@@ -381,17 +400,16 @@ const AdminApprovals: React.FC<AdminApprovalsProps> = ({ onBack, onNavigate }) =
                 )}
 
                 {request.estado !== 'pending' && (
-                  <div className="p-4 border-t border-gray-800 text-xs text-gray-500 text-center font-medium">
-                    <div className="flex items-center justify-between">
-                      <span>Procesada el {new Date(request.updatedAt || request.createdAt).toLocaleDateString('es-CO')}</span>
-                      <button
-                        onClick={() => handleSyncToAirtable(request)}
-                        disabled={syncingId === request.id}
-                        className="px-3 py-1 text-xs bg-gray-800 border border-gray-700 rounded hover:bg-gray-750 disabled:opacity-50"
-                      >
-                        {syncingId === request.id ? 'Sincronizando...' : 'Registrar en Airtable'}
-                      </button>
-                    </div>
+                  <div className="p-4 border-t border-gray-800 text-xs text-gray-500 flex items-center justify-between">
+                    <span>Procesada el {new Date(request.updatedAt || request.createdAt).toLocaleDateString('es-CO')}</span>
+                    <button
+                      onClick={() => handleSyncToAirtable(request)}
+                      disabled={syncingId === request.id}
+                      className="px-3 py-1 text-xs bg-gray-800 border border-gray-700 rounded hover:bg-gray-750 disabled:opacity-50 font-medium"
+                      title="Reintenta sincronizar a Airtable"
+                    >
+                      {syncingId === request.id ? '⏳ Sync...' : '🔄 Reintentar'}
+                    </button>
                   </div>
                 )}
               </div>
