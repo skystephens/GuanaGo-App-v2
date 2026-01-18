@@ -117,7 +117,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             >
               <PackageIcon size={24} className="mb-2 md:mb-3" />
               <h4 className="font-bold text-sm md:text-base">Paquetes</h4>
-              <p className="text-xs md:text-sm opacity-80">Todo incluido</p>
+              <p className="text-xs md:text-sm opacity-80">Alojamiento + Tours + Traslados</p>
             </button>
             <button 
               onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'tour' })}
