@@ -1,6 +1,6 @@
 
 import { Tour, Hotel, TaxiZone, Transaction, RewardItem, Badge, Reservation, Client, Package, GuanaLocation } from './types';
-import { Wifi, Wind, Utensils, Droplets, Sun, Pill, DollarSign, ShoppingBag, Coffee } from 'lucide-react';
+import { Wifi, Wind, Utensils, Droplets, Sun, Pill, DollarSign, ShoppingBag, Coffee, Heart, Bed } from 'lucide-react';
 import React from 'react';
 import { api } from './services/api';
 
