@@ -1,8 +1,14 @@
 # 📊 GuanaGO - Estado del Proyecto Enero 2026
 
-> Documento actualizado: 16 de Enero 2026  
-> Versión: 2.0.0  
+> Documento actualizado: 17 de Enero 2026  
+> Versión: 2.1.0  
 > Status General: 🟢 Operativo con mejoras activas
+> 
+> **🆕 ÚLTIMA ACTUALIZACIÓN**: Implementación de flujo de aprobación condicional
+> - ✅ Hoteles siempre requieren aprobación
+> - ✅ Tours/Traslados aprobación basada en campo Airtable
+> - ✅ Checkout actualizado con lógica condicional
+> - Ver: [APPROVAL_FLOW_IMPLEMENTATION.md](APPROVAL_FLOW_IMPLEMENTATION.md)
 
 ---
 
