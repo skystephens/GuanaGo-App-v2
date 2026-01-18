@@ -68,8 +68,22 @@ const AdminStructureMap: React.FC<AdminStructureMapProps> = ({ onBack }) => {
 
       <div className="px-6 pt-6 space-y-6">
         {!structure ? (
-          <div className="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center">
-            <p className="text-gray-400 font-medium">Pulsa “Analizar” para ver el mapa del backend</p>
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-12 text-center">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Server size={32} className="text-purple-500" />
+              </div>
+              <p className="text-gray-300 font-bold text-lg mb-2">Análisis del Backend</p>
+              <p className="text-gray-400 text-sm mb-6">Descubre la estructura completa de rutas, controladores, servicios y middleware</p>
+            </div>
+            <button 
+              onClick={analyze}
+              disabled={loading}
+              className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 text-white px-6 py-3 rounded-xl font-bold text-sm transition-colors inline-flex items-center gap-2"
+            >
+              <Server size={16} />
+              {loading ? 'Analizando...' : 'Iniciar Análisis'}
+            </button>
           </div>
         ) : (
           <>
@@ -85,9 +99,18 @@ const AdminStructureMap: React.FC<AdminStructureMapProps> = ({ onBack }) => {
             </div>
 
             {/* Tree */}
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
+            <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 max-h-96 overflow-auto">
               <TreeView data={structure} />
             </div>
+
+            {/* Retry Button */}
+            <button 
+              onClick={analyze}
+              disabled={loading}
+              className="w-full bg-gray-800 hover:bg-gray-700 disabled:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
+            >
+              {loading ? '⏳ Analizando...' : '🔄 Actualizar Análisis'}
+            </button>
           </>
         )}
       </div>
