@@ -183,11 +183,70 @@ export const HOTEL_LIST: Hotel[] = [
     image: 'https://picsum.photos/id/164/800/600',
     category: 'hotel',
     address: 'Av. Colombia, San Andrés Isla',
-    description: 'Estancia de lujo.',
-    amenities: ['Wi-Fi', 'Piscina', 'Desayuno'],
+    description: 'Estancia de lujo frente al mar con acceso privado a la playa, piscina climatizada y servicio de lujo 24/7.',
+    amenities: ['Wi-Fi', 'Piscina', 'Desayuno', 'Jacuzzi'],
     maxGuests: 4,
     pricePerNight: { 1: 150, 2: 180 },
-    active: true
+    active: true,
+    accommodationType: 'Hotel Boutique',
+    allowBabies: true,
+    babyPolicy: 'Niños de 0 a 3 años no se cobran como huésped. A partir de 4 años se cuentan como adulto.',
+    singleBeds: 1,
+    doubleBeds: 1,
+    queenBeds: 0,
+    kingBeds: 0,
+    hasPool: true,
+    hasJacuzzi: true,
+    hasKitchen: false,
+    includesBreakfast: true
+  },
+  {
+    id: 'h2',
+    title: 'Posada Nativa Raizal',
+    rating: 4.7,
+    reviews: 142,
+    price: 100,
+    image: 'https://picsum.photos/id/165/800/600',
+    category: 'hotel',
+    address: 'Calle 20, San Andrés Centro',
+    description: 'Alojamiento típico con auténtica hospitalidad raizal. Desayuno casero incluido.',
+    amenities: ['Wi-Fi', 'Desayuno'],
+    maxGuests: 3,
+    pricePerNight: { 1: 100, 2: 130 },
+    active: true,
+    accommodationType: 'Posada Nativa',
+    allowBabies: true,
+    babyPolicy: 'Aceptamos bebés. Niños 0-3 años no generan costo. Comunica sus necesidades especiales.',
+    singleBeds: 2,
+    doubleBeds: 1,
+    hasPool: false,
+    hasJacuzzi: false,
+    includesBreakfast: true
+  },
+  {
+    id: 'h3',
+    title: 'Apartahotel Playa Azul',
+    rating: 4.5,
+    reviews: 96,
+    price: 120,
+    image: 'https://picsum.photos/id/166/800/600',
+    category: 'hotel',
+    address: 'Frente al Mar, San Andrés',
+    description: 'Apartamentos modernos con cocina equipada, perfectos para familias largas.',
+    amenities: ['Wi-Fi', 'Piscina', 'Cocina Equipada'],
+    maxGuests: 5,
+    pricePerNight: { 1: 120, 2: 150, 3: 170 },
+    active: true,
+    accommodationType: 'Aparta Hotel',
+    allowBabies: true,
+    babyPolicy: 'Perfecto para familias. Bebés 0-3 sin costo. Contamos con cuna disponible.',
+    singleBeds: 2,
+    doubleBeds: 1,
+    queenBeds: 1,
+    hasPool: true,
+    hasJacuzzi: false,
+    hasKitchen: true,
+    includesBreakfast: false
   }
 ];
 
@@ -240,8 +299,14 @@ export const TAXI_ZONES: TaxiZone[] = [
 
 export const AMENITY_ICONS: Record<string, React.ReactNode> = {
   'Wi-Fi': <Wifi size={24} className="text-green-600 mb-2" />,
-  'Piscina': <Droplets size={24} className="text-green-600 mb-2" />,
-  'Desayuno': <Utensils size={24} className="text-green-600 mb-2" />
+  'Piscina': <Droplets size={24} className="text-blue-600 mb-2" />,
+  'Desayuno': <Utensils size={24} className="text-green-600 mb-2" />,
+  'Jacuzzi': <Droplets size={24} className="text-purple-600 mb-2" />,
+  'Acepta Bebés': <Heart size={24} className="text-pink-600 mb-2" />,
+  'Cama Sencilla': <Bed size={24} className="text-indigo-600 mb-2" />,
+  'Cama Doble': <Bed size={24} className="text-indigo-600 mb-2" />,
+  'Cama Queen': <Bed size={24} className="text-indigo-600 mb-2" />,
+  'Cama King': <Bed size={24} className="text-indigo-600 mb-2" />
 };
 
 export const WALLET_TRANSACTIONS: Transaction[] = [];

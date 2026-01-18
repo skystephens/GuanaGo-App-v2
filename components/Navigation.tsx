@@ -9,9 +9,10 @@ interface NavigationProps {
   onNavigate: (route: AppRoute) => void;
   role: UserRole;
   isAuthenticated?: boolean;
+  onLogout?: () => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role, isAuthenticated }) => {
+const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role, isAuthenticated, onLogout }) => {
   const { itemCount } = useCart();
   
   // MENU TURISTA: 5 Items
@@ -23,12 +24,9 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
     { route: AppRoute.CHECKOUT, icon: <ShoppingCart size={22} />, label: 'Carrito' },
   ];
 
-  // Versión para usuarios sin registro: cambiamos Carrito por GUANA Points/Retos
+  // Versión para usuarios sin registro: solo perfil y explorar
   const touristNavItemsGuest = [
-    { route: AppRoute.UNIFIED_PANEL, icon: <Grid3x3 size={22} />, label: 'Panel' },
     { route: AppRoute.HOME, icon: <Compass size={22} />, label: 'Explora' },
-    { route: AppRoute.INTERACTIVE_MAP, icon: <MapIcon size={22} />, label: 'Mapa' },
-    { route: AppRoute.DYNAMIC_ITINERARY, icon: <CalendarDays size={22} />, label: 'Planifica' },
     { route: AppRoute.PROFILE, icon: <UserCircle size={22} />, label: 'Cuenta' },
   ];
 
@@ -100,6 +98,20 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
           </button>
         );
       })}
+      {!isAuthenticated && isTourist && onLogout && (
+        <button
+          onClick={onLogout}
+          className={`flex flex-col md:flex-row items-center gap-1 md:gap-2 transition-all relative py-2 md:py-3 md:px-4 rounded-2xl flex-1 md:flex-none
+            md:hover:bg-gray-100 md:dark:hover:bg-gray-800
+            text-gray-400 hover:text-red-500`}
+          title="Cerrar sesión"
+        >
+          <div className="relative transition-transform duration-300">
+            <LogOut size={22} />
+          </div>
+          <span className="text-[8px] md:text-xs font-black uppercase tracking-tighter md:tracking-normal md:normal-case md:font-semibold opacity-60 md:opacity-80">Salir</span>
+        </button>
+      )}
     </div>
   );
 };

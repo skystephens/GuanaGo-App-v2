@@ -229,7 +229,7 @@ const App: React.FC = () => {
           {renderScreen()}
         </main>
         
-        <Navigation currentRoute={currentRoute} onNavigate={navigateTo} role={userRole} isAuthenticated={isAuthenticated} />
+        <Navigation currentRoute={currentRoute} onNavigate={navigateTo} role={userRole} isAuthenticated={isAuthenticated} onLogout={handleLogout} />
 
         {userRole === 'tourist' && (
           <GuanaChatbot />

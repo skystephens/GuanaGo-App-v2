@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Share2, Star, MapPin, CheckCircle, ShoppingCart, Minus, Plus, Calendar, Clock, Loader2, AlertTriangle, XCircle, X, Maximize2, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Share2, Star, MapPin, CheckCircle, ShoppingCart, Minus, Plus, Calendar, Clock, Loader2, AlertTriangle, XCircle, X, Maximize2, ChevronLeft, ChevronRight, ShieldCheck, Sparkles, BedDouble, Heart } from 'lucide-react';
 import { HOTEL_DATA, AMENITY_ICONS } from '../constants';
 import { AppRoute, Package, Hotel, Tour } from '../types';
 import { useCart } from '../context/CartContext';
@@ -403,11 +403,28 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
 
            {/* About Section */}
            <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100">
-             <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest mb-4">La Experiencia</h3>
+             <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest mb-6">La Experiencia</h3>
+             
+             {/* ⚠️ ALERTA DE EDADES - Niños 0-3 años NO se cobran */}
+             {isHotel && (
+               <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-4">
+                 <div className="flex items-start gap-3">
+                   <div className="flex-shrink-0 mt-1 text-green-600 text-xl">👶</div>
+                   <div>
+                     <p className="text-xs font-black text-green-700 uppercase tracking-wider mb-1">Política de Edades - Especial Familias</p>
+                     <p className="text-sm font-bold text-green-800 leading-relaxed">
+                       ✓ Niños de <strong>0 a 3 años NO se cobran</strong> como huésped<br/>
+                       ✓ A partir de 4 años se cuentan como adulto<br/>
+                       ✓ Comunicar edad de menores al reservar
+                     </p>
+                   </div>
+                 </div>
+               </div>
+             )}
              
              {/* Categoría de actividad */}
              {(data.categoriaActividad || data.activityCategory || (data.tags && data.tags.length > 0)) && (
-               <div className="flex flex-wrap gap-2 mb-4">
+               <div className="flex flex-wrap gap-2 mb-6">
                  {(Array.isArray(data.tags) ? data.tags : [data.categoriaActividad || data.activityCategory]).filter(Boolean).map((tag: string, idx: number) => (
                    <span key={idx} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase">
                      {tag}
@@ -418,17 +435,103 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
 
              {/* Categoría de alojamiento */}
              {isHotel && hotel.accommodationType && (
-               <div className="mb-4 bg-amber-50 border border-amber-200 rounded-2xl p-3">
+               <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4">
                  <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider">Tipo de Alojamiento:</span>
-                 <p className="text-sm font-bold text-amber-700 mt-1">{hotel.accommodationType}</p>
+                 <p className="text-sm font-bold text-amber-700 mt-2">{hotel.accommodationType}</p>
                </div>
              )}
 
              {/* Política de bebés */}
              {isHotel && hotel.babyPolicy && (
-               <div className="mb-4 bg-blue-50 border border-blue-200 rounded-2xl p-3">
+               <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-4">
                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider">Política de Bebés:</span>
-                 <p className="text-sm font-bold text-blue-700 mt-1">{hotel.babyPolicy}</p>
+                 <p className="text-sm font-bold text-blue-700 mt-2">{hotel.babyPolicy}</p>
+               </div>
+             )}
+
+             {/* AMENITIES SECTION */}
+             {isHotel && (hotel.hasPool || hotel.hasJacuzzi || hotel.allowBabies || hotel.amenities?.length > 0) && (
+               <div className="mb-6">
+                 <h4 className="text-xs font-black text-gray-600 uppercase mb-4 flex items-center gap-2">
+                   <Sparkles size={16} className="text-yellow-500" />
+                   Comodidades y Servicios
+                 </h4>
+                 <div className="grid grid-cols-3 gap-3">
+                   {/* Piscina */}
+                   {hotel.hasPool && (
+                     <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-center">
+                       <div className="text-3xl mb-2">🏊</div>
+                       <p className="text-xs font-bold text-blue-700">Piscina</p>
+                     </div>
+                   )}
+                   
+                   {/* Jacuzzi */}
+                   {hotel.hasJacuzzi && (
+                     <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 text-center">
+                       <div className="text-3xl mb-2">🛁</div>
+                       <p className="text-xs font-bold text-purple-700">Jacuzzi</p>
+                     </div>
+                   )}
+                   
+                   {/* Acepta Bebés */}
+                   {hotel.allowBabies && (
+                     <div className="bg-pink-50 border border-pink-200 rounded-2xl p-4 text-center">
+                       <div className="text-3xl mb-2">👶</div>
+                       <p className="text-xs font-bold text-pink-700">Apto Bebés</p>
+                     </div>
+                   )}
+                   
+                   {/* Otras amenities */}
+                   {hotel.amenities && hotel.amenities.filter(a => !['Piscina', 'Jacuzzi'].includes(a)).slice(0, 3).map((amenity: string, idx: number) => (
+                     <div key={idx} className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
+                       <div className="text-3xl mb-2">✓</div>
+                       <p className="text-xs font-bold text-green-700">{amenity}</p>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             )}
+
+             {/* TIPOS DE CAMAS */}
+             {isHotel && (hotel.singleBeds || hotel.doubleBeds || hotel.queenBeds || hotel.kingBeds) && (
+               <div className="mb-6">
+                 <h4 className="text-xs font-black text-gray-600 uppercase mb-4 flex items-center gap-2">
+                   <BedDouble size={16} className="text-indigo-600" />
+                   Configuración de Camas
+                 </h4>
+                 <div className="grid grid-cols-2 gap-3">
+                   {hotel.singleBeds && hotel.singleBeds > 0 && (
+                     <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4">
+                       <div className="text-2xl mb-2">🛏️</div>
+                       <p className="text-xs font-bold text-indigo-700 uppercase">Camas Sencillas</p>
+                       <p className="text-lg font-black text-indigo-600 mt-1">{hotel.singleBeds}</p>
+                     </div>
+                   )}
+                   
+                   {hotel.doubleBeds && hotel.doubleBeds > 0 && (
+                     <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4">
+                       <div className="text-2xl mb-2">🛏️</div>
+                       <p className="text-xs font-bold text-indigo-700 uppercase">Camas Dobles</p>
+                       <p className="text-lg font-black text-indigo-600 mt-1">{hotel.doubleBeds}</p>
+                     </div>
+                   )}
+                   
+                   {hotel.queenBeds && hotel.queenBeds > 0 && (
+                     <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4">
+                       <div className="text-2xl mb-2">🛏️</div>
+                       <p className="text-xs font-bold text-indigo-700 uppercase">Camas Queen</p>
+                       <p className="text-lg font-black text-indigo-600 mt-1">{hotel.queenBeds}</p>
+                     </div>
+                   )}
+                   
+                   {hotel.kingBeds && hotel.kingBeds > 0 && (
+                     <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4">
+                       <div className="text-2xl mb-2">🛏️</div>
+                       <p className="text-xs font-bold text-indigo-700 uppercase">Camas King</p>
+                       <p className="text-lg font-black text-indigo-600 mt-1">{hotel.kingBeds}</p>
+                     </div>
+                   )}
+                 </div>
                </div>
              )}
              
