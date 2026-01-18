@@ -7,6 +7,10 @@ const router = express.Router();
 // Crear solicitud (no requiere auth estricta; si hay token, se usa usuarioId)
 router.post('/', availabilityController.createRequest);
 
+// ⚠️ IMPORTANTE: Las rutas específicas DEBEN venir ANTES que las genéricas
+// Listar todas las solicitudes (solo admin)
+router.get('/admin/all', authenticateToken, authorizeRole('admin'), availabilityController.listAll);
+
 // Listar solicitudes del usuario (requiere auth)
 router.get('/user', authenticateToken, availabilityController.listForUser);
 

@@ -46,6 +46,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminFinance from './pages/admin/AdminFinance';
 import AdminServices from './pages/admin/AdminServices';
+import AdminApprovals from './pages/admin/AdminApprovals';
 import AdminBackend from './pages/admin/AdminBackend';
 import AdminCaribbeanNight from './pages/admin/AdminCaribbeanNight';
 import AdminArtistas from './pages/admin/AdminArtistas';
@@ -166,6 +167,7 @@ const App: React.FC = () => {
       case AppRoute.PARTNER_ACCOMMODATIONS: return <PartnerAccommodations onBack={goBack} />;
       case AppRoute.ADMIN_DASHBOARD: return <AdminDashboard onNavigate={navigateTo} />;
       case AppRoute.ADMIN_USERS: return <AdminUsers />;
+      case AppRoute.ADMIN_APPROVALS: return <AdminApprovals onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_FINANCE: return <AdminFinance />;
       case AppRoute.ADMIN_SERVICES: return <AdminServices />;
       case AppRoute.ADMIN_BACKEND: return <AdminBackend />;

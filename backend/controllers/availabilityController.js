@@ -71,6 +71,16 @@ export const listForUser = async (req, res, next) => {
   }
 };
 
+export const listAll = async (req, res, next) => {
+  try {
+    // Sin filtro de socioId ni usuarioId - devuelve todas las solicitudes
+    const records = await listAvailabilityRequests({});
+    res.json({ success: true, data: records });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateRequest = async (req, res, next) => {
   try {
     const { id } = req.params;

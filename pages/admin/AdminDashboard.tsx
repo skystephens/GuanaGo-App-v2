@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList, Clock } from 'lucide-react';
 import { ADMIN_STATS, PARTNER_RESERVATIONS, POPULAR_TOURS } from '../../constants';
 import { AppRoute } from '../../types';
 
@@ -101,6 +101,14 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
              >
                <Users size={24} className="text-blue-500" />
                <span className="text-xs font-bold">Usuarios</span>
+             </button>
+             <button 
+               onClick={() => onNavigate(AppRoute.ADMIN_APPROVALS)}
+               className="bg-gradient-to-br from-yellow-900 to-orange-900 p-4 rounded-xl border border-yellow-600 hover:border-yellow-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"
+             >
+               <div className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+               <Clock size={24} className="text-yellow-400" />
+               <span className="text-xs font-bold">Aprobaciones</span>
              </button>
              <button 
                onClick={() => onNavigate(AppRoute.ADMIN_FINANCE)}

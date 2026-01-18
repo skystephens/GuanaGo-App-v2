@@ -16,6 +16,7 @@ export interface Tour {
   raizalHistory?: string;
   latitude?: number;
   longitude?: number;
+  requiresApproval?: boolean; // 🆕 Si el servicio requiere confirmación de socio
 }
 
 export interface ItineraryDay {
@@ -196,11 +197,13 @@ export interface Reservation extends BlockchainAudit {
 
 export interface CartItem extends Tour {
   quantity: number; 
-  date?: string;
-  time?: string; 
-  nights?: number; 
-  pax?: number;
-  babies?: number;
+  date?: string;        // Para tours/traslados (fecha de actividad)
+  time?: string;        // Para tours/traslados (hora)
+  checkIn?: string;     // 🆕 Para hoteles (ISO date, check-in a las 3 PM)
+  checkOut?: string;    // 🆕 Para hoteles (ISO date, check-out a las 1 PM)
+  nights?: number;      // Para hoteles
+  pax?: number;         // Personas/huéspedes
+  babies?: number;      // Bebés (solo hoteles)
 }
 
 export interface Message {
@@ -254,6 +257,7 @@ export enum AppRoute {
   ADMIN_USERS = 'ADMIN_USERS',
   ADMIN_FINANCE = 'ADMIN_FINANCE',
   ADMIN_SERVICES = 'ADMIN_SERVICES',
+  ADMIN_APPROVALS = 'ADMIN_APPROVALS',
   ADMIN_BACKEND = 'ADMIN_BACKEND',
   ADMIN_TASKS = 'ADMIN_TASKS',
   GROUP_QUOTE = 'GROUP_QUOTE',

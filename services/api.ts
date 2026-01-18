@@ -68,6 +68,7 @@ export const api = {
       adultos?: number;
       ninos?: number;
       bebes?: number;
+      tipoServicio?: string;
       notas?: string;
       contactName?: string;
       contactEmail?: string;
@@ -89,6 +90,34 @@ export const api = {
         const response = await fetch(`${BACKEND_URL}/api/availability-requests/user`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
+        });
+        return await safeJson(response);
+      } catch (e) {
+        return { success: false, error: 'Network error' };
+      }
+    },
+    listAllRequests: async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/availability-requests/admin/all`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        return await safeJson(response);
+      } catch (e) {
+        return [];
+      }
+    },
+    updateRequest: async (requestId: string, updates: {
+      estado?: 'pending' | 'approved' | 'rejected' | 'expired';
+      tarifa?: number;
+      condiciones?: string;
+      updatedAt?: string;
+    }) => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/availability-requests/${requestId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
         });
         return await safeJson(response);
       } catch (e) {
