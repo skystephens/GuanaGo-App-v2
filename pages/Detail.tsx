@@ -58,6 +58,9 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
     reviews: data.reviews || 0,
   };
 
+  // 🆕 Declare isHotel before useEffect to avoid initialization error
+  const isHotel = type === 'hotel';
+
   useEffect(() => {
      const tomorrow = new Date();
      tomorrow.setDate(tomorrow.getDate() + 1);
@@ -96,7 +99,6 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
     validateInventory(newDate);
   };
   
-  const isHotel = type === 'hotel';
   const hotel = safeData as Hotel;
   const maxAllowed = availableSlots !== null ? availableSlots : (isHotel && hotel.maxGuests ? hotel.maxGuests : 10);
   
