@@ -1,12 +1,21 @@
 import React from 'react';
 import { Palette, Heart, Package, Ticket } from 'lucide-react';
 import { AppRoute } from '../types';
+import PhotoCarousel from './PhotoCarousel';
 
 interface CocoArtSectionProps {
   onNavigate: (route: AppRoute, data?: any) => void;
 }
 
 const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
+  const carouselImages = [
+    'https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.21.27_c6ff3afa-980x735.jpg',
+    'https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.23.13_2e2e3c6f-980x735.jpg',
+    'https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.22.06_4aa64cc6-980x735.jpg',
+    'https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.24.07_6b8c4f3a-980x735.jpg',
+    'https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.25.14_8d9f5c2e-980x735.jpg'
+  ];
+
   const offerings = [
     {
       icon: <Package size={20} />,
@@ -77,13 +86,9 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
             </button>
           </div>
 
-          {/* Image */}
-          <div className="h-48 md:h-auto bg-cover bg-center" style={{
-            backgroundImage: 'url(https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.21.27_c6ff3afa-980x735.jpg)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}>
-            <div className="w-full h-full bg-gradient-to-l from-amber-900/50 to-transparent"></div>
+          {/* Photo Carousel */}
+          <div className="h-48 md:h-auto">
+            <PhotoCarousel images={carouselImages} autoPlay={true} autoPlayInterval={5000} />
           </div>
         </div>
       </div>
