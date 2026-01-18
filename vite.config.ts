@@ -10,6 +10,14 @@ export default defineConfig(({ mode }) => {
         port: 3002,
         strictPort: true, // Falla si 3002 está ocupado
         host: '0.0.0.0',
+        // 🔗 Proxy para rutas API al backend Express
+        proxy: {
+          '/api': {
+            target: 'http://localhost:5000',
+            changeOrigin: true,
+            rewrite: (path) => path // Mantiene la ruta igual
+          }
+        }
       },
       plugins: [react()],
       define: {

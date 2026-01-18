@@ -84,7 +84,10 @@ const UnifiedPanel: React.FC<UnifiedPanelProps> = ({
 
   // Opciones para ARTISTA
   const artistMenu: MenuItem[] = [
-    { id: 'music-events', label: 'Caribbean Night', icon: <Music size={24} />, route: AppRoute.RIMM_CLUSTER, description: 'Eventos musicales', color: 'from-purple-500 to-purple-600' },
+    { id: 'artist-profile', label: 'Mi Perfil Artista', icon: <User size={24} />, route: AppRoute.PROFILE, description: 'Datos, bio y catálogo', color: 'from-purple-500 to-purple-600' },
+    { id: 'artist-marketplace', label: 'Tienda de Obras', icon: <Store size={24} />, route: AppRoute.MARKETPLACE, description: 'Vender arte y merch', color: 'from-pink-500 to-pink-600' },
+    { id: 'artist-new-product', label: 'Crear Producto/Show', icon: <Plus size={24} />, route: AppRoute.PARTNER_CREATE_SERVICE, description: 'Sube obra, show o taller', color: 'from-orange-500 to-orange-600' },
+    { id: 'music-events', label: 'Caribbean Night', icon: <Music size={24} />, route: AppRoute.RIMM_CLUSTER, description: 'Eventos musicales', color: 'from-indigo-500 to-indigo-600' },
   ];
 
   // Opciones para SUPER ADMIN

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { User, Award, ShieldCheck, Copy, ExternalLink, Settings, MessageCircle, LogOut, ChevronRight, Mail, Trophy, CreditCard, Ticket, Gift, Zap, Tag, Star, Briefcase, Shield, Loader2, Target, Sparkles, QrCode, Phone, MapPin, X, Globe, UserCheck, IdCard } from 'lucide-react';
+import { User, Award, ShieldCheck, Copy, ExternalLink, Settings, MessageCircle, LogOut, ChevronRight, Mail, Trophy, CreditCard, Ticket, Gift, Zap, Tag, Star, Briefcase, Shield, Loader2, Target, Sparkles, QrCode, Phone, MapPin, X, Globe, UserCheck, IdCard, ArrowLeft, Music } from 'lucide-react';
 import { PARTNER_CLIENTS } from '../constants';
 import { AppRoute, UserRole, Client, Campaign, GuanaUser } from '../types';
 import DashboardContainer from '../components/DashboardContainer';
@@ -153,6 +153,22 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, us
                 </div>
               </div>
               <ChevronRight className="text-gray-400 group-hover:text-blue-600" size={20} />
+            </button>
+
+            <button 
+              onClick={() => onSwitchRole('Artista')}
+              className="w-full bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:bg-purple-50 hover:border-purple-200 transition-all active:scale-95 group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                  <Music size={24} />
+                </div>
+                <div className="text-left">
+                  <div className="font-black text-gray-900">Panel Artista</div>
+                  <div className="text-xs text-gray-500">Vender obras, shows y talleres</div>
+                </div>
+              </div>
+              <ChevronRight className="text-gray-400 group-hover:text-purple-600" size={20} />
             </button>
 
             <button 

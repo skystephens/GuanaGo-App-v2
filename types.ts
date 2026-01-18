@@ -277,9 +277,9 @@ export enum AppRoute {
 
 export type UserRole = 'tourist' | 'partner' | 'admin' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';
 
-export type TaskStatus = 'pendiente' | 'en progreso' | 'completada' | 'bloqueada';
+export type TaskStatus = 'pendiente' | 'en_progreso' | 'urgente_pendiente' | 'terminado' | 'bloqueado';
 export type TaskPriority = 'baja' | 'media' | 'alta' | 'critica';
-export type TaskCategory = 'backend' | 'frontend' | 'infraestructura' | 'diseño' | 'documentacion' | 'testing';
+export type TaskCategory = 'backend' | 'frontend' | 'infraestructura' | 'diseno' | 'documentacion' | 'testing' | 'blockchain' | 'negocio';
 
 export interface ProjectTask {
   id: string;
@@ -291,13 +291,15 @@ export interface ProjectTask {
   archivoReferencia?: string;
   seccionReferencia?: string;
   estimacionHoras?: number;
+  horasReales?: number;
   creadoPor?: string;
   asignadoA?: string;
-  fechaCreacion?: string;
+  createdAt?: string;
+  updatedAt?: string;
   fechaVencimiento?: string;
-  dependencias?: string[];
-  completadaEn?: string;
-  notas?: string;
+  dependeDe?: string[];
+  completedAt?: string;
+  notasIA?: string;
 }
 
 export interface TaskStats {
@@ -311,9 +313,10 @@ export interface TaskStats {
 
 export const TASK_STATUS_CONFIG = {
   pendiente: { label: 'Pendiente', color: 'bg-gray-100', textColor: 'text-gray-700', icon: 'Circle' },
-  'en progreso': { label: 'En Progreso', color: 'bg-blue-100', textColor: 'text-blue-700', icon: 'Clock' },
-  completada: { label: 'Completada', color: 'bg-green-100', textColor: 'text-green-700', icon: 'CheckCircle2' },
-  bloqueada: { label: 'Bloqueada', color: 'bg-red-100', textColor: 'text-red-700', icon: 'AlertCircle' }
+  en_progreso: { label: 'En Progreso', color: 'bg-blue-100', textColor: 'text-blue-700', icon: 'Clock' },
+  urgente_pendiente: { label: 'Urgente', color: 'bg-orange-100', textColor: 'text-orange-700', icon: 'AlertCircle' },
+  terminado: { label: 'Terminado', color: 'bg-green-100', textColor: 'text-green-700', icon: 'CheckCircle2' },
+  bloqueado: { label: 'Bloqueado', color: 'bg-red-100', textColor: 'text-red-700', icon: 'Pause' }
 } as const;
 
 export const TASK_PRIORITY_CONFIG = {
@@ -327,9 +330,11 @@ export const TASK_CATEGORY_CONFIG = {
   backend: { label: 'Backend', color: '#3B82F6', icon: 'Server' },
   frontend: { label: 'Frontend', color: '#8B5CF6', icon: 'Palette' },
   infraestructura: { label: 'Infraestructura', color: '#EF4444', icon: 'Zap' },
-  diseño: { label: 'Diseño', color: '#EC4899', icon: 'Sparkles' },
+  diseno: { label: 'Diseño', color: '#EC4899', icon: 'Sparkles' },
   documentacion: { label: 'Documentación', color: '#10B981', icon: 'FileText' },
-  testing: { label: 'Testing', color: '#F59E0B', icon: 'CheckCircle2' }
+  testing: { label: 'Testing', color: '#F59E0B', icon: 'CheckCircle2' },
+  blockchain: { label: 'Blockchain', color: '#6366F1', icon: 'Link2' },
+  negocio: { label: 'Negocio', color: '#14B8A6', icon: 'Briefcase' }
 } as const;
 
 export interface Admin {
