@@ -614,11 +614,6 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                    </div>
                    <button onClick={handleIncrement} className="w-11 h-11 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-600 hover:text-emerald-600 active:scale-90 transition-all"><Plus size={18} /></button>
                 </div>
-                {isHotel && (
-                  <div className="text-[8px] text-gray-500 font-bold mt-2 px-2 leading-tight">
-                    ℹ️ Edades 4+ se cuentan como adulto • Bebés 0-3 años
-                  </div>
-                )}
              </div>
              {isHotel && (
                 <div className="flex-1">
