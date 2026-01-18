@@ -306,7 +306,7 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, initialCategory = 'all' }
               <div className="grid grid-cols-2 gap-4">
                 {filteredServices.map((service) => (
                   <ServiceCard
-                    key={`${service.id}-${dataSource}-${service.image?.substring(0, 20)}`}
+                    key={`${service.id}-${service.image || 'no-img'}`}
                     service={service}
                     onClick={() => handleServiceClick(service)}
                   />
