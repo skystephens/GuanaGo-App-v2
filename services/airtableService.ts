@@ -592,6 +592,16 @@ export async function getServices(category?: string) {
       accommodationType: f['Tipo de Alojamiento'] || '',
       allowBabies: f['Acepta Bebes'] === true || f['Acepta Bebés'] === true,
       babyPolicy: f['Politica Bebes'] || f['Política Bebes'] || '',
+      
+      // 🆕 APROBACIÓN REQUERIDA (para hoteles siempre true, para tours/traslados depende del campo)
+      requiresApproval: (() => {
+        if (tipoServicio.includes('alojamiento') || tipoServicio.includes('hotel')) {
+          return true; // Hoteles siempre requieren aprobación
+        }
+        // Tours/Traslados: leer del campo Airtable
+        const fieldValue = f['RequiereAprobacion'] || f['Requiere Aprobacion'] || false;
+        return fieldValue === true || fieldValue === 'true' || fieldValue === 'sí' || fieldValue === 'si';
+      })(),
 
       // Plan de alimentación (PE/PC/PAM/PA/TI)
       mealPlanCode: (() => {

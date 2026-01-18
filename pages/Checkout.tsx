@@ -16,7 +16,12 @@ interface CheckoutProps {
 const Checkout: React.FC<CheckoutProps> = ({ onBack, onNavigate, isAuthenticated }) => {
   const { items, totalPrice, clearCart, removeFromCart } = useCart();
    const [step, setStep] = useState<'cart' | 'info' | 'payment' | 'processing' | 'success'>('cart');
-   const hasHotel = items.some(i => i.category === 'hotel');
+   
+   // Servicios que requieren aprobación (hoteles siempre, tours/traslados si el campo lo indica)
+   const servicesNeedingApproval = items.filter(i => i.requiresApproval === true);
+   const hasApprovalRequirement = servicesNeedingApproval.length > 0;
+   const hasHotel = items.some(i => i.category === 'hotel'); // Mantener para compatibilidad
+   
    const [availabilityStatus, setAvailabilityStatus] = useState<'not-requested' | 'pending' | 'approved'>('not-requested');
   const [paymentMethod, setPaymentMethod] = useState<'binance' | 'hedera' | 'payu'>('payu');
   const [auditInfo, setAuditInfo] = useState<{status: 'pending' | 'verified', txId?: string}>({status: 'pending'});
@@ -45,13 +50,14 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onNavigate, isAuthenticated
    const handleRequestAvailability = async () => {
       try {
          setAvailabilityStatus('pending');
-         // Crear solicitudes para cada item de alojamiento
-         for (const item of items.filter(i => i.category === 'hotel')) {
+         // Crear solicitudes para cada item que requiere aprobación
+         for (const item of servicesNeedingApproval) {
             await api.availability.createRequest({
                alojamientoId: item.id,
                checkIn: item.checkIn || item.date || '',
                checkOut: item.checkOut || '',
                adultos: item.pax || item.quantity || 1,
+               tipoServicio: item.category,
                contactName: userData.fullName,
                contactEmail: userData.email,
                contactWhatsapp: userData.whatsapp
@@ -67,10 +73,10 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onNavigate, isAuthenticated
    const handlePayment = async () => {
     setStep('processing');
     try {
-            if (hasHotel && availabilityStatus !== 'approved') {
-               // Bloquear pago hasta aprobación
+            if (hasApprovalRequirement && availabilityStatus !== 'approved') {
+               // Bloquear pago hasta aprobación de servicios que lo requieren
                setStep('payment');
-               alert('Debes contar con confirmación de disponibilidad antes de pagar.');
+               alert('Debes contar con confirmación de los servicios solicitados antes de pagar.');
                return;
             }
         // 1. Notarización Blockchain
@@ -131,9 +137,19 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onNavigate, isAuthenticated
                          <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-sm text-gray-100 truncate pr-6">{item.title}</h4>
                             <div className="flex flex-col gap-1 mt-1 text-[11px] text-gray-400">
-                               <div className="flex items-center gap-1.5"><Calendar size={12} className="text-emerald-500" /><span>{item.date}</span></div>
-                               <div className="flex items-center gap-1.5"><Clock size={12} className="text-emerald-500" /><span>{item.time}</span></div>
-                               <div className="mt-1 font-medium text-emerald-400">{item.category === 'hotel' ? `${item.nights} Noches - ${item.pax} Pax` : `${item.quantity} Personas`}</div>
+                               {item.category === 'hotel' ? (
+                                  <>
+                                     <div className="flex items-center gap-1.5"><Calendar size={12} className="text-emerald-500" /><span>{item.checkIn} → {item.checkOut}</span></div>
+                                     <div className="flex items-center gap-1.5"><Clock size={12} className="text-emerald-500" /><span>Check-in 3PM / Check-out 1PM</span></div>
+                                     <div className="mt-1 font-medium text-emerald-400">{item.nights} Noches - {item.pax} Pax</div>
+                                  </>
+                               ) : (
+                                  <>
+                                     <div className="flex items-center gap-1.5"><Calendar size={12} className="text-emerald-500" /><span>{item.date}</span></div>
+                                     <div className="flex items-center gap-1.5"><Clock size={12} className="text-emerald-500" /><span>{item.time}</span></div>
+                                     <div className="mt-1 font-medium text-emerald-400">{item.quantity} Personas</div>
+                                  </>
+                               )}
                             </div>
                          </div>
                          <div className="flex flex-col justify-between items-end">
@@ -176,17 +192,22 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onNavigate, isAuthenticated
              </div>
                ) : step === 'payment' ? (
              <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
-                        {hasHotel && (
+                        {hasApprovalRequirement && (
                            <div className="bg-yellow-500/10 border border-yellow-600/30 p-4 rounded-2xl">
                               <div className="flex items-start gap-3">
                                  <ShieldAlert size={18} className="text-yellow-600 shrink-0" />
-                                 <div>
-                                    <p className="text-xs font-bold text-yellow-700">Verificación de Disponibilidad</p>
-                                    <p className="text-[11px] text-yellow-800">Para alojamientos, debes solicitar y recibir confirmación de disponibilidad antes de pagar.</p>
+                                 <div className="flex-1">
+                                    <p className="text-xs font-bold text-yellow-700">Verificación de Disponibilidad Requerida</p>
+                                    <p className="text-[11px] text-yellow-800 mt-1">Los siguientes servicios requieren confirmación del socio antes de proceder:</p>
+                                    <ul className="text-[10px] text-yellow-700 mt-2 ml-2 space-y-1">
+                                       {servicesNeedingApproval.map(item => (
+                                          <li key={item.id}>• {item.title} ({item.category})</li>
+                                       ))}
+                                    </ul>
                                     <div className="mt-3 flex items-center gap-2">
                                        <span className="text-[10px] px-2 py-1 rounded-lg bg-yellow-600/20 text-yellow-800 font-bold uppercase tracking-widest">Estado: {availabilityStatus === 'not-requested' ? 'Sin Solicitud' : availabilityStatus === 'pending' ? 'Pendiente' : 'Aprobado'}</span>
                                        {availabilityStatus !== 'approved' && (
-                                          <button onClick={handleRequestAvailability} className="text-xs bg-yellow-600 text-white px-3 py-1.5 rounded-xl font-bold">Solicitar Disponibilidad</button>
+                                          <button onClick={handleRequestAvailability} className="text-xs bg-yellow-600 text-white px-3 py-1.5 rounded-xl font-bold hover:bg-yellow-700">Solicitar Disponibilidad</button>
                                        )}
                                     </div>
                                  </div>
@@ -200,7 +221,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onNavigate, isAuthenticated
                    <button onClick={() => setPaymentMethod('binance')} className={`w-full p-5 rounded-2xl border flex items-center justify-between transition-all ${paymentMethod === 'binance' ? 'bg-yellow-500/10 border-yellow-500' : 'bg-gray-900 border-gray-800'}`}><div className="flex items-center gap-4"><div className="bg-yellow-500 p-2.5 rounded-xl text-black shadow-lg"><Coins size={24} /></div><div className="text-left"><p className="font-bold text-sm">Binance Pay</p><p className="text-[10px] text-gray-500">Paga con Cripto (Bajo Fee)</p></div></div>{paymentMethod === 'binance' && <CheckCircle size={20} className="text-yellow-500" />}</button>
                    <button onClick={() => setPaymentMethod('hedera')} className={`w-full p-5 rounded-2xl border flex items-center justify-between transition-all ${paymentMethod === 'hedera' ? 'bg-blue-500/10 border-blue-500' : 'bg-gray-900 border-gray-800'}`}><div className="flex items-center gap-4"><div className="bg-blue-500 p-2.5 rounded-xl text-white shadow-lg"><ShieldCheck size={24} /></div><div className="text-left"><p className="font-bold text-sm">Hedera Network</p><p className="text-[10px] text-gray-500">Inmutable HBAR/USDC</p></div></div>{paymentMethod === 'hedera' && <CheckCircle size={20} className="text-blue-500" />}</button>
                 </div>
-                <button onClick={handlePayment} disabled={hasHotel && availabilityStatus !== 'approved'} className={`w-full py-5 rounded-2xl font-bold mt-4 flex items-center justify-center gap-2 shadow-xl ${hasHotel && availabilityStatus !== 'approved' ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                <button onClick={handlePayment} disabled={hasApprovalRequirement && availabilityStatus !== 'approved'} className={`w-full py-5 rounded-2xl font-bold mt-4 flex items-center justify-center gap-2 shadow-xl ${hasApprovalRequirement && availabilityStatus !== 'approved' ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
                    <Lock size={18} /> Pagar {paymentMethod === 'payu' ? prices.cop : prices.usdt}
                 </button>
              </div>
