@@ -2,10 +2,11 @@
 import { TAXI_ZONES, POPULAR_TOURS, HOTEL_LIST, POPULAR_PACKAGES, PARTNER_CLIENTS } from '../constants';
 import { Tour, Hotel, TaxiZone, Reservation, Package, Campaign, Message, Restaurant, GuanaLocation, GroupQuoteConfig, Client } from '../types';
 
-// Webhooks de Make.com
-const MAKE_WEBHOOK_DIRECTORY = 'https://hook.us1.make.com/gleyxf83giw4xqr7i6i94mb7syclmh2o';
-const MAKE_WEBHOOK_SERVICES = 'https://hook.us1.make.com/klnf8ruz7znu31mlig5y7osajbney2p3';
-const MAKE_WEBHOOK_USERS = 'https://hook.us1.make.com/8lz93j5qs3m5qu4cakeukxeq6hhgx6hc';
+// Webhooks de Make.com - DESACTIVADOS (usar backend directo para ahorrar escenarios gratuitos)
+// Solo usamos backend/Airtable directo ahora
+const MAKE_WEBHOOK_DIRECTORY = ''; // Desactivado
+const MAKE_WEBHOOK_SERVICES = ''; // Desactivado
+const MAKE_WEBHOOK_USERS = ''; // Desactivado
 
 // Backend URL - usar relativo en producción, localhost en dev
 const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
