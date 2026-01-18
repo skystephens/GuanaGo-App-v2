@@ -1,5 +1,5 @@
 import React from 'react';
-import { Palette, ExternalLink, Heart, Package } from 'lucide-react';
+import { Palette, Heart, Package, Ticket } from 'lucide-react';
 import { AppRoute } from '../types';
 
 interface CocoArtSectionProps {
@@ -68,15 +68,13 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
               <p className="text-amber-200 text-xs font-bold uppercase">✓ Experiencias educativas e inmersivas</p>
             </div>
 
-            <a
-              href="https://guiasanandresislas.com/experiencia-cultural-coco-art/"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'tour', searchTerm: 'Coco Art' })}
               className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition-colors w-fit"
             >
-              Conocer más
-              <ExternalLink size={14} />
-            </a>
+              <Ticket size={14} />
+              Reservar Experiencia
+            </button>
           </div>
 
           {/* Image */}
@@ -91,7 +89,7 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
       </div>
 
       {/* Offerings Grid */}
-      <div className="relative z-10 grid md:grid-cols-3 gap-4">
+      <div className="relative z-10 grid md:grid-cols-3 gap-4 mb-6">
         {offerings.map((offering, idx) => (
           <div 
             key={idx}
@@ -105,20 +103,6 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
             <p className="text-orange-300 font-black text-xs">{offering.price}</p>
           </div>
         ))}
-      </div>
-
-      {/* Contact CTA */}
-      <div className="relative z-10 mt-6 bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <p className="text-white font-bold text-sm">¿Interesado en Coco Art?</p>
-          <p className="text-amber-100/60 text-xs">Solicita tu presupuesto personalizado</p>
-        </div>
-        <a
-          href="mailto:comercial@guiasai.com?subject=Consulta%20Coco%20Art"
-          className="inline-flex items-center gap-2 bg-orange-500/80 hover:bg-orange-500 text-white px-4 py-2 rounded-lg font-bold text-xs transition-colors whitespace-nowrap"
-        >
-          📧 Contactar
-        </a>
       </div>
     </section>
   );
