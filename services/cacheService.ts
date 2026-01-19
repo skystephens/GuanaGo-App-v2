@@ -266,40 +266,40 @@ export const FALLBACK_TAXI_ZONES: TaxiZone[] = [
     id: 'z1', 
     name: 'Zona 1 - Centro / North End', 
     sectors: 'Centro, North End, El Cliff, Peatonal, Aeropuerto, Spratt Bight',
-    priceSmall: 13000,
-    priceLarge: 26000,
+    priceSmall: 25000,  // 1-4 pasajeros (desde aeropuerto)
+    priceLarge: 35000,  // 5+ pasajeros (van/microbús)
     color: 'bg-yellow-400' 
   },
   { 
     id: 'z2', 
     name: 'Zona 2 - San Luis', 
     sectors: 'San Luis, Sound Bay, Rocky Cay, Bahía Sonora',
-    priceSmall: 30000,
-    priceLarge: 50000,
+    priceSmall: 30000,  // desde aeropuerto
+    priceLarge: 45000,
     color: 'bg-green-500' 
   },
   { 
     id: 'z3', 
     name: 'Zona 3 - La Loma / El Cove', 
     sectors: 'La Loma, El Cove, Orange Hill, Brooks Hill',
-    priceSmall: 35000,
-    priceLarge: 55000,
+    priceSmall: 40000,  // desde aeropuerto
+    priceLarge: 60000,
     color: 'bg-pink-500' 
   },
   { 
     id: 'z4', 
     name: 'Zona 4 - Sur / Punta Sur', 
     sectors: 'Punta Sur, South End, Tom Hooker, El Acuario',
-    priceSmall: 45000,
-    priceLarge: 70000,
+    priceSmall: 70000,  // desde aeropuerto
+    priceLarge: 100000,
     color: 'bg-blue-400' 
   },
   { 
     id: 'z5', 
     name: 'Zona 5 - West View / Cove', 
     sectors: 'West View, Cueva de Morgan, Big Pond, Linval',
-    priceSmall: 40000,
-    priceLarge: 60000,
+    priceSmall: 55000,  // desde aeropuerto
+    priceLarge: 80000,
     color: 'bg-red-500' 
   }
 ];
