@@ -287,7 +287,7 @@ GuanaGO Travel se está lanzando como nuestro **Producto Victoria B2C** - una Pr
 ### Características Desarrolladas Recientemente (Enero 2026)
 1. **Sistema de Cotización en Tiempo Real**: Constructor de itinerarios con IA que calcula paquetes multi-servicio instantáneamente
 2. **Motor de Precios Dinámico**: Lógica de precios separada para B2C (GuanaGO - precios plaza) vs B2B (GuiaSAI - +25-30% para distribución OTA)
-3. **Gestión de Disponibilidad Inteligente**: Sistema de bloqueo de reservas con ventana de 12 horas antes del servicio. Tours confirmados instantáneamente: Acuario Mágico, Johnny Cay Directo, Tour VIP, CocoArt. Alojamientos con respuesta 2-24 horas (L-S). Integración iCal/Google Calendar/Cloudbeds en progreso.
+3. **Gestión de Disponibilidad Inteligente con UX Transparente**: Sistema de bloqueo de reservas con ventana de 12 horas. La PWA comunica claramente al usuario: (a) Tours con confirmación instantánea vs. sujetos a aprobación, (b) Tiempo estimado de respuesta del proveedor, (c) Notificación para revisar perfil y confirmar con pago, (d) Política de tarifas: sin pago completado no hay garantía de precio. Integración iCal/Cloudbeds en progreso.
 4. **Constructor Admin de Cotizaciones**: Sistema CRUD completo para operadores turísticos para crear, editar y gestionar paquetes de viaje personalizados
 5. **Servicios Basados en Ubicación**: Mapas interactivos en Mapbox con áreas circulares aproximadas para hoteles (diseño privacy-first)
 
@@ -358,6 +358,11 @@ GuanaGO Travel se está lanzando como nuestro **Producto Victoria B2C** - una Pr
   - **Política de Reserva**: Ventana de 12 horas antes del servicio (bloqueo automático implementado)
   - **Tours con Confirmación Instantánea**: Acuario Mágico, Johnny Cay Directo, Tour VIP (Acuario + Johnny Cay mismo día), CocoArt
   - **Alojamientos Fast-Response**: Red de socios con tiempo de respuesta 2-24 horas (Lunes-Sábado)
+  - **UX de Reserva en PWA**: 
+    - Sistema de badges visuales ("Confirmación Instantánea" vs "Respuesta en 2-24h")
+    - Notificaciones push cuando proveedor confirma disponibilidad
+    - Dashboard de usuario muestra estado de cotizaciones pendientes
+    - **Política de Tarifas Transparente**: Mensaje claro al reservar - "Esta tarifa es válida solo hasta completar el pago. Sin pago confirmado, no garantizamos el precio mostrado"
   - **Próximo**: Integración con calendarios externos para sincronización automática de disponibilidad 
 
 ### Q2 2026: Escalamiento & Partnerships
@@ -469,7 +474,12 @@ Hosting: [Por determinar - Render/Vercel recomendado]
   - Motor de reglas para políticas de reserva por tipo de servicio
   - Sincronización bidireccional con calendarios externos (iCal/Cloudbeds)
   - Sistema de confirmación automática para tours verificados
-  - Notificaciones en tiempo real a proveedores vía WhatsApp/SMS
+  - Notificaciones bidireccionales: proveedores vía WhatsApp/SMS, usuarios vía push/email
+  - **Dashboard de Usuario con Estados de Reserva**:
+    - Cotizaciones pendientes de confirmación con countdown timer
+    - Alertas de expiración de tarifas sin pago (24-48h)
+    - Historial de reservas con estados: "En espera", "Confirmada", "Pagada", "Expirada"
+  - Sistema de "hold" temporal (30 min) para reservas con confirmación instantánea durante proceso de pago
 - **Endurecimiento de Seguridad**: OAuth2, rate limiting, penetration testing
 
 ---
