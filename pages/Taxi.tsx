@@ -139,24 +139,44 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
                />
 
                <div className="space-y-4">
-                  {/* Leyenda de zonas */}
-                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                    <p className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-2">Zonas de Taxi</p>
-                    <div className="space-y-2">
-                      {TAXI_ZONES.map((zone) => {
-                        const zoneNumber = zone.id.replace('z', '');
-                        const zoneLabel = zone.name.replace(/^Zona\s*\d+\s*-\s*/i, '');
-                        return (
-                          <div key={zone.id} className="flex items-start gap-2">
-                            <div className={`w-3 h-3 mt-1 rounded-full border border-gray-300 ${zone.color}`}></div>
-                            <div className="text-xs text-gray-700 leading-tight">
-                              <span className="font-bold mr-1">Zona {zoneNumber}</span>
-                              <span>{zoneLabel}</span>
-                            </div>
+                  {/* Guía de Zonas y Precios */}
+                  <div className="space-y-2 max-h-72 overflow-y-auto">
+                    <p className="text-xs font-bold text-gray-600 uppercase tracking-widest sticky top-0 bg-white pb-2">Zonas y Tarifas</p>
+                    {TAXI_ZONES.map((zone) => (
+                      <button
+                        key={zone.id}
+                        onClick={() => setSelectedZoneId(zone.id)}
+                        className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer ${
+                          selectedZoneId === zone.id
+                            ? 'bg-green-50 border-green-400 shadow-md'
+                            : 'bg-white border-gray-200 hover:border-green-300'
+                        }`}
+                      >
+                        <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl ${zone.color}`}></div>
+                        
+                        <div className="flex justify-between items-start mb-2 pl-2">
+                          <h3 className="font-bold text-gray-900 text-sm">{zone.name}</h3>
+                          <div className="text-right">
+                            <p className="text-green-600 font-bold text-sm">${(zone.priceSmall / 1000).toFixed(0)}k</p>
+                            <p className="text-[10px] text-gray-500">1-4 pax</p>
                           </div>
-                        );
-                      })}
-                    </div>
+                        </div>
+                        
+                        <p className="text-xs text-gray-500 pl-2 leading-tight mb-2">{zone.sectors}</p>
+                        
+                        <div className="flex items-center justify-between bg-gray-50 rounded-lg p-2 pl-3">
+                          <div className="text-center">
+                            <span className="block text-[9px] text-gray-400 uppercase font-bold">Taxi (1-4)</span>
+                            <span className="font-bold text-gray-800 text-xs">${(zone.priceSmall / 1000).toFixed(0)}k</span>
+                          </div>
+                          <div className="h-4 w-px bg-gray-200"></div>
+                          <div className="text-center">
+                            <span className="block text-[9px] text-gray-400 uppercase font-bold">Van (5+)</span>
+                            <span className="font-bold text-gray-800 text-xs">${(zone.priceLarge / 1000).toFixed(0)}k</span>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
                   </div>
 
                   {/* Formulario de destino y pasajeros */}
