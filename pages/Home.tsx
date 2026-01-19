@@ -136,7 +136,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               <p className="text-xs md:text-sm opacity-80">Donde quedarte</p>
             </button>
             <button 
-              onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'taxi' })}
+              onClick={() => onNavigate(AppRoute.TAXI_DETAIL)}
               className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white p-4 md:p-6 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
             >
               <Car size={24} className="mb-2 md:mb-3" />
