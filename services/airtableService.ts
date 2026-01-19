@@ -643,6 +643,9 @@ export async function getServices(category?: string) {
       // Formalidad empresarial
       rnt: f['RNT'] || f['Rnt'] || '',
       
+      // 🆕 Ubicación GPS (Lat_Lon) para mostrar en mapa
+      latLon: f['Lat_Lon'] || f['LatLon'] || f['coordinates'] || undefined,
+      
       // Las claves image, images y gallery ya están definidas antes, no repetir aquí
     };
   }).filter(s => s.active && (s.ubicacion === 'San Andres' || s.ubicacion === 'San Andrés' || !s.ubicacion)); // Solo servicios publicados de San Andrés

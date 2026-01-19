@@ -17,6 +17,7 @@ export interface Tour {
   latitude?: number;
   longitude?: number;
   requiresApproval?: boolean; // 🆕 Si el servicio requiere confirmación de socio
+  latLon?: string; // 🆕 Ubicación GPS en formato "lat,lon" (ej: "12.5849,-81.7338")
 }
 
 export interface ItineraryDay {

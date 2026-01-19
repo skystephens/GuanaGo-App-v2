@@ -5,6 +5,7 @@ import { HOTEL_DATA, AMENITY_ICONS } from '../constants';
 import { AppRoute, Package, Hotel, Tour } from '../types';
 import { useCart } from '../context/CartContext';
 import { api } from '../services/api';
+import HotelLocationMap from '../components/HotelLocationMap';
 
 interface DetailProps {
   type: 'hotel' | 'tour' | 'package';
@@ -536,6 +537,15 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
              )}
              
              <p className="text-gray-500 leading-relaxed text-sm font-medium mb-6">{data.description}</p>
+             
+             {/* 🆕 Mapa de Ubicación Aproximada - Solo para hoteles */}
+             {isHotel && safeData.latLon && (
+               <HotelLocationMap 
+                 latLon={safeData.latLon} 
+                 title={safeData.title} 
+                 approximationRadiusKm={0.5}
+               />
+             )}
              
              {/* Información del servicio */}
              <div className="grid grid-cols-2 gap-4 mb-6">
