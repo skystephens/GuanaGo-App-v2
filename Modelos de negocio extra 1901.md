@@ -423,6 +423,71 @@ GuanaGO Travel se está lanzando como nuestro **Producto Victoria B2C** - una Pr
 
 ---
 
+## 🪙 ESTRUCTURA DE CAPITAL MULTINIVEL (EQUITY + TOKENS)
+
+Para financiar el crecimiento sin diluir equity indefinidamente, GuanaGO implementará tres capas de participación:
+
+### Capa 1: Equity Tradicional (Control de Empresa)
+**Para**: Socios estratégicos, inversores de impacto, fundadores
+- Sky Stephens (Fundador): 51% con derecho a voto controlador
+- Partners estratégicos (Manish, futuro team): 8-12% c/u
+- Employee Stock Option Pool: 10-15% (futuros CTO, CMO, COO)
+- Estructura: SAFE notes o priced rounds con vesting 4 años / 1 año cliff
+
+**Beneficio**: Alineación a largo plazo, decisiones estratégicas compartidas, salida clara
+
+### Capa 2: Income-Share Tokens (Participación en Ingresos)
+**Para**: Inversores que quieren retornos sin control accionario
+- Modelo similar a Reental.co: Usuarios/inversores compran tokens de servicios específicos
+- Ejemplos:
+  - **"Tour VIP Token"**: Inviertes $500, recibes 2% de los ingresos por ventas de ese tour por 12 meses
+  - **"Hotel Caribbean Night Token"**: Inviertes $1,000 en remodelaciónhotelera, recibes 3% de ingresos mensuales mientras el hotel siga operativo
+  - **"Music Experience NFT"**: Inviertes en experiencia RIMM, recibes royalties de cada booking
+
+**Smart Contracts**:
+- Distribución automática de ingresos vía Hedera
+- Transparencia total: cada venta = depósito automático a token holders
+- Sin intermediarios, sin comisiones de plataforma
+
+**Ventajas**:
+- ✅ Levanta capital sin dilución accionaria
+- ✅ Crea liquidez para servicios específicos
+- ✅ Los inversores ven retornos reales en 6-12 meses
+- ✅ Alinea incentivos: mejor servicio = mejores ingresos para todos
+
+**Proyección 2026**:
+- Lanzar 5 "Income-Share Token series" por $50-100k c/u = $250-500k sin dilución
+- Cada inversor accede a suite de servicios (tours, alojamientos, experiencias)
+- Posibilidad de staking: tokens pueden re-invertirse para mayor retorno
+
+### Capa 3: Utility Tokens - Guana Points
+**Para**: Usuarios, turistas, comunidad local
+- Compran con descuento: $100 USD = 110 Guana Points (10% bonus)
+- Usos:
+  - Descuentos en plataforma GuanaGO (5-15%)
+  - Acceso a experiencias exclusivas RIMM
+  - Staking rewards: 5% APY si dejan tokens por 6+ meses
+  - Voting rights en proyectos sostenibilidad (Biosphere Reserve)
+
+**Diferencia con Income-Share**: Guana Points NO son equity, NO generan dividendos de empresa, es utility puro
+
+### Roadmap de Levantamiento de Capital (2026-2028)
+
+| Fase | Instrumento | Meta | Timeline | Dilución Equity |
+|------|-------------|------|----------|-----------------|
+| **Seed** | SAFE + Income-Share Tokens | $150k (Manish) | Q1 2026 | 8-10% |
+| **Pre-Series A** | Income-Share Series 1-3 | $300k (anónimos) | Q2-Q3 2026 | 0% |
+| **Series A** | Priced round + Tokens | $2-5M (VCs) | Q4 2026-Q1 2027 | 15-20% |
+| **Series B** (Opcional) | Growth capital | $10M+ | 2027-2028 | 10-15% |
+
+**Resultado Final** (2028):
+- Sky: 35-40% equity + 100% control (51% voting)
+- Early investors (Manish, angels): 20-25% equity + token upside
+- Employees: 12-15% via options
+- Empresa valuada: $50-100M USD (Caribbean "super app" para turismo)
+
+---
+
 ## 🎯 MÉTRICAS DE ÉXITO: CÓMO MEDIREMOS ESTE PARTNERSHIP
 
 ### Hitos Técnicos (Track CTO)
