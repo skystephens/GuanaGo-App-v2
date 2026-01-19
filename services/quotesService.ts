@@ -205,9 +205,8 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
   }
 
   try {
-    // Filtrar por cotizacionId
-    const filterFormula = `{Cotizacion}='${cotizacionId}'`;
-    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES_ITEMS)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+    // Obtener TODOS los items sin filtro
+    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES_ITEMS)}`;
     
     const response = await fetch(url, {
       headers: getHeaders()
@@ -218,7 +217,72 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
     }
 
     const data = await response.json();
-    const items = data.records.map(mapRecordToCotizacionItem);
+    const items: CotizacionItem[] = [];
+    
+    // Filtrar en memoria por cotizacionId
+    for (const record of data.records) {
+      // Verificar si este item está vinculado a la cotizacion
+      const linkedIds = record.fields['ID CotizacionGG'] || [];
+      if (!linkedIds.includes(cotizacionId)) {
+        continue; // Este item no pertenece a esta cotización
+      }
+      
+      const servicioId = record.fields.Servicio?.[0];
+      
+      if (servicioId) {
+        // Obtener la cotización para extraer datos del lookup
+        const cotizacionResponse = await fetch(
+          `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES)}/${cotizacionId}`,
+          { headers: getHeaders() }
+        );
+        
+        let fecha = '';
+        let adultos = 0;
+        let ninos = 0;
+        let bebes = 0;
+        
+        if (cotizacionResponse.ok) {
+          const cotizacionData = await cotizacionResponse.json();
+          const cot = cotizacionData.fields;
+          fecha = cot['Fecha Inicio'] || '';
+          adultos = parseInt(cot['Adultos 18 - 99 años'] || '0') || 0;
+          ninos = parseInt(cot['Niños 4 - 17 años'] || '0') || 0;
+          bebes = parseInt(cot['Bebes 0 - 3 años'] || '0') || 0;
+        }
+        
+        // Obtener el servicio de ServiciosTuristicos_SAI
+        const servicioUrl = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.SERVICIOS)}/${servicioId}`;
+        const servicioResponse = await fetch(servicioUrl, { headers: getHeaders() });
+        
+        if (servicioResponse.ok) {
+          const servicioData = await servicioResponse.json();
+          const s = servicioData.fields;
+          
+          // Calcular el subtotal: precio del servicio * (adultos + ninos)
+          const precioServicio = parseFloat(s['Precio actualizado'] || '0') || 0;
+          const subtotal = precioServicio * (adultos + ninos);
+          
+          // Crear el item con los datos
+          items.push({
+            id: record.id,
+            cotizacionId: cotizacionId,
+            servicioId: servicioId,
+            servicioNombre: s.Servicio || s.nombre || '',
+            servicioTipo: (s.category || s.Categoria || 'tour') as 'tour' | 'hotel' | 'taxi' | 'package',
+            fecha: fecha,
+            horarioInicio: s['Horario Inicio'] || s.horarioInicio || '',
+            horarioFin: s['Horario Fin'] || s.horarioFin || '',
+            adultos: adultos,
+            ninos: ninos,
+            bebes: bebes,
+            precioUnitario: precioServicio,
+            subtotal: subtotal,
+            status: (record.fields.Status || 'Disponible') as QuoteItemStatus,
+            conflictos: []
+          });
+        }
+      }
+    }
     
     console.log(`✅ Cargados ${items.length} items para cotización ${cotizacionId}`);
     return items;
@@ -285,15 +349,22 @@ export async function addCotizacionItem(
 
   try {
     const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES_ITEMS)}`;
+    const mappedFields = mapCotizacionItemToFields(item);
+    
+    console.log('📝 Campos mapeados:', mappedFields);
+    
+    const requestBody = {
+      records: [{
+        fields: mappedFields
+      }]
+    };
+    
+    console.log('📤 Enviando a Airtable:', JSON.stringify(requestBody, null, 2));
     
     const response = await fetch(url, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({
-        records: [{
-          fields: mapCotizacionItemToFields(item)
-        }]
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
@@ -394,10 +465,10 @@ function mapRecordToCotizacion(record: any): Cotizacion {
     fechaInicio: f['Fecha Inicio'] || f.fechaInicio || '',
     fechaFin: f['Fecha Fin'] || f.fechaFin || '',
     adultos: parseInt(f['Adultos 18 - 99 años'] || f.Adultos || '0') || 0,
-    ninos: parseInt(f['Niños 4 - 18 años'] || f.Ninos || '0') || 0,
+    ninos: parseInt(f['Niños 4 - 17 años'] || f.Ninos || '0') || 0,
     bebes: parseInt(f['Bebes 0 - 3 años'] || f.Bebes || '0') || 0,
     fechaCreacion: f['Fecha Creacion'] || f.fechaCreacion || record.createdTime,
-    estado: (f.Estado || 'draft') as QuoteStatus,
+    estado: (f.Estado || 'Draft') as QuoteStatus,
     precioTotal: parseFloat(f['Precio total'] || f.precioTotal || '0') || 0,
     notasInternas: f['Notas internas'] || f.notasInternas || ''
   };
@@ -406,17 +477,19 @@ function mapRecordToCotizacion(record: any): Cotizacion {
 function mapCotizacionToFields(cotizacion: Partial<Cotizacion>): Record<string, any> {
   const fields: Record<string, any> = {};
   
+  // Solo campos obligatorios que deben existir en Airtable
   if (cotizacion.nombre !== undefined) fields.Nombre = cotizacion.nombre;
-  if (cotizacion.email !== undefined) fields.Email = cotizacion.email;
-  if (cotizacion.telefono !== undefined) fields.Telefono = cotizacion.telefono;
+  if (cotizacion.email !== undefined && cotizacion.email) fields.Email = cotizacion.email;
+  // Teléfono es opcional - solo agregar si existe y tiene valor
+  if (cotizacion.telefono !== undefined && cotizacion.telefono) fields.Telefono = cotizacion.telefono;
   if (cotizacion.fechaInicio !== undefined) fields['Fecha Inicio'] = cotizacion.fechaInicio;
   if (cotizacion.fechaFin !== undefined) fields['Fecha Fin'] = cotizacion.fechaFin;
   if (cotizacion.adultos !== undefined) fields['Adultos 18 - 99 años'] = cotizacion.adultos;
-  if (cotizacion.ninos !== undefined) fields['Niños 4 - 18 años'] = cotizacion.ninos;
+  if (cotizacion.ninos !== undefined) fields['Niños 4 - 17 años'] = cotizacion.ninos;
   if (cotizacion.bebes !== undefined) fields['Bebes 0 - 3 años'] = cotizacion.bebes;
   if (cotizacion.estado !== undefined) fields.Estado = cotizacion.estado;
   if (cotizacion.precioTotal !== undefined) fields['Precio total'] = cotizacion.precioTotal;
-  if (cotizacion.notasInternas !== undefined) fields['Notas internas'] = cotizacion.notasInternas;
+  if (cotizacion.notasInternas !== undefined && cotizacion.notasInternas) fields['Notas internas'] = cotizacion.notasInternas;
   
   return fields;
 }
@@ -424,21 +497,24 @@ function mapCotizacionToFields(cotizacion: Partial<Cotizacion>): Record<string, 
 function mapRecordToCotizacionItem(record: any): CotizacionItem {
   const f = record.fields;
   
+  // Obtener datos del servicio vinculado (populated por Airtable)
+  const servicioData = f.Servicio_Data || {};
+  
   return {
     id: record.id,
-    cotizacionId: f.Cotizacion?.[0] || f.cotizacionId || '',
-    servicioId: f.Servicio?.[0] || f.servicioId || '',
-    servicioNombre: f.Nombre || f.servicioNombre || '',
-    servicioTipo: (f.Tipo || 'tour') as 'tour' | 'hotel' | 'taxi' | 'package',
-    fecha: f['Fecha inicio'] || f.fecha || '',
-    horarioInicio: f['Horario Inicio'] || f.horarioInicio || '',
-    horarioFin: f['Horario Fin'] || f.horarioFin || '',
-    adultos: parseInt(f['Adultos 18 - 99 años'] || f.adultos || '0') || 0,
-    ninos: parseInt(f['Niños 4 - 18 años'] || f.ninos || '0') || 0,
-    bebes: parseInt(f['Bebes 0 - 3 años'] || f.bebes || '0') || 0,
-    precioUnitario: parseFloat(f['Precio Unitario'] || f.precioUnitario || '0') || 0,
-    subtotal: parseFloat(f['Precio Subtotal'] || f.subtotal || '0') || 0,
-    status: (f.Status || 'disponible') as QuoteItemStatus,
+    cotizacionId: f.CotizacionesGG?.[0] || '',
+    servicioId: f.Servicio?.[0] || '',
+    servicioNombre: servicioData.Servicio || servicioData.nombre || '',
+    servicioTipo: (servicioData.category || servicioData.Categoria || 'tour') as 'tour' | 'hotel' | 'taxi' | 'package',
+    fecha: f['Fecha Inicio'] || '',
+    horarioInicio: servicioData['Horario Inicio'] || servicioData.horarioInicio || '',
+    horarioFin: servicioData['Horario Fin'] || servicioData.horarioFin || '',
+    adultos: parseInt(f['Adultos 18 - 99 años'] || '0') || 0,
+    ninos: parseInt(f['Niños 4 - 17 años'] || '0') || 0,
+    bebes: parseInt(f['Bebes 0 - 3 años'] || '0') || 0,
+    precioUnitario: parseFloat(f['Precio Unitario'] || '0') || 0,
+    subtotal: parseFloat(f['Precio Subtotal'] || '0') || 0,
+    status: (f.Status || 'Disponible') as QuoteItemStatus,
     conflictos: []
   };
 }
@@ -446,19 +522,26 @@ function mapRecordToCotizacionItem(record: any): CotizacionItem {
 function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string, any> {
   const fields: Record<string, any> = {};
   
-  if (item.cotizacionId !== undefined) fields.Cotizacion = [item.cotizacionId];
-  if (item.servicioId !== undefined) fields.Servicio = [item.servicioId];
-  if (item.servicioNombre !== undefined) fields.Nombre = item.servicioNombre;
-  if (item.servicioTipo !== undefined) fields.Tipo = item.servicioTipo;
-  if (item.fecha !== undefined) fields['Fecha inicio'] = item.fecha;
-  if (item.horarioInicio !== undefined) fields['Horario Inicio'] = item.horarioInicio;
-  if (item.horarioFin !== undefined) fields['Horario Fin'] = item.horarioFin;
-  if (item.adultos !== undefined) fields['Adultos 18 - 99 años'] = item.adultos;
-  if (item.ninos !== undefined) fields['Niños 4 - 18 años'] = item.ninos;
-  if (item.bebes !== undefined) fields['Bebes 0 - 3 años'] = item.bebes;
-  if (item.precioUnitario !== undefined) fields['Precio Unitario'] = item.precioUnitario;
-  if (item.subtotal !== undefined) fields['Precio Subtotal'] = item.subtotal;
-  if (item.status !== undefined) fields.Status = item.status;
+  // SOLO los dos campos de vínculo necesarios
+  // Airtable calculará/rellenará automáticamente todo lo demás
+  if (item.cotizacionId !== undefined && item.cotizacionId && item.cotizacionId.trim()) {
+    fields['ID CotizacionGG'] = [item.cotizacionId];
+  }
+  if (item.servicioId !== undefined && item.servicioId && item.servicioId.trim()) {
+    fields.Servicio = [item.servicioId];
+  }
+  
+  // TODOS los demás campos se calculan/rellenan automáticamente en Airtable:
+  // LOOKUPS:
+  // - Fecha Inicio (desde CotizacionesGG)
+  // - Fecha Fin (desde CotizacionesGG)
+  // - Adultos, Niños, Bebés (desde CotizacionesGG)
+  // 
+  // LOOKUPS / CÁLCULOS:
+  // - Precio (lookup desde ServiciosTuristicos_SAI)
+  // - Precio Unitario (lookup o cálculo)
+  // - Precio Subtotal (lookup o cálculo)
+  // - Status (si existe)
   
   return fields;
 }

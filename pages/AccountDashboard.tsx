@@ -43,6 +43,9 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, us
          if (expiresAt > new Date()) {
            setAdminUser(session.user);
            setShowAdminPin(false);
+           // Restaurar vista de SuperAdmin si había sesión válida
+           onSwitchRole('SuperAdmin');
+           if (onNavigate) onNavigate(AppRoute.ADMIN_DASHBOARD);
          }
        } catch {}
      }
@@ -236,6 +239,9 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, us
             console.log('✅ Admin login exitoso:', user);
             setAdminUser(user);
             setShowAdminPin(false);
+            // Entrar directamente al modo SuperAdmin y abrir el dashboard
+            onSwitchRole('SuperAdmin');
+            if (onNavigate) onNavigate(AppRoute.ADMIN_DASHBOARD);
           }}
         />
       );

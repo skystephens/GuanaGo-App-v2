@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Compass, CalendarDays, ShoppingCart, UserCircle, LayoutDashboard, QrCode, Wallet, Settings, PieChart, Map as MapIcon, Database, Trophy, Grid3x3, LogOut } from 'lucide-react';
+import { Compass, CalendarDays, ShoppingCart, UserCircle, LayoutDashboard, QrCode, Wallet, Settings, PieChart, Map as MapIcon, Database, Trophy, Grid3x3, LogOut, FileText } from 'lucide-react';
 import { AppRoute, UserRole } from '../types';
 import { useCart } from '../context/CartContext';
 
@@ -41,7 +41,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
     { route: AppRoute.PROFILE, icon: <UserCircle size={22} />, label: 'Perfil' },
   ];
 
-  // MENU ADMIN: Panel, Backend (sincronización), Finanzas, Socios, Perfil
+  // MENU ADMIN: Panel, Dashboard, Aprobaciones, Reservas, Perfil (Cotizaciones solo en Dashboard y UnifiedPanel)
   const adminNavItems = [
     { route: AppRoute.UNIFIED_PANEL, icon: <Grid3x3 size={22} />, label: 'Panel' },
     { route: AppRoute.ADMIN_DASHBOARD, icon: <PieChart size={22} />, label: 'Dashboard' },

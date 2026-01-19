@@ -391,6 +391,11 @@ export interface CotizacionItem {
 }
 
 export const QUOTE_STATUS_CONFIG = {
+  Draft: { label: 'Borrador', color: 'bg-gray-100', textColor: 'text-gray-700' },
+  Enviada: { label: 'Enviada', color: 'bg-blue-100', textColor: 'text-blue-700' },
+  Aceptada: { label: 'Aceptada', color: 'bg-green-100', textColor: 'text-green-700' },
+  Rechazada: { label: 'Rechazada', color: 'bg-red-100', textColor: 'text-red-700' },
+  // Mantener las minúsculas por compatibilidad
   draft: { label: 'Borrador', color: 'bg-gray-100', textColor: 'text-gray-700' },
   enviada: { label: 'Enviada', color: 'bg-blue-100', textColor: 'text-blue-700' },
   aceptada: { label: 'Aceptada', color: 'bg-green-100', textColor: 'text-green-700' },

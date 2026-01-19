@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, Plus, Send, Trash2, Calendar, Users, DollarSign, Clock,
-  CheckCircle2, AlertCircle, FileText, Search, Filter, User, Mail, Phone
+  CheckCircle2, AlertCircle, FileText, Search, Filter, User, Mail, Phone,
+  Download, Eye, Loader2
 } from 'lucide-react';
 import { AppRoute, Cotizacion, CotizacionItem, Tour, QuoteStatus, QUOTE_STATUS_CONFIG } from '../../types';
 import {
@@ -16,6 +17,7 @@ import {
   validateOperatingDay
 } from '../../services/quotesService';
 import { getServices } from '../../services/airtableService';
+import { downloadQuotePDF, previewQuote } from '../../services/pdfService';
 
 interface AdminQuotesProps {
   onBack: () => void;
@@ -28,6 +30,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [items, setItems] = useState<CotizacionItem[]>([]);
   const [services, setServices] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
   const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
   
   // Form states
@@ -51,6 +54,20 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     loadCotizaciones();
     loadServices();
   }, []);
+
+  // Recalcular el total cuando cambien los items
+  useEffect(() => {
+    if (selectedCotizacion && items.length > 0) {
+      const calculatedTotal = items.reduce((sum, item) => sum + item.subtotal, 0);
+      console.log(`💰 Total recalculado desde items: $${calculatedTotal}`);
+      if (selectedCotizacion.precioTotal !== calculatedTotal) {
+        setSelectedCotizacion({
+          ...selectedCotizacion,
+          precioTotal: calculatedTotal
+        });
+      }
+    }
+  }, [items]);
 
   const loadCotizaciones = async () => {
     setLoading(true);
@@ -80,7 +97,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       ninos: formData.ninos,
       bebes: formData.bebes,
       fechaCreacion: new Date().toISOString(),
-      estado: 'draft',
+      estado: 'Draft',
       precioTotal: 0,
       notasInternas: formData.notasInternas
     };
@@ -94,7 +111,13 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   };
 
   const handleAddService = async (service: Tour) => {
-    if (!selectedCotizacion) return;
+    if (!selectedCotizacion) {
+      alert('Por favor selecciona una cotización primero');
+      return;
+    }
+
+    try {
+      console.log('📋 Agregando servicio:', service.title, 'a cotización:', selectedCotizacion.id);
 
     // Extraer horarios del servicio
     const horarios = service.schedule || service.horario || '';
@@ -125,16 +148,36 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       return;
     }
 
-    // Validar día de operación
-    const dayCheck = validateOperatingDay(service, selectedCotizacion.fechaInicio);
-    if (!dayCheck.valid) {
-      alert(dayCheck.message);
-      return;
+    // Validar día de operación - verificar si el servicio opera en ALGÚN día del rango
+    // Por ahora, solo mostrar advertencia pero permitir agregar (el cliente seleccionará el día específico después)
+    const diasOperacion = service.operatingDays || service.diasOperacion || '';
+    if (diasOperacion && diasOperacion.length > 0) {
+      // Verificar si el día específico está dentro del rango de fechas
+      const startDate = new Date(selectedCotizacion.fechaInicio);
+      const endDate = new Date(selectedCotizacion.fechaFin);
+      const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      
+      // Buscar si hay algún día en el rango donde el servicio opera
+      let hasOperatingDayInRange = false;
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dayName = dayNames[d.getDay()];
+        if (diasOperacion.toLowerCase().includes(dayName.toLowerCase())) {
+          hasOperatingDayInRange = true;
+          break;
+        }
+      }
+      
+      if (!hasOperatingDayInRange) {
+        const proceed = confirm(`⚠️ ${service.title} opera en: ${diasOperacion}\nNo hay coincidencia en el rango ${new Date(selectedCotizacion.fechaInicio).toLocaleDateString()} - ${new Date(selectedCotizacion.fechaFin).toLocaleDateString()}\n\n¿Agregar de todas formas?`);
+        if (!proceed) return;
+      }
     }
 
     const totalPersonas = formData.adultos + formData.ninos + formData.bebes;
+    // Solo adultos y niños pagan; bebés no pagan
+    const payingPeople = formData.adultos + formData.ninos;
     const precio = service.price || service.precio || 0;
-    const subtotal = precio * totalPersonas;
+    const subtotal = precio * payingPeople;
 
     const newItem: Omit<CotizacionItem, 'id'> = {
       cotizacionId: selectedCotizacion.id,
@@ -153,12 +196,16 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       conflictos: validation.conflicts
     };
 
+    console.log('📦 Enviando item a Airtable:', newItem);
+
     const created = await addCotizacionItem(newItem);
     if (created) {
-      setItems([...items, created]);
+      const updatedItems = [...items, created];
+      setItems(updatedItems);
       
-      // Actualizar precio total
-      const newTotal = items.reduce((sum, item) => sum + item.subtotal, 0) + subtotal;
+      // Actualizar precio total sumando todos los items
+      const newTotal = updatedItems.reduce((sum, item) => sum + item.subtotal, 0);
+      console.log(`💰 Nuevo total de cotización: $${newTotal}`);
       await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
       
       // Recargar cotización
@@ -167,24 +214,33 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
         setSelectedCotizacion(updated);
         setItems(updated.items || []);
       }
+      // Sin alerta - el servicio se visualiza automáticamente en la sección de servicios incluidos
+    } else {
+      alert('❌ Error al agregar el servicio');
+    }
+    } catch (error) {
+      console.error('❌ Error en handleAddService:', error);
+      alert('❌ Error: ' + (error instanceof Error ? error.message : 'Error desconocido'));
     }
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    if (!confirm('¿Eliminar este servicio de la cotización?')) return;
-    
     const success = await deleteCotizacionItem(itemId);
     if (success) {
       const newItems = items.filter(i => i.id !== itemId);
       setItems(newItems);
       
-      // Actualizar precio total
+      // Actualizar precio total sumando todos los items restantes
       if (selectedCotizacion) {
         const newTotal = newItems.reduce((sum, item) => sum + item.subtotal, 0);
+        console.log(`💰 Nuevo total después de eliminar: $${newTotal}`);
         await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
         
         const updated = await getCotizacionById(selectedCotizacion.id);
-        if (updated) setSelectedCotizacion(updated);
+        if (updated) {
+          setSelectedCotizacion(updated);
+          setItems(updated.items || []);
+        }
       }
     }
   };
@@ -192,10 +248,30 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const handleSendQuote = async () => {
     if (!selectedCotizacion) return;
     
-    await updateCotizacion(selectedCotizacion.id, { estado: 'enviada' });
+    await updateCotizacion(selectedCotizacion.id, { estado: 'Enviada' });
     alert('✅ Cotización enviada al cliente');
     loadCotizaciones();
     setView('list');
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!selectedCotizacion) return;
+    
+    setGeneratingPDF(true);
+    try {
+      await downloadQuotePDF(selectedCotizacion, items);
+      alert('✅ PDF descargado exitosamente');
+    } catch (error) {
+      alert('❌ Error generando PDF. Inténtalo de nuevo.');
+      console.error(error);
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
+
+  const handlePreview = () => {
+    if (!selectedCotizacion) return;
+    previewQuote(selectedCotizacion, items);
   };
 
   const filteredServices = services.filter(service => {
@@ -252,7 +328,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
               </div>
             ) : (
               cotizaciones.map(cot => {
-                const statusConfig = QUOTE_STATUS_CONFIG[cot.estado];
+                const statusConfig = QUOTE_STATUS_CONFIG[cot.estado] || QUOTE_STATUS_CONFIG['Draft'];
                 return (
                   <div
                     key={cot.id}
@@ -491,13 +567,39 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleSendQuote}
-              className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg transition-colors font-medium"
-            >
-              <Send className="w-5 h-5" />
-              Enviar Cotización
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handlePreview}
+                className="flex items-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors font-medium"
+              >
+                <Eye className="w-5 h-5" />
+                Preview
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                disabled={generatingPDF}
+                className="flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {generatingPDF ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Generando...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-5 h-5" />
+                    Descargar PDF
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleSendQuote}
+                className="flex items-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 rounded-lg transition-colors font-medium"
+              >
+                <Send className="w-5 h-5" />
+                Enviar
+              </button>
+            </div>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6">
@@ -635,7 +737,14 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
                 {/* Filtros */}
                 <div className="flex gap-2 mb-4">
-                  {(['all', 'tour', 'hotel', 'taxi'] as const).map(type => (
+                  {(['all', 'tour', 'hotel', 'taxi'] as const).map(type => {
+                    const labels: Record<string, string> = {
+                      'all': 'Todos',
+                      'tour': 'Tour',
+                      'hotel': 'Alojamiento',
+                      'taxi': 'Taxi'
+                    };
+                    return (
                     <button
                       key={type}
                       onClick={() => setFilterType(type)}
@@ -645,9 +754,10 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                           : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                       }`}
                     >
-                      {type === 'all' ? 'Todos' : type.charAt(0).toUpperCase() + type.slice(1)}
+                      {labels[type]}
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Lista de servicios */}
@@ -661,7 +771,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                       <div className="font-medium text-sm">{service.title || service.nombre}</div>
                       <div className="flex items-center justify-between mt-1">
                         <span className="text-xs text-gray-400">
-                          {service.category || service.tipo}
+                          {service.tipoAlojamiento || service.category || service.tipo || 'Servicio'}
                         </span>
                         <span className="text-sm font-semibold text-green-400">
                           ${(service.price || service.precio || 0).toLocaleString('es-CO')}

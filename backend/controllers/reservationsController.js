@@ -10,6 +10,10 @@ export const getAllReservations = async (req, res, next) => {
     );
     res.json({ success: true, data: result.reservas || [] });
   } catch (error) {
+    // If Make webhook not configured, return empty array
+    if (error.message && error.message.includes('404')) {
+      return res.json({ success: true, data: [] });
+    }
     next(error);
   }
 };

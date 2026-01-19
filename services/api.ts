@@ -9,8 +9,9 @@ const MAKE_WEBHOOK_SERVICES = ''; // Desactivado
 const MAKE_WEBHOOK_USERS = ''; // Desactivado
 
 // Backend URL - usar relativo en producción, localhost en dev
-const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-  ? 'http://localhost:3002' 
+// En local usamos el backend que levanta start-backend (puerto 5000). En prod usamos rutas relativas.
+const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  ? 'http://localhost:5000'
   : '';
 
 const safeJson = async (response: Response) => {
@@ -186,16 +187,18 @@ export const api = {
   },
   // --- USUARIOS Y PERFILES ---
   users: {
+    // Perfil de usuario: usar backend; fallback a constante local
     getProfile: async (userId: string): Promise<Client | null> => {
       try {
-        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'GET_USER_PROFILE', userId, table: 'Usuarios_SAI' })
+        const response = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
         const data = await safeJson(response);
-        // Si no hay respuesta real, devolvemos el mock sincronizado con constants
-        return data || PARTNER_CLIENTS.find(c => c.id === userId) || null;
+        if (data?.user) return data.user as Client;
+        return PARTNER_CLIENTS.find(c => c.id === userId) || null;
       } catch (e) {
         return PARTNER_CLIENTS.find(c => c.id === userId) || null;
       }

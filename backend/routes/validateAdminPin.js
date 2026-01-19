@@ -1,5 +1,5 @@
 import express from 'express';
-import { validateAdminPin } from '../../backend/services/adminService.js';
+import { validateAdminPin } from '../services/adminService.js';
 
 const router = express.Router();
 

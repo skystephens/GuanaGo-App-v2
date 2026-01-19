@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList, Clock } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList, Clock, FileText } from 'lucide-react';
 import { ADMIN_STATS, POPULAR_TOURS } from '../../constants';
 import { AppRoute } from '../../types';
 import { api } from '../../services/api';

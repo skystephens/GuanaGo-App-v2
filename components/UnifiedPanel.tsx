@@ -94,6 +94,7 @@ const UnifiedPanel: React.FC<UnifiedPanelProps> = ({
   const adminMenu: MenuItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <BarChart3 size={24} />, route: AppRoute.ADMIN_DASHBOARD, description: 'Panel de control', color: 'from-red-500 to-red-600' },
     { id: 'approvals', label: 'Aprobaciones', icon: <CheckCircle size={24} />, route: AppRoute.ADMIN_APPROVALS, description: 'Solicitudes pendientes', color: 'from-yellow-500 to-yellow-600', badge: '12' },
+    { id: 'quotes', label: 'Cotizaciones', icon: <FileText size={24} />, route: AppRoute.ADMIN_QUOTES, description: 'Gestión de cotizaciones', color: 'from-emerald-500 to-emerald-600' },
     { id: 'reservations', label: 'Reservas', icon: <Calendar size={24} />, route: AppRoute.ADMIN_RESERVATIONS, description: 'Todas las reservaciones', color: 'from-blue-500 to-blue-600' },
     { id: 'users', label: 'Usuarios', icon: <Users size={24} />, route: AppRoute.ADMIN_USERS, description: 'Gestión de usuarios', color: 'from-purple-500 to-purple-600' },
     { id: 'services', label: 'Servicios', icon: <Package size={24} />, route: AppRoute.ADMIN_SERVICES, description: 'Tours y servicios', color: 'from-emerald-500 to-emerald-600' },
