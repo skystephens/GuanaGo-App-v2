@@ -93,7 +93,19 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, us
             </button>
           )}
           {/* Header Admin */}
-          <div className="bg-white rounded-3xl p-6 mb-6 shadow-xl border border-purple-100">
+          <div className="bg-white rounded-3xl p-6 mb-6 shadow-xl border border-purple-100 relative">
+            <button
+              onClick={() => {
+                localStorage.removeItem('admin_session');
+                setAdminUser(null);
+                onLogout();
+                if (onNavigate) onNavigate(AppRoute.HOME);
+              }}
+              className="absolute top-4 right-4 p-2 hover:bg-red-100 rounded-lg transition-colors text-red-600"
+              title="Cerrar Sesión Admin"
+            >
+              <LogOut size={20} />
+            </button>
             <div className="flex items-center gap-4 mb-4">
               <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl flex items-center justify-center shadow-lg">
                 <ShieldCheck size={32} className="text-white" />

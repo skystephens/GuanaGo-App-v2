@@ -87,40 +87,70 @@ const UserProfileButton: React.FC<UserProfileButtonProps> = ({
 
           {/* Menu Items */}
           <div className="py-2">
-            <button
-              onClick={() => {
-                onNavigate?.(AppRoute.PROFILE);
-                setShowDropdown(false);
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700 text-sm font-medium"
-            >
-              <User size={16} className="text-emerald-600" />
-              Mi Perfil
-            </button>
+            {userRole === 'SuperAdmin' ? (
+              <>
+                <button
+                  onClick={() => {
+                    onNavigate?.(AppRoute.PROFILE);
+                    setShowDropdown(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-purple-50 transition-colors text-purple-700 text-sm font-medium"
+                >
+                  <Settings size={16} className="text-purple-600" />
+                  Controles Admin
+                </button>
 
-            <button
-              onClick={() => {
-                onNavigate?.(AppRoute.PROFILE);
-                setShowDropdown(false);
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700 text-sm font-medium"
-            >
-              <Settings size={16} className="text-blue-600" />
-              Configuración
-            </button>
+                <div className="border-t border-gray-100 my-2"></div>
 
-            <div className="border-t border-gray-100 my-2"></div>
+                <button
+                  onClick={() => {
+                    onLogout?.();
+                    setShowDropdown(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-red-600 text-sm font-bold"
+                >
+                  <LogOut size={16} />
+                  ⚠️ CERRAR SESIÓN ADMIN
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    onNavigate?.(AppRoute.PROFILE);
+                    setShowDropdown(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700 text-sm font-medium"
+                >
+                  <User size={16} className="text-emerald-600" />
+                  Mi Perfil
+                </button>
 
-            <button
-              onClick={() => {
-                onLogout?.();
-                setShowDropdown(false);
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-red-600 text-sm font-medium"
-            >
-              <LogOut size={16} />
-              Cerrar Sesión
-            </button>
+                <button
+                  onClick={() => {
+                    onNavigate?.(AppRoute.PROFILE);
+                    setShowDropdown(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700 text-sm font-medium"
+                >
+                  <Settings size={16} className="text-blue-600" />
+                  Configuración
+                </button>
+
+                <div className="border-t border-gray-100 my-2"></div>
+
+                <button
+                  onClick={() => {
+                    onLogout?.();
+                    setShowDropdown(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-red-600 text-sm font-medium"
+                >
+                  <LogOut size={16} />
+                  Cerrar Sesión
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
