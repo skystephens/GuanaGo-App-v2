@@ -59,9 +59,15 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, us
       setLoadingUser(true);
       setLoadingCampaigns(true);
       try {
-         // 1. Sincronizar datos personales reales desde el proxy (Airtable)
-         const profile = await api.users.getProfile(TEST_USER_ID);
-         setUserData({ ...profile, role: userRole });
+         // 1. Sincronizar datos personales reales desde el proxy (Airtable) - solo si autenticado
+         if (isAuthenticated) {
+            const profile = await api.users.getProfile(TEST_USER_ID);
+            setUserData({ ...profile, role: userRole });
+         } else {
+            // Si no está autenticado, usar datos de fallback
+            const fallbackUser = PARTNER_CLIENTS.find(c => c.id === TEST_USER_ID) || PARTNER_CLIENTS[0];
+            setUserData({ ...fallbackUser, role: userRole });
+         }
 
          // 2. Cargar campañas de marketing activas
          const camps = await api.campaigns.list();

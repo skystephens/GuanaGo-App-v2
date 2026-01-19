@@ -185,6 +185,42 @@ export const api = {
       }
     }
   },
+
+  taxis: {
+    request: async (payload: {
+      origin: string;
+      destination: string;
+      zoneId?: string;
+      passengers: number;
+      luggage?: number;
+      tripType?: string;
+      pickupTime?: string;
+      flightNumber?: string;
+      notes?: string;
+      contactName: string;
+      contactPhone: string;
+      contactEmail?: string;
+      taxisNeeded?: number;
+      priceEstimate?: number;
+    }): Promise<{ success: boolean; message?: string; data?: any }> => {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const response = await fetch(`${BACKEND_URL}/api/taxis/request`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await safeJson(response);
+        if (response.status === 401) throw new Error('401');
+        return data || { success: true, message: 'Solicitud enviada' };
+      } catch (e) {
+        throw e;
+      }
+    }
+  },
   // --- USUARIOS Y PERFILES ---
   users: {
     // Perfil de usuario: usar backend; fallback a constante local
@@ -558,6 +594,10 @@ export const api = {
   campaigns: {
     list: async (): Promise<Campaign[]> => {
        try {
+         // Si no hay webhook configurado, retornar array vacío
+         if (!MAKE_WEBHOOK_SERVICES) {
+           return [];
+         }
          const response = await fetch(MAKE_WEBHOOK_SERVICES, {
             method: 'POST',
             headers: { 
