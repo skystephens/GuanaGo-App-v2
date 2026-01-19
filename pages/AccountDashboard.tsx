@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Award, ShieldCheck, Copy, ExternalLink, Settings, MessageCircle, LogOut, ChevronRight, Mail, Trophy, CreditCard, Ticket, Gift, Zap, Tag, Star, Briefcase, Shield, Loader2, Target, Sparkles, QrCode, Phone, MapPin, X, Globe, UserCheck, IdCard, ArrowLeft, Music } from 'lucide-react';
 import { PARTNER_CLIENTS } from '../constants';
 import { AppRoute, UserRole, Client, Campaign, GuanaUser } from '../types';
-import DashboardContainer from '../components/DashboardContainer';
+import UnifiedPanel from '../components/UnifiedPanel';
 import { api } from '../services/api';
 import ChatWindow from '../components/ChatWindow';
 import AdminPinLogin from './AdminPinLogin';
@@ -340,12 +340,19 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, us
   // Fallback user en caso de carga lenta
   const displayUser = userData ? { ...userData, role: userRole } : { ...PARTNER_CLIENTS[0], role: userRole };
 
-  // Render dinámico por rol
+  // Render dinámico por rol - usar UnifiedPanel para navegación
   return (
-    <div className="bg-gray-50 min-h-screen pb-32 font-sans overflow-x-hidden">
-      <DashboardContainer user={displayUser as GuanaUser} />
-      {/* ...puedes agregar aquí otros componentes globales si lo deseas... */}
-    </div>
+    <UnifiedPanel
+      userRole={userRole}
+      onNavigate={(route) => {
+        if (onNavigate) onNavigate(route);
+      }}
+      onBack={() => {
+        if (onBack) onBack();
+      }}
+      isAuthenticated={isAuthenticated}
+      onLogout={onLogout}
+    />
   );
 };
 
