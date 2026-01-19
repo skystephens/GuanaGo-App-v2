@@ -532,12 +532,12 @@ function mapRecordToCotizacionItem(record: any): CotizacionItem {
   const f = record.fields;
   
   // Obtener datos del servicio vinculado (populated por Airtable)
-  const servicioData = f.Servicio_Data || {};
+  const servicioData = f.ServiciosTuristicos_SAI_Data || f.Servicio_Data || {};
   
   return {
     id: record.id,
     cotizacionId: f.CotizacionesGG?.[0] || '',
-    servicioId: f.Servicio?.[0] || '',
+    servicioId: f.ServiciosTuristicos_SAI?.[0] || f.Servicio?.[0] || '',
     servicioNombre: servicioData.Servicio || servicioData.nombre || '',
     servicioTipo: (servicioData.category || servicioData.Categoria || 'tour') as 'tour' | 'hotel' | 'taxi' | 'package',
     fecha: f['Fecha Inicio'] || '',
@@ -572,10 +572,10 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
   
   // SOLO los dos campos de vínculo necesarios (al crear)
   if (item.cotizacionId !== undefined && item.cotizacionId && item.cotizacionId.trim()) {
-    fields['ID CotizacionGG'] = [item.cotizacionId];
+    fields['CotizacionesGG'] = [item.cotizacionId];
   }
   if (item.servicioId !== undefined && item.servicioId && item.servicioId.trim()) {
-    fields.Servicio = [item.servicioId];
+    fields['ServiciosTuristicos_SAI'] = [item.servicioId];
   }
   
   return fields;
