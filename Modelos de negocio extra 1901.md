@@ -260,257 +260,257 @@ Excited for our call to see how we proceed ahead
 
 ---
 
-# 📊 EXECUTIVE BRIEF FOR MANISH (DSHG SONIC)
-**Partnership Discussion Document | GuanaGO + DSHG Sonic**  
-Date: January 19, 2026  
-Prepared by: Sky Stephens, CEO & Founder, GuanaGO
+# 📊 RESUMEN EJECUTIVO PARA MANISH (DSHG SONIC)
+**Documento de Discusión de Partnership | GuanaGO + DSHG Sonic**  
+Fecha: 19 de Enero, 2026  
+Preparado por: Sky Stephens, CEO & Fundador, GuanaGO
 
 ---
 
-## 🎯 INTRODUCTION: THE EARLY WIN (Q1 2026)
+## 🎯 INTRODUCCIÓN: LA VICTORIA TEMPRANA (Q1 2026)
 
-GuanaGO Travel is launching as our **B2C Victory Product** - a fully functional Progressive Web App that delivers immediate value to both tourists and local stakeholders in San Andrés Island, Colombia's Caribbean Biosphere Reserve.
+GuanaGO Travel se está lanzando como nuestro **Producto Victoria B2C** - una Progressive Web App completamente funcional que entrega valor inmediato tanto a turistas como a actores locales en la Isla de San Andrés, Reserva de Biosfera del Caribe colombiano.
 
-**Why this matters**: While other tourism apps focus on listings, we're building the **"Destination Operating System"** - a platform where AI-powered itinerary planning, real-time inventory management, ethical consumption rewards, and blockchain-verified cultural experiences converge.
+**Por qué esto importa**: Mientras otras apps de turismo se enfocan en listados, nosotros estamos construyendo el **"Sistema Operativo de Destino"** - una plataforma donde convergen la planificación de itinerarios con IA, gestión de inventario en tiempo real, recompensas por consumo ético, y experiencias culturales verificadas con blockchain.
 
 ---
 
-## 🚀 CURRENT STATE: WHAT'S ALREADY BUILT
+## 🚀 ESTADO ACTUAL: LO QUE YA ESTÁ CONSTRUIDO
 
-### Tech Stack Achievements
+### Logros del Tech Stack
 - **Frontend**: React 19.2.1 + TypeScript + Vite 6.4.1
-- **Backend**: Node.js + Express 5.2.1 + Airtable API integration
-- **Infrastructure**: PWA-ready, optimized for mobile-first Caribbean connectivity
-- **Deployment**: Live at guanago.travel (functional prototype stage)
-- **Database**: 500+ local partners mapped in Airtable (Hotels, Tours, Taxis, Restaurants, Artisans)
+- **Backend**: Node.js + Express 5.2.1 + Integración API Airtable
+- **Infraestructura**: PWA-ready, optimizada para conectividad móvil del Caribe
+- **Deployment**: En vivo en guanago.travel (etapa de prototipo funcional)
+- **Base de Datos**: 500+ socios locales mapeados en Airtable (Hoteles, Tours, Taxis, Restaurantes, Artesanos)
 
-### Recently Developed Features (January 2026)
-1. **Real-Time Quotation System**: AI-powered itinerary builder that calculates multi-service packages instantly
-2. **Dynamic Pricing Engine**: Separate pricing logic for B2C (GuanaGO - plaza prices) vs B2B (GuiaSAI - +25-30% for OTA distribution)
-3. **Hotel Availability Management**: Calendar sync ready (iCal/Google Calendar/Cloudbeds integration planned)
-4. **Admin Quote Builder**: Complete CRUD system for tour operators to create, edit, and manage custom travel packages
-5. **Location-Based Services**: Interactive maps with approximated circular areas for hotels (privacy-first design)
-
----
-
-## 💰 BUSINESS MODEL: THE THREE REVENUE STREAMS
-
-### Stream 1: B2C Direct Sales (GuanaGO Travel)
-**Target**: International tourists booking directly via guanago.travel
-- **Commission**: 10-15% (vs. 20-30% charged by Civitatis/GetYourGuide)
-- **Advantage**: Competitive pricing for tourists + higher margins for local suppliers
-- **Volume Projection**: 500 bookings/month by Q4 2026 (conservative estimate based on 200k annual visitors to San Andrés)
-
-### Stream 2: B2B Distribution (GuiaSAI Network)
-**Target**: OTAs, travel agencies, and tour operators worldwide
-- **Markup**: +25-30% on plaza prices (standard industry practice)
-- **API Access**: Wholesalers can integrate GuanaGO inventory into their platforms
-- **Advantage**: Expands reach without competing against our direct sales channel
-
-### Stream 3: Token Economy & Loyalty (Guana Points)
-**Target**: Recurring visitors and "True Fans" of the island
-- **Mechanism**: Users buy Guana Tokens at a discount, redeem with local partners
-- **Savings Plans**: Monthly payment options for vacation planning (e.g., $100/month for 6 months = pre-purchased vacation with 10% bonus tokens)
-- **Blockchain Layer**: Hedera-based NFTs for cultural experiences (RIMM music cluster, CocoArt artisans)
-- **Governance**: Token holders get voting rights on sustainability initiatives and partner approvals
+### Características Desarrolladas Recientemente (Enero 2026)
+1. **Sistema de Cotización en Tiempo Real**: Constructor de itinerarios con IA que calcula paquetes multi-servicio instantáneamente
+2. **Motor de Precios Dinámico**: Lógica de precios separada para B2C (GuanaGO - precios plaza) vs B2B (GuiaSAI - +25-30% para distribución OTA)
+3. **Gestión de Disponibilidad Hotelera**: Sincronización de calendario lista (integración iCal/Google Calendar/Cloudbeds planeada)
+4. **Constructor Admin de Cotizaciones**: Sistema CRUD completo para operadores turísticos para crear, editar y gestionar paquetes de viaje personalizados
+5. **Servicios Basados en Ubicación**: Mapas interactivos con áreas circulares aproximadas para hoteles (diseño privacy-first)
 
 ---
 
-## 🎭 THE THREE CORE TRACKS (AS YOU HIGHLIGHTED)
+## 💰 MODELO DE NEGOCIO: LOS TRES FLUJOS DE INGRESOS
 
-### Track 1: Official Islands Guide
-**Status**: Foundation Complete ✅
-- Interactive map with 500+ points of interest
-- Weather alerts integration with DIMAR (Colombia's maritime authority)
-- Curated services with approval workflow for quality control
-- **Next Step**: Launch mobile notifications for weather alerts and special events
+### Flujo 1: Ventas Directas B2C (GuanaGO Travel)
+**Target**: Turistas internacionales reservando directamente via guanago.travel
+- **Comisión**: 10-15% (vs. 20-30% cobrado por Civitatis/GetYourGuide)
+- **Ventaja**: Precios competitivos para turistas + márgenes más altos para proveedores locales
+- **Proyección de Volumen**: 500 reservas/mes para Q4 2026 (estimación conservadora basada en 200k visitantes anuales a San Andrés)
 
-**Strategic Value**: Position GuanaGO as the **default official channel** endorsed by local government and tourism authorities
+### Flujo 2: Distribución B2B (Red GuiaSAI)
+**Target**: OTAs, agencias de viajes y tour operadores mundialmente
+- **Markup**: +25-30% sobre precios plaza (práctica estándar de la industria)
+- **Acceso API**: Mayoristas pueden integrar inventario de GuanaGO en sus plataformas
+- **Ventaja**: Expande alcance sin competir contra nuestro canal de ventas directas
 
-### Track 2: RIMM / Music Cluster Partnership
-**Status**: Pilot Program Active 🎵
-- Partnership with local musicians' association to offer direct-to-fan experiences
-- NFT-backed "Caribbean Night" experiences (dinner + live music + cultural immersion)
-- Revenue share: 70% to artists, 30% to GuanaGO (vs. traditional 50-50 splits with intermediaries)
-- **Impact**: $50k+ in artist revenue potential in 2026 (vs. current $20k via government contracts)
-
-**Strategic Value**: Creates **cultural differentiation** - tourists don't just visit, they participate in authentic Raizal heritage
-
-### Track 3: Guana Points / Loyalty + Ethical Consumption
-**Status**: Smart Contracts in Design Phase 🪙
-- Reward system for tourists who choose local Raizal-owned businesses
-- Carbon offset tracking (e.g., choosing bike tours over motorboat tours earns 2x points)
-- Partnership with local cooperatives (taxi, fishing, artisan guilds)
-- **Mechanism**: Blockchain audit trail ensures transparency (no "green-washing")
-
-**Strategic Value**: Transforms GuanaGO from a booking platform to a **Destination OS** with embedded values
+### Flujo 3: Economía de Tokens & Lealtad (Guana Points)
+**Target**: Visitantes recurrentes y "True Fans" de la isla
+- **Mecanismo**: Usuarios compran Guana Tokens con descuento, redimen con socios locales
+- **Planes de Ahorro**: Opciones de pago mensual para planificación de vacaciones (ej: $100/mes por 6 meses = vacaciones pre-compradas con 10% bonus en tokens)
+- **Capa Blockchain**: NFTs basados en Hedera para experiencias culturales (cluster RIMM música, artesanos CocoArt)
+- **Gobernanza**: Poseedores de tokens obtienen derechos de voto en iniciativas de sostenibilidad y aprobación de socios
 
 ---
 
-## 📈 THE 2026 DEPLOYMENT PLAN
+## 🎭 LOS TRES TRACKS PRINCIPALES (COMO TÚ DESTACASTE)
 
-### Q1 2026 (NOW): Early Win Launch
-- ✅ Complete hotel + tour booking flow with payment integration
-- ✅ Deploy admin panel for local partners to manage their inventory
-- 🔄 Beta test with 2 partner hotels and 5 tour operators
-- 🔄 Airport banner campaign + taxi cooperative partnership for tourist acquisition
+### Track 1: Guía Oficial de las Islas
+**Estado**: Fundación Completa ✅
+- Mapa interactivo con 500+ puntos de interés
+- Integración de alertas meteorológicas con DIMAR (autoridad marítima de Colombia)
+- Servicios curados con flujo de aprobación para control de calidad
+- **Próximo Paso**: Lanzar notificaciones móviles para alertas climáticas y eventos especiales
 
-### Q2 2026: Scale & Partnerships
-- Launch Guana Token savings plans
-- Integrate Google Calendar / Cloudbeds API for real-time availability
-- Sign 10 additional hotels and 20 tour operators
-- ANATO Travel Show (May 2026) - showcase GuanaGO as the official San Andrés platform
+**Valor Estratégico**: Posicionar GuanaGO como el **canal oficial por defecto** avalado por gobierno local y autoridades turísticas
 
-### Q3 2026: Regional Expansion
-- Add Providencia Island (sister island in Seaflower Biosphere Reserve)
-- Launch B2B API for OTA distribution (GuiaSAI)
-- Implement blockchain NFTs for RIMM music experiences
+### Track 2: Partnership RIMM / Cluster de Música
+**Estado**: Programa Piloto Activo 🎵
+- Partnership con asociación de músicos locales para ofrecer experiencias directas fan-artista
+- Experiencias "Caribbean Night" respaldadas por NFT (cena + música en vivo + inmersión cultural)
+- Reparto de ingresos: 70% artistas, 30% GuanaGO (vs. splits tradicionales 50-50 con intermediarios)
+- **Impacto**: $50k+ en potencial de ingresos para artistas en 2026 (vs. actuales $20k vía contratos gubernamentales)
 
-### Q4 2026: Consolidation
-- Target 500 bookings/month consistently
-- Measure impact: 30% of local businesses report increased revenue via GuanaGO
-- Apply for GEF Seaflower grant to scale conservation-tech initiatives
+**Valor Estratégico**: Crea **diferenciación cultural** - los turistas no solo visitan, participan en herencia Raizal auténtica
 
----
+### Track 3: Guana Points / Lealtad + Consumo Ético
+**Estado**: Smart Contracts en Fase de Diseño 🪙
+- Sistema de recompensas para turistas que eligen negocios raizales locales
+- Rastreo de offset de carbono (ej: elegir tours en bici vs lancha motora gana 2x puntos)
+- Partnership con cooperativas locales (taxi, pesca, gremios artesanales)
+- **Mecanismo**: Rastro de auditoría blockchain asegura transparencia (no "green-washing")
 
-## 🤝 PARTNERSHIP PROPOSAL: DSHG SONIC + GUANAGO
-
-### What We Need from DSHG Sonic
-
-1. **Strategic Tech Partnership (CTO-Level)**
-   - Architecture review for scaling beyond Airtable (migration to PostgreSQL or similar)
-   - API design for B2B distribution layer
-   - Code review and optimization of React/Node codebase
-
-2. **Equity Alignment**
-   - DSHG Sonic acquires **[X]% equity** in exchange for:
-     - Technical leadership on roadmap execution
-     - Mentorship for Sky as CEO/CTO
-     - Network introductions to potential investors and partners
-   - Vesting structure tied to measurable milestones (e.g., 50% vests after 500 active users, 50% after $100k revenue)
-
-3. **Resource Commitment**
-   - **[X] hours/month** of hands-on development support
-   - Quarterly strategic planning sessions
-   - Access to DSHG Sonic's tech infrastructure (if applicable)
-
-### What DSHG Sonic Gets
-
-1. **Equity in a High-Impact Venture**
-   - Solving real problems: 90% of Caribbean islands lack a digital-first tourism OS
-   - Scalable model: Replicable to other small island nations
-   - Aligned with global trends: Blockchain + Tourism + Sustainability
-
-2. **Portfolio Differentiation**
-   - This isn't another SaaS tool; it's a **territorial transformation project**
-   - Cultural impact metrics that attract impact investors and foundations
-   - Potential for government partnerships (Colombia, Caribbean regional bodies)
-
-3. **Clear Exit Strategy**
-   - **Acquisition target**: Booking.com, Expedia, or regional players like Despegar.com
-   - **IPO path**: If GuanaGO becomes the standard for island destinations, regional consolidation becomes viable
-   - **Token liquidity**: If Guana Token gains adoption, secondary market provides liquidity event
+**Valor Estratégico**: Transforma GuanaGO de plataforma de reservas a un **Destination OS** con valores incorporados
 
 ---
 
-## 🎯 SUCCESS METRICS: HOW WE'LL MEASURE THIS PARTNERSHIP
+## 📈 PLAN DE DEPLOYMENT 2026
 
-### Technical Milestones (CTO Track)
-- [ ] Migration from Airtable to scalable database (Q2 2026)
-- [ ] API documentation and sandbox for B2B partners (Q2 2026)
-- [ ] Smart contract deployment for revenue-share NFTs (Q3 2026)
-- [ ] Mobile app (iOS/Android) launch (Q4 2026)
+### Q1 2026 (AHORA): Lanzamiento Victoria Temprana
+- ✅ Flujo completo de reserva hotel + tour con integración de pagos
+- ✅ Desplegar panel admin para socios locales gestionen su inventario
+- 🔄 Prueba beta con 2 hoteles socios y 5 tour operadores
+- 🔄 Campaña banner aeropuerto + partnership cooperativa de taxis para adquisición de turistas
 
-### Business Milestones (CEO Track)
-- [ ] 50 active local partners using GuanaGO dashboard (Q1 2026)
-- [ ] 100 bookings via the platform (Q2 2026)
-- [ ] $50k in gross merchandise volume (Q3 2026)
-- [ ] Break-even on marketing spend (Q4 2026)
+### Q2 2026: Escalamiento & Partnerships
+- Lanzar planes de ahorro Guana Token
+- Integrar API Google Calendar / Cloudbeds para disponibilidad tiempo real
+- Firmar 10 hoteles adicionales y 20 tour operadores
+- ANATO Travel Show (Mayo 2026) - presentar GuanaGO como plataforma oficial de San Andrés
 
-### Impact Milestones (Mission Track)
-- [ ] 20 Raizal-owned businesses report increased income (Q2 2026)
-- [ ] 1,000 tourists use the "ethical consumption" filter (Q3 2026)
-- [ ] Partnership with 1 government entity (tourism or environment) (Q4 2026)
+### Q3 2026: Expansión Regional
+- Agregar Isla Providencia (isla hermana en Reserva Biosfera Seaflower)
+- Lanzar API B2B para distribución OTA (GuiaSAI)
+- Implementar NFTs blockchain para experiencias música RIMM
 
----
-
-## 💡 WHY THIS IS THE RIGHT MOMENT
-
-1. **Post-Pandemic Recovery**: Caribbean tourism is rebounding (+15% YoY growth)
-2. **Digital-First Travelers**: Gen Z and Millennials demand mobile-first, transparent experiences
-3. **ESG Investment Boom**: Impact investors are looking for tech + sustainability + local empowerment stories
-4. **Caribbean Digital Gap**: Most islands still rely on outdated tourism infrastructure - GuanaGO can be the regional standard
+### Q4 2026: Consolidación
+- Target 500 reservas/mes consistentemente
+- Medir impacto: 30% de negocios locales reportan incremento de ingresos vía GuanaGO
+- Aplicar a grant GEF Seaflower para escalar iniciativas conservación-tech
 
 ---
 
-## 🛠️ TECHNOLOGY DEEP DIVE: WHAT MAKES THIS SCALABLE
+## 🤝 PROPUESTA DE PARTNERSHIP: DSHG SONIC + GUANAGO
 
-### Current Architecture
+### Lo Que Necesitamos de DSHG Sonic
+
+1. **Partnership Tecnológico Estratégico (Nivel CTO)**
+   - Revisión de arquitectura para escalar más allá de Airtable (migración a PostgreSQL o similar)
+   - Diseño de API para capa de distribución B2B
+   - Revisión de código y optimización de codebase React/Node
+
+2. **Alineación de Equity**
+   - DSHG Sonic adquiere **[X]% equity** a cambio de:
+     - Liderazgo técnico en ejecución de roadmap
+     - Mentoría para Sky como CEO/CTO
+     - Introducción de network a potenciales inversores y socios
+   - Estructura de vesting atada a hitos medibles (ej: 50% vests después de 500 usuarios activos, 50% después de $100k revenue)
+
+3. **Compromiso de Recursos**
+   - **[X] horas/mes** de soporte desarrollo hands-on
+   - Sesiones trimestrales de planificación estratégica
+   - Acceso a infraestructura tech de DSHG Sonic (si aplica)
+
+### Lo Que DSHG Sonic Obtiene
+
+1. **Equity en un Venture de Alto Impacto**
+   - Resolviendo problemas reales: 90% de islas del Caribe carecen de OS turístico digital-first
+   - Modelo escalable: Replicable a otras pequeñas naciones insulares
+   - Alineado con tendencias globales: Blockchain + Turismo + Sostenibilidad
+
+2. **Diferenciación de Portfolio**
+   - Esto no es otra herramienta SaaS; es un **proyecto de transformación territorial**
+   - Métricas de impacto cultural que atraen inversores de impacto y fundaciones
+   - Potencial para partnerships gubernamentales (Colombia, cuerpos regionales del Caribe)
+
+3. **Estrategia de Salida Clara**
+   - **Target de adquisición**: Booking.com, Expedia, o jugadores regionales como Despegar.com
+   - **Path IPO**: Si GuanaGO se convierte en estándar para destinos isla, consolidación regional se vuelve viable
+   - **Liquidez de token**: Si Guana Token gana adopción, mercado secundario provee evento de liquidez
+
+---
+
+## 🎯 MÉTRICAS DE ÉXITO: CÓMO MEDIREMOS ESTE PARTNERSHIP
+
+### Hitos Técnicos (Track CTO)
+- [ ] Migración de Airtable a base de datos escalable (Q2 2026)
+- [ ] Documentación API y sandbox para socios B2B (Q2 2026)
+- [ ] Despliegue de smart contracts para NFTs revenue-share (Q3 2026)
+- [ ] Lanzamiento app móvil (iOS/Android) (Q4 2026)
+
+### Hitos de Negocio (Track CEO)
+- [ ] 50 socios locales activos usando dashboard GuanaGO (Q1 2026)
+- [ ] 100 reservas vía la plataforma (Q2 2026)
+- [ ] $50k en volumen bruto de mercancía (Q3 2026)
+- [ ] Break-even en gasto de marketing (Q4 2026)
+
+### Hitos de Impacto (Track Misión)
+- [ ] 20 negocios raizales reportan incremento de ingresos (Q2 2026)
+- [ ] 1,000 turistas usan el filtro "consumo ético" (Q3 2026)
+- [ ] Partnership con 1 entidad gubernamental (turismo o ambiente) (Q4 2026)
+
+---
+
+## 💡 POR QUÉ ESTE ES EL MOMENTO CORRECTO
+
+1. **Recuperación Post-Pandemia**: Turismo del Caribe está rebotando (+15% crecimiento YoY)
+2. **Viajeros Digital-First**: Gen Z y Millennials demandan experiencias móvil-first, transparentes
+3. **Boom Inversión ESG**: Inversores de impacto buscan historias tech + sostenibilidad + empoderamiento local
+4. **Brecha Digital Caribeña**: La mayoría de islas aún dependen de infraestructura turística obsoleta - GuanaGO puede ser el estándar regional
+
+---
+
+## 🛠️ DEEP DIVE TECNOLÓGICO: QUÉ HACE ESTO ESCALABLE
+
+### Arquitectura Actual
 ```
 Frontend (PWA): React + TypeScript + Vite
 Backend: Node.js + Express
-Database: Airtable (temporary, migration planned)
-Payments: Integration in progress (Stripe/MercadoPago)
-Blockchain: Hedera (for NFTs and smart contracts)
-Hosting: [To be determined - Render/Vercel recommended]
+Base de Datos: Airtable (temporal, migración planeada)
+Pagos: Integración en progreso (Stripe/MercadoPago)
+Blockchain: Hedera (para NFTs y smart contracts)
+Hosting: [Por determinar - Render/Vercel recomendado]
 ```
 
-### Planned Improvements (with DSHG Sonic)
-- **Database Migration**: Move to PostgreSQL with proper relational schema
-- **Microservices**: Separate inventory, payments, and user management into independent services
-- **API Layer**: RESTful + GraphQL endpoints for B2B distribution
-- **Caching Strategy**: Redis for real-time availability checks
-- **Security Hardening**: OAuth2, rate limiting, penetration testing
+### Mejoras Planeadas (con DSHG Sonic)
+- **Migración de Base de Datos**: Mover a PostgreSQL con esquema relacional apropiado
+- **Microservicios**: Separar inventario, pagos y gestión de usuarios en servicios independientes
+- **Capa API**: Endpoints RESTful + GraphQL para distribución B2B
+- **Estrategia de Caché**: Redis para checks de disponibilidad en tiempo real
+- **Endurecimiento de Seguridad**: OAuth2, rate limiting, penetration testing
 
 ---
 
-## 📞 NEXT STEPS FOR OUR CALL
+## 📞 PRÓXIMOS PASOS PARA NUESTRA LLAMADA
 
-1. **Alignment on Vision**: Confirm that DSHG Sonic sees the potential of GuanaGO as a "Destination OS" (not just another travel app)
+1. **Alineación de Visión**: Confirmar que DSHG Sonic ve el potencial de GuanaGO como "Destination OS" (no solo otra app de viajes)
 
-2. **Equity & Terms Discussion**: 
-   - What equity percentage makes sense for both parties?
-   - Vesting schedule tied to milestones?
-   - Roles and responsibilities (Sky as CEO, Manish as Strategic CTO?)
+2. **Discusión de Equity & Términos**: 
+   - ¿Qué porcentaje de equity tiene sentido para ambas partes?
+   - ¿Calendario de vesting atado a hitos?
+   - ¿Roles y responsabilidades (Sky como CEO, Manish como CTO Estratégico)?
 
-3. **Immediate Action Items**:
-   - Code review of GuanaGO codebase (GitHub access)
-   - Architecture design session (database migration plan)
-   - Define Q1 2026 sprint goals together
+3. **Action Items Inmediatos**:
+   - Revisión de código de codebase GuanaGO (acceso GitHub)
+   - Sesión de diseño de arquitectura (plan de migración de base de datos)
+   - Definir objetivos sprint Q1 2026 juntos
 
-4. **Legal Framework**:
-   - SAFE note, equity agreement, or advisory role with options?
-   - IP protection for both GuanaGO proprietary code and DSHG Sonic contributions
+4. **Marco Legal**:
+   - ¿SAFE note, acuerdo de equity, o rol advisory con opciones?
+   - ¿Protección IP tanto para código propietario GuanaGO como contribuciones DSHG Sonic?
 
 ---
 
-## 🌟 CLOSING STATEMENT
+## 🌟 DECLARACIÓN FINAL
 
-GuanaGO is not just a booking platform - it's the **digital infrastructure for a Caribbean island's economic transformation**. By partnering with DSHG Sonic, we're combining:
+GuanaGO no es solo una plataforma de reservas - es la **infraestructura digital para la transformación económica de una isla caribeña**. Al asociarnos con DSHG Sonic, estamos combinando:
 
-- **Sky's Domain Expertise**: 5+ years on the island, deep local relationships, understanding of cultural nuances
-- **DSHG Sonic's Technical Excellence**: Scalable architecture, startup experience, strategic vision
-- **Shared Mission**: Build ethical tech that empowers local communities while generating sustainable returns
+- **Expertise de Dominio de Sky**: 5+ años en la isla, relaciones locales profundas, entendimiento de matices culturales
+- **Excelencia Técnica de DSHG Sonic**: Arquitectura escalable, experiencia startup, visión estratégica
+- **Misión Compartida**: Construir tech ético que empodera comunidades locales mientras genera retornos sostenibles
 
-Let's make 2026 the year GuanaGO becomes the blueprint for how small island nations leverage technology to reclaim their tourism economy.
+Hagamos del 2026 el año en que GuanaGO se convierte en el blueprint de cómo pequeñas naciones insulares aprovechan la tecnología para reclamar su economía turística.
 
-**Looking forward to our conversation.**
+**Esperando nuestra conversación con entusiasmo.**
 
 ---
 
 *Sky Stephens*  
-*Founder & CEO, GuanaGO*  
-*[Your Contact Info]*
+*Fundador & CEO, GuanaGO*  
+*[Tu Info de Contacto]*
 
 ---
 
-## 📋 ATTACHMENTS FOR THE CALL
+## 📋 ANEXOS PARA LA LLAMADA
 
-1. **Live Demo**: guanago.travel (credentials to be shared)
-2. **GitHub Repository**: [Link to be shared with NDA]
-3. **Financial Model**: Revenue projections 2026-2028 (Excel/Google Sheets)
-4. **Partner Testimonials**: 2 local hoteliers who've tested the admin panel
-5. **ANATO 2026 Presentation**: Slides for May travel show
+1. **Demo en Vivo**: guanago.travel (credenciales a compartir)
+2. **Repositorio GitHub**: [Link a compartir con NDA]
+3. **Modelo Financiero**: Proyecciones de ingresos 2026-2028 (Excel/Google Sheets)
+4. **Testimonios de Socios**: 2 hoteleros locales que han probado el panel admin
+5. **Presentación ANATO 2026**: Slides para feria de viajes de Mayo
 
 ---
 
@@ -519,8 +519,13 @@ Let's make 2026 the year GuanaGO becomes the blueprint for how small island nati
 1. **Revisar y personalizar** el porcentaje de equity que estás dispuesto a ofrecer
 2. **Definir tus "no negociables"** (ej: conservar control mayoritario, mantener misión social)
 3. **Preparar demo en vivo** mostrando el sistema de cotización que acabas de desarrollar
-4. **Tener clarity** sobre tu runway actual (cuántos meses puedes operar sin inversión externa)
+4. **Tener claridad** sobre tu runway actual (cuántos meses puedes operar sin inversión externa)
 5. **Investigar a DSHG Sonic**: portfolio, valores, exit stories previos
+6. **Preparar respuestas** a preguntas sobre:
+   - Defensibilidad del negocio (¿qué impide que Booking clone esto?)
+   - Tamaño de mercado direccionable (TAM/SAM/SOM)
+   - Tu tesis sobre por qué el timing es ahora
+   - Qué harías con $X cantidad de inversión
 
 ---
 
