@@ -159,7 +159,7 @@ app.use(notFound);
 app.use(errorHandler);
 
 // ==================== START SERVER ====================
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log('\n🚀 =======================================');
   console.log(`   GuanaGO Backend Server`);
   console.log('   =======================================');
@@ -167,4 +167,10 @@ app.listen(PORT, () => {
   console.log(`   📊 Environment: ${config.nodeEnv}`);
   console.log(`   📡 API Base: http://localhost:${PORT}/api`);
   console.log('   =======================================\n');
+}).on('error', (err) => {
+  console.error('❌ Error al iniciar servidor:', err);
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ El puerto ${PORT} ya está en uso`);
+    process.exit(1);
+  }
 });

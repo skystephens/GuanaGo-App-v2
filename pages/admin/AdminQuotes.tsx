@@ -12,6 +12,7 @@ import {
   addCotizacionItem,
   updateCotizacion,
   deleteCotizacionItem,
+  updateCotizacionItem,
   validateScheduleConflicts,
   validateCapacity,
   validateOperatingDay
@@ -33,6 +34,10 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
   
+  // Estados para edición de items
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingItemData, setEditingItemData] = useState<Partial<CotizacionItem>>({});
+  
   // Form states
   const [formData, setFormData] = useState({
     nombre: '',
@@ -43,6 +48,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     adultos: 2,
     ninos: 0,
     bebes: 0,
+    descuento: 0,
     notasInternas: ''
   });
 
@@ -97,7 +103,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       ninos: formData.ninos,
       bebes: formData.bebes,
       fechaCreacion: new Date().toISOString(),
-      estado: 'Draft',
+      estado: 'draft',
       precioTotal: 0,
       notasInternas: formData.notasInternas
     };
@@ -120,7 +126,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       console.log('📋 Agregando servicio:', service.title, 'a cotización:', selectedCotizacion.id);
 
     // Extraer horarios del servicio
-    const horarios = service.schedule || service.horario || '';
+    const horarios = (service as any).schedule || (service as any).horario || '';
     const horarioMatch = horarios.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
     const horarioInicio = horarioMatch ? horarioMatch[1] : '';
     const horarioFin = horarioMatch ? horarioMatch[2] : '';
@@ -150,7 +156,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
     // Validar día de operación - verificar si el servicio opera en ALGÚN día del rango
     // Por ahora, solo mostrar advertencia pero permitir agregar (el cliente seleccionará el día específico después)
-    const diasOperacion = service.operatingDays || service.diasOperacion || '';
+    const diasOperacion = (service as any).operatingDays || (service as any).diasOperacion || '';
     if (diasOperacion && diasOperacion.length > 0) {
       // Verificar si el día específico está dentro del rango de fechas
       const startDate = new Date(selectedCotizacion.fechaInicio);
@@ -176,15 +182,38 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     const totalPersonas = formData.adultos + formData.ninos + formData.bebes;
     // Solo adultos y niños pagan; bebés no pagan
     const payingPeople = formData.adultos + formData.ninos;
-    const precio = service.price || service.precio || 0;
-    const subtotal = precio * payingPeople;
+    const precio = service.price || (service as any).precio || 0;
+    
+    // LÓGICA ESPECIAL PARA ALOJAMIENTOS
+    let subtotal = 0;
+    let fechaFin: string | undefined = undefined;
+    
+    const isHotel = (service.category || (service as any).tipo) === 'hotel';
+    
+    if (isHotel) {
+      // Para hoteles: calcular número de noches
+      const startDate = new Date(selectedCotizacion.fechaInicio);
+      const endDate = new Date(selectedCotizacion.fechaFin);
+      // Las noches son desde check-in hasta check-out (no incluye la noche de check-out)
+      const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      // El precio del hotel NO se multiplica por pax (ya incluye el número de huéspedes)
+      subtotal = precio * Math.max(1, nights);
+      fechaFin = selectedCotizacion.fechaFin;
+      
+      console.log(`🏨 Hotel: ${nights} noches × $${precio} = $${subtotal}`);
+    } else {
+      // Para tours y otros servicios: multiplicar por personas
+      subtotal = precio * payingPeople;
+      console.log(`🎫 ${service.category || 'Servicio'}: ${payingPeople} pax × $${precio} = $${subtotal}`);
+    }
 
     const newItem: Omit<CotizacionItem, 'id'> = {
       cotizacionId: selectedCotizacion.id,
       servicioId: service.id,
-      servicioNombre: service.title || service.nombre,
-      servicioTipo: (service.category || service.tipo) as 'tour' | 'hotel' | 'taxi' | 'package',
+      servicioNombre: service.title || (service as any).nombre,
+      servicioTipo: (service.category || (service as any).tipo) as 'tour' | 'hotel' | 'taxi' | 'package',
       fecha: selectedCotizacion.fechaInicio,
+      fechaFin: fechaFin,
       horarioInicio,
       horarioFin,
       adultos: formData.adultos,
@@ -245,10 +274,75 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     }
   };
 
+  const handleStartEditItem = (item: CotizacionItem) => {
+    setEditingItemId(item.id);
+    setEditingItemData({
+      ...item,
+      precioEditado: item.precioEditado || item.precioUnitario
+    });
+  };
+
+  const handleSaveEditItem = async (itemId: string) => {
+    if (!editingItemData || !selectedCotizacion) return;
+
+    const itemIndex = items.findIndex(i => i.id === itemId);
+    if (itemIndex === -1) return;
+
+    const currentItem = items[itemIndex];
+    
+    // Calcular nuevo subtotal basado en cambios
+    let newSubtotal = currentItem.subtotal;
+    
+    if (currentItem.servicioTipo === 'hotel') {
+      // Para hoteles: el precio se aplica una sola vez (no se multiplica por pax)
+      const startDate = new Date(editingItemData.fecha || currentItem.fecha);
+      const endDate = new Date(editingItemData.fechaFin || currentItem.fechaFin || currentItem.fecha);
+      const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const price = editingItemData.precioEditado || editingItemData.precioUnitario || currentItem.precioUnitario;
+      newSubtotal = price * Math.max(1, nights);
+    } else {
+      // Para tours y otros: precio × personas
+      const payingPeople = (editingItemData.adultos || currentItem.adultos) + (editingItemData.ninos || currentItem.ninos);
+      const price = editingItemData.precioEditado || editingItemData.precioUnitario || currentItem.precioUnitario;
+      newSubtotal = price * payingPeople;
+    }
+
+    const updatedItem: CotizacionItem = {
+      ...currentItem,
+      ...editingItemData,
+      precioUnitario: editingItemData.precioEditado ? currentItem.precioUnitario : editingItemData.precioUnitario || currentItem.precioUnitario,
+      precioEditado: editingItemData.precioEditado,
+      subtotal: newSubtotal
+    };
+
+    // Guardar en Airtable
+    const saved = await updateCotizacionItem(itemId, updatedItem);
+    if (!saved) {
+      alert('❌ Error al guardar el item');
+      return;
+    }
+
+    const updatedItems = [...items];
+    updatedItems[itemIndex] = updatedItem;
+    setItems(updatedItems);
+
+    // Actualizar precio total
+    const newTotal = updatedItems.reduce((sum, item) => sum + item.subtotal, 0);
+    await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
+
+    setEditingItemId(null);
+    setEditingItemData({});
+  };
+
+  const handleCancelEditItem = () => {
+    setEditingItemId(null);
+    setEditingItemData({});
+  };
+
   const handleSendQuote = async () => {
     if (!selectedCotizacion) return;
     
-    await updateCotizacion(selectedCotizacion.id, { estado: 'Enviada' });
+    await updateCotizacion(selectedCotizacion.id, { estado: 'enviada' });
     alert('✅ Cotización enviada al cliente');
     loadCotizaciones();
     setView('list');
@@ -652,48 +746,141 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                           item.status === 'conflicto' ? 'border-orange-600 bg-orange-950/20' : 'border-gray-800 bg-gray-950'
                         }`}
                       >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-semibold">{item.servicioNombre}</h4>
-                              <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded text-xs uppercase">
-                                {item.servicioTipo}
-                              </span>
+                        {editingItemId === item.id ? (
+                          // MODO EDICIÓN
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-400 mb-2">Fecha Inicio</label>
+                              <input
+                                type="date"
+                                value={editingItemData.fecha || ''}
+                                onChange={(e) => setEditingItemData({ ...editingItemData, fecha: e.target.value })}
+                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                              />
                             </div>
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-4 h-4" />
-                                {new Date(item.fecha).toLocaleDateString()}
-                              </div>
-                              {item.horarioInicio && item.horarioFin && (
-                                <div className="flex items-center gap-1">
-                                  <Clock className="w-4 h-4" />
-                                  {item.horarioInicio} - {item.horarioFin}
-                                </div>
-                              )}
-                              <div className="flex items-center gap-1">
-                                <Users className="w-4 h-4" />
-                                {item.adultos + item.ninos + item.bebes} pax
-                              </div>
-                              <div className="flex items-center gap-1 font-semibold text-green-400">
-                                <DollarSign className="w-4 h-4" />
-                                ${item.subtotal.toLocaleString('es-CO')}
-                              </div>
-                            </div>
-                            {item.conflictos && item.conflictos.length > 0 && (
-                              <div className="mt-2 text-sm text-orange-400 flex items-start gap-2">
-                                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                <span>{item.conflictos[0]}</span>
+                            
+                            {item.servicioTipo === 'hotel' && (
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-400 mb-2">Fecha Fin</label>
+                                <input
+                                  type="date"
+                                  value={editingItemData.fechaFin || item.fechaFin || ''}
+                                  onChange={(e) => setEditingItemData({ ...editingItemData, fechaFin: e.target.value })}
+                                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                />
                               </div>
                             )}
+
+                            <div className="grid grid-cols-3 gap-2">
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-400 mb-1">Adultos</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={editingItemData.adultos || 0}
+                                  onChange={(e) => setEditingItemData({ ...editingItemData, adultos: parseInt(e.target.value) || 0 })}
+                                  className="w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-400 mb-1">Niños</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={editingItemData.ninos || 0}
+                                  onChange={(e) => setEditingItemData({ ...editingItemData, ninos: parseInt(e.target.value) || 0 })}
+                                  className="w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-400 mb-1">Bebés</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={editingItemData.bebes || 0}
+                                  onChange={(e) => setEditingItemData({ ...editingItemData, bebes: parseInt(e.target.value) || 0 })}
+                                  className="w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-400 mb-2">Precio (Editar si aplica descuento)</label>
+                              <input
+                                type="number"
+                                value={editingItemData.precioEditado || editingItemData.precioUnitario || 0}
+                                onChange={(e) => setEditingItemData({ ...editingItemData, precioEditado: parseFloat(e.target.value) || 0 })}
+                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                              />
+                            </div>
+
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleSaveEditItem(item.id)}
+                                className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-white text-sm font-semibold transition-colors"
+                              >
+                                Guardar
+                              </button>
+                              <button
+                                onClick={handleCancelEditItem}
+                                className="flex-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm font-semibold transition-colors"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
                           </div>
-                          <button
-                            onClick={() => handleDeleteItem(item.id)}
-                            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
+                        ) : (
+                          // MODO VISUALIZACIÓN
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 cursor-pointer" onClick={() => handleStartEditItem(item)}>
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="font-semibold">{item.servicioNombre}</h4>
+                                <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded text-xs uppercase">
+                                  {item.servicioTipo}
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="w-4 h-4" />
+                                  {new Date(item.fecha).toLocaleDateString()}
+                                  {item.servicioTipo === 'hotel' && item.fechaFin && (
+                                    <>
+                                      {' - '}
+                                      {new Date(item.fechaFin).toLocaleDateString()}
+                                    </>
+                                  )}
+                                </div>
+                                {item.horarioInicio && item.horarioFin && (
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="w-4 h-4" />
+                                    {item.horarioInicio} - {item.horarioFin}
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-1">
+                                  <Users className="w-4 h-4" />
+                                  {item.adultos + item.ninos + item.bebes} pax
+                                </div>
+                                <div className="flex items-center gap-1 font-semibold text-green-400">
+                                  <DollarSign className="w-4 h-4" />
+                                  ${item.subtotal.toLocaleString('es-CO')}
+                                </div>
+                              </div>
+                              {item.conflictos && item.conflictos.length > 0 && (
+                                <div className="mt-2 text-sm text-orange-400 flex items-start gap-2">
+                                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                  <span>{item.conflictos[0]}</span>
+                                </div>
+                              )}
+                              <div className="mt-2 text-xs text-gray-500">Haz clic para editar fecha, pax o precio</div>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteItem(item.id)}
+                              className="p-2 text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded-lg transition-colors flex-shrink-0"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -713,8 +900,54 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
             <div className="space-y-6">
               {/* Total */}
               <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-6 rounded-xl">
-                <div className="text-sm text-blue-100 mb-1">Precio Total</div>
-                <div className="text-4xl font-bold">${selectedCotizacion.precioTotal.toLocaleString('es-CO')}</div>
+                <div className="text-sm text-blue-100 mb-3">Resumen Financiero</div>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-blue-100">Subtotal</span>
+                    <span className="text-2xl font-bold text-white">${selectedCotizacion.precioTotal.toLocaleString('es-CO')}</span>
+                  </div>
+                  
+                  <div className="pt-3 border-t border-blue-400/30">
+                    <label className="block text-xs text-blue-100 mb-2">Descuento (Opcional)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        value={selectedCotizacion.descuento || 0}
+                        onChange={(e) => {
+                          const newDescuento = parseFloat(e.target.value) || 0;
+                          setSelectedCotizacion({
+                            ...selectedCotizacion,
+                            descuento: newDescuento
+                          });
+                        }}
+                        onBlur={() => {
+                          if (selectedCotizacion.descuento !== undefined) {
+                            updateCotizacion(selectedCotizacion.id, { descuento: selectedCotizacion.descuento });
+                          }
+                        }}
+                        placeholder="0"
+                        className="flex-1 px-3 py-2 bg-blue-800/50 border border-blue-400 rounded text-white text-sm placeholder-blue-200"
+                      />
+                      <span className="flex items-center text-blue-100 text-sm">COP</span>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-3 border-t border-blue-400/30">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-blue-100 font-semibold">Total Final</span>
+                      <span className="text-3xl font-bold text-white">
+                        ${(selectedCotizacion.precioTotal - (selectedCotizacion.descuento || 0)).toLocaleString('es-CO')}
+                      </span>
+                    </div>
+                    {selectedCotizacion.descuento && selectedCotizacion.descuento > 0 && (
+                      <div className="text-xs text-green-200 mt-1">
+                        Descuento: ${selectedCotizacion.descuento.toLocaleString('es-CO')}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Buscador de servicios */}

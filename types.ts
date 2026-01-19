@@ -368,6 +368,7 @@ export interface Cotizacion {
   fechaCreacion: string;              // ISO timestamp
   estado: QuoteStatus;
   precioTotal: number;
+  descuento?: number;                 // Descuento en COP (nuevo)
   notasInternas?: string;
   items?: CotizacionItem[];           // Items de la cotización
 }
@@ -378,16 +379,19 @@ export interface CotizacionItem {
   servicioId: string;                 // Link a ServiciosTuristicos_SAI
   servicioNombre: string;             // Nombre del servicio
   servicioTipo: 'tour' | 'hotel' | 'taxi' | 'package';  // Tipo
-  fecha: string;                      // ISO date
+  fecha: string;                      // ISO date (fecha inicio)
+  fechaFin?: string;                  // ISO date (fecha fin para alojamientos - nuevo)
   horarioInicio?: string;             // HH:MM
   horarioFin?: string;                // HH:MM
-  adultos: number;
-  ninos: number;
-  bebes: number;
-  precioUnitario: number;
-  subtotal: number;                   // precio × personas
+  adultos: number;                    // Editable
+  ninos: number;                      // Editable
+  bebes: number;                      // Editable
+  precioUnitario: number;             // Precio original (referencia)
+  precioEditado?: number;             // Precio editado manualmente (nuevo)
+  subtotal: number;                   // precio × personas (o precio fijo para hotel)
   status: QuoteItemStatus;
   conflictos?: string[];              // Lista de conflictos detectados
+  incluyeHuespedes?: number;          // Para alojamientos: número de huéspedes que incluye el precio
 }
 
 export const QUOTE_STATUS_CONFIG = {
