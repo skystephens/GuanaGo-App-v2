@@ -345,7 +345,10 @@ GuanaGO Travel se está lanzando como nuestro **Producto Victoria B2C** - una Pr
 
 **Valor Estratégico**: Transforma GuanaGO de plataforma de reservas a un **Destination OS** con valores incorporados
 
----
+### Track 4: Alianza con cooperativa de taxis aeropuerto mas de 200 taxis en actual funcionamiento.
+**Estado**: en reunines con Gerencia y Junta directiva
+- por lo pronto trabajamos con 10 taxistas que pueden darnos servicio casi inmediato en horario diurno, pero preferimos maximo 6 horas antes tener la reserva pronto sera menos.
+
 
 ## 📈 PLAN DE DEPLOYMENT 2026
 
@@ -485,6 +488,45 @@ Para financiar el crecimiento sin diluir equity indefinidamente, GuanaGO impleme
 - Early investors (Manish, angels): 20-25% equity + token upside
 - Employees: 12-15% via options
 - Empresa valuada: $50-100M USD (Caribbean "super app" para turismo)
+
+---
+
+## 🚕 ALIANZA ESTRATÉGICA: COOPERATIVA DE TAXIS (AEROPUERTO)
+
+**Objetivo**: Digitalizar el despacho en aeropuerto (200 taxis) para reducir espera, aumentar ingresos y captar turistas a GuanaGO desde el primer contacto.
+
+### Propuesta de Valor
+- **Turnos Digitales Transparencia**: App/Panel que respeta reglas actuales (pares/impares alternando por día) y muestra posición en fila.
+- **Despacho Asistido**: QR en banner de aeropuerto → viajero ingresa destino → sistema asigna taxi en turno y muestra placa + tarifa estimada.
+- **Venta Cruzada**: Ofrecer traslado + tour/seguro básico con comisión a la cooperativa.
+- **Cash + Digital**: Aceptar pago en efectivo y QR/Link de pago; registrar viaje para métricas de reparto justo.
+- **Seguridad y Confianza**: Identidad verificada de conductor + botón de alerta; recibo digital para el turista.
+
+### Modelo de Ingresos y Reparto
+- **Comisión Baja**: 5-7% por viaje digitalizado (vs 15-20% de OTAs); 70% de esa comisión se reinvierte en marketing conjunto (banner, QR, ads).
+- **Bonos de Prioridad**: Conductores que tomen viajes digitales obtienen priorización en la siguiente ronda (respetando pares/impares).
+- **Data Compartida**: Métricas de demanda por vuelo y hora → optimiza asignación y reduce tiempos muertos.
+
+### Fases de Implementación
+1) **Piloto 30 días** (20 taxis): Turnos pares/impares, QR en banner, tracking de 3 vuelos diarios.
+2) **Escala a 200 taxis**: Dashboard para presidente de la cooperativa; soporte 6am-8pm.
+3) **Integraciones**: Pagos con link/QR, reportes semanales; opción de "primer traslado gratis" si reservan tour >$200k.
+
+### Qué Pedimos a la Cooperativa
+- Permiso para instalar banner con QR y rotular 20 taxis piloto.
+- Acceso al despachador para co-gestionar turnos digitales.
+- Vocero (presidente) para comité semanal de mejora.
+
+### Qué Ofrecemos
+- Software de turnos sin costo en piloto.
+- Marketing compartido (70% de comisión reinvertida en pauta + material).
+- Reportes de demanda por vuelo, hora y ruta para ajustar tarifas dinámicas.
+
+### KPIs del Piloto
+- Tiempo promedio de asignación < 2 minutos.
+- % taxis digitales sobre total: meta 30% en 30 días.
+- Conversión a upsell (tour/seguro): meta 10% de traslados.
+- Satisfacción viajero (NPS) y sin incidentes reportados.
 
 ---
 
