@@ -264,6 +264,7 @@ export enum AppRoute {
   ADMIN_STRUCTURE = 'ADMIN_STRUCTURE',
   ADMIN_BACKEND = 'ADMIN_BACKEND',
   ADMIN_TASKS = 'ADMIN_TASKS',
+  ADMIN_QUOTES = 'ADMIN_QUOTES',
   ADMIN_CARIBBEAN = 'ADMIN_CARIBBEAN_NIGHT',
   ADMIN_ARTISTAS = 'ADMIN_ARTISTAS',
   ADMIN_SOCIOS = 'ADMIN_SOCIOS',
@@ -346,3 +347,60 @@ export interface Admin {
   activo: boolean;
   permisos_especificos?: string[];
 }
+
+// =========================================================
+// 📋 SISTEMA DE COTIZACIONES
+// =========================================================
+
+export type QuoteStatus = 'draft' | 'enviada' | 'aceptada' | 'rechazada' | 'expirada';
+export type QuoteItemStatus = 'disponible' | 'confirmado' | 'conflicto' | 'no_disponible';
+
+export interface Cotizacion {
+  id: string;
+  nombre: string;                     // Nombre del cliente
+  email?: string;                     // Email del cliente
+  telefono?: string;                  // Teléfono del cliente
+  fechaInicio: string;                // ISO date
+  fechaFin: string;                   // ISO date
+  adultos: number;                    // 18-99 años
+  ninos: number;                      // 4-18 años
+  bebes: number;                      // 0-3 años
+  fechaCreacion: string;              // ISO timestamp
+  estado: QuoteStatus;
+  precioTotal: number;
+  notasInternas?: string;
+  items?: CotizacionItem[];           // Items de la cotización
+}
+
+export interface CotizacionItem {
+  id: string;
+  cotizacionId: string;               // Link a CotizacionesGG
+  servicioId: string;                 // Link a ServiciosTuristicos_SAI
+  servicioNombre: string;             // Nombre del servicio
+  servicioTipo: 'tour' | 'hotel' | 'taxi' | 'package';  // Tipo
+  fecha: string;                      // ISO date
+  horarioInicio?: string;             // HH:MM
+  horarioFin?: string;                // HH:MM
+  adultos: number;
+  ninos: number;
+  bebes: number;
+  precioUnitario: number;
+  subtotal: number;                   // precio × personas
+  status: QuoteItemStatus;
+  conflictos?: string[];              // Lista de conflictos detectados
+}
+
+export const QUOTE_STATUS_CONFIG = {
+  draft: { label: 'Borrador', color: 'bg-gray-100', textColor: 'text-gray-700' },
+  enviada: { label: 'Enviada', color: 'bg-blue-100', textColor: 'text-blue-700' },
+  aceptada: { label: 'Aceptada', color: 'bg-green-100', textColor: 'text-green-700' },
+  rechazada: { label: 'Rechazada', color: 'bg-red-100', textColor: 'text-red-700' },
+  expirada: { label: 'Expirada', color: 'bg-yellow-100', textColor: 'text-yellow-700' }
+} as const;
+
+export const QUOTE_ITEM_STATUS_CONFIG = {
+  disponible: { label: 'Disponible', color: 'bg-green-50', textColor: 'text-green-700', icon: 'CheckCircle2' },
+  confirmado: { label: 'Confirmado', color: 'bg-blue-50', textColor: 'text-blue-700', icon: 'CheckCircle' },
+  conflicto: { label: 'Conflicto', color: 'bg-orange-50', textColor: 'text-orange-700', icon: 'AlertCircle' },
+  no_disponible: { label: 'No Disponible', color: 'bg-red-50', textColor: 'text-red-700', icon: 'XCircle' }
+} as const;

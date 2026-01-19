@@ -215,6 +215,14 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                <ClipboardList size={24} className="text-cyan-400" />
                <span className="text-xs font-bold">Tareas</span>
              </button>
+             <button 
+               onClick={() => onNavigate(AppRoute.ADMIN_QUOTES)}
+               className="bg-gradient-to-br from-emerald-900 to-green-900 p-4 rounded-xl border border-emerald-600 hover:border-emerald-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"
+             >
+               <div className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+               <FileText size={24} className="text-emerald-400" />
+               <span className="text-xs font-bold">Cotizaciones</span>
+             </button>
          </div>
       </div>
     </div>
