@@ -126,6 +126,12 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
+    // Limpiar TODAS las sesiones del localStorage
+    localStorage.removeItem('admin_session');
+    localStorage.removeItem('user_session');
+    localStorage.removeItem('partner_session');
+    
+    // Resetear estado
     setIsAuthenticated(false);
     setUserRole('Turista');
     setUserName('Usuario');
