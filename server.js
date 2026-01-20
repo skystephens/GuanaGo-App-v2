@@ -15,6 +15,7 @@ import taxisRoutes from './backend/routes/taxis.js';
 import tasksRoutes from './backend/routes/tasks.js';
 import availabilityRoutes from './backend/routes/availability.js';
 import systemRoutes from './backend/routes/system.js';
+import accommodationsRoutes from './backend/routes/accommodations.js';
 
 // Import middleware
 import { requestLogger } from './backend/middleware/logger.js';
@@ -119,6 +120,9 @@ app.use('/api/tasks', tasksRoutes);
 
 // System routes (estructura backend)
 app.use('/api/system', systemRoutes);
+
+// Accommodations submissions routes
+app.use('/api/accommodations', accommodationsRoutes);
 
 console.log('✅ Rutas API configuradas');
 

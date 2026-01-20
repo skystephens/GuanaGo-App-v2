@@ -65,7 +65,7 @@ const PartnerOperations: React.FC<OperationsProps> = ({ onNavigate }) => {
   return (
       <div className="bg-gray-950 min-h-screen text-white pb-24 font-sans">
          <header className="px-6 pt-12 pb-4">
-            <h1 className="text-2xl font-bold mb-1">Operaciones Transporte</h1>
+          <h1 className="text-2xl font-bold mb-1">Traslados</h1>
             <p className="text-gray-400 text-sm">Tu perfil, carreras y turno en aeropuerto</p>
          </header>
 

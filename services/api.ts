@@ -186,6 +186,59 @@ export const api = {
     }
   },
 
+  accommodations: {
+    createSubmission: async (payload: {
+      nombreAlojamiento: string;
+      tipoAlojamiento: string;
+      ubicacion?: string;
+      direccion?: string;
+      descripcion?: string;
+      capacidadMaxima?: number;
+      camasSencillas?: number;
+      camasDobles?: number;
+      tieneCocina?: boolean;
+      incluyeDesayuno?: boolean;
+      aceptaBebes?: boolean;
+      politicaBebes?: string;
+      minimoNoches?: number;
+      monedaPrecios?: string;
+      precio1?: number;
+      precio2?: number;
+      precio3?: number;
+      precio4?: number;
+      telefonoContacto?: string;
+      emailContacto?: string;
+      socioId?: string;
+      usuarioId?: string;
+    }) => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/accommodations/submissions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        return await safeJson(response);
+      } catch (e) {
+        return { success: false, error: 'Network error' };
+      }
+    },
+    listMySubmissions: async () => {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const response = await fetch(`${BACKEND_URL}/api/accommodations/submissions/partner`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        });
+        return await safeJson(response);
+      } catch (e) {
+        return { success: false, error: 'Network error' };
+      }
+    }
+  },
+
   taxis: {
     request: async (payload: {
       origin: string;

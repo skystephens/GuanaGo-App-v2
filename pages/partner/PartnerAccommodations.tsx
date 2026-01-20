@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Home, AlertCircle, CheckCircle, Clock, ChevronRight } from 'lucide-react';
+import { api } from '../../services/api';
 
 interface PartnerAccommodationsProps {
   onBack?: () => void;
@@ -9,6 +10,89 @@ export default function PartnerAccommodations({ onBack }: PartnerAccommodationsP
   const [activeTab, setActiveTab] = useState<'form' | 'status'>('form');
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [mySubmissions, setMySubmissions] = useState<any[]>([]);
+
+  const [form, setForm] = useState({
+    nombreAlojamiento: '',
+    tipoAlojamiento: '',
+    ubicacion: '',
+    direccion: '',
+    descripcion: '',
+    capacidadMaxima: undefined as number | undefined,
+    camasSencillas: undefined as number | undefined,
+    camasDobles: undefined as number | undefined,
+    camasQueen: undefined as number | undefined,
+    camasKing: undefined as number | undefined,
+    tieneCocina: false,
+    incluyeDesayuno: false,
+    accesoJacuzzi: false,
+    accesoBar: false,
+    accesoPiscina: false,
+    aceptaBebes: true,
+    politicaBebes: '',
+    minimoNoches: 1,
+    monedaPrecios: 'COP',
+    precio1: undefined as number | undefined,
+    precio2: undefined as number | undefined,
+    precio3: undefined as number | undefined,
+    precio4: undefined as number | undefined,
+    telefonoContacto: '',
+    emailContacto: ''
+  });
+
+  const onChange = (key: string, value: any) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const loadMySubmissions = async () => {
+    const res = await api.accommodations.listMySubmissions();
+    if (res && res.success) {
+      setMySubmissions(res.records || res.data || []);
+    }
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setResult(null);
+    const payload = { ...form };
+    const res = await api.accommodations.createSubmission(payload);
+    setSubmitting(false);
+    setResult(res);
+    if (res && res.success) {
+      setForm({
+        nombreAlojamiento: '',
+        tipoAlojamiento: '',
+        ubicacion: '',
+        direccion: '',
+        descripcion: '',
+        capacidadMaxima: undefined,
+        camasSencillas: undefined,
+        camasDobles: undefined,
+        camasQueen: undefined,
+        camasKing: undefined,
+        tieneCocina: false,
+        incluyeDesayuno: false,
+        accesoJacuzzi: false,
+        accesoBar: false,
+        accesoPiscina: false,
+        aceptaBebes: true,
+        politicaBebes: '',
+        minimoNoches: 1,
+        monedaPrecios: 'COP',
+        precio1: undefined,
+        precio2: undefined,
+        precio3: undefined,
+        precio4: undefined,
+        telefonoContacto: '',
+        emailContacto: ''
+      });
+      loadMySubmissions();
+      setActiveTab('status');
+    }
+  };
 
   useEffect(() => {
     // Verificar autenticación del socio
@@ -21,6 +105,7 @@ export default function PartnerAccommodations({ onBack }: PartnerAccommodationsP
     
     setUserRole(role);
     setIsLoading(false);
+    loadMySubmissions();
   }, []);
 
   if (isLoading) {
@@ -126,7 +211,7 @@ export default function PartnerAccommodations({ onBack }: PartnerAccommodationsP
               </div>
             </div>
 
-            {/* Formulario Embed */}
+            {/* Formulario Interno */}
             <div className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
               <div className="bg-gradient-to-r from-gray-800 to-gray-750 px-6 py-4 border-b border-gray-700">
                 <h2 className="text-xl font-bold text-white">Datos del Alojamiento</h2>
@@ -135,20 +220,320 @@ export default function PartnerAccommodations({ onBack }: PartnerAccommodationsP
                 </p>
               </div>
               
-              <div className="bg-white" style={{ minHeight: '700px' }}>
-                <iframe 
-                  className="w-full" 
-                  src="https://airtable.com/embed/appiReH55Qhrbv4Lk/pagLkVPNTpes8TUto/form" 
-                  frameBorder={0}
-                  width="100%" 
-                  height="700" 
-                  style={{ 
-                    background: 'white', 
-                    border: 'none',
-                  }}
-                  title="Formulario de Alojamientos"
-                />
-              </div>
+              <form onSubmit={onSubmit} className="p-6 space-y-6">
+                
+                {/* Información Básica */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-white border-b border-gray-700 pb-2">Información Básica</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Nombre del Alojamiento *</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={form.nombreAlojamiento} 
+                        onChange={(e) => onChange('nombreAlojamiento', e.target.value)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ej: Hotel Paradise"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Tipo de Alojamiento *</label>
+                      <select 
+                        required
+                        value={form.tipoAlojamiento} 
+                        onChange={(e) => onChange('tipoAlojamiento', e.target.value)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">Selecciona...</option>
+                        <option value="Hotel">Hotel</option>
+                        <option value="Casa">Casa</option>
+                        <option value="Hostel">Hostel</option>
+                        <option value="Posada">Posada</option>
+                        <option value="Apartamento">Apartamento</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Ubicación</label>
+                      <input 
+                        type="text" 
+                        value={form.ubicacion} 
+                        onChange={(e) => onChange('ubicacion', e.target.value)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="San Andrés, Providencia, etc."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Dirección</label>
+                      <input 
+                        type="text" 
+                        value={form.direccion} 
+                        onChange={(e) => onChange('direccion', e.target.value)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Dirección completa"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Descripción</label>
+                      <textarea 
+                        value={form.descripcion} 
+                        onChange={(e) => onChange('descripcion', e.target.value)}
+                        rows={4}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Describe tu alojamiento, amenidades, ubicación..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Capacidad y Camas */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-white border-b border-gray-700 pb-2">Capacidad y Camas</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Capacidad Máxima</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        value={form.capacidadMaxima ?? ''} 
+                        onChange={(e) => onChange('capacidadMaxima', e.target.value ? Number(e.target.value) : undefined)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Nº personas"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Camas Sencillas</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        value={form.camasSencillas ?? ''} 
+                        onChange={(e) => onChange('camasSencillas', e.target.value ? Number(e.target.value) : undefined)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Camas Dobles</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        value={form.camasDobles ?? ''} 
+                        onChange={(e) => onChange('camasDobles', e.target.value ? Number(e.target.value) : undefined)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Camas Queen</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        value={form.camasQueen ?? ''} 
+                        onChange={(e) => onChange('camasQueen', e.target.value ? Number(e.target.value) : undefined)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Camas King</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        value={form.camasKing ?? ''} 
+                        onChange={(e) => onChange('camasKing', e.target.value ? Number(e.target.value) : undefined)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Amenidades */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-white border-b border-gray-700 pb-2">Amenidades</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-650">
+                      <input 
+                        type="checkbox" 
+                        checked={form.tieneCocina} 
+                        onChange={(e) => onChange('tieneCocina', e.target.checked)}
+                        className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-white">Tiene cocina</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-650">
+                      <input 
+                        type="checkbox" 
+                        checked={form.incluyeDesayuno} 
+                        onChange={(e) => onChange('incluyeDesayuno', e.target.checked)}
+                        className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-white">Incluye desayuno</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-650">
+                      <input 
+                        type="checkbox" 
+                        checked={form.accesoJacuzzi} 
+                        onChange={(e) => onChange('accesoJacuzzi', e.target.checked)}
+                        className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-white">Acceso a Jacuzzi</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-650">
+                      <input 
+                        type="checkbox" 
+                        checked={form.accesoBar} 
+                        onChange={(e) => onChange('accesoBar', e.target.checked)}
+                        className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-white">Acceso a Bar</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-650">
+                      <input 
+                        type="checkbox" 
+                        checked={form.accesoPiscina} 
+                        onChange={(e) => onChange('accesoPiscina', e.target.checked)}
+                        className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-white">Acceso a piscina</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Políticas */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-white border-b border-gray-700 pb-2">Políticas</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-650">
+                      <input 
+                        type="checkbox" 
+                        checked={form.aceptaBebes} 
+                        onChange={(e) => onChange('aceptaBebes', e.target.checked)}
+                        className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-white">Acepta bebés</span>
+                    </label>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Política de bebés</label>
+                      <input 
+                        type="text" 
+                        value={form.politicaBebes} 
+                        onChange={(e) => onChange('politicaBebes', e.target.value)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ej: Gratis hasta 2 años"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Mínimo de noches</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        value={form.minimoNoches} 
+                        onChange={(e) => onChange('minimoNoches', Number(e.target.value))}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Precios */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-white border-b border-gray-700 pb-2">Precios por Huésped</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Moneda</label>
+                      <select 
+                        value={form.monedaPrecios} 
+                        onChange={(e) => onChange('monedaPrecios', e.target.value)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="COP">COP</option>
+                        <option value="USD">USD</option>
+                      </select>
+                    </div>
+                    <div></div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Precio 1 persona</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        value={form.precio1 ?? ''} 
+                        onChange={(e) => onChange('precio1', e.target.value ? Number(e.target.value) : undefined)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Precio 2 personas</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        value={form.precio2 ?? ''} 
+                        onChange={(e) => onChange('precio2', e.target.value ? Number(e.target.value) : undefined)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Precio 3 personas</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        value={form.precio3 ?? ''} 
+                        onChange={(e) => onChange('precio3', e.target.value ? Number(e.target.value) : undefined)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Precio 4 personas</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        value={form.precio4 ?? ''} 
+                        onChange={(e) => onChange('precio4', e.target.value ? Number(e.target.value) : undefined)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contacto */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-white border-b border-gray-700 pb-2">Información de Contacto</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Teléfono</label>
+                      <input 
+                        type="tel" 
+                        value={form.telefonoContacto} 
+                        onChange={(e) => onChange('telefonoContacto', e.target.value)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="+57 300 123 4567"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                      <input 
+                        type="email" 
+                        value={form.emailContacto} 
+                        onChange={(e) => onChange('emailContacto', e.target.value)}
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="contacto@hotel.com"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <div className="flex items-center justify-between pt-4">
+                  <button 
+                    type="submit" 
+                    disabled={submitting}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? 'Enviando...' : 'Enviar Solicitud'}
+                  </button>
+                  {result && (
+                    <div className={`px-4 py-2 rounded-lg ${result.success ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                      {result.success ? '✓ Solicitud enviada correctamente' : '✗ Error al enviar'}
+                    </div>
+                  )}
+                </div>
+              </form>
             </div>
 
             {/* Tips */}
@@ -185,56 +570,84 @@ export default function PartnerAccommodations({ onBack }: PartnerAccommodationsP
             
             {/* Info */}
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-              <div className="text-center">
-                <Clock className="mx-auto mb-4 text-yellow-400" size={48} />
-                <h2 className="text-xl font-bold text-white mb-2">
-                  Vista de Solicitudes
-                </h2>
-                <p className="text-gray-400 mb-4">
-                  Próximamente podrás ver aquí el estado de todas tus solicitudes de alojamiento:
-                  pendientes, aprobadas y rechazadas.
-                </p>
-                <div className="inline-flex items-center gap-2 bg-blue-900/30 text-blue-300 px-4 py-2 rounded-lg text-sm">
-                  <span>🔄</span>
-                  <span>Funcionalidad en desarrollo</span>
-                </div>
-              </div>
+              <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <CheckCircle className="text-blue-400" size={24} />
+                Mis Solicitudes de Alojamiento
+              </h2>
+              <p className="text-gray-400">
+                Aquí puedes ver el estado de todas tus solicitudes: pendientes, aprobadas y rechazadas.
+              </p>
             </div>
 
-            {/* Placeholder de tabla futura */}
+            {/* Lista de Solicitudes */}
             <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
               <div className="bg-gray-750 px-6 py-3 border-b border-gray-700">
                 <h3 className="font-bold text-white">Historial de Solicitudes</h3>
               </div>
               <div className="p-6">
-                <div className="space-y-3">
-                  {/* Ejemplo de cómo se verá */}
-                  <div className="bg-gray-750 rounded-lg p-4 border border-gray-600 opacity-50">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-bold text-white">Hotel Paradise</h4>
-                        <p className="text-sm text-gray-400">Enviado: 15 ene 2026</p>
-                      </div>
-                      <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold">
-                        ✓ Aprobado
-                      </span>
-                    </div>
+                {mySubmissions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Clock className="mx-auto mb-4 text-gray-500" size={48} />
+                    <p className="text-gray-400">No tienes solicitudes aún.</p>
+                    <button
+                      onClick={() => setActiveTab('form')}
+                      className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+                    >
+                      Crear primera solicitud
+                    </button>
                   </div>
-                  <div className="bg-gray-750 rounded-lg p-4 border border-gray-600 opacity-50">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-bold text-white">Posada Nativa</h4>
-                        <p className="text-sm text-gray-400">Enviado: 17 ene 2026</p>
-                      </div>
-                      <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-xs font-bold">
-                        ⏳ Pendiente
-                      </span>
-                    </div>
+                ) : (
+                  <div className="space-y-3">
+                    {mySubmissions.map((r: any) => {
+                      const fields = r.fields || r;
+                      const estado = (fields.estado || fields.Estado || 'pendiente').toLowerCase();
+                      
+                      let statusBadge = {
+                        bg: 'bg-yellow-500/20',
+                        text: 'text-yellow-400',
+                        label: '⏳ Pendiente'
+                      };
+                      
+                      if (estado === 'approved' || estado === 'aprobado') {
+                        statusBadge = {
+                          bg: 'bg-green-500/20',
+                          text: 'text-green-400',
+                          label: '✓ Aprobado'
+                        };
+                      } else if (estado === 'rejected' || estado === 'rechazado') {
+                        statusBadge = {
+                          bg: 'bg-red-500/20',
+                          text: 'text-red-400',
+                          label: '✗ Rechazado'
+                        };
+                      }
+                      
+                      return (
+                        <div key={r.id || fields.id} className="bg-gray-750 rounded-lg p-4 border border-gray-600">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h4 className="font-bold text-white text-lg">
+                                {fields.nombreAlojamiento || fields.Nombre || 'Sin nombre'}
+                              </h4>
+                              <p className="text-sm text-gray-400 mt-1">
+                                Tipo: {fields.tipoAlojamiento || fields.Tipo || '-'}
+                              </p>
+                              <p className="text-sm text-gray-400">
+                                Ubicación: {fields.ubicacion || fields.Ubicacion || '-'}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                Enviado: {fields.createdTime || fields.FechaCreacion || '-'}
+                              </p>
+                            </div>
+                            <span className={`${statusBadge.bg} ${statusBadge.text} px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap`}>
+                              {statusBadge.label}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
-                <p className="text-center text-gray-500 text-sm mt-6 italic">
-                  Vista previa - datos reales próximamente
-                </p>
+                )}
               </div>
             </div>
 

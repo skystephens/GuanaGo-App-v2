@@ -262,7 +262,7 @@ Excited for our call to see how we proceed ahead
 
 # 📊 RESUMEN EJECUTIVO PARA MANISH (DSHG SONIC)
 **Documento de Discusión de Partnership | GuanaGO + DSHG Sonic**  
-Fecha: 19 de Enero, 2026  
+Fecha: 20 de Enero, 2026  
 Preparado por: Sky Stephens, CEO & Fundador, GuanaGO
 
 ---
@@ -272,6 +272,14 @@ Preparado por: Sky Stephens, CEO & Fundador, GuanaGO
 GuanaGO Travel se está lanzando como nuestro **Producto Victoria B2C** - una Progressive Web App completamente funcional que entrega valor inmediato tanto a turistas como a actores locales en la Isla de San Andrés, Reserva de Biosfera del Caribe colombiano.
 
 **Por qué esto importa**: Mientras otras apps de turismo se enfocan en listados, nosotros estamos construyendo el **"Sistema Operativo de Destino"** - una plataforma donde convergen la planificación de itinerarios con IA, gestión de inventario en tiempo real, recompensas por consumo ético, y experiencias culturales verificadas con blockchain.
+
+**Mi Situación Actual**: Como CEO y desarrollador temporal usando VS Code + GitHub Copilot, he logrado construir un MVP funcional en tiempo récord. Sin embargo, reconozco las limitaciones técnicas críticas:
+- ❌ Necesito blindaje de seguridad profesional antes de procesar pagos
+- ❌ La arquitectura actual no está optimizada para escalar a 10k+ usuarios
+- ❌ Requiero inversión para marketing agresivo y adquisición de usuarios
+- ❌ Falta expertise en IA avanzada y blockchain para Fases 2 y 3
+
+**Por qué Necesito un CTO Partner**: No busco solo un empleado técnico, busco un **co-fundador estratégico** que entienda tanto el código como el negocio, y pueda escalar la plataforma de 500 usuarios a 50,000 en 18 meses.
 
 ---
 
@@ -314,6 +322,42 @@ GuanaGO Travel se está lanzando como nuestro **Producto Victoria B2C** - una Pr
 - **Capa Blockchain**: NFTs basados en Hedera para experiencias culturales (cluster RIMM música, artesanos CocoArt)
 - **Gobernanza**: Poseedores de tokens obtienen derechos de voto en iniciativas de sostenibilidad y aprobación de socios
 
+### Flujo 4: Suscripciones B2B + Marketing de Lealtad (GuanaGO Business)
+**Target**: Negocios locales (hoteles, restaurantes, tours, retail, artesanos) que buscan visibilidad y fidelización de clientes
+- **Modelo de Suscripción**: 
+  - **Tier Básico** ($50-100/mes): Perfil destacado en mapa interactivo, badge "Verificado", analytics básicos
+  - **Tier Premium** ($150-300/mes): Todo lo anterior + sistema de campañas de ofertas, gestión de puntos Guana, notificaciones push a usuarios cercanos
+  - **Tier Enterprise** ($500+/mes): Integración API completa, dashboard avanzado, campañas ilimitadas, soporte prioritario
+  
+- **Sistema de Campañas Inteligentes**: 
+  - Negocios crean ofertas limitadas (ej: "20% off en cena romántica - solo primeros 50 clientes")
+  - Se envían notificaciones geolocalizadas a usuarios de la app (radio de 2-5 km)
+  - Ofertas con deadline y contador de redenciones en tiempo real
+  - Analytics: conversión, ROI, perfil demográfico de quien redimió
+  
+- **Programa de Canje de Puntos**: 
+  - Establecimientos pueden **canjear** Guana Points de clientes por productos/servicios
+  - Ejemplo: Cliente tiene 500 Guana Points → Restaurante acepta 200 puntos = $20k COP de descuento en cuenta
+  - GuanaGO liquida al negocio semanalmente: $18k COP (descuento 10% por fee de procesamiento)
+  - **Ventaja para el negocio**: Atrae clientes con puntos acumulados, genera tráfico sin inversión publicitaria directa
+  
+- **Recarga de Puntos B2B**: 
+  - Negocios pueden comprar Guana Points al por mayor (descuento 15-20%) para regalar a clientes VIP
+  - Ejemplo: Hotel compra 10,000 puntos ($900 USD en lugar de $1,000) para dar welcome bonus a huéspedes
+  - Genera **efecto red**: el huésped usa esos puntos en otros negocios del ecosistema GuanaGO
+  
+- **Generación de Confianza & Reputación**:
+  - Sistema de reviews verificados (solo clientes que reservaron/visitaron pueden opinar)
+  - Badge "GuanaGO Trusted Partner" tras alcanzar métricas (100+ reservas, 4.5+ rating)
+  - Ranking público de "Top 10 Negocios Éticos" (basado en uso de prácticas sostenibles + reviews)
+  - Resolución de disputas con mediación de GuanaGO (reduce chargebacks y problemas legales)
+
+**Proyección de Ingresos Q4 2026**: 
+- 50 negocios suscritos (mix tiers) = $7,500/mes = $90k/año recurrente
+- 10% fee en transacciones de canje de puntos = $3-5k/mes adicionales
+- Venta de puntos al por mayor = $2-4k/mes (margen 15-20%)
+- **Total Flujo 4**: $150-180k/año en ingresos recurrentes predecibles
+
 ---
 
 ## 🎭 LOS TRES TRACKS PRINCIPALES (COMO TÚ DESTACASTE)
@@ -352,6 +396,196 @@ GuanaGO Travel se está lanzando como nuestro **Producto Victoria B2C** - una Pr
 
 ## 📈 PLAN DE DEPLOYMENT 2026
 
+### **ESTRATEGIA DE DESARROLLO: Fases Escalonadas**
+
+#### **FASE 0: Fundación Técnica (Q1 2026 - EN CURSO)**
+**Herramientas**: VS Code + GitHub Copilot + React/Node.js
+**Enfoque**: Sky como CEO/CTO temporal construyendo MVP funcional
+
+**Completado** ✅:
+- Arquitectura base React 19.2.1 + Node.js + Express
+- Sistema de cotización en tiempo real
+- Mapas interactivos (Mapbox)
+- Panel admin básico para socios
+- Integración Airtable para gestión de datos
+
+**En Progreso** 🔄:
+- Flujo completo de reserva hotel + tour
+- Panel de gestión de alojamientos para socios
+- Sistema de disponibilidad con ventana de 12 horas
+- Gestión de traslados con cooperativa de taxis
+
+**Limitaciones Actuales**:
+- ❌ Sin sistema de pagos integrado (Stripe/MercadoPago pendiente)
+- ❌ Seguridad básica (vulnerable a ataques sin auditoría profesional)
+- ❌ Infraestructura no escalada para tráfico alto
+- ❌ Sin CI/CD automatizado ni testing robusto
+
+---
+
+#### **FASE 1: Consolidación de Core Features (Q2 2026)**
+**Objetivo**: Completar las 4 herramientas fundamentales para operación comercial
+
+**1. Tours** 🎯
+- ✅ Catálogo completo con confirmación instantánea/bajo demanda
+- 🔄 Sistema de reviews verificados
+- 🔄 Calendar sync (iCal/Google Calendar)
+- 📋 Integración de pago seguro (Stripe/MercadoPago)
+
+**2. Alojamientos** 🏨
+- ✅ Formulario interno de solicitud (reemplaza embed Airtable)
+- ✅ Panel para socios gestionan disponibilidad
+- 🔄 Integración Cloudbeds/similar para sincronización automática
+- 📋 Motor de búsqueda por filtros (precio, ubicación, amenidades)
+
+**3. Traslados** 🚕
+- 🔄 Sistema de turnos digitales para cooperativa de taxis
+- 📋 Geolocalización en tiempo real de vehículos disponibles
+- 📋 Calculadora de tarifas con zonas predefinidas
+- 📋 Pago digital + efectivo (tracking de ambos)
+
+**4. Mapa & Información** 🗺️
+- ✅ 500+ puntos de interés mapeados
+- 🔄 Integración API DIMAR para alertas meteorológicas
+- 📋 Filtros por categoría y "consumo ético"
+- 📋 Modo offline para turistas sin conexión
+
+**Inversión Necesaria Fase 1**: $15-25k USD
+- Integración de pasarelas de pago: $3-5k
+- Auditoría de seguridad básica: $5-8k
+- Infraestructura cloud escalable (6 meses): $2-3k
+- Marketing inicial (banner aeropuerto, redes): $5-9k
+
+**Revenue Esperado Q2 2026**: $10-15k (100-150 reservas a comisión 10-15%)
+
+---
+
+#### **FASE 2: Inteligencia Artificial & Automatización (Q3 2026)**
+**Requisito Previo**: CTO + Dev Team contratado (ver sección de roles)
+
+**IA en Atención al Cliente** 🤖
+- Chatbot con GPT-4/Claude integrado en PWA
+- Responde FAQs en español/inglés/kriol
+- Escalamiento a humano si pregunta compleja
+- Integración WhatsApp Business API
+
+**IA en Cotizaciones** 💡
+- Motor de recomendación de itinerarios basado en:
+  - Presupuesto del usuario
+  - Duración de estadía
+  - Intereses declarados (aventura, relax, cultura)
+  - Historial de reservas similares (collaborative filtering)
+- Generación automática de paquetes optimizados
+
+**IA en Operaciones** 📊
+- Predicción de demanda para socios (ocupancy forecasting)
+- Pricing dinámico sugerido según temporada
+- Detección de fraude en reservas
+- Análisis de sentimiento en reviews
+
+**Inversión Necesaria Fase 2**: $40-60k USD
+- Contratación CTO (equity + salario 6 meses): $30-40k
+- APIs de IA (OpenAI/Anthropic): $2-3k/año
+- Infraestructura ML (entrenamiento de modelos): $5-10k
+- Data science tooling: $3-5k
+
+**Revenue Esperado Q3 2026**: $40-60k (400-500 reservas + Flujo 4 iniciando)
+
+---
+
+#### **FASE 3: Blockchain & Cripto-Economía (Q4 2026 - Q1 2027)**
+**Requisito Previo**: Fase 1 y 2 operando establemente + $100k+ en revenue acumulado
+
+**Pagos en Cripto** 💰
+- Aceptar BTC, ETH, USDC, USDT
+- Integración con Hedera (fees bajos, transacciones rápidas)
+- Conversión automática a COP para socios que no quieran cripto
+- Descuento 5% por pagar en cripto (incentivo early adopters)
+
+**Staking de Guana Tokens** 🪙
+- Usuarios stakean tokens por 6-12 meses
+- Rewards: 5-10% APY + acceso a experiencias exclusivas
+- Tokens bloqueados generan liquidez para fondo de marketing
+
+**NFTs del Cluster RIMM** 🎵
+- Artistas del cluster de música emiten NFTs por experiencia
+- Ejemplo: "Caribbean Night #001" = NFT + cena + concierto privado
+- Royalties automáticos: 10% de reventa va al artista (smart contract)
+- Coleccionismo: Set completo de 12 experiencias = NFT especial "True Fan"
+
+**Tokens de Gobernanza** 🗳️
+- Poseedores de >1000 Guana Tokens votan en:
+  - Qué negocios entran al programa "Ético Certificado"
+  - Destino de % del revenue para proyectos de sostenibilidad
+  - Nuevas features a desarrollar en la app
+- DAO híbrido: votos on-chain + decisiones ejecutivas de Sky (50%+1)
+
+**Inversión Necesaria Fase 3**: $80-120k USD
+- Smart contract development (Hedera/Ethereum): $30-50k
+- Auditoría de smart contracts (CertiK/Trail of Bits): $25-40k
+- Integración cripto-payments (Coinbase Commerce/similar): $10-15k
+- Legal (compliance cripto en Colombia): $15-25k
+
+**Revenue Esperado Q4 2026**: $100-150k (1000+ reservas/mes + Flujo 4 consolidado)
+
+---
+
+### **NECESIDADES DE INVERSIÓN & EQUITY**
+
+#### **Ronda Actual (Pre-Seed): $150-200k USD**
+
+**Uso de Fondos**:
+- **50% Desarrollo Técnico**: Completar Fase 1 + contratar CTO
+- **30% Marketing & Adquisición**: Banners aeropuerto, pauta digital, influencers micro-locales
+- **10% Operaciones**: Salario Sky (mínimo viable), gastos legales, contabilidad
+- **10% Reserva**: Contingencias, pivotes, oportunidades no previstas
+
+**Estructura de Equity Propuesta**:
+- **Sky (Fundador)**: 45-50% (control voting siempre >50%)
+- **CTO Partner (Manish/similar)**: 8-12% (vesting 4 años, cliff 1 año)
+- **Inversionista Ángel ($150k)**: 15-20% (SAFE note, cap $1.5M valuation)
+- **Employee Stock Option Pool**: 15% (futuros hires: CFO, CMO, Dev Team)
+- **Advisors & Cluster Partners**: 5-8% (mentores, RIMM, cooperativa taxis)
+
+**Milestone para Serie A (2027)**: $500k revenue anualizado + 5000 usuarios activos/mes
+
+---
+
+### **ROLES & CONTRATACIONES CRÍTICAS**
+
+#### **Q2 2026: CTO de Tiempo Completo**
+**Responsabilidades**:
+- ✅ Auditar y refactorizar codebase actual (eliminar deuda técnica)
+- ✅ Implementar seguridad enterprise: OAuth2, rate limiting, encryption en DB
+- ✅ Diseñar arquitectura escalable (microservicios si es necesario)
+- ✅ Integrar pasarelas de pago y PCI compliance
+- ✅ Configurar CI/CD, testing automatizado, monitoring (Sentry/Datadog)
+- ✅ Liderar contratación de 2-3 devs junior/mid
+
+**Perfil Ideal**:
+- 5+ años experiencia backend (Node.js/Python/Go)
+- Ha escalado apps de 0 a 100k+ usuarios
+- Conocimiento de seguridad (OWASP Top 10)
+- Experiencia en fintech o pagos (deseable)
+- Habla español (trabaja con equipo local en San Andrés)
+
+**Compensación**:
+- 8-10% equity (vesting 4 años)
+- Salario: $50-70k/año (ajustado a Colombia, remoto ok)
+- Bono de performance: $10k al alcanzar hitos técnicos
+
+#### **Q3 2026: Growth Marketer**
+- Experto en adquisición digital (Google Ads, Meta Ads, influencers)
+- Maneja presupuesto de $3-5k/mes en pauta
+- KPI: CAC < $15 USD, LTV > $100 USD
+
+#### **Q4 2026: Community Manager Bilingüe**
+- Gestiona redes (Instagram, TikTok, YouTube)
+- Crea contenido con socios locales (behind the scenes)
+- Responde DMs y coordina con chatbot IA
+
+---
+
 ### Q1 2026 (AHORA): Lanzamiento Victoria Temprana
 - ✅ Flujo completo de reserva hotel + tour con integración de pagos
 - ✅ Desplegar panel admin para socios locales gestionen su inventario
@@ -388,41 +622,209 @@ GuanaGO Travel se está lanzando como nuestro **Producto Victoria B2C** - una Pr
 
 ## 🤝 PROPUESTA DE PARTNERSHIP: DSHG SONIC + GUANAGO
 
-### Lo Que Necesitamos de DSHG Sonic
+### **Lo Que Está Sobre la Mesa (Situación Actual)**
 
-1. **Partnership Tecnológico Estratégico (Nivel CTO)**
-   - Revisión de arquitectura para escalar más allá de Airtable (migración a PostgreSQL o similar)
-   - Diseño de API para capa de distribución B2B
-   - Revisión de código y optimización de codebase React/Node
+**GuanaGO Hoy**:
+- ✅ MVP funcional con 500+ socios locales mapeados
+- ✅ Sistema de cotización en tiempo real operativo
+- ✅ Infraestructura base en React 19.2.1 + Node.js + Express
+- ⚠️ Sin sistema de pagos integrado (blocker para revenue)
+- ⚠️ Seguridad básica (vulnerable a ataques profesionales)
+- ⚠️ $0 en revenue recurrente (pero con pipeline de 50+ socios interesados en Flujo 4)
 
-2. **Alineación de Equity**
-   - DSHG Sonic adquiere **[X]% equity** a cambio de:
-     - Liderazgo técnico en ejecución de roadmap
-     - Mentoría para Sky como CEO/CTO
-     - Introducción de network a potenciales inversores y socios
-   - Estructura de vesting atada a hitos medibles (ej: 50% vests después de 500 usuarios activos, 50% después de $100k revenue)
+**Lo Que GuanaGO Puede Ser en 18 Meses**:
+- 🎯 $500k-1M en revenue anualizado
+- 🎯 5000-10000 usuarios activos/mes
+- 🎯 El estándar tecnológico para destinos insulares del Caribe
+- 🎯 Serie A de $2-5M a valuation $10-15M
 
-3. **Compromiso de Recursos**
-   - **[X] horas/mes** de soporte desarrollo hands-on
-   - Sesiones trimestrales de planificación estratégica
-   - Acceso a infraestructura tech de DSHG Sonic (si aplica)
+---
 
-### Lo Que DSHG Sonic Obtiene
+### **Lo Que Necesito de un CTO Partner**
 
-1. **Equity en un Venture de Alto Impacto**
-   - Resolviendo problemas reales: 90% de islas del Caribe carecen de OS turístico digital-first
-   - Modelo escalable: Replicable a otras pequeñas naciones insulares
-   - Alineado con tendencias globales: Blockchain + Turismo + Sostenibilidad
+#### **1. Expertise Técnico Crítico (Meses 1-6)**
 
-2. **Diferenciación de Portfolio**
-   - Esto no es otra herramienta SaaS; es un **proyecto de transformación territorial**
-   - Métricas de impacto cultural que atraen inversores de impacto y fundaciones
-   - Potencial para partnerships gubernamentales (Colombia, cuerpos regionales del Caribe)
+**Seguridad Enterprise** 🔒
+- Auditoría completa del codebase actual (identificar vulnerabilidades)
+- Implementación de:
+  - Rate limiting y protección DDoS
+  - Input sanitization (prevenir SQL injection, XSS)
+  - JWT authentication con rotación automática
+  - Secrets management profesional (no más API keys en .env)
+  - Logging de eventos de seguridad (SIEM básico)
+- Certificación PCI Level 2 para procesar pagos con tarjeta
+- Protocolo de responsible disclosure (bug bounty program)
 
-3. **Estrategia de Salida Clara**
-   - **Target de adquisición**: Booking.com, Expedia, o jugadores regionales como Despegar.com
-   - **Path IPO**: Si GuanaGO se convierte en estándar para destinos isla, consolidación regional se vuelve viable
-   - **Liquidez de token**: Si Guana Token gana adopción, mercado secundario provee evento de liquidez
+**Integración de Pagos** 💳
+- Stripe/MercadoPago con webhooks robustos
+- Manejo de edge cases: pagos fallidos, reembolsos, disputas
+- Reconciliación bancaria automática
+- Cumplimiento regulatorio Colombia (facturación electrónica DIAN)
+
+**Arquitectura Escalable** 📈
+- Migración de Airtable a PostgreSQL (o similar)
+- Implementación de Redis cache (reducir latencia 60-80%)
+- CDN para assets estáticos (Cloudflare)
+- Load balancing para manejar picos (temporada alta = 5x tráfico normal)
+- Monitoring 24/7 (Sentry/Datadog) con alertas automáticas
+
+**DevOps & CI/CD** 🚀
+- Pipeline: commit → automated tests → staging → production
+- Rollback instantáneo si deploy rompe algo
+- Infrastructure as Code (Terraform/AWS CloudFormation)
+- Database backups automáticos + disaster recovery plan
+
+#### **2. Liderazgo Técnico (Meses 7-18)**
+
+**Team Building**:
+- Contratar y liderar 2-3 devs (junior/mid-level)
+- Definir estándares de código y code review process
+- Mentorear a Sky en transición de "CEO-Dev" a "CEO puro"
+
+**Product & Roadmap**:
+- Traducir visión de negocio a especificaciones técnicas
+- Priorizar features con framework RICE (Reach, Impact, Confidence, Effort)
+- Comunicar tradeoffs técnicos al board (ej: "podemos tener X rápido pero con deuda técnica, o Y más lento pero escalable")
+
+**Relación con Inversionistas**:
+- Presentar arquitectura técnica en pitch de Serie A
+- Defender valuación con métricas de ingeniería (uptime 99.9%, response time <200ms)
+- Demostrar que el tech moat es defendible (no es "just another web app")
+
+---
+
+### **Lo Que DSHG Sonic Obtiene**
+
+#### **1. Equity en Venture de Alto Potencial**
+
+**Propuesta Específica**:
+- **8-10% equity** como CTO co-fundador
+- Vesting: 4 años con cliff de 1 año (estándar industria)
+- **Hitos de Aceleración**:
+  - 25% vests inmediatamente al lanzar pagos seguros (Q2 2026)
+  - 25% adicional al alcanzar $50k en revenue mensual (Q3 2026)
+  - 50% restante pro-rata mensual por 3 años
+
+**Valuación Implícita**:
+- Pre-money: $1-1.5M (basado en MVP funcional + 500 socios + claridad de roadmap)
+- Tu equity 10% = $100-150k de valor hoy, potencialmente $1-2M en Serie A (2027)
+
+#### **2. Control Técnico Real (No "Just Advisory")**
+
+- **Decisiones de Arquitectura**: Tú decides el stack, las herramientas, la infraestructura
+- **Presupuesto Tech**: Control de $40-60k/año en tooling y contrataciones
+- **Título Formal**: CTO en cap table, presentaciones, y contratos con clientes enterprise
+
+#### **3. Caso de Estudio Único**
+
+**Diferenciación de Portfolio**:
+- No es otra SaaS B2B; es un **proyecto de transformación territorial**
+- Métricas de impacto cultural (ingresos directos a artistas raizales, offset de carbono)
+- Historia vendible: "Cómo llevamos a una isla del Caribe a la era digital"
+
+**Atractivo para Futuros Clientes/Inversores**:
+- Si GuanaGO funciona, puedes vender el mismo modelo (white-label) a otras islas: Roatán (Honduras), Bocas del Toro (Panamá), Islas del Rosario (Colombia)
+- Potencial de convertirse en **"Shopify para Destinos Turísticos"**
+
+#### **4. Estrategia de Salida Clara**
+
+**Escenarios de Liquidez (Orden de Probabilidad)**:
+
+1. **Adquisición Estratégica (60% probabilidad)**:
+   - **Compradores Potenciales**: Booking.com, Expedia, Despegar.com (líder LATAM)
+   - **Valuación Estimada**: $15-30M si llegamos a $2M en revenue anualizado
+   - **Timing**: 2027-2028 (3-4 años post-lanzamiento)
+   - **Tu Payout**: 10% de $20M = $2M líquido
+
+2. **Recapitalización (30% probabilidad)**:
+   - Inversionista de growth (Series B/C) compra equity de early shareholders
+   - Liquidez parcial sin perder upside completo
+   - Ejemplo: Vendes 50% de tu equity (5%) por $500k-1M, mantienes 5% para salida final
+
+3. **IPO / SPAC (10% probabilidad)**:
+   - Si escalamos a Caribe completo (20+ destinos), podríamos ser público en 2030+
+   - Benchmark: TripAdvisor IPO 2011 a $4B valuation
+   - Muy poco probable pero no imposible si ejecutamos perfecto
+
+---
+
+### **La Estructura de Compromiso que Propongo**
+
+#### **Opción A: Full-Time CTO (Recomendado)**
+
+**Tu Rol**:
+- 40 horas/semana dedicadas a GuanaGO
+- Responsabilidad total sobre tech stack y seguridad
+- Contratas y lideras equipo de desarrollo
+
+**Compensación**:
+- **Equity**: 10% (vesting 4 años, cliff 1 año)
+- **Salario**: $60-70k/año (ajustado a Colombia, remoto ok)
+- **Bono de Performance**: $10k al alcanzar cada hito técnico mayor
+
+**Ventajas**:
+- Máximo alineamiento de incentivos
+- Velocidad de ejecución 3x más rápida
+- Credibilidad con inversionistas (CTO de tiempo completo señala seriedad)
+
+**Desventajas**:
+- Requiere que dejes otros proyectos (o los delegues)
+- Riesgo de oportunidad (si GuanaGO falla, perdiste 2 años)
+
+---
+
+#### **Opción B: CTO Part-Time / Advisor (Plan B)**
+
+**Tu Rol**:
+- 15-20 horas/semana (enfoque en auditoría de código y decisiones estratégicas)
+- Sky sigue siendo IC (individual contributor) con supervisión tuya
+- Contratas freelancers específicos para tareas críticas (ej: penetration testing)
+
+**Compensación**:
+- **Equity**: 5-6% (vesting 3 años)
+- **Salario**: $30-40k/año (consulting fee)
+- Sin bonos (porque no es full accountability)
+
+**Ventajas**:
+- Diversificas riesgo (mantienes otros proyectos)
+- Aún capturas upside significativo si GuanaGO triunfa
+
+**Desventajas**:
+- Ejecución más lenta (dependemos de freelancers)
+- Menos credibilidad con Serie A (investors prefieren full-time CTO)
+- Tu equity menor refleja menor commitment
+
+---
+
+### **Lo Que Necesito Saber de Ti para Decidir**
+
+1. **¿Qué otros proyectos tienes actualmente y cuánto tiempo demandan?**
+   - Necesito honestidad sobre tu disponibilidad real
+
+2. **¿Has escalado un producto de 0 a 100k+ usuarios antes?**
+   - Si no, ¿qué en tu experiencia te hace confiable para hacerlo ahora?
+
+3. **¿Tu expertise en seguridad es práctica o teórica?**
+   - ¿Has implementado PCI compliance antes, o necesitaremos contratar un auditor externo?
+
+4. **¿Qué tan cómodo estás trabajando con devs remotos en LATAM?**
+   - Contratar en Colombia/Argentina es 50% más barato que USA, pero requiere gestión de zona horaria y idioma
+
+5. **¿Cuál es tu expectativa de salario mínimo para considerar full-time?**
+   - Sé directo; prefiero negociar equity vs cash según tu necesidad
+
+6. **¿Tienes red de devs que podríamos contratar rápidamente?**
+   - Si conoces 2-3 seniors que confiarías para unirse, eso acelera todo 6 meses
+
+---
+
+### **Próximos Pasos si Esto te Interesa**
+
+1. **Llamada 1 (Esta Semana)**: Discutir visión, estructura de equity, disponibilidad real
+2. **Llamada 2 (Próxima Semana)**: Code review session - te comparto acceso a GitHub, auditas el codebase, me das feedback crudo
+3. **Llamada 3 (Semana 3)**: Negociación final de términos + firma de term sheet (si hay química)
+
+**Timeline de Decisión**: Necesito tener CTO confirmado antes del 15 de Febrero para cumplir el roadmap de Q1 y estar listo para ANATO Travel Show (Mayo 2026).
 
 ---
 
@@ -530,7 +932,130 @@ Para financiar el crecimiento sin diluir equity indefinidamente, GuanaGO impleme
 
 ---
 
-## 🎯 MÉTRICAS DE ÉXITO: CÓMO MEDIREMOS ESTE PARTNERSHIP
+## 🎯 ESTRATEGIA DE MARKETING & ADQUISICIÓN
+
+### **Problema a Resolver**: ¿Cómo atraemos turistas a usar GuanaGO durante su visita?
+
+**Realidad del Turista en San Andrés**:
+- Llega sin plan definido (80% reserva vuelo y hotel, pero no actividades)
+- Busca info en Instagram, Google, o pregunta al taxista del aeropuerto
+- Es vulnerable a "jala-turistas" con precios inflados
+- Tiene conectividad limitada (WiFi de hotel o datos móviles caros)
+
+**Ventaja de GuanaGO**: PWA = funciona offline + instalable + más rápida que apps nativas
+
+---
+
+### **Canal 1: Aeropuerto (Primer Punto de Contacto)**
+
+**Inversión**: $2-5k USD (one-time setup + $300/mes mantenimiento)
+
+**Táctica**:
+1. **Banner Físico de 3x2 metros** en zona de reclamo de equipaje
+   - QR gigante escaneable desde 5 metros
+   - Copy: "Bienvenido a San Andrés 🏝️ | Descarga la Guía Oficial → Tours, Hoteles, Taxis | 15% OFF tu primera reserva"
+   - Diseño en español/inglés
+
+2. **Flyers en Kioscos de Info Turística**
+   - Colaboración con oficina de turismo gubernamental
+   - Flyer waterproof (para la playa)
+
+3. **Partnership con Cooperativa de Taxis**
+   - 200 taxis con sticker en ventana trasera: "Reserva con GuanaGO.travel"
+   - Comisión: Taxista gana $5k COP por cada turista que reserve un tour via su código referido
+
+**Métrica de Éxito**: 30% de turistas que llegan escanean QR en primera semana (6000 turistas/mes * 30% = 1800 descargas)
+
+---
+
+### **Canal 2: Redes Sociales (Pre-Visita y Durante)**
+
+**Inversión**: $3-5k USD/mes (pauta + contenido)
+
+**Táctica Instagram/TikTok**:
+- **Contenido Orgánico** (3-5 posts/semana):
+  - Videos cortos de socios locales: "Así preparamos el rondón en La Regatta"
+  - Testimonios de turistas: "Reservé mi tour en GuanaGO y fue súper fácil"
+  - Behind the scenes del cluster RIMM
+
+- **Pauta Pagada** ($2k/mes):
+  - Targeting: Personas de 25-45 años en Colombia/USA que siguen cuentas de viajes al Caribe
+  - Remarketing: Personas que visitaron guanago.travel pero no reservaron
+  - Ofertas flash: "24 horas para reservar Johnny Cay con 20% OFF"
+
+**Influencers Micro-Locales** ($1k/mes):
+- 5-10 creadores de contenido con 10-50k seguidores
+- Paquetes gratuitos a cambio de 3 posts + 5 stories
+- Autenticidad > producción costosa
+
+**Métrica de Éxito**: CAC < $15 USD (costo por reserva), ROAS 3:1 (por cada $1 en pauta, $3 en revenue)
+
+---
+
+### **Canal 3: Hoteles & Alojamientos (In-Destination)**
+
+**Inversión**: $0 (partnership sin costo)
+
+**Táctica**:
+- **Welcome Kit Digital**: Hoteles envían link de GuanaGO en email de bienvenida pre-llegada
+- **QR en Habitaciones**: Sticker en espejo de baño o mesa de noche con QR
+- **Comisión Reversa**: Hotel gana 5% de comisión si huésped reserva tour via GuanaGO durante estadía
+
+**Beneficio Mutuo**: Hotel mejora experiencia del huésped sin costo, GuanaGO accede a captive audience
+
+**Métrica de Éxito**: 10% de huéspedes de hoteles socios reservan al menos 1 actividad
+
+---
+
+### **Canal 4: Embajadores de Marca (Raizales Locales)**
+
+**Inversión**: $500-1000/mes (comisiones)
+
+**Táctica**:
+- Reclutar 20 raizales (músicos, artesanos, guías) como embajadores
+- Cada uno recibe un código único: "RIMM15" = 15% descuento
+- Ganan 10% de comisión por cada venta generada con su código
+- Material de apoyo: Tarjetas de presentación, posts pre-diseñados
+
+**Beneficio**: Evangelización orgánica + empoderamiento económico de la comunidad
+
+**Métrica de Éxito**: 50-100 reservas/mes vía códigos de embajadores
+
+---
+
+### **Canal 5: SEO & Contenido (Largo Plazo)**
+
+**Inversión**: $0 (solo tiempo de Sky/equipo)
+
+**Táctica**:
+- **Blog en guanago.travel**:
+  - "10 Playas Secretas de San Andrés que Debes Visitar"
+  - "Guía Completa de Precios: ¿Cuánto Cuesta Viajar a San Andrés en 2026?"
+  - "Kriol Crash Course: Frases Esenciales para tu Viaje"
+- **Keywords Objetivo**: "tours san andrés", "hoteles providencia", "qué hacer en san andrés"
+- **Guest Posts**: Publicar en blogs de viajes colombianos (El Tiempo Viajes, Travelgrafía)
+
+**Métrica de Éxito**: 5000 visitas orgánicas/mes para Q4 2026
+
+---
+
+### **Proyección de CAC & LTV por Canal**
+
+| Canal | CAC (Costo Adquisición) | LTV (Lifetime Value) | ROAS | Escalabilidad |
+|-------|-------------------------|----------------------|------|---------------|
+| **Aeropuerto** | $2-5 | $80-120 | 20:1 | Media (limitado a San Andrés) |
+| **Redes Sociales** | $12-18 | $90-150 | 5:1 | Alta (global) |
+| **Hoteles** | $0 | $70-100 | ∞ | Alta (replicable) |
+| **Embajadores** | $8-12 | $60-90 | 6:1 | Media (depende de comunidad) |
+| **SEO** | $0 | $50-80 | ∞ | Muy Alta (compounding) |
+
+**Estrategia Inicial (Q1-Q2 2026)**: Enfocar 70% del presupuesto en Aeropuerto + Redes Sociales (resultados rápidos)
+
+**Estrategia de Madurez (Q3-Q4 2026)**: Migrar a SEO + Hoteles + Embajadores (CAC tiende a $0, márgenes mejoran)
+
+---
+
+## 🤖 INTEGRACIÓN DE IA: ROADMAP DETALLADO
 
 ### Hitos Técnicos (Track CTO)
 - [ ] Migración de Airtable a base de datos escalable (Q2 2026)
@@ -561,6 +1086,68 @@ Para financiar el crecimiento sin diluir equity indefinidamente, GuanaGO impleme
 ---
 
 ## 🛠️ DEEP DIVE TECNOLÓGICO: QUÉ HACE ESTO ESCALABLE
+
+### **Estrategia de Desarrollo: VS Code + GitHub Copilot como Acelerador**
+
+**Filosofía Actual**: Sky como "CEO-Desarrollador" usando herramientas de IA para iterar rápidamente
+
+**Stack de Productividad**:
+- **VS Code** + **GitHub Copilot**: Generación de código, refactoring, documentación
+- **Cursor AI** (opcional): Para tareas de arquitectura y debugging complejas
+- **Claude/ChatGPT**: Consultoría técnica, pair programming virtual
+- **Airtable**: Base de datos temporal (migración a PostgreSQL en Fase 1)
+
+**Ventajas de este Approach**:
+- ✅ Velocidad: Prototipado 3-5x más rápido que desarrollo tradicional
+- ✅ Costo: $0 en salarios de devs en etapa pre-seed
+- ✅ Aprendizaje: Sky profundiza en React/Node mientras construye
+- ✅ Flexibilidad: Pivotes rápidos sin dependencia de equipo externo
+
+**Limitaciones Reconocidas**:
+- ❌ **Seguridad**: Copilot no puede auditar vulnerabilidades complejas (SQL injection, XSS, CSRF)
+- ❌ **Escalabilidad**: Arquitectura inicial no optimizada para 10k+ usuarios concurrentes
+- ❌ **Mejores Prácticas**: Deuda técnica acumulada (testing incompleto, documentación ad-hoc)
+- ❌ **Compliance**: PCI-DSS para pagos requiere expertise profesional
+
+**Por qué Necesitamos un CTO Real**:
+
+1. **Blindaje de Seguridad** 🔒
+   - Auditoría completa del código actual (penetration testing)
+   - Implementación de protocolos enterprise:
+     - Rate limiting (prevenir DDoS)
+     - Input sanitization (prevenir inyecciones)
+     - JWT tokens con rotación automática
+     - Secrets management (AWS Secrets Manager/HashiCorp Vault)
+     - Logging y monitoring de eventos sospechosos
+   - Certificación PCI Level 2 para procesar pagos
+   - Política de responsible disclosure para bug bounties
+
+2. **Arquitectura Escalable** 📈
+   - Migración de monolito a microservicios (si es necesario)
+   - Implementación de cache (Redis) para reducir latencia
+   - CDN para assets estáticos (Cloudflare)
+   - Load balancing para manejar picos de tráfico (temporadas altas)
+   - Database sharding si superamos 100k usuarios
+
+3. **Integración de Pagos Segura** 💳
+   - Stripe/MercadoPago con webhooks configurados correctamente
+   - Manejo de errores y reintentos (pagos fallidos)
+   - Reconciliación bancaria automática
+   - Prevención de fraude (3D Secure, CVV validation)
+
+4. **DevOps & CI/CD** 🚀
+   - Pipeline automatizado: commit → test → deploy
+   - Rollback instantáneo si deploy falla
+   - Staging environment idéntico a producción
+   - Monitoring 24/7 (alertas si server cae)
+
+**Transición de Poder Técnico**:
+- **Mes 1-2**: CTO audita código actual, documenta deuda técnica
+- **Mes 3-4**: Refactoring crítico (seguridad + pagos)
+- **Mes 5-6**: Sky sigue usando Copilot para features nuevas, CTO revisa PRs
+- **Mes 7+**: CTO lidera contratación de devs, Sky se enfoca 100% en producto y negocio
+
+---
 
 ### Arquitectura Actual
 ```

@@ -73,7 +73,7 @@ const UnifiedPanel: React.FC<UnifiedPanelProps> = ({
   // Opciones para SOCIO/ALIADO/OPERADOR
   const partnerMenu: MenuItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <BarChart3 size={24} />, route: AppRoute.PARTNER_DASHBOARD, description: 'Resumen de tu negocio', color: 'from-blue-500 to-blue-600' },
-    { id: 'operations', label: 'Operaciones', icon: <Settings size={24} />, route: AppRoute.PARTNER_OPERATIONS, description: 'Gestiona operaciones', color: 'from-emerald-500 to-emerald-600' },
+    { id: 'operations', label: 'Traslados', icon: <Settings size={24} />, route: AppRoute.PARTNER_OPERATIONS, description: 'Gestiona traslados', color: 'from-emerald-500 to-emerald-600' },
     { id: 'services', label: 'Mis Servicios', icon: <Package size={24} />, route: AppRoute.PARTNER_MY_SERVICES, description: 'Tours y actividades', color: 'from-orange-500 to-orange-600' },
     { id: 'new-service', label: 'Crear Servicio', icon: <Plus size={24} />, route: AppRoute.PARTNER_CREATE_SERVICE, description: 'Nuevo tour o experiencia', color: 'from-purple-500 to-purple-600' },
     { id: 'accommodations', label: 'Alojamientos', icon: <MapPin size={24} />, route: AppRoute.PARTNER_ACCOMMODATIONS, description: 'Gestiona tus hoteles', color: 'from-cyan-500 to-cyan-600' },

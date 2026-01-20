@@ -53,7 +53,7 @@ const Operations: React.FC<OperationsProps> = ({ onNavigate }) => {
   return (
     <div className="bg-gray-900 min-h-screen text-white pb-24 font-sans">
        <header className="px-6 pt-12 pb-6">
-          <h1 className="text-2xl font-bold mb-1">Operaciones</h1>
+          <h1 className="text-2xl font-bold mb-1">Traslados</h1>
           <p className="text-gray-400 text-sm">Gestiona el flujo de hoy</p>
        </header>
 

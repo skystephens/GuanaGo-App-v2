@@ -63,7 +63,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlace, setSelectedPlace] = useState<DirectoryItem | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>('map');
   const [isLoading, setIsLoading] = useState(true);
   const [dataSource, setDataSource] = useState<'cache' | 'api' | 'fallback'>('fallback');
 
@@ -301,7 +301,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ onBack }) => {
               }`}
             >
               <Grid3X3 size={14} />
-              Grid
+              Directorio
             </button>
             <button
               onClick={() => setViewMode('map')}

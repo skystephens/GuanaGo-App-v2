@@ -21,22 +21,38 @@ const TaxiList: React.FC<TaxiListProps> = ({ onBack, onNavigate }) => {
        </div>
 
        <div className="p-6">
-         
-         <div className="bg-green-600 rounded-2xl p-6 text-white shadow-lg mb-8 relative overflow-hidden">
-             <div className="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4">
-                <Calculator size={100} />
+
+         {/* Hero con CTA */}
+         <div className="rounded-3xl p-6 shadow-lg mb-8 relative overflow-hidden bg-gradient-to-br from-black via-green-700 to-green-600 text-white">
+             <div className="absolute right-0 top-0 opacity-10 transform translate-x-6 -translate-y-6">
+                <Calculator size={120} />
              </div>
-             <h2 className="text-xl font-bold mb-2">Calculadora de Viajes</h2>
-             <p className="text-green-100 text-sm mb-4 pr-8 leading-relaxed">
-               Cotiza tu traslado exacto desde el aeropuerto según la zona y cantidad de pasajeros.
+             <p className="text-xs uppercase tracking-[0.2em] text-yellow-200 font-bold mb-2">Traslados oficiales</p>
+             <h2 className="text-2xl font-extrabold leading-tight">Llega, solicita y sube sin filas</h2>
+             <p className="text-green-100 text-sm mt-2 mb-5 max-w-xl leading-relaxed">
+               Tarifas reguladas por zona. Hasta 4 pax o 3 con equipaje grande por taxi; sumamos más vehículos si tu grupo lo necesita.
              </p>
-             <button 
-               onClick={() => onNavigate(AppRoute.TAXI_DETAIL)}
-               className="bg-white text-green-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-green-50 transition-colors flex items-center gap-2"
-             >
-               <Calculator size={16} />
-               Calcular Ahora
-             </button>
+             <div className="flex flex-wrap gap-2 mb-4">
+               <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-400 text-black">Turno aeropuerto</span>
+               <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/15 border border-white/20">Pago en sitio</span>
+               <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-500/80 text-white">Sin sobrecostos</span>
+             </div>
+             <div className="flex flex-wrap gap-3">
+               <button 
+                 onClick={() => onNavigate(AppRoute.TAXI_DETAIL)}
+                 className="bg-white text-green-800 px-4 py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-green-50 transition-colors flex items-center gap-2"
+               >
+                 <Calculator size={16} />
+                 Calcular tarifa
+               </button>
+               <button
+                 onClick={() => onNavigate(AppRoute.TAXI_DETAIL)}
+                 className="bg-black/60 border border-white/15 text-white px-4 py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-black/80 transition-colors flex items-center gap-2"
+               >
+                 Solicitar traslado
+                 <ChevronRight size={14} />
+               </button>
+             </div>
          </div>
 
          <div className="flex items-center gap-2 mb-4">

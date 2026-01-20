@@ -26,7 +26,23 @@ export const makeRequest = async (webhookUrl, data, actionID) => {
       throw new Error(`Make.com respondió con status ${response.status}`);
     }
 
-    const result = await response.json();
+    // Intentar parsear como JSON, si falla, devolver respuesta como texto
+    const contentType = response.headers.get('content-type');
+    let result;
+    
+    if (contentType && contentType.includes('application/json')) {
+      result = await response.json();
+    } else {
+      const text = await response.text();
+      console.log(`⚠️ Make.com respondió con formato no-JSON [${actionID}]:`, text);
+      // Si es una respuesta de aceptación, devolver un objeto estándar
+      result = {
+        status: 'accepted',
+        message: text,
+        actionID
+      };
+    }
+    
     console.log(`✅ Respuesta de Make.com [${actionID}]:`, result);
     
     return result;
