@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Airtable</title>
+</head>
+<body>
+    <h1>Debug Airtable - Tours</h1>
+    <pre id="output"></pre>
+    <script>
+        const API_KEY = 'patDWx13o3qtNjLqv.37cd343946b889d2044f1f5fa9039c06931d38a192f794c115f0efd21cca1658';
+        const BASE_ID = 'appiReH55Qhrbv4Lk';
+        const TABLE = 'ServiciosTuristicos_SAI';
+        
+        fetch(`https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE)}?maxRecords=5&filterByFormula=AND({Tipo de Servicio}='Tour',{Publicado}=1)`, {
+            headers: {
+                'Authorization': `Bearer ${API_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            const output = document.getElementById('output');
+            if (data.records && data.records.length > 0) {
+                data.records.forEach((record, idx) => {
+                    output.textContent += `\n\n=== TOUR ${idx + 1}: ${record.fields.Servicio} ===\n`;
+                    output.textContent += JSON.stringify(record.fields, null, 2);
+                });
+            } else {
+                output.textContent = 'No tours found';
+            }
+        })
+        .catch(err => {
+            document.getElementById('output').textContent = 'Error: ' + err.message;
+        });
+    </script>
+</body>
+</html>
