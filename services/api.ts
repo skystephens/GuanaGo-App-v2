@@ -463,7 +463,7 @@ export const api = {
     
     getDirectoryFromAirtable: async (): Promise<any[]> => {
       // Llamada directa a Airtable API como fallback
-      const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY || 'patDWx13o3qtNjLqv.37cd343946b889d2044f1f5fa9039c06931d38a192f794c115f0efd21cca1658';
+      const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY;
       const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
       const TABLE_NAME = 'Directorio_Mapa';
       

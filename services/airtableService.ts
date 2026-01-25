@@ -1,3 +1,338 @@
+// ================= FUNCIONES COTIZADOR B2B (importadas y adaptadas) =================
+import axios from 'axios';
+
+// Calcula el precio de alojamiento según tipo y cantidad de huéspedes
+export function calculateAccommodationPrice(accommodation: any, numHuespedes: number): number {
+  const tipo = accommodation.accommodationType || 'Hotel';
+  const tiposPrecioFijo = ['Hotel', 'Casa', 'Villa', 'Finca', 'Posada Nativa', 'Hotel boutique', 'Apartamentos', 'Aparta Hotel'];
+  if (tiposPrecioFijo.includes(tipo)) {
+    return accommodation.precioActualizado || accommodation.precioBase || 0;
+  }
+  if (numHuespedes === 1) {
+    return accommodation.precio1Huesped || accommodation.precioActualizado || 0;
+  } else if (numHuespedes === 2) {
+    return accommodation.precio2Huespedes || accommodation.precioActualizado || 0;
+  } else if (numHuespedes === 3) {
+    return accommodation.precio3Huespedes || accommodation.precioActualizado || 0;
+  } else if (numHuespedes >= 4) {
+    return accommodation.precio4Huespedes || accommodation.precioActualizado || 0;
+  }
+  return accommodation.precioActualizado || accommodation.precioBase || 0;
+}
+
+// Calcula el precio total de un tour según el número de pasajeros
+export function calculateTourPrice(tour: any, numPasajeros: number): number {
+  const tourName = (tour.nombre || '').toLowerCase();
+  if (tourName.includes('jetski') || tourName.includes('jet ski')) {
+    const precioJetski = tour.precioPerPerson || tour.precioBase || 0;
+    if (numPasajeros > 2) {
+      const jetkisNecesarios = Math.ceil(numPasajeros / 2);
+      return precioJetski * jetkisNecesarios;
+    }
+    return precioJetski;
+  }
+  const precioPerPerson = tour.precioPerPerson || tour.precioBase || 0;
+  return precioPerPerson * numPasajeros;
+}
+
+// Crear cotización principal en Airtable
+export async function createCotizacionGG(payload: {
+  nombre: string;
+  email: string;
+  telefono: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  adultos?: number;
+  ninos?: number;
+  bebes?: number;
+  precioTotal: number;
+  notasInternas?: string;
+}): Promise<string> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    throw new Error('Airtable no está configurado (VITE_AIRTABLE_API_KEY / VITE_AIRTABLE_BASE_ID)');
+  }
+  try {
+    const url = `${AIRTABLE_API_URL}/CotizacionesGG`;
+    const fields: Record<string, any> = {};
+    if (payload.nombre) fields.Nombre = payload.nombre;
+    if (payload.email) fields.Email = payload.email;
+    if (payload.telefono) fields.Telefono = payload.telefono;
+    if (payload.precioTotal !== undefined) fields['Precio total'] = payload.precioTotal;
+    if (payload.fechaInicio) fields['Fecha Inicio'] = payload.fechaInicio;
+    if (payload.fechaFin) fields['Fecha Fin'] = payload.fechaFin;
+    if (payload.adultos !== undefined && payload.adultos > 0) fields['Adultos 18 - 99 años'] = payload.adultos;
+    if (payload.ninos !== undefined && payload.ninos > 0) fields['Niños 4 - 17 años'] = payload.ninos;
+    if (payload.bebes !== undefined && payload.bebes > 0) fields['Bebes 0 - 3 años'] = payload.bebes;
+    if (payload.notasInternas) fields['Notas internas'] = payload.notasInternas;
+    const response = await axios.post(url, { fields }, { headers: getHeaders() });
+    return response.data?.id as string;
+  } catch (error: any) {
+    console.error('❌ Error detallado en createCotizacionGG:', error);
+    throw error;
+  }
+}
+
+// Crear item de cotización en Airtable
+export async function createCotizacionItemGG(payload: {
+  cotizacionId: string;
+  servicioId: string;
+  fechaInicio: string;
+  fechaFin?: string;
+  adultos?: number;
+  ninos?: number;
+  bebes?: number;
+  precioUnitario?: number;
+  subtotal: number;
+}): Promise<string> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    throw new Error('Airtable no está configurado (VITE_AIRTABLE_API_KEY / VITE_AIRTABLE_BASE_ID)');
+  }
+  const url = `${AIRTABLE_API_URL}/cotizaciones_Items`;
+  const fields: Record<string, any> = {};
+  try {
+    if (payload.cotizacionId) fields['CotizacionesGG'] = [payload.cotizacionId];
+    if (payload.servicioId && payload.servicioId.startsWith('rec')) fields['ServiciosTuristicos_SAI'] = [payload.servicioId];
+    if (payload.fechaInicio) fields['Fecha Inicio'] = payload.fechaInicio;
+    if (payload.fechaFin) fields['Fecha Fin'] = payload.fechaFin;
+    if (payload.precioUnitario !== undefined) fields['Precio Unitario'] = payload.precioUnitario;
+    if (payload.subtotal !== undefined) fields['Precio Subtotal'] = payload.subtotal;
+    if (payload.adultos !== undefined && payload.adultos > 0) fields['Adultos 18 - 99 años'] = payload.adultos;
+    if (payload.ninos !== undefined && payload.ninos > 0) fields['Niños 4 - 17 años'] = payload.ninos;
+    if (payload.bebes !== undefined && payload.bebes > 0) fields['Bebes 0 - 3 años'] = payload.bebes;
+    const response = await axios.post(url, { fields }, { headers: getHeaders() });
+    return response.data?.id as string;
+  } catch (error: any) {
+    console.error('❌ Error detallado en createCotizacionItemGG:', error);
+    throw error;
+  }
+}
+
+// Obtener alojamientos (Alojamiento, Hotel, etc.)
+export async function getAccommodations() {
+  try {
+    if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+      console.warn('⚠️ Airtable no configurado');
+      return getMockAccommodations();
+    }
+    const url = `${AIRTABLE_API_URL}/ServiciosTuristicos_SAI`;
+    const filterByFormula = `AND({Tipo de Servicio} = 'Alojamiento', {Publicado} = 1)`;
+    const response = await axios.get(url, {
+      headers: getHeaders(),
+      params: { filterByFormula, maxRecords: 50 },
+    });
+    return response.data.records.map((record: any) => ({
+      id: record.id,
+      nombre: record.fields.Servicio || record.fields.Nombre || 'Sin nombre',
+      descripcion: record.fields.Descripcion || '',
+      categoria: record.fields['Tipo de Servicio'] || record.fields.Categoria || 'Alojamiento',
+      publicado: record.fields.Publicado === true,
+      accommodationType: record.fields['Tipo de Alojamiento'] || 'Hotel',
+      precioActualizado: parseFloat(record.fields.Precio || record.fields['Precio actualizado'] || 0),
+      precio1Huesped: parseFloat(record.fields['Precio 1 Huesped'] || record.fields.Precio || 0),
+      precio2Huespedes: parseFloat(record.fields['Precio 2 Huespedes'] || record.fields.Precio || 0),
+      precio3Huespedes: parseFloat(record.fields['Precio 3 Huespedes'] || record.fields.Precio || 0),
+      precio4Huespedes: parseFloat(record.fields['Precio 4+ Huespedes'] || record.fields.Precio || 0),
+      precioBase: parseFloat(record.fields.Precio || record.fields.PrecioBase || 0),
+      precioMin: parseFloat(record.fields.PrecioMin || record.fields.Precio || 0),
+      precioMax: parseFloat(record.fields.PrecioMax || record.fields.Precio || 0),
+      capacidad: parseInt(record.fields['Capacidad Maxima'] || record.fields.Capacidad || 0),
+      ubicacion: record.fields.Ubicacion || '',
+      telefono: record.fields['Telefono Contacto'] || record.fields.Telefono || '',
+      email: record.fields['Email Contacto'] || record.fields.Email || '',
+      imageUrl: record.fields.Imagenurl?.[0]?.url || record.fields.ImagenURL?.[0]?.url || record.fields.Imagenurl?.[0] || record.fields.ImagenURL?.[0] || '',
+      images: (record.fields.Imagenurl || record.fields.ImagenURL || []).map((img: any) => typeof img === 'string' ? img : img?.url || '').filter((url: string) => url),
+      estrellas: parseInt(record.fields.Rating || record.fields.Estrellas || 0),
+      amenities: record.fields.Amenities || [],
+      servicios: record.fields.Servicios || record.fields.Amenities || [],
+      disabledDates: record.fields.FechasDeshabilitadas || [],
+      horarioCheckIn: record.fields.HorarioCheckIn || '14:00',
+      horarioCheckOut: record.fields.HorarioCheckOut || '11:00',
+    }));
+  } catch (error) {
+    console.error('❌ Error obteniendo alojamientos:', error);
+    return getMockAccommodations();
+  }
+}
+
+// Obtener transportes (Transporte, Taxi, etc.)
+export async function getTransports() {
+  try {
+    if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+      console.warn('⚠️ Airtable no configurado');
+      return getMockTransports();
+    }
+    const url = `${AIRTABLE_API_URL}/ServiciosTuristicos_SAI`;
+    const filterByFormula = `AND({Categoria} = 'Transporte', {Publicado} = 1)`;
+    const response = await axios.get(url, {
+      headers: getHeaders(),
+      params: { filterByFormula, maxRecords: 50 },
+    });
+    return response.data.records.map((record: any) => ({
+      id: record.id,
+      nombre: record.fields.Nombre || 'Sin nombre',
+      descripcion: record.fields.Descripcion || '',
+      categoria: record.fields.Categoria,
+      publicado: record.fields.Publicado === true,
+      precioBase: parseFloat(record.fields.PrecioBase || 0),
+      precioPerVehicle: parseFloat(record.fields.PrecioPerVehicle || record.fields.PrecioBase || 0),
+      capacidad: parseInt(record.fields.Capacidad || 5),
+      tipo: record.fields.Tipo || 'Automóvil',
+      telefono: record.fields.Telefono || '',
+      email: record.fields.Email || '',
+      operador: record.fields.Operador || '',
+      rutas: record.fields.Rutas || ['Aeropuerto-Hotel', 'Hotel-Hotel'],
+    }));
+  } catch (error) {
+    console.error('❌ Error obteniendo transportes:', error);
+    return getMockTransports();
+  }
+}
+
+// ================= MOCK DATA (para desarrollo) =================
+function getMockAccommodations() {
+  return [
+    {
+      id: 'hotel-1',
+      nombre: 'Hotel Las Palmeras',
+      descripcion: 'Hotel 4 estrellas frente al mar con piscina infinity',
+      categoria: 'Alojamiento',
+      publicado: true,
+      accommodationType: 'Hotel',
+      precioActualizado: 500000,
+      precio1Huesped: 450000,
+      precio2Huespedes: 500000,
+      precio3Huespedes: 600000,
+      precio4Huespedes: 700000,
+      precioBase: 500000,
+      precioMin: 450000,
+      precioMax: 750000,
+      capacidad: 4,
+      ubicacion: 'Playa Spratt Bight',
+      telefono: '+57 8 5128888',
+      email: 'reservas@laspalmeras.com',
+      imageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
+      images: [
+        'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
+        'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400',
+        'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400',
+        'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400'
+      ],
+      estrellas: 4,
+      amenities: ['WiFi', 'Aire acondicionado', 'Mini bar', 'TV Cable', 'Piscina'],
+      servicios: ['WiFi', 'Aire acondicionado', 'Mini bar', 'TV Cable', 'Piscina'],
+      horarioCheckIn: '14:00',
+      horarioCheckOut: '11:00',
+    },
+    {
+      categoria: 'Alojamiento',
+      publicado: true,
+      accommodationType: 'Hotel',
+      precioActualizado: 800000,
+      precio1Huesped: 700000,
+      precio2Huespedes: 800000,
+      precio3Huespedes: 950000,
+      precio4Huespedes: 1100000,
+      precioBase: 800000,
+      precioMin: 700000,
+      precioMax: 1000000,
+      capacidad: 6,
+      ubicacion: 'San Luis',
+      telefono: '+57 8 5100200',
+      email: 'reservas@decameron.com',
+      imageUrl: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400',
+      images: [
+        'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400',
+        'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400',
+        'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=400'
+      ],
+      estrellas: 5,
+      amenities: ['All Inclusive', 'Playas privadas', 'Restaurantes', 'Animación', 'Spa', 'Gym'],
+      servicios: ['All Inclusive', 'Playas privadas', 'Restaurantes', 'Animación', 'Spa', 'Gym'],
+      horarioCheckIn: '15:00',
+      horarioCheckOut: '12:00',
+    },
+    {
+      id: 'hotel-3',
+      nombre: 'Apartamento Miss Mary',
+      descripcion: 'Apartamento acogedor con cocina equipada',
+      categoria: 'Alojamiento',
+      publicado: true,
+      accommodationType: 'Apartamentos',
+      precioActualizado: 150000,
+      precio1Huesped: 150000,
+      precio2Huespedes: 200000,
+      precio3Huespedes: 250000,
+      precio4Huespedes: 300000,
+      precioBase: 200000,
+      precioMin: 150000,
+      precioMax: 300000,
+      capacidad: 4,
+      ubicacion: 'Centro',
+      telefono: '+57 8 5124567',
+      email: 'info@missmary.com',
+      imageUrl: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400',
+      images: [
+        'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400',
+        'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400'
+      ],
+      estrellas: 3,
+      amenities: ['WiFi', 'Cocina equipada', 'Aire acondicionado', 'TV Cable'],
+      servicios: ['WiFi', 'Cocina equipada', 'Aire acondicionado', 'TV Cable'],
+      horarioCheckIn: '14:00',
+      horarioCheckOut: '10:00',
+    },
+  ];
+}
+
+function getMockTransports() {
+  return [
+    {
+      id: 'trans-1',
+      nombre: 'Coop de Taxis Unidos',
+      descripcion: 'Servicio de taxis con choferes certificados',
+      categoria: 'Transporte',
+      publicado: true,
+      precioPerVehicle: 200000,
+      capacidad: 4,
+      tipo: 'Automóvil',
+      telefono: '+57 8 5180000',
+      email: 'reservas@taximun.com',
+      imageUrl: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400',
+      operador: 'Coop Taxis',
+      rutas: ['Aeropuerto-Hotel', 'Hotel-Hotel', 'Tours'],
+    },
+    {
+      id: 'trans-2',
+      nombre: 'Minivan Premium',
+      descripcion: 'Servicio de minivanes con aire acondicionado',
+      categoria: 'Transporte',
+      publicado: true,
+      precioPerVehicle: 350000,
+      capacidad: 8,
+      tipo: 'Minivan',
+      telefono: '+57 8 5180001',
+      email: 'minivans@guiasai.com',
+      imageUrl: 'https://images.unsplash.com/photo-1552799446-159ba9523315?w=400',
+      operador: 'TransGO',
+      rutas: ['Aeropuerto-Hotel', 'Grupos'],
+    },
+    {
+      id: 'trans-3',
+      nombre: 'Lancha Privada',
+      descripcion: 'Transporte acuático a Old Providence',
+      categoria: 'Transporte',
+      publicado: true,
+      precioPerVehicle: 500000,
+      capacidad: 12,
+      tipo: 'Lancha',
+      telefono: '+57 8 5180002',
+      email: 'lanchas@guiasai.com',
+      imageUrl: 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=400',
+      operador: 'Caribbean Boats',
+      rutas: ['San Andrés-Providencia'],
+    },
+  ];
+}
 /**
  * Airtable Service - Conexión directa a Airtable sin Make.com
  * Usa la API REST oficial de Airtable
