@@ -9,6 +9,7 @@ import {
   ChevronUp, MoreVertical, Cpu
 } from 'lucide-react';
 import PanelEstadoSistema from './PanelEstadoSistema';
+import PanelIAAsistente from './PanelIAAsistente';
 import { AppRoute } from '../../types';
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
@@ -481,6 +482,7 @@ const AdminTorreControl: React.FC<Props> = ({ onBack, onNavigate }) => {
   const [diagResults, setDiagResults] = useState<Record<string, { ok: boolean; msg: string; checking: boolean }>>({});
   const [diagSeccion, setDiagSeccion] = useState<string | null>(null);
   const [mostrarResumen, setMostrarResumen] = useState(false);
+  const [vistaActual, setVistaActual] = useState<'tareas' | 'ia'>('tareas');
 
   // Modales
   const [modalTarea, setModalTarea]     = useState<{ seccionId: string; tarea?: TareaControl } | null>(null);
@@ -572,11 +574,67 @@ const AdminTorreControl: React.FC<Props> = ({ onBack, onNavigate }) => {
     return { tot, done, pct: Math.round((done / tot) * 100) };
   };
 
-  // Exportar
+  // Exportar JSON
   const exportar = () => {
     const blob = new Blob([JSON.stringify({ fecha: new Date().toISOString(), progreso: `${completadas}/${total}`, secciones }, null, 2)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = `torre_${new Date().toISOString().slice(0, 10)}.json`; a.click();
+  };
+
+  // Exportar CLAUDE.md — contexto completo para Claude Code
+  const exportarClaude = () => {
+    const fecha = new Date().toLocaleDateString('es-CO', { dateStyle: 'long' });
+    const secLines = secciones.map(sec => {
+      const done = sec.tareas.filter(t => t.estado === 'completado').length;
+      const pct = sec.tareas.length > 0 ? Math.round((done / sec.tareas.length) * 100) : 0;
+      const tareaLines = sec.tareas.map(t => {
+        const estado = { pendiente: '[ ]', en_progreso: '[~]', completado: '[x]', bloqueado: '[!]' }[t.estado] ?? '[ ]';
+        const prio = t.prioridad === 'critica' ? ' ⚡CRÍTICA' : '';
+        return `  ${estado}${prio} ${t.titulo}${t.notas ? `\n      Nota: ${t.notas}` : ''}`;
+      }).join('\n');
+      return `### ${sec.titulo} (${pct}% · ${done}/${sec.tareas.length})\n${tareaLines}`;
+    }).join('\n\n');
+
+    const md = `# CLAUDE.md — GuanaGO Proyecto Context
+> Generado automáticamente desde la Torre de Control · ${fecha}
+> Este archivo da contexto a Claude Code sobre el estado real del proyecto.
+
+## Stack Técnico
+- **Frontend:** React 19 + Vite + TypeScript + Tailwind CSS (PWA)
+- **Backend:** Node.js + Express en Render (puerto 5000)
+- **DB captura:** Airtable (base \`appiReH55Qhrbv4Lk\`)
+- **DB runtime:** Firebase Firestore (en implementación)
+- **Auth:** Firebase Auth (Google + email)
+- **IA en app:** Groq API (Llama 3.3 70B) vía \`/api/ai/chat\`
+- **Deploy:** Render (backend) + Firebase Hosting (frontend)
+- **Automatización:** Make.com (Airtable → Firestore sync)
+
+## Estado Global del Proyecto
+- Proyectos activos: **${secciones.length}**
+- Total tareas: **${total}**
+- Completadas: **${completadas} (${progresoPct}%)**
+- En progreso: **${enProgreso}**
+- Bloqueadas: **${bloqueadas}**
+- Críticas pendientes: **${criticas}**
+
+## Proyectos y Tareas
+> [ ] pendiente · [~] en progreso · [x] completado · [!] bloqueado
+
+${secLines}
+
+## Instrucciones para Claude Code
+- Al iniciar sesión, leer este archivo para tener contexto del proyecto
+- Priorizar tareas marcadas como ⚡CRÍTICA
+- El directorio principal es \`GuanaGo-App-Enero-main/\`
+- El backend Express está en \`server.js\` + \`backend/\`
+- Las páginas admin están en \`pages/admin/\`
+- Los tipos globales están en \`types.ts\`
+- Las rutas de navegación están en el enum \`AppRoute\`
+`;
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'CLAUDE.md'; a.click();
+    URL.revokeObjectURL(a.href);
   };
 
   const tareasFiltradas = (tareas: TareaControl[]) =>
@@ -591,22 +649,54 @@ const AdminTorreControl: React.FC<Props> = ({ onBack, onNavigate }) => {
     <div className="bg-gray-950 min-h-screen text-white pb-28 font-sans">
 
       {/* ── Header ── */}
-      <header className="sticky top-0 z-30 bg-gray-900 border-b border-gray-700 px-4 py-3 flex items-center gap-3">
-        <button onClick={onBack} className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700">
-          <ArrowLeft size={18} />
-        </button>
-        <TowerControl size={20} className="text-cyan-400" />
-        <div className="flex-1">
-          <h1 className="text-sm font-bold leading-none">Torre de Control</h1>
-          <p className="text-gray-500 text-xs">{secciones.length} proyectos · {total} tareas</p>
+      <header className="sticky top-0 z-30 bg-gray-900 border-b border-gray-700">
+        <div className="px-4 py-3 flex items-center gap-3">
+          <button onClick={onBack} className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700">
+            <ArrowLeft size={18} />
+          </button>
+          <TowerControl size={20} className="text-cyan-400" />
+          <div className="flex-1">
+            <h1 className="text-sm font-bold leading-none">Torre de Control</h1>
+            <p className="text-gray-500 text-xs">{secciones.length} proyectos · {total} tareas · {progresoPct}% avance</p>
+          </div>
+          <button onClick={exportarClaude} className="p-2 rounded-lg bg-gray-800 hover:bg-violet-900 hover:border-violet-700 border border-transparent" title="Exportar CLAUDE.md para Claude Code">
+            <FileText size={15} className="text-gray-400 hover:text-violet-300" />
+          </button>
+          <button onClick={exportar} className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700" title="Exportar JSON">
+            <Download size={15} className="text-gray-400" />
+          </button>
+          <button onClick={() => setMostrarResumen(p => !p)} className="px-3 py-1.5 rounded-lg bg-cyan-900 hover:bg-cyan-800 text-cyan-300 text-xs font-bold flex items-center gap-1">
+            <BarChart2 size={13} /> Resumen
+          </button>
         </div>
-        <button onClick={exportar} className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700" title="Exportar JSON">
-          <Download size={15} className="text-gray-400" />
-        </button>
-        <button onClick={() => setMostrarResumen(p => !p)} className="px-3 py-1.5 rounded-lg bg-cyan-900 hover:bg-cyan-800 text-cyan-300 text-xs font-bold flex items-center gap-1">
-          <BarChart2 size={13} /> Resumen
-        </button>
+        {/* ── Tabs ── */}
+        <div className="flex border-t border-gray-800">
+          <button
+            onClick={() => setVistaActual('tareas')}
+            className={`flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors
+              ${vistaActual === 'tareas' ? 'text-cyan-300 border-b-2 border-cyan-500 bg-cyan-950/30' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <CheckSquare size={13} /> Proyectos & Tareas
+          </button>
+          <button
+            onClick={() => setVistaActual('ia')}
+            className={`flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors
+              ${vistaActual === 'ia' ? 'text-violet-300 border-b-2 border-violet-500 bg-violet-950/30' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <Cpu size={13} /> Asistente IA
+          </button>
+        </div>
       </header>
+
+      {/* ── Vista: Asistente IA ── */}
+      {vistaActual === 'ia' && (
+        <div style={{ height: 'calc(100vh - 89px)' }}>
+          <PanelIAAsistente secciones={secciones} />
+        </div>
+      )}
+
+      {/* ── Vista: Proyectos & Tareas ── */}
+      {vistaActual === 'tareas' && <>
 
       {/* ── Progreso global ── */}
       <div className="px-4 pt-4 pb-2">
@@ -932,6 +1022,8 @@ const AdminTorreControl: React.FC<Props> = ({ onBack, onNavigate }) => {
           ))}
         </div>
       </div>
+
+      </> /* fin vistaActual === 'tareas' */}
 
       {/* ── Modales ── */}
       {modalTarea && (

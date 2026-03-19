@@ -162,6 +162,51 @@ app.use((req, res, next) => {
   }
 });
 
+// ==================== AI ASSISTANT (Groq proxy) ====================
+app.post('/api/ai/chat', async (req, res) => {
+  const GROQ_API_KEY = process.env.GROQ_API_KEY;
+  if (!GROQ_API_KEY) {
+    return res.status(503).json({ error: 'GROQ_API_KEY no configurada en .env' });
+  }
+
+  const { messages, systemPrompt } = req.body;
+  if (!messages || !Array.isArray(messages)) {
+    return res.status(400).json({ error: 'Se requiere array de messages' });
+  }
+
+  try {
+    const body = {
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: systemPrompt || 'Eres un asistente de proyecto.' },
+        ...messages,
+      ],
+      temperature: 0.7,
+      max_tokens: 1024,
+    };
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      return res.status(response.status).json({ error: err });
+    }
+
+    const data = await response.json();
+    res.json({ reply: data.choices[0].message.content });
+  } catch (err) {
+    console.error('AI chat error:', err);
+    res.status(500).json({ error: 'Error al contactar Groq API' });
+  }
+});
+
 // ==================== ERROR HANDLING ====================
 app.use(notFound);
 app.use(errorHandler);
