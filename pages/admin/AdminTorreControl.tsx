@@ -691,7 +691,7 @@ ${secLines}
       {/* ── Vista: Asistente IA ── */}
       {vistaActual === 'ia' && (
         <div style={{ height: 'calc(100vh - 89px)' }}>
-          <PanelIAAsistente secciones={secciones} />
+          <PanelIAAsistente secciones={secciones} onAddTarea={saveTarea} />
         </div>
       )}
 

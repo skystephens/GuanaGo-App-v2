@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Send, Bot, User, Trash2, Download, Sparkles,
-  AlertCircle, Loader2, ChevronDown,
+  AlertCircle, Loader2, ChevronDown, Plus, X, Save,
 } from 'lucide-react';
-import type { SeccionControl, EstadoTarea } from './AdminTorreControl';
+import type { SeccionControl, TareaControl, Prioridad } from './AdminTorreControl';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Mensaje {
@@ -14,7 +14,17 @@ interface Mensaje {
 
 interface Props {
   secciones: SeccionControl[];
+  onAddTarea?: (seccionId: string, tarea: TareaControl) => void;
 }
+
+interface MiniModalTarea {
+  msgIndex: number;
+  titulo: string;
+  seccionId: string;
+  prioridad: Prioridad;
+}
+
+const genId = () => `ia-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
 // ─── Quick action prompts ─────────────────────────────────────────────────────
 const QUICK_ACTIONS = [
@@ -76,12 +86,14 @@ INSTRUCCIONES:
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
-export default function PanelIAAsistente({ secciones }: Props) {
+export default function PanelIAAsistente({ secciones, onAddTarea }: Props) {
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [input, setInput]       = useState('');
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
   const [showQuick, setShowQuick] = useState(true);
+  const [miniModal, setMiniModal] = useState<MiniModalTarea | null>(null);
+  const [tareaCreada, setTareaCreada] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -130,6 +142,33 @@ export default function PanelIAAsistente({ secciones }: Props) {
     }
   };
 
+  const abrirMiniModal = (msgIndex: number, contenido: string) => {
+    const lineas = contenido.split('\n').filter(l => l.trim().length > 10);
+    const titulo = lineas[0]?.replace(/^[#\-*>\d.]+\s*/, '').slice(0, 80) || 'Tarea desde IA';
+    setMiniModal({
+      msgIndex,
+      titulo,
+      seccionId: secciones[0]?.id || '',
+      prioridad: 'alta',
+    });
+  };
+
+  const confirmarTarea = () => {
+    if (!miniModal || !onAddTarea) return;
+    const tarea: TareaControl = {
+      id: genId(),
+      titulo: miniModal.titulo.trim(),
+      descripcion: `Generada por Asistente IA el ${new Date().toLocaleDateString('es-CO')}`,
+      prioridad: miniModal.prioridad,
+      estado: 'pendiente',
+      creadaEn: new Date().toISOString(),
+    };
+    onAddTarea(miniModal.seccionId, tarea);
+    setTareaCreada(miniModal.msgIndex);
+    setMiniModal(null);
+    setTimeout(() => setTareaCreada(null), 3000);
+  };
+
   const limpiar = () => {
     setMensajes([]);
     setError(null);
@@ -147,7 +186,7 @@ export default function PanelIAAsistente({ secciones }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-950">
+    <div className="flex flex-col h-full bg-gray-950 relative">
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 flex-shrink-0">
@@ -232,15 +271,30 @@ export default function PanelIAAsistente({ secciones }: Props) {
                 : <Bot size={13} className="text-violet-300" />
               }
             </div>
-            <div className={`rounded-xl p-3 text-sm leading-relaxed max-w-[80%] whitespace-pre-wrap ${
-              m.role === 'user'
-                ? 'bg-blue-950 border border-blue-800 text-blue-100 rounded-tr-none'
-                : 'bg-gray-900 border border-gray-800 text-gray-200 rounded-tl-none'
-            }`}>
-              {m.content}
-              <span className="block mt-1 text-xs opacity-30">
-                {new Date(m.ts).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
-              </span>
+            <div className="flex flex-col gap-1 max-w-[80%]">
+              <div className={`rounded-xl p-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                m.role === 'user'
+                  ? 'bg-blue-950 border border-blue-800 text-blue-100 rounded-tr-none'
+                  : 'bg-gray-900 border border-gray-800 text-gray-200 rounded-tl-none'
+              }`}>
+                {m.content}
+                <span className="block mt-1 text-xs opacity-30">
+                  {new Date(m.ts).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+              {/* Botón crear tarea — solo en respuestas del asistente */}
+              {m.role === 'assistant' && onAddTarea && (
+                <button
+                  onClick={() => abrirMiniModal(i, m.content)}
+                  className={`self-start flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg border transition-all
+                    ${tareaCreada === i
+                      ? 'bg-green-900 border-green-700 text-green-300'
+                      : 'bg-gray-900 border-gray-700 text-gray-500 hover:border-violet-600 hover:text-violet-300'
+                    }`}
+                >
+                  {tareaCreada === i ? '✓ Tarea creada' : <><Plus size={10} /> Crear tarea</>}
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -295,6 +349,72 @@ export default function PanelIAAsistente({ secciones }: Props) {
           El asistente tiene contexto de todos tus proyectos y tareas en tiempo real
         </p>
       </div>
+
+      {/* Mini modal: crear tarea desde respuesta IA */}
+      {miniModal && (
+        <div className="absolute inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-gray-900 border border-violet-700 rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+              <span className="text-sm font-bold text-violet-300 flex items-center gap-2">
+                <Plus size={14} /> Nueva tarea desde IA
+              </span>
+              <button onClick={() => setMiniModal(null)} className="text-gray-500 hover:text-gray-300 p-1">
+                <X size={14} />
+              </button>
+            </div>
+            <div className="p-4 space-y-3">
+              <div>
+                <label className="text-xs text-gray-400 font-bold uppercase mb-1 block">Título de la tarea</label>
+                <input
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-600"
+                  value={miniModal.titulo}
+                  onChange={e => setMiniModal(p => p ? { ...p, titulo: e.target.value } : p)}
+                  autoFocus
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-gray-400 font-bold uppercase mb-1 block">Proyecto</label>
+                  <select
+                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-600"
+                    value={miniModal.seccionId}
+                    onChange={e => setMiniModal(p => p ? { ...p, seccionId: e.target.value } : p)}
+                  >
+                    {secciones.map(s => (
+                      <option key={s.id} value={s.id}>{s.titulo}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 font-bold uppercase mb-1 block">Prioridad</label>
+                  <select
+                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-600"
+                    value={miniModal.prioridad}
+                    onChange={e => setMiniModal(p => p ? { ...p, prioridad: e.target.value as Prioridad } : p)}
+                  >
+                    <option value="critica">🔴 Crítica</option>
+                    <option value="alta">🟠 Alta</option>
+                    <option value="media">🟡 Media</option>
+                    <option value="baja">⚪ Baja</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-800 flex gap-3">
+              <button onClick={() => setMiniModal(null)} className="flex-1 py-2.5 rounded-xl bg-gray-800 text-gray-400 text-sm font-bold hover:bg-gray-700">
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarTarea}
+                disabled={!miniModal.titulo.trim() || !miniModal.seccionId}
+                className="flex-1 py-2.5 rounded-xl bg-violet-700 hover:bg-violet-600 text-white text-sm font-bold disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                <Save size={14} /> Agregar a Torre
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
