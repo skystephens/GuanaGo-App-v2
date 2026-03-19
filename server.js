@@ -55,6 +55,7 @@ app.use(express.static(distPath, {
 import validateAdminPinRoutes from './backend/routes/validateAdminPin.js';
 import debugRoutes from './backend/routes/debug.js';
 import userAuthRoutes from './backend/routes/userAuth.js';
+import firebaseAuthRoutes from './backend/routes/firebaseAuth.js';
 console.log('🔧 Configurando rutas API...');
 
 app.get('/api/health', (req, res) => {
@@ -90,6 +91,9 @@ app.use('/api/auth', authRoutes);
 
 // User authentication routes (register/login)
 app.use('/api/user-auth', userAuthRoutes);
+
+// Firebase authentication routes
+app.use('/api/firebase-auth', firebaseAuthRoutes);
 
 // Admin PIN validation route
 app.use('/api/validate-admin-pin', validateAdminPinRoutes);

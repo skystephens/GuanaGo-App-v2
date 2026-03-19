@@ -8,18 +8,17 @@ import { api } from '../services/api';
 import ChatWindow from '../components/ChatWindow';
 import AdminPinLogin from './AdminPinLogin';
 import AuthGate from './AuthGate';
+import { useAuth } from '../context/AuthContext';
 
 interface AccountDashboardProps {
-  isAuthenticated: boolean;
-  userRole?: UserRole;
-  onLogin: () => void;
   onLogout: () => void;
   onSwitchRole: (role: UserRole) => void;
   onNavigate?: (route: AppRoute) => void;
   onBack?: () => void;
 }
 
-const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, userRole = 'Turista', onLogin, onLogout, onSwitchRole, onNavigate, onBack }) => {
+const AccountDashboard: React.FC<AccountDashboardProps> = ({ onLogout, onSwitchRole, onNavigate, onBack }) => {
+  const { isAuthenticated, userRole, isLoading } = useAuth();
   const [showSupportChat, setShowSupportChat] = useState(false);
   const [showDigitalId, setShowDigitalId] = useState(false);
   const [activeCampaigns, setActiveCampaigns] = useState<Campaign[]>([]);
@@ -55,6 +54,13 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, us
      }
   }, [isAuthenticated, userRole]);
 
+  // Sincronizar showAuthGate cuando Firebase carga el estado de auth
+  useEffect(() => {
+    if (isAuthenticated) {
+      setShowAuthGate(false);
+    }
+  }, [isAuthenticated]);
+
   const fetchInitialData = async () => {
       setLoadingUser(true);
       setLoadingCampaigns(true);
@@ -82,6 +88,15 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ isAuthenticated, us
          setLoadingCampaigns(false);
       }
   };
+
+  // Mientras Firebase carga, mostrar loader
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="animate-spin text-emerald-600" size={32} />
+      </div>
+    );
+  }
 
   // Si hay sesión de admin activa, mostrar panel de SuperAdmin
   if (adminUser && !showAdminPin) {

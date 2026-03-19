@@ -4,7 +4,7 @@ import { Wifi, Wind, Utensils, Droplets, Sun, Pill, DollarSign, ShoppingBag, Cof
 import React from 'react';
 import { api } from './services/api';
 
-export const GUANA_LOGO = "https://guiasanandresislas.com/wp-content/uploads/2026/01/Logotipo-App-guanago.png"; 
+export const GUANA_LOGO = "https://guiasanandresislas.com/wp-content/uploads/2025/02/Logo-GuiaSAI-avisoa.png"; 
 
 export const DIRECTORY_DATA: GuanaLocation[] = [
   // FARMACIAS / DROGUERÍAS

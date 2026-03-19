@@ -1,0 +1,16 @@
+ID_Componente,Nombre,Tipo,Ubicación,Descripción,Estado,Props,Tests,Última_Modificación,Autor
+COMP-001,PointsBalance,React Component,/src/components/points/PointsBalance.tsx,Muestra el balance actual de puntos del usuario con animación de contador,En Desarrollo,"{userId: string; showHistory?: boolean; compact?: boolean}",⏳ Pendiente,2026-01-29,Claude Code
+COMP-002,ServiceCard,React Component,/src/components/services/ServiceCard.tsx,Tarjeta de servicio turístico (hotel/tour) con imagen y precio,Implementado,"{service: Service; onQuote: () => void; featured?: boolean}",✅ Unit tests escritos,2026-01-28,Tú
+COMP-003,QuoteForm,React Component,/src/components/quote/QuoteForm.tsx,Formulario de cotización con validación de fechas y huéspedes,Implementado,"{serviceId: string; onSubmit: (data: QuoteData) => void}",✅ Unit + Integration tests,2026-01-27,Tú
+COMP-004,usePointsStore,Zustand Hook,/src/stores/pointsStore.ts,Estado global del sistema de puntos (balance + transacciones),En Desarrollo,N/A - Hook,⏳ Pendiente,2026-01-29,Claude Code
+COMP-005,airtableService,Service,/src/services/airtableService.ts,Centraliza todas las llamadas a Airtable API con cache,Implementado,N/A - Singleton,✅ Unit tests con mock,2026-01-25,Tú
+COMP-006,ImageGallery,React Component,/src/components/ui/ImageGallery.tsx,Galería de imágenes con lightbox y navegación touch,Implementado,"{images: string[]; alt: string; onImageClick?: (index: number) => void}",✅ Unit tests,2026-01-26,Tú
+COMP-007,FilterPanel,React Component,/src/components/filters/FilterPanel.tsx,Panel de filtros para servicios (precio/tipo/ubicación),Implementado,"{filters: FilterState; onChange: (filters: FilterState) => void}",✅ Unit tests,2026-01-27,Tú
+COMP-008,MapView,React Component,/src/components/map/MapView.tsx,Mapa interactivo de San Andrés con puntos de interés,Planeado,"{markers: Marker[]; center: LatLng; zoom?: number}",❌ No iniciado,2026-01-29,Pendiente
+COMP-009,PointsHistory,React Component,/src/components/points/PointsHistory.tsx,Lista de transacciones de puntos del usuario,Planeado,"{userId: string; limit?: number}",❌ No iniciado,2026-01-29,Pendiente
+COMP-010,NavigationBar,React Component,/src/components/layout/NavigationBar.tsx,Barra de navegación principal con menú responsive,Implementado,"{user?: User; onLogout?: () => void}",✅ Integration tests,2026-01-24,Tú
+COMP-011,PricingEngine,Utility,/src/utils/pricingEngine.ts,Calcula precios finales según tipo de usuario (B2B/B2C/Residente),Planeado,N/A - Utilidad,❌ No iniciado,2026-01-29,Pendiente
+COMP-012,useAuth,Custom Hook,/src/hooks/useAuth.ts,Hook para autenticación con JWT y gestión de sesión,Planeado,N/A - Hook,❌ No iniciado,2026-01-29,Pendiente
+COMP-013,QuoteSummary,React Component,/src/components/quote/QuoteSummary.tsx,Widget flotante que muestra resumen de cotización activa,Implementado,"{items: QuoteItem[]; total: number; onCheckout: () => void}",✅ Unit tests,2026-01-28,Tú
+COMP-014,ServiceFilters,React Component,/src/components/services/ServiceFilters.tsx,Filtros rápidos para catálogo de servicios,Implementado,"{activeFilters: string[]; onChange: (filters: string[]) => void}",✅ Unit tests,2026-01-27,Tú
+COMP-015,LoadingState,React Component,/src/components/ui/LoadingState.tsx,Componente de loading con skeleton screens,Implementado,"{variant?: 'card' | 'table' | 'form'}",✅ Snapshot tests,2026-01-26,Tú

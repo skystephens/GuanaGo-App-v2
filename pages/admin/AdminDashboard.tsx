@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList, Clock, FileText } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList, Clock, FileText, TowerControl } from 'lucide-react';
 import { ADMIN_STATS, POPULAR_TOURS } from '../../constants';
 import { AppRoute } from '../../types';
 import { api } from '../../services/api';
@@ -176,7 +176,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                <span className="text-xs font-bold">Finanzas</span>
              </button>
              <button 
-               onClick={() => onNavigate(AppRoute.ADMIN_CARIBBEAN_NIGHT)}
+               onClick={() => onNavigate(AppRoute.ADMIN_CARIBBEAN)}
                className="bg-gradient-to-br from-orange-900 to-cyan-900 p-4 rounded-xl border border-orange-600 hover:border-orange-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"
              >
                <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
@@ -215,13 +215,24 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                <ClipboardList size={24} className="text-cyan-400" />
                <span className="text-xs font-bold">Tareas</span>
              </button>
-             <button 
+             <button
                onClick={() => onNavigate(AppRoute.ADMIN_QUOTES)}
                className="bg-gradient-to-br from-emerald-900 to-green-900 p-4 rounded-xl border border-emerald-600 hover:border-emerald-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"
              >
                <div className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                <FileText size={24} className="text-emerald-400" />
                <span className="text-xs font-bold">Cotizaciones</span>
+             </button>
+             <button
+               onClick={() => onNavigate(AppRoute.ADMIN_TORRE_CONTROL)}
+               className="col-span-4 bg-gradient-to-r from-cyan-900 via-blue-900 to-cyan-900 p-4 rounded-xl border border-cyan-500 hover:border-cyan-300 flex items-center justify-center gap-3 text-center relative overflow-hidden"
+             >
+               <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+               <TowerControl size={22} className="text-cyan-400" />
+               <div className="text-left">
+                 <span className="text-sm font-bold text-cyan-300 block">Torre de Control</span>
+                 <span className="text-xs text-cyan-600">Checklist de lanzamiento · Super Admin</span>
+               </div>
              </button>
          </div>
       </div>

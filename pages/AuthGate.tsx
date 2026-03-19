@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { ArrowLeft, User, Briefcase, ShieldCheck, LogIn, UserPlus, AlertCircle, Mail, Lock, Loader2, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { AppRoute, UserRole } from '../types';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, signInWithCustomToken } from 'firebase/auth';
+import { auth, googleProvider } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
 
 interface AuthGateProps {
   onAuthenticated: (role: UserRole) => void;
@@ -10,7 +13,29 @@ interface AuthGateProps {
 type AuthStep = 'select-type' | 'login' | 'register' | 'admin-pin';
 type UserType = 'turista' | 'local' | 'socio' | 'admin' | null;
 
+/**
+ * Despues de que Firebase autentica, verificar token con backend
+ * para obtener/crear perfil en Airtable
+ */
+async function verifyWithBackend(firebaseUser: any, userType: string) {
+  const idToken = await firebaseUser.getIdToken();
+  const response = await fetch('/api/firebase-auth/verify', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`,
+    },
+    body: JSON.stringify({ userType }),
+  });
+  const data = await response.json();
+  if (!data.success) {
+    throw new Error(data.error || 'Error verificando perfil');
+  }
+  return data;
+}
+
 const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
+  const { setProfile } = useAuth();
   const [currentStep, setCurrentStep] = useState<AuthStep>('select-type');
   const [userType, setUserType] = useState<UserType>(null);
   const [email, setEmail] = useState('');
@@ -18,8 +43,8 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isLogin, setIsLogin] = useState(true); // true = login, false = register
-  
+  const [isLogin, setIsLogin] = useState(true);
+
   // Para el PIN de admin
   const [adminPin, setAdminPin] = useState('');
   const [pinAttempts, setPinAttempts] = useState(0);
@@ -62,86 +87,120 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
     setEmail('');
     setPassword('');
     setAdminPin('');
-    
-    // Si es admin, mostrar panel de PIN
-    if (type === 'admin') {
-      setCurrentStep('admin-pin');
-    } else {
-      setCurrentStep('login');
-    }
+    // Todos los tipos van al login unificado (email/password + Google)
+    setCurrentStep('login');
   };
 
+  // ============================================
+  // FIREBASE: Login/Registro con Email + Password
+  // ============================================
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // Validación básica
     if (!email || !password) {
       setError('Por favor completa todos los campos');
       setLoading(false);
       return;
     }
 
-    // Validación adicional para registro
-    if (!isLogin) {
-      if (!email.includes('@')) {
-        setError('El correo debe ser válido');
-        setLoading(false);
-        return;
-      }
-      if (password.length < 8) {
-        setError('La contraseña debe tener mínimo 8 caracteres');
-        setLoading(false);
-        return;
-      }
+    if (!isLogin && password.length < 8) {
+      setError('La contraseña debe tener mínimo 8 caracteres');
+      setLoading(false);
+      return;
     }
 
     try {
-      const endpoint = isLogin ? '/api/user-auth/login' : '/api/user-auth/register';
-      const payload = isLogin 
-        ? { email, password }
-        : { email, password, userType, nombre: email.split('@')[0] };
+      let firebaseUser;
 
-      // Usar URL relativa para que funcione tanto en local como en producción
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      if (isLogin) {
+        // Intentar login con Firebase directamente
+        try {
+          const result = await signInWithEmailAndPassword(auth, email, password);
+          firebaseUser = result.user;
+        } catch (firebaseErr: any) {
+          // Si el usuario no existe en Firebase, intentar migracion desde Airtable
+          if (firebaseErr.code === 'auth/user-not-found' || firebaseErr.code === 'auth/invalid-credential') {
+            console.log('🔄 Intentando migracion desde Airtable...');
+            const migrateRes = await fetch('/api/firebase-auth/migrate-login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password }),
+            });
+            const migrateData = await migrateRes.json();
 
-      const data = await response.json();
+            if (!migrateData.success) {
+              throw new Error(migrateData.error || 'Credenciales incorrectas');
+            }
 
-      if (!data.success) {
-        setError(data.error || 'Error en la autenticación');
-        setLoading(false);
-        return;
+            // Login con el custom token de Firebase
+            const customResult = await signInWithCustomToken(auth, migrateData.customToken);
+            firebaseUser = customResult.user;
+          } else {
+            throw firebaseErr;
+          }
+        }
+      } else {
+        // Registro nuevo en Firebase
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        firebaseUser = result.user;
       }
 
-      // Guardar sesión en localStorage
-      const session = {
-        user: data.user,
-        email: data.user.email,
-        userType,
-        role: data.user.role,
-        loginTime: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      };
-      localStorage.setItem('user_session', JSON.stringify(session));
-      
-      // Mostrar mensaje si requiere aprobación
-      if (data.user.requiresApproval) {
+      // Verificar con backend y obtener perfil Airtable
+      const data = await verifyWithBackend(firebaseUser, userType || 'turista');
+
+      if (data.user) {
+        setProfile(data.user);
+      }
+
+      if (data.requiresApproval && data.message) {
         alert(data.message);
       }
-      
-      // Cambiar rol según tipo de usuario
-      onAuthenticated(data.user.role);
-      
-    } catch (err) {
+
+      onAuthenticated(data.user?.role || userTypeConfig[userType!]?.role || 'Tourist');
+
+    } catch (err: any) {
       console.error('Error en autenticación:', err);
-      setError('Error conectando con el servidor. Verifica que el backend esté corriendo.');
+      const code = err.code || '';
+      if (code === 'auth/email-already-in-use') {
+        setError('Este correo ya está registrado. Inicia sesión.');
+      } else if (code === 'auth/weak-password') {
+        setError('La contraseña es muy débil. Usa mínimo 6 caracteres.');
+      } else if (code === 'auth/invalid-email') {
+        setError('El correo no es válido.');
+      } else if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
+        setError('Correo o contraseña incorrectos.');
+      } else {
+        setError(err.message || 'Error de autenticación');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ============================================
+  // FIREBASE: Login con Google
+  // ============================================
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const data = await verifyWithBackend(result.user, userType || 'turista');
+
+      if (data.user) {
+        setProfile(data.user);
+      }
+
+      onAuthenticated(data.user?.role || userTypeConfig[userType!]?.role || 'Tourist');
+    } catch (err: any) {
+      console.error('Error Google login:', err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Se cerró la ventana de Google.');
+      } else {
+        setError(err.message || 'Error al iniciar con Google');
+      }
     } finally {
       setLoading(false);
     }
@@ -156,10 +215,12 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
     }
   };
 
-  // Handler para PIN de administrador
+  // ============================================
+  // Admin PIN (se mantiene igual, sin Firebase)
+  // ============================================
   const handleAdminPinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!adminPin || adminPin.length === 0) {
       setError('Por favor ingresa tu PIN');
       return;
@@ -174,8 +235,6 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
     setError('');
 
     try {
-      console.log(`🔐 Enviando PIN a /api/validate-admin-pin`);
-      
       const res = await fetch('/api/validate-admin-pin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -190,19 +249,18 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
       const data = await res.json();
 
       if (data.success && data.user) {
-        // Guardar sesión admin
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + 8);
-        
+
         const session = {
           user: data.user,
           expiresAt: expiresAt.toISOString(),
           loginTime: new Date().toISOString()
         };
-        
+
         localStorage.setItem('admin_session', JSON.stringify(session));
         localStorage.setItem('admin_authenticated', 'true');
-        
+
         onAuthenticated('SuperAdmin');
       } else {
         setPinAttempts(prev => prev + 1);
@@ -219,35 +277,18 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
     }
   };
 
-  const handlePinDigit = (digit: string) => {
-    if (adminPin.length < 10) {
-      setAdminPin(prev => prev + digit);
-      setError('');
-    }
-  };
-
-  const handlePinDelete = () => {
-    setAdminPin(prev => prev.slice(0, -1));
-    setError('');
-  };
-
-  const handlePinClear = () => {
-    setAdminPin('');
-    setError('');
-  };
-
+  // ============================================
   // PASO 1: Seleccionar tipo de usuario
+  // ============================================
   if (currentStep === 'select-type') {
     return (
       <div className="bg-gradient-to-b from-gray-50 to-white min-h-screen flex flex-col justify-center px-4 pb-24 font-sans">
         <div className="w-full max-w-md mx-auto">
-          {/* Logo/Header */}
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-black text-gray-900 mb-2">GuanaGO</h1>
             <p className="text-gray-600 text-sm">Elige tu tipo de cuenta</p>
           </div>
 
-          {/* Descripción */}
           <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-4 mb-8">
             <div className="flex gap-3">
               <div className="text-emerald-600 flex-shrink-0 mt-0.5">
@@ -259,7 +300,6 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
             </div>
           </div>
 
-          {/* Opciones de usuario */}
           <div className="space-y-3 mb-6">
             {Object.entries(userTypeConfig).map(([key, config]) => (
               <button
@@ -291,7 +331,6 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
             ))}
           </div>
 
-          {/* Info adicional */}
           <p className="text-center text-xs text-gray-500 leading-relaxed">
             Puedes cambiar tu tipo de cuenta más adelante en la configuración de tu perfil.
           </p>
@@ -300,26 +339,22 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
     );
   }
 
+  // ============================================
   // PASO 2A: Panel PIN para Administrador
+  // ============================================
   if (currentStep === 'admin-pin') {
     return (
       <div className="bg-gradient-to-br from-purple-50 to-white min-h-screen flex flex-col px-4 pb-24 font-sans">
-        {/* Header */}
         <div className="flex items-center justify-between pt-4 pb-6 border-b border-gray-200">
-          <button
-            onClick={goBack}
-            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
-          >
+          <button onClick={goBack} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
             <ArrowLeft size={24} className="text-gray-700" />
           </button>
           <h2 className="font-black text-gray-900 text-lg">Administrador</h2>
           <div className="w-10" />
         </div>
 
-        {/* Contenedor principal */}
         <div className="flex-1 flex items-center justify-center w-full max-w-sm mx-auto my-8">
           <div className="w-full">
-            {/* Icono y título */}
             <div className="text-center mb-8">
               <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <KeyRound size={40} className="text-purple-600" />
@@ -328,31 +363,22 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
               <p className="text-sm text-gray-600">Ingresa tu PIN de administrador</p>
             </div>
 
-            {/* Campo de PIN (texto) */}
             <form onSubmit={handleAdminPinSubmit} className="space-y-4">
               <div className="relative">
                 <Lock size={18} className="absolute left-4 top-3.5 text-gray-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={adminPin}
-                  onChange={(e) => {
-                    setAdminPin(e.target.value);
-                    setError('');
-                  }}
+                  onChange={(e) => { setAdminPin(e.target.value); setError(''); }}
                   placeholder="Ingresa tu PIN"
                   className="w-full pl-11 pr-12 py-3 border-2 border-purple-200 rounded-xl outline-none transition-all focus:border-purple-500 text-gray-900 text-sm"
                   autoComplete="off"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 transition-colors"
-                >
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 transition-colors">
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
 
-              {/* Error */}
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex gap-3">
                   <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -360,7 +386,6 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
                 </div>
               )}
 
-              {/* Botón Acceder */}
               <button
                 type="submit"
                 disabled={loading || adminPin.length < 4}
@@ -369,34 +394,17 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
                   flex items-center justify-center gap-2
                   ${(loading || adminPin.length < 4) ? 'opacity-60 cursor-not-allowed' : 'active:scale-95'}`}
               >
-                {loading ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Validando...
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck size={18} />
-                    Acceder
-                  </>
-                )}
+                {loading ? (<><Loader2 size={18} className="animate-spin" /> Validando...</>) : (<><ShieldCheck size={18} /> Acceder</>)}
               </button>
             </form>
 
-            {/* Intentos restantes */}
             {pinAttempts > 0 && (
-              <p className="text-center text-xs text-red-500 mt-4">
-                Intentos fallidos: {pinAttempts}/{MAX_PIN_ATTEMPTS}
-              </p>
+              <p className="text-center text-xs text-red-500 mt-4">Intentos fallidos: {pinAttempts}/{MAX_PIN_ATTEMPTS}</p>
             )}
 
-            {/* Opción de login con email */}
             <div className="text-center border-t border-gray-200 pt-6 mt-6">
               <p className="text-xs text-gray-600 mb-2">¿Prefieres usar email?</p>
-              <button
-                onClick={() => setCurrentStep('login')}
-                className="text-purple-600 font-bold text-sm hover:text-purple-700 transition-colors"
-              >
+              <button onClick={() => setCurrentStep('login')} className="text-purple-600 font-bold text-sm hover:text-purple-700 transition-colors">
                 Acceder con Email y PIN
               </button>
             </div>
@@ -406,7 +414,9 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
     );
   }
 
-  // PASO 2B: Login / Registro (email + password/pin)
+  // ============================================
+  // PASO 2B: Login / Registro con Firebase
+  // ============================================
   const config = userType ? userTypeConfig[userType] : null;
 
   return (
@@ -416,42 +426,53 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
       ${config?.color === 'indigo' ? 'from-indigo-50 to-white' : ''}
       ${config?.color === 'purple' ? 'from-purple-50 to-white' : ''}
     `}>
-      {/* Header con botón atrás */}
+      {/* Header */}
       <div className="flex items-center justify-between pt-4 pb-6 border-b border-gray-200">
-        <button
-          onClick={goBack}
-          className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
-        >
+        <button onClick={goBack} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
           <ArrowLeft size={24} className="text-gray-700" />
         </button>
-        <h2 className="font-black text-gray-900 text-lg">
-          {config?.label}
-        </h2>
+        <h2 className="font-black text-gray-900 text-lg">{config?.label}</h2>
         <div className="w-10" />
       </div>
 
-      {/* Contenedor principal */}
       <div className="flex-1 flex items-center justify-center w-full max-w-md mx-auto my-8">
         <div className="w-full">
-          {/* Título */}
-          <div className="mb-8 text-center">
+          {/* Titulo */}
+          <div className="mb-6 text-center">
             <h1 className="text-2xl font-black text-gray-900 mb-2">
               {isLogin ? 'Inicia Sesión' : 'Crea tu Cuenta'}
             </h1>
             <p className="text-sm text-gray-600">
-              {isLogin 
-                ? `Bienvenido ${config?.label}` 
-                : `Únete como ${config?.label}`}
+              {isLogin ? `Bienvenido ${config?.label}` : `Únete como ${config?.label}`}
             </p>
           </div>
 
-          {/* Formulario */}
+          {/* Boton Google */}
+          <button
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all flex items-center justify-center gap-3 mb-4 active:scale-95 disabled:opacity-50"
+          >
+            <svg width="20" height="20" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            <span className="font-bold text-gray-700 text-sm">Continuar con Google</span>
+          </button>
+
+          {/* Separador */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px bg-gray-200 flex-1"></div>
+            <span className="text-xs text-gray-500 uppercase font-bold">O con email</span>
+            <div className="h-px bg-gray-200 flex-1"></div>
+          </div>
+
+          {/* Formulario Email/Password */}
           <form onSubmit={handleAuthSubmit} className="space-y-5 mb-6">
-            {/* Email */}
             <div>
-              <label className="block text-xs font-black text-gray-700 mb-2 ml-1">
-                Correo Electrónico
-              </label>
+              <label className="block text-xs font-black text-gray-700 mb-2 ml-1">Correo Electrónico</label>
               <div className="relative">
                 <Mail size={18} className="absolute left-4 top-3.5 text-gray-400" />
                 <input
@@ -464,31 +485,23 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
               </div>
             </div>
 
-            {/* Contraseña o PIN */}
             <div>
-              <label className="block text-xs font-black text-gray-700 mb-2 ml-1">
-                {userType === 'admin' ? 'PIN' : 'Contraseña'}
-              </label>
+              <label className="block text-xs font-black text-gray-700 mb-2 ml-1">Contraseña</label>
               <div className="relative">
                 <Lock size={18} className="absolute left-4 top-3.5 text-gray-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={userType === 'admin' ? '••••••' : (isLogin ? '••••••••' : '••••••••(mínimo 8)')}
+                  placeholder={isLogin ? '••••••••' : '••••••••(mínimo 8)'}
                   className="w-full pl-11 pr-12 py-3 border-2 border-gray-200 rounded-xl outline-none transition-all focus:border-emerald-500 text-gray-900 text-sm"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 transition-colors"
-                >
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 transition-colors">
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
-            {/* Error */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex gap-3">
                 <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -496,28 +509,14 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
               </div>
             )}
 
-            {/* Botón Submit */}
             <button
               type="submit"
               disabled={loading}
               className={`w-full py-4 rounded-xl font-black uppercase text-sm tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2
-                ${isLogin 
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200' 
-                  : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200'}
-                ${loading ? 'opacity-75 cursor-not-allowed' : ''}
-              `}
+                bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200
+                ${loading ? 'opacity-75 cursor-not-allowed' : ''}`}
             >
-              {loading ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  Procesando...
-                </>
-              ) : (
-                <>
-                  {isLogin ? <LogIn size={18} /> : <UserPlus size={18} />}
-                  {isLogin ? 'Inicia Sesión' : 'Crear Cuenta'}
-                </>
-              )}
+              {loading ? (<><Loader2 size={18} className="animate-spin" /> Procesando...</>) : (<>{isLogin ? <LogIn size={18} /> : <UserPlus size={18} />} {isLogin ? 'Inicia Sesión' : 'Crear Cuenta'}</>)}
             </button>
           </form>
 
@@ -527,10 +526,7 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
               {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
             </p>
             <button
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setError('');
-              }}
+              onClick={() => { setIsLogin(!isLogin); setError(''); }}
               className="text-emerald-600 font-black text-sm hover:text-emerald-700 transition-colors"
             >
               {isLogin ? 'Registrate aquí' : 'Inicia sesión aquí'}

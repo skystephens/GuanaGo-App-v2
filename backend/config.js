@@ -37,5 +37,10 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
   
   // CORS
-  corsOrigin: process.env.CORS_ORIGIN || '*'
+  corsOrigin: process.env.CORS_ORIGIN || '*',
+
+  // Feature flags / switches
+  featureFlags: {
+    includeUnpublished: process.env.INCLUDE_UNPUBLISHED === 'true'
+  }
 };

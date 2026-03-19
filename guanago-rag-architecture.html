@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuanaGO - Arquitectura RAG + MCP + Make</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+        
+        .tab {
+            padding: 1rem 2rem;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .tab:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .layer {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            border-radius: 15px;
+            border-left: 4px solid;
+        }
+        
+        .layer-1 { border-color: #667eea; background: #f0f4ff; }
+        .layer-2 { border-color: #00b894; background: #e8fff6; }
+        .layer-3 { border-color: #ff6b6b; background: #ffe8e8; }
+        .layer-4 { border-color: #ffa502; background: #fff5e6; }
+        
+        .layer-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nodes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .node {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .node h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
+        
+        .node p {
+            font-size: 0.875rem;
+            color: #718096;
+            line-height: 1.5;
+        }
+        
+        .node-detail {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+            display: none;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 5px;
+        }
+        
+        .node.expanded .node-detail {
+            display: block;
+        }
+        
+        .roadmap {
+            display: grid;
+            gap: 2rem;
+        }
+        
+        .phase {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+        }
+        
+        .phase h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .phase-content {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .phase-content ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .phase-content li {
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .phase-content li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .metric-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .metric-item {
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .metric-item strong {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-item code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 GuanaGO - Arquitectura RAG + MCP + Make</h1>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('architecture')">🏗️ Arquitectura</button>
+            <button class="tab" onclick="showTab('roadmap')">🗺️ Roadmap</button>
+            <button class="tab" onclick="showTab('metrics')">📊 Métricas</button>
+        </div>
+        
+        <!-- TAB 1: ARQUITECTURA -->
+        <div id="architecture" class="tab-content active">
+            <div class="layer layer-1">
+                <div class="layer-title">
+                    <span>🧠</span>
+                    <span>CAPA 1: INTELIGENCIA (Claude AI)</span>
+                </div>
+                <div class="nodes">
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>Claude Code</h4>
+                        <p>Agente de desarrollo que lee contexto de Airtable y ejecuta tareas de código</p>
+                        <div class="node-detail">
+# Setup:
+npm install -g @anthropic-ai/claude-code
+
+# Config MCP en .claude/mcp-config.json:
+{
+  "mcpServers": {
+    "airtable": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-airtable"],
+      "env": {
+        "AIRTABLE_API_KEY": "YOUR_KEY",
+        "AIRTABLE_BASE_ID": "YOUR_BASE"
+      }
+    }
+  }
+}
+                        </div>
+                    </div>
+                    
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>Claude MCP</h4>
+                        <p>Model Context Protocol - Lee Airtable como memoria contextual</p>
+                        <div class="node-detail">
+# Instalar MCP Server:
+npm install @modelcontextprotocol/server-airtable
+
+# Uso automático:
+Claude Code detecta MCP config y lee tablas automáticamente
+cuando ejecutas prompts como:
+"Lee TASK-001 de Airtable y ejecútala"
+                        </div>
+                    </div>
+                    
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>Gemini Flash</h4>
+                        <p>Análisis de contexto masivo (1M tokens) para debugging y arquitectura</p>
+                        <div class="node-detail">
+# Uso vía AI Studio:
+https://aistudio.google.com/
+
+# O vía API:
+import google.generativeai as genai
+genai.configure(api_key='YOUR_KEY')
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+# Ideal para:
+- Analizar toda tu base de código
+- Encontrar bugs ocultos
+- Refactorizar arquitectura completa
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="layer layer-2">
+                <div class="layer-title">
+                    <span>💾</span>
+                    <span>CAPA 2: DATOS (Airtable como RAG)</span>
+                </div>
+                <div class="nodes">
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>Tasks_Kanban</h4>
+                        <p>Gestión de tareas con Kanban board</p>
+                        <div class="node-detail">
+Campos clave:
+- ID_Task, Nombre_Tarea, Descripción
+- Estado (Backlog | To Do | In Progress | Done)
+- Prioridad (Baja | Media | Alta | Crítica)
+- Asignado_a, Estimación_Horas
+- Documentos_Relacionados (link)
+- Componentes_Relacionados (link)
+
+Claude Code puede:
+- Leer tareas pendientes
+- Actualizar estado automáticamente
+- Marcar como Done cuando completa
+                        </div>
+                    </div>
+                    
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>Documentos_RAG</h4>
+                        <p>Knowledge base: specs, decisiones, APIs, flujos</p>
+                        <div class="node-detail">
+Campos clave:
+- ID_Documento, Título, Tipo
+- Contenido_Markdown (long text)
+- Tags, Módulos_Relacionados
+- Embedding_Status (para búsqueda semántica)
+
+Claude Code usa estos docs para entender:
+- Cómo implementar features
+- Decisiones de arquitectura pasadas
+- APIs y endpoints disponibles
+- Flujos de usuario establecidos
+                        </div>
+                    </div>
+                    
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>Componentes_App</h4>
+                        <p>Inventario de componentes React, services, hooks</p>
+                        <div class="node-detail">
+Campos clave:
+- ID_Componente, Nombre, Tipo
+- Ubicación (filepath)
+- Estado (Planeado | En Dev | Implementado)
+- Props, Dependencias_Código
+- Tests (coverage status)
+
+Claude Code puede:
+- Evitar duplicar componentes
+- Reutilizar código existente
+- Actualizar tests automáticamente
+                        </div>
+                    </div>
+                    
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>Features_Roadmap</h4>
+                        <p>Visión de producto: features, user stories, métricas de éxito</p>
+                        <div class="node-detail">
+Campos clave:
+- ID_Feature, Nombre, Descripción
+- Estado (Idea | Planeado | En Dev | Lanzado)
+- User_Story, Success_Metrics
+- Tareas (links), Documentos (links)
+
+Permite a Claude Code entender:
+- Por qué se implementa algo
+- Qué problema resuelve
+- Cómo medir el éxito
+                        </div>
+                    </div>
+                    
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>CotizacionesGG</h4>
+                        <p>Sistema B2B: cotizaciones de agencias en tiempo real</p>
+                        <div class="node-detail">
+Campos clave:
+- ID_Cotizacion, Servicio (link)
+- Agencia, Email_Agencia
+- Fecha_Checkin, Fecha_Checkout
+- Precio_Total, Estado
+- Aprobado_Por, Notas_Proveedor
+
+Automatizaciones Make.com:
+- Nueva cotización → WhatsApp proveedor
+- Aprobada → Email agencia
+- Rechazada → Notificar + razón
+                        </div>
+                    </div>
+                    
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>Servicios</h4>
+                        <p>Catálogo: hoteles, tours, transportes de San Andrés</p>
+                        <div class="node-detail">
+Campos clave:
+- ID_Servicio, Nombre, Tipo
+- Precio_Base_Noche, Imagenes
+- Ubicacion, Amenidades
+- Proveedor (link), Activo
+
+Automatizaciones Make.com:
+- Sincronizar precios diarios (Google Sheets → Airtable)
+- Actualizar disponibilidad
+- Notificar cambios a frontend
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="layer layer-3">
+                <div class="layer-title">
+                    <span>⚡</span>
+                    <span>CAPA 3: AUTOMATIZACIÓN (Make.com)</span>
+                </div>
+                <div class="nodes">
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>Workflow: Nueva Cotización</h4>
+                        <p>Trigger → Notificar Proveedor vía WhatsApp + Email</p>
+                        <div class="node-detail">
+Flujo Make.com:
+1. TRIGGER: Nuevo registro en CotizacionesGG
+2. FILTRO: Estado = "Pendiente"
+3. BUSCAR: Datos del proveedor (tabla Proveedores)
+4. ENVIAR: WhatsApp vía Twilio/WATI
+   Mensaje: "Nueva cotización #COT-1234 por $1,890"
+5. ENVIAR: Email con template HTML
+6. ACTUALIZAR: Campo "Notificado" = true
+
+Costo: ~10 operaciones/cotización
+Free tier: 1,000 ops/mes = 100 cotizaciones gratis
+                        </div>
+                    </div>
+                    
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>Workflow: Aprobación</h4>
+                        <p>Proveedor aprueba → Notificar Agencia + Crear Booking</p>
+                        <div class="node-detail">
+Flujo Make.com:
+1. TRIGGER: Registro actualizado en CotizacionesGG
+2. FILTRO: Estado cambió a "Aprobada"
+3. OBTENER: Datos agencia (email, servicio, precio)
+4. GENERAR: PDF de cotización (módulo PDF)
+5. ENVIAR: Email a agencia con PDF adjunto
+6. CREAR: Registro en tabla Bookings
+7. NOTIFICAR: Slack interno "Nueva reserva confirmada"
+
+Costo: ~15 operaciones/aprobación
+                        </div>
+                    </div>
+                    
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>Workflow: Sync Precios</h4>
+                        <p>Actualización diaria de precios desde Google Sheets</p>
+                        <div class="node-detail">
+Flujo Make.com:
+1. TRIGGER: Scheduled (cada día 6 AM)
+2. LEER: Google Sheets con precios actualizados
+   (Proveedores editan aquí manualmente)
+3. ITERAR: Por cada fila del Sheet
+4. BUSCAR: Servicio en Airtable por ID_Servicio
+5. ACTUALIZAR: Campo Precio_Base_Noche
+6. LOGGING: Guardar cambios en tabla AuditLog
+7. NOTIFICAR: Slack "Precios actualizados: 47 servicios"
+
+Costo: ~300 operaciones/día (1 por servicio + overhead)
+Con plan Core ($10.59/mes): 10,000 ops = suficiente
+                        </div>
+                    </div>
+                    
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>Workflow: Claude Code Deploy</h4>
+                        <p>Claude completa tarea → Trigger CI/CD automático</p>
+                        <div class="node-detail">
+Flujo Make.com:
+1. TRIGGER: Registro actualizado en Tasks_Kanban
+2. FILTRO: Estado cambió a "Done"
+3. WEBHOOK: GitHub Actions
+   POST https://api.github.com/repos/.../dispatches
+   Event: "claude-code-completed"
+4. GITHUB ACTION: 
+   - Run tests
+   - Build production
+   - Deploy to Vercel/Render
+5. ACTUALIZAR: Airtable con deployment URL
+6. NOTIFICAR: Discord/Slack con changelog
+
+Costo: ~8 operaciones/tarea completada
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="layer layer-4">
+                <div class="layer-title">
+                    <span>🌐</span>
+                    <span>CAPA 4: DISTRIBUCIÓN (Frontend Apps)</span>
+                </div>
+                <div class="nodes">
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>GuiaSAI B2B</h4>
+                        <p>Plataforma para agencias de viajes (ya funcional)</p>
+                        <div class="node-detail">
+Tech Stack:
+- React 18 + Vite + TypeScript
+- Zustand (state management)
+- airtableService.ts (API layer)
+- Deployed: guiasanandresislas.com/agencias
+
+Features:
+- Catálogo de servicios con filtros
+- Cotizador en tiempo real
+- Formulario captura → Airtable
+- Email confirmación automático
+
+Próximo: Dashboard para agencias (ver cotizaciones)
+                        </div>
+                    </div>
+                    
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>GuanaGO PWA</h4>
+                        <p>App turista con gamificación y puntos (en desarrollo)</p>
+                        <div class="node-detail">
+Tech Stack:
+- React 18 + Vite + TypeScript + PWA
+- vite-plugin-pwa (manifest, service worker)
+- Mapbox/Leaflet (mapa interactivo SAI)
+- PointsEngine (gamificación)
+
+Features planeadas:
+- Catálogo servicios con precios bajos
+- Sistema de puntos (10% cashback)
+- Mapa con POIs de la isla
+- Chat en vivo 24/7
+- Instalable como app
+
+Target: Sprint 3
+                        </div>
+                    </div>
+                    
+                    <div class="node" onclick="toggleNode(this)">
+                        <h4>Admin Panel</h4>
+                        <p>Dashboard para proveedores y equipo GuiaSAI</p>
+                        <div class="node-detail">
+Tech Stack:
+- React 18 + TypeScript
+- Recharts (analytics)
+- TanStack Table (data tables)
+- React Hook Form (forms)
+
+Features:
+- Ver cotizaciones pendientes
+- Aprobar/Rechazar con 1 click
+- Calendario de disponibilidad
+- Métricas de ventas
+- Gestión de servicios
+
+Roles:
+- Proveedor: Solo sus cotizaciones
+- Admin GuiaSAI: Ver todo + analytics
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB 2: ROADMAP -->
+        <div id="roadmap" class="tab-content">
+            <div class="roadmap">
+                <div class="phase">
+                    <h3>FASE 1: Fundamentos RAG (Semana 1) ✅</h3>
+                    <div class="phase-content">
+                        <ul>
+                            <li>Crear 4 tablas en Airtable (Tasks, Docs, Componentes, Features)</li>
+                            <li>Importar datos de ejemplo</li>
+                            <li>Configurar relaciones entre tablas</li>
+                            <li>Obtener API credentials (Personal Access Token)</li>
+                            <li>Script de sincronización local (sync-airtable.js)</li>
+                        </ul>
+                        <p style="margin-top: 1rem; opacity: 0.9;">
+                            <strong>Costo:</strong> $0 (Free tier) → $20/mes (Plus recomendado para producción)
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="phase">
+                    <h3>FASE 2: MCP + Claude Code (Semana 2)</h3>
+                    <div class="phase-content">
+                        <ul>
+                            <li>Instalar MCP server de Airtable</li>
+                            <li>Configurar .claude/mcp-config.json</li>
+                            <li>Probar lectura de contexto desde Claude Code</li>
+                            <li>Ejecutar primera tarea (TASK-001: Sistema Puntos)</li>
+                            <li>Claude actualiza Airtable automáticamente</li>
+                        </ul>
+                        <p style="margin-top: 1rem; opacity: 0.9;">
+                            <strong>Costo:</strong> $0 (MCP es gratis) + $20/mes Claude Pro (opcional pero recomendado)
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="phase">
+                    <h3>FASE 3: Make.com Workflows (Semana 3)</h3>
+                    <div class="phase-content">
+                        <ul>
+                            <li>Crear cuenta Make.com (free tier)</li>
+                            <li>Workflow 1: Nueva cotización → WhatsApp proveedor</li>
+                            <li>Workflow 2: Aprobación → Email + PDF a agencia</li>
+                            <li>Workflow 3: Sync precios diario (Google Sheets)</li>
+                            <li>Testing completo de notificaciones</li>
+                        </ul>
+                        <p style="margin-top: 1rem; opacity: 0.9;">
+                            <strong>Costo:</strong> $0 (Free: 1K ops/mes) → $10.59/mes (Core: 10K ops/mes)
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="phase">
+                    <h3>FASE 4: Sistema Completo End-to-End (Semana 4)</h3>
+                    <div class="phase-content">
+                        <ul>
+                            <li>Integración completa: Claude Code ↔ Airtable ↔ Make</li>
+                            <li>Claude lee tarea → Ejecuta → Actualiza Airtable → Make notifica</li>
+                            <li>Dashboard de métricas en tiempo real</li>
+                            <li>Documentación completa del sistema</li>
+                            <li>Training del equipo en SAI</li>
+                        </ul>
+                        <p style="margin-top: 1rem; opacity: 0.9;">
+                            <strong>Costo total mensual:</strong> $25-65 USD (según volumen)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB 3: MÉTRICAS -->
+        <div id="metrics" class="tab-content">
+            <div class="metrics">
+                <div class="metric-card">
+                    <h3>📊 Métricas de Desarrollo</h3>
+                    <div class="metric-item">
+                        <strong>Velocidad de Implementación</strong>
+                        <code>Tareas completadas / Semana</code>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                            Meta: 5-8 tareas/semana con Claude Code<br>
+                            Baseline sin AI: 2-3 tareas/semana
+                        </p>
+                    </div>
+                    <div class="metric-item">
+                        <strong>Precisión de Estimación</strong>
+                        <code>Horas_Reales / Estimación_Horas × 100</code>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                            Meta: 80-120% (buena estimación)<br>
+                            Trackear en Airtable automáticamente
+                        </p>
+                    </div>
+                    <div class="metric-item">
+                        <strong>Cobertura de Tests</strong>
+                        <code>Componentes con Tests / Total × 100</code>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                            Meta: >80% coverage<br>
+                            Claude Code escribe tests automáticos
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>💼 Métricas de Negocio B2B</h3>
+                    <div class="metric-item">
+                        <strong>Tasa de Conversión</strong>
+                        <code>Cotizaciones Aprobadas / Total × 100</code>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                            Meta: >60% aprobación<br>
+                            Automatizar cálculo en Airtable
+                        </p>
+                    </div>
+                    <div class="metric-item">
+                        <strong>Tiempo de Respuesta</strong>
+                        <code>Fecha_Aprobacion - Fecha_Solicitud (horas)</code>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                            Meta: <2 horas promedio<br>
+                            Make.com notifica si >4 horas
+                        </p>
+                    </div>
+                    <div class="metric-item">
+                        <strong>GMV (Gross Merchandise Value)</strong>
+                        <code>SUM(Precio_Total WHERE Estado = 'Aprobada')</code>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                            Meta: $50K USD/mes en 6 meses<br>
+                            Dashboard en tiempo real
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>🎮 Métricas GuanaGO (Turista)</h3>
+                    <div class="metric-item">
+                        <strong>Usuarios Activos Mensuales</strong>
+                        <code>COUNT(DISTINCT userId WHERE lastActivity > 30d)</code>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                            Meta: 1,000 MAU en 3 meses<br>
+                            Trackear con Mixpanel/Amplitude
+                        </p>
+                    </div>
+                    <div class="metric-item">
+                        <strong>Engagement con Puntos</strong>
+                        <code>Usuarios con puntos > 0 / Total × 100</code>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                            Meta: >50% activan sistema<br>
+                            Guardar en tabla UserPoints
+                        </p>
+                    </div>
+                    <div class="metric-item">
+                        <strong>Retention Semana 1</strong>
+                        <code>Usuarios semana 2 / Usuarios semana 1 × 100</code>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                            Meta: >60% retention<br>
+                            Cohort analysis en Airtable
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>⚡ Métricas de Automatización</h3>
+                    <div class="metric-item">
+                        <strong>Operaciones Make.com</strong>
+                        <code>Total operations / Mes</code>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                            Free: 1,000 ops/mes<br>
+                            Core: 10,000 ops/mes ($10.59)<br>
+                            Monitorear en dashboard Make
+                        </p>
+                    </div>
+                    <div class="metric-item">
+                        <strong>Tasa de Éxito Automations</strong>
+                        <code>Workflows exitosos / Total × 100</code>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                            Meta: >95% sin errores<br>
+                            Make.com envía alertas si falla
+                        </p>
+                    </div>
+                    <div class="metric-item">
+                        <strong>ROI de Automatización</strong>
+                        <code>(Horas ahorradas × $20) / Costo herramientas</code>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                            Ejemplo: 40h/mes ahorradas = $800<br>
+                            Costo: $50/mes → ROI 16x
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function toggleNode(node) {
+            node.classList.toggle('expanded');
+        }
+    </script>
+</body>
+</html>

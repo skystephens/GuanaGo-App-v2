@@ -5,7 +5,7 @@ import { AppRoute, Tour } from '../types';
 import { GUANA_LOGO } from '../constants';
 import CaribbeanNightSection from '../components/CaribbeanNightSection';
 import CocoArtSection from '../components/CocoArtSection';
-import GuanaPointsSection from '../components/GuanaPointsSection';
+// GuanaPointsSection ocultado temporalmente
 
 interface HomeProps {
   onNavigate: (route: AppRoute, data?: any) => void;
@@ -84,11 +84,11 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
       <header className="px-6 md:px-8 lg:px-12 pt-12 pb-4 bg-white flex items-center justify-between">
          <div className="flex items-center gap-3">
            <div className="bg-emerald-50 w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center p-1 border border-emerald-100 shadow-sm">
-              <img src={GUANA_LOGO} alt="Guana Go" className="w-full h-full object-contain" />
+              <img src={GUANA_LOGO} alt="GuiaSAI" className="w-full h-full object-contain" />
            </div>
            <div>
               <h1 className="text-xs text-gray-400 font-bold uppercase tracking-wider">Explora SAI</h1>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800 leading-none">Guana Go</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 leading-none">GuiaSAI</h2>
            </div>
          </div>
          {/* Desktop: info adicional */}
@@ -146,8 +146,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* GUANA Points - Preview compacto con link a sección completa */}
-        <GuanaPointsSection onNavigate={onNavigate} isAuthenticated={false} userPoints={0} compact={true} />
+        {/* GUANA Points oculto temporalmente */}
 
         {/* RIMM Caribbean Night Section */}
         <CaribbeanNightSection onNavigate={onNavigate} />

@@ -1,0 +1,253 @@
+ID_Documento,Título,Tipo,Contenido_Markdown,Módulos_Relacionados,Tags,Versión,Última_Actualización,Autor,Embedding_Status
+DOC-001,Arquitectura del Sistema de Puntos,Spec Técnica,"# Sistema de Puntos GuanaGO
+
+## Objetivo
+Permitir que usuarios acumulen puntos por compras y acciones, canjeables por descuentos en futuras reservas.
+
+## Diseño Técnico
+
+### Frontend
+- **Estado Global**: Zustand store `usePointsStore`
+- **Componentes**:
+  - `PointsBalance`: Muestra balance actual
+  - `PointsHistory`: Lista de transacciones
+  - `RedeemPoints`: Interface de canje
+
+### Backend
+- **Persistencia**: Airtable tabla `UserPoints`
+- **Campos**:
+  - userId (string)
+  - balance (number)
+  - lifetimeEarned (number)
+  - lifetimeRedeemed (number)
+
+### Lógica de Negocio
+- 10% de cada compra → puntos
+- 100 puntos = $1 USD descuento
+- Niveles: cada 1000 puntos = +1 nivel
+
+## Ejemplo de Uso
+```typescript
+const { points, addPoints, redeemPoints } = usePointsStore();
+
+// Usuario compra por $100
+addPoints(userId, 100 * 0.10, 'BOOKING');
+
+// Usuario canjea 500 puntos
+const discount = redeemPoints(userId, 500); // $5 USD
+```
+
+## Testing
+- Unit tests para cálculos
+- Integration tests con Airtable mock
+- E2E test del flujo completo
+
+## Seguridad
+- Validar en backend que usuario tiene puntos suficientes
+- Rate limiting para evitar fraude
+- Audit log de todas las transacciones",Frontend | Backend,puntos | gamificación | zustand | airtable,1.0,2026-01-29,Tú + Claude,Procesado
+DOC-002,Decisión: Zustand vs Redux,Decisión,"# ADR-001: Zustand para State Management
+
+## Contexto
+Necesitamos gestionar estado global (puntos, usuario, carrito) en GuanaGO.
+
+## Opciones Evaluadas
+1. Redux Toolkit
+2. Zustand
+3. Context API + useReducer
+
+## Decisión: Zustand
+
+### Razones
+- **Simplicidad**: Menos boilerplate que Redux
+- **Performance**: Solo re-renderiza componentes suscritos
+- **Tamaño**: 1.2kb vs 8kb de Redux
+- **DevTools**: Tiene extensión de Chrome
+- **TypeScript**: Excelente soporte nativo
+
+### Desventajas
+- Ecosistema más pequeño que Redux
+- Menos middleware disponibles
+
+## Consecuencias
+- Implementación rápida
+- Fácil de entender para nuevos devs
+- Migración futura a Redux posible si crece
+
+## Referencias
+- https://github.com/pmndrs/zustand
+- https://docs.pmnd.rs/zustand",Frontend,zustand | redux | state-management | architecture,1.0,2026-01-29,Tú,Procesado
+DOC-003,Flujo de Usuario: Cotización B2B,User Flow,"# Flujo: Agencia Solicita Cotización
+
+## Paso 1: Landing
+Usuario (agencia) llega a `/agencias`
+
+## Paso 2: Explorar Servicios
+- Ve catálogo de hoteles/tours/transportes
+- Puede filtrar por:
+  - Tipo de servicio
+  - Rango de precio
+  - Ubicación
+  - Disponibilidad
+
+## Paso 3: Seleccionar Servicio
+- Click en tarjeta de servicio
+- Ve detalles completos:
+  - Fotos
+  - Descripción
+  - Amenidades
+  - Precios por temporada
+  - Disponibilidad calendario
+
+## Paso 4: Iniciar Cotización
+- Click ""Cotizar""
+- Modal con formulario:
+  - Fechas (checkin/checkout)
+  - Número de huéspedes
+  - Servicios adicionales (opcional)
+  - Notas especiales
+
+## Paso 5: Ver Precio
+- Sistema calcula:
+  - Precio base × noches
+  - Servicios adicionales
+  - Subtotal
+  - **Comisión agencia (15%)**
+  - Total
+
+## Paso 6: Enviar Solicitud
+- Formulario de contacto:
+  - Nombre agencia
+  - Email
+  - Teléfono
+  - NIT (opcional)
+- Checkbox: ""Acepto términos""
+- Click ""Enviar Cotización""
+
+## Paso 7: Confirmación
+- Pantalla de éxito
+- Mensaje: ""Recibirás cotización en <2 horas""
+- Email automático de confirmación
+- Guardado en Airtable.CotizacionesGG
+
+## Paso 8: Follow-up (Backend)
+- Notificación a proveedor (email + WhatsApp)
+- Proveedor revisa en dashboard
+- Aprueba/rechaza
+- Sistema envía respuesta a agencia",Frontend | Backend,ux | user-flow | cotización | b2b,1.0,2026-01-29,Tú,Procesado
+DOC-004,API Airtable: Endpoints Usados,API Docs,"# API Airtable - GuiaSAI/GuanaGO
+
+## Base Configuration
+- Base ID: `appXXXXXXXXXXXXXX` (reemplazar)
+- API Key: En `.env` como `VITE_AIRTABLE_API_KEY`
+
+## Tabla: Servicios
+
+### GET /Servicios
+Obtener todos los servicios
+
+**Filtros comunes:**
+```javascript
+filterByFormula: ""AND({Activo} = TRUE, {Tipo} = 'Alojamiento')""
+```
+
+**Campos retornados:**
+- ID_Servicio
+- Nombre
+- Tipo
+- Precio_Base_Noche
+- Imagenes (array)
+- Ubicacion
+- Amenidades (array)
+
+### GET /Servicios/{recordId}
+Obtener servicio específico
+
+## Tabla: CotizacionesGG
+
+### POST /CotizacionesGG
+Crear nueva cotización
+
+**Body:**
+```json
+{
+  ""fields"": {
+    ""ID_Cotizacion"": ""COT-1234"",
+    ""Servicio"": [""recXXXXXXXXXX""],
+    ""Agencia"": ""TravelPro"",
+    ""Email_Agencia"": ""contact@travel.com"",
+    ""Fecha_Checkin"": ""2026-03-15"",
+    ""Fecha_Checkout"": ""2026-03-22"",
+    ""Num_Adultos"": 4,
+    ""Precio_Total"": 1890,
+    ""Estado"": ""Pendiente""
+  }
+}
+```
+
+### PATCH /CotizacionesGG/{recordId}
+Actualizar estado de cotización
+
+## Rate Limits
+- 5 requests/segundo
+- Usar debouncing en búsquedas
+
+## Error Handling
+```typescript
+try {
+  const response = await airtable.get(...);
+} catch (error) {
+  if (error.statusCode === 429) {
+    // Rate limit → retry con backoff
+  }
+  if (error.statusCode === 404) {
+    // Registro no existe
+  }
+}
+```",Backend,airtable | api | endpoints,1.0,2026-01-29,Tú,Procesado
+DOC-005,GuanaGO: Propuesta de Valor,Research,"# GuanaGO - Propuesta de Valor
+
+## Para Turistas
+
+### Problema
+- Precios altos en OTAs (Booking, Expedia)
+- Tours genéricos sin experiencia local auténtica
+- Falta de información confiable en destino
+
+### Solución GuanaGO
+- **Precios 20-30% más bajos** (acceso directo a proveedores)
+- **Experiencias auténticas** curadas por locales raizales
+- **Información en tiempo real** (clima, eventos, alertas)
+- **Gamificación** (puntos, descuentos, retos)
+
+### Diferenciadores
+1. App PWA instalable (funciona offline)
+2. Mapa interactivo con puntos de interés
+3. Soporte 24/7 en las islas
+4. Comunidad de viajeros (reviews, tips)
+
+## Para Residentes
+
+### Problema
+- Discriminación de precios (turista vs local)
+- Poca oferta de eventos/experiencias para residentes
+- Falta de conexión con comunidad
+
+### Solución GuanaGO
+- **Precios especiales** verificando residencia
+- **Eventos exclusivos** (música raizal, gastronomía)
+- **Puntos acelerados** (x1.5)
+- **Acceso prioritario** a experiencias limitadas
+
+## Para Proveedores
+
+### Problema
+- Comisiones altas de OTAs (25-30%)
+- Dependencia de intermediarios
+- Falta de herramientas digitales
+
+### Solución GuanaGO
+- **Comisión baja** (8% vs 25%)
+- **Dashboard de gestión** (reservas, disponibilidad)
+- **Pagos rápidos** (weekly vs monthly)
+- **Data analytics** de sus clientes",Marketing,propuesta-valor | investigación | diferenciación,1.0,2026-01-29,Tú,Procesado

@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
     return {
       server: {
-        port: 3002,
+        port: 3006,
         strictPort: true, // Falla si 3002 está ocupado
         host: '0.0.0.0',
         // 🔗 Proxy para rutas API al backend Express

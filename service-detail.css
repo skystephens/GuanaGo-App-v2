@@ -1,0 +1,477 @@
+/* ServiceDetail.css - Optimizado para conversión */
+
+.service-detail-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* ========================================
+   HERO SECTION - Primera impresión crítica
+   ======================================== */
+
+.service-hero {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 3rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 20px;
+  margin-bottom: 3rem;
+}
+
+.hero-gallery {
+  position: relative;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.hero-image {
+  width: 100%;
+  aspect-ratio: 16/10;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.hero-image:hover {
+  transform: scale(1.05);
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem;
+}
+
+.hero-badges {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.badge-raizal {
+  background: linear-gradient(135deg, #00B4D8, #06FFA5);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 15px rgba(0,180,216,0.3);
+  animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.badge-type {
+  background: rgba(255,255,255,0.95);
+  color: #2d3748;
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  backdrop-filter: blur(10px);
+}
+
+/* ========================================
+   HERO CONTENT - CTAs y precio
+   ======================================== */
+
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.service-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a202c;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.service-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4a5568;
+  font-size: 1.125rem;
+}
+
+/* ========================================
+   AUTENTICIDAD BADGE - Diferenciador clave
+   ======================================== */
+
+.authenticity-badge {
+  background: linear-gradient(135deg, #FFF5E6, #FFE8CC);
+  border-left: 4px solid #FF6B35;
+  padding: 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  gap: 1rem;
+  align-items: start;
+  box-shadow: 0 4px 20px rgba(255,107,53,0.1);
+}
+
+.badge-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.badge-content h3 {
+  font-weight: 700;
+  color: #C05621;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.125rem;
+}
+
+.badge-content p {
+  margin: 0;
+  color: #744210;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* ========================================
+   PRECIO - Destacado pero no agresivo
+   ======================================== */
+
+.price-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px solid #E2E8F0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.price-label {
+  font-size: 0.875rem;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.price-amount {
+  font-family: 'Poppins', sans-serif;
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #00B4D8, #06FFA5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.price-currency {
+  font-size: 1.25rem;
+  color: #4a5568;
+  font-weight: 600;
+}
+
+/* ========================================
+   CTAs - Conversión principal
+   ======================================== */
+
+.cta-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  flex: 1;
+  min-width: 200px;
+  padding: 1.25rem 2rem;
+  background: linear-gradient(135deg, #FF6B35, #E55A00);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(255,107,53,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(255,107,53,0.4);
+}
+
+.btn-secondary {
+  flex: 1;
+  min-width: 200px;
+  padding: 1.25rem 2rem;
+  background: white;
+  color: #2d3748;
+  border: 2px solid #00B4D8;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-secondary:hover {
+  background: #00B4D8;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* ========================================
+   DESCRIPCIÓN Y EXPERIENCIA ÚNICA
+   ======================================== */
+
+.service-description {
+  padding: 3rem 2rem;
+  background: white;
+  border-radius: 20px;
+  margin-bottom: 2rem;
+}
+
+.service-description h2 {
+  font-family: 'Crimson Pro', serif;
+  font-size: 2rem;
+  color: #1a202c;
+  margin-bottom: 1.5rem;
+}
+
+.service-description p {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #4a5568;
+  margin-bottom: 2rem;
+}
+
+.unique-experience {
+  background: linear-gradient(135deg, #E6FFFA, #B2F5EA);
+  padding: 2rem;
+  border-radius: 15px;
+  border-left: 4px solid #06FFA5;
+}
+
+.unique-experience h3 {
+  color: #047857;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.unique-experience p {
+  color: #065F46;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ========================================
+   AMENIDADES - Grid moderno
+   ======================================== */
+
+.service-amenities {
+  padding: 3rem 2rem;
+  background: white;
+  border-radius: 20px;
+  margin-bottom: 2rem;
+}
+
+.service-amenities h2 {
+  font-family: 'Crimson Pro', serif;
+  font-size: 2rem;
+  color: #1a202c;
+  margin-bottom: 2rem;
+}
+
+.amenities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.amenity-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #F7FAFC;
+  border-radius: 10px;
+  border: 1px solid #E2E8F0;
+  transition: all 0.2s ease;
+}
+
+.amenity-item:hover {
+  background: #EDF2F7;
+  border-color: #00B4D8;
+  transform: translateX(5px);
+}
+
+.amenity-icon {
+  color: #06FFA5;
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+/* ========================================
+   PROVEEDOR LOCAL - Confianza
+   ======================================== */
+
+.local-provider {
+  padding: 3rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  color: white;
+  margin-bottom: 2rem;
+}
+
+.local-provider h2 {
+  font-family: 'Crimson Pro', serif;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+.provider-card {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.provider-info h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.provider-info p {
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.provider-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  background: rgba(255,255,255,0.15);
+  border-radius: 12px;
+  min-width: 150px;
+}
+
+.provider-badge span:first-child {
+  font-size: 3rem;
+}
+
+.provider-badge span:last-child {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ========================================
+   FORMULARIO DE COTIZACIÓN
+   ======================================== */
+
+.quote-section {
+  padding: 3rem 2rem;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+}
+
+.quote-section h2 {
+  font-family: 'Crimson Pro', serif;
+  font-size: 2rem;
+  color: #1a202c;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .service-hero {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .service-title {
+    font-size: 2rem;
+  }
+
+  .price-amount {
+    font-size: 2.5rem;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+
+  .provider-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .amenities-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================================
+   LOADING STATES
+   ======================================== */
+
+.loading-skeleton {
+  padding: 4rem 2rem;
+  text-align: center;
+  font-size: 1.25rem;
+  color: #718096;
+}
+
+.error-state {
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.error-state h2 {
+  font-size: 2rem;
+  color: #1a202c;
+  margin-bottom: 1.5rem;
+}
+
+.error-state button {
+  padding: 1rem 2rem;
+  background: #00B4D8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}

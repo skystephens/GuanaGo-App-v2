@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # FRONTEND (Vite - React)
+  # ==========================================
+  frontend:
+    container_name: guanago-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+      - VITE_ENV=development
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
+    networks:
+      - guanago-network
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ==========================================
+  # BACKEND (Express - Node.js)
+  # ==========================================
+  backend:
+    container_name: guanago-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - AIRTABLE_API_KEY=${AIRTABLE_API_KEY}
+      - AIRTABLE_BASE_ID=${AIRTABLE_BASE_ID}
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173
+      - FRONTEND_URL=http://localhost:5173
+      - BACKEND_URL=http://localhost:3001
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/uploads:/app/uploads
+    command: npm run dev
+    networks:
+      - guanago-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ==========================================
+  # AIRTABLE MOCK (Opcional - para desarrollo sin API)
+  # ==========================================
+  # Descomentar si quieres mockear Airtable
+  # airtable-mock:
+  #   container_name: guanago-airtable-mock
+  #   image: mockserver/mockserver:latest
+  #   ports:
+  #     - "1080:1080"
+  #   environment:
+  #     MOCKSERVER_INITIALIZATION_JSON_PATH: /config/mockserver-init.json
+  #   volumes:
+  #     - ./docker/mockserver-init.json:/config/mockserver-init.json
+  #   networks:
+  #     - guanago-network
+
+networks:
+  guanago-network:
+    driver: bridge
+
+# Volúmenes para persistencia
+volumes:
+  backend-uploads:
+    driver: local

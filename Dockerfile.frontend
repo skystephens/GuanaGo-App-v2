@@ -1,0 +1,48 @@
+# Dockerfile para Frontend (Vite + React)
+# Construcción multi-etapa para optimización
+
+# ==========================================
+# Stage 1: Build
+# ==========================================
+FROM node:18-alpine as builder
+
+WORKDIR /app
+
+# Copiar package.json y package-lock.json
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm ci
+
+# Copiar código fuente
+COPY . .
+
+# Build
+RUN npm run build
+
+# ==========================================
+# Stage 2: Runtime (Vite Dev Server)
+# ==========================================
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Instalar dependencias de tiempo de ejecución
+RUN npm install -g http-server
+
+# Copiar package.json
+COPY package*.json ./
+
+# Instalar solo dependencias de producción
+RUN npm ci --only=production
+
+# Exponer puerto
+EXPOSE 5173
+
+# Comando para desarrollo (hot reload)
+CMD ["npm", "run", "dev"]
+
+# Labels
+LABEL maintainer="GuanaGO Team"
+LABEL description="GuanaGO Frontend - React + Vite"
+LABEL version="1.0"

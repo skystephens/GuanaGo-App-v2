@@ -341,6 +341,14 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
   const handleSendQuote = async () => {
     if (!selectedCotizacion) return;
+    if (!selectedCotizacion.email || !selectedCotizacion.telefono) {
+      alert('Agrega el email y teléfono del cliente antes de enviar la cotización.');
+      return;
+    }
+    if (items.length === 0) {
+      alert('Agrega al menos un servicio antes de enviar la cotización.');
+      return;
+    }
     
     await updateCotizacion(selectedCotizacion.id, { estado: 'enviada' });
     alert('✅ Cotización enviada al cliente');
@@ -645,6 +653,12 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   // VISTA: DETALLE DE COTIZACIÓN
   // =========================================================
   if (view === 'detail' && selectedCotizacion) {
+    const canSendQuote = Boolean(
+      selectedCotizacion.email &&
+      selectedCotizacion.telefono &&
+      items.length > 0
+    );
+
     return (
       <div className="min-h-screen bg-gray-950 text-white p-6">
         <div className="max-w-7xl mx-auto">
@@ -688,12 +702,18 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
               </button>
               <button
                 onClick={handleSendQuote}
+                disabled={!canSendQuote}
                 className="flex items-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 rounded-lg transition-colors font-medium"
               >
                 <Send className="w-5 h-5" />
                 Enviar
               </button>
             </div>
+            {!canSendQuote && (
+              <p className="text-xs text-gray-400 mt-2">
+                Completa email y teléfono del cliente y agrega al menos un servicio antes de enviar.
+              </p>
+            )}
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6">

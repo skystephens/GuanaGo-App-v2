@@ -3,9 +3,9 @@ import { config } from '../config.js';
 
 // Datos mock para cuando Make no está configurado
 const MOCK_SERVICES = [
-  { id: '1', title: 'Tour Isla de San Andrés', category: 'tour', price: 150, rating: 4.8, image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400' },
-  { id: '2', title: 'Hotel Decameron', category: 'hotel', price: 200, rating: 4.5, image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400' },
-  { id: '3', title: 'Snorkel en el Acuario', category: 'tour', price: 80, rating: 4.9, image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400' },
+  { id: '1', title: 'Tour Isla de San Andrés', category: 'tour', price: 150, rating: 4.8, image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400', publicado: true },
+  { id: '2', title: 'Hotel Decameron', category: 'hotel', price: 200, rating: 4.5, image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400', publicado: true },
+  { id: '3', title: 'Snorkel en el Acuario', category: 'tour', price: 80, rating: 4.9, image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400', publicado: false },
 ];
 
 // Mock data para eventos musicales RIMM Caribbean Night
@@ -59,7 +59,8 @@ const isMakeConfigured = () => {
  */
 export const getServices = async (req, res, next) => {
   try {
-    const { category, featured, search } = req.query;
+    const { category, featured, search, includeUnpublished } = req.query;
+    const includeUnpublishedFlag = (includeUnpublished === 'true') || config.featureFlags.includeUnpublished;
     
     // Eventos musicales RIMM Caribbean Night - siempre usar datos locales
     // (No están en Airtable, son gestionados internamente por RIMM)
@@ -76,10 +77,11 @@ export const getServices = async (req, res, next) => {
     // Si Make no está configurado, devolver datos mock
     if (!isMakeConfigured()) {
       console.log('⚠️ Make webhook no configurado, usando datos mock para services');
+      const filteredMock = includeUnpublishedFlag ? MOCK_SERVICES : MOCK_SERVICES.filter(s => s.publicado !== false);
       return res.json({
         success: true,
-        data: MOCK_SERVICES,
-        total: MOCK_SERVICES.length,
+        data: filteredMock,
+        total: filteredMock.length,
         source: 'mock'
       });
     }
@@ -88,7 +90,7 @@ export const getServices = async (req, res, next) => {
       config.makeWebhooks.services,
       {
         action: 'list',
-        filters: { category, featured, search }
+        filters: { category, featured, search, includeUnpublished: includeUnpublishedFlag }
       },
       'GET_SERVICES'
     );
@@ -101,10 +103,11 @@ export const getServices = async (req, res, next) => {
   } catch (error) {
     // Si falla Make, devolver datos mock
     console.log('⚠️ Error con Make, usando datos mock:', error.message);
+    const filteredMock = includeUnpublishedFlag ? MOCK_SERVICES : MOCK_SERVICES.filter(s => s.publicado !== false);
     res.json({
       success: true,
-      data: MOCK_SERVICES,
-      total: MOCK_SERVICES.length,
+      data: filteredMock,
+      total: filteredMock.length,
       source: 'mock-fallback'
     });
   }

@@ -375,7 +375,10 @@ const TABLES = {
   VENTAS_ARTISTA: 'Ventas_Artista',
   
   // Gestión de tareas del proyecto
-  TAREAS: 'Tareas_To_do'
+  TAREAS: 'Tareas_To_do',
+
+  // Procedimientos RAG / SOPs para IA
+  PROCEDIMIENTOS_RAG: 'Procedimientos_RAG'
 };
 
 import type { GuanaUser, UserRole, EstablishmentType } from '../types';
@@ -2891,4 +2894,101 @@ function parseDependencias(deps: any): string[] | undefined {
   if (Array.isArray(deps)) return deps;
   if (typeof deps === 'string') return deps.split(',').map(d => d.trim()).filter(Boolean);
   return undefined;
+}
+
+// ─── PROCEDIMIENTOS RAG ──────────────────────────────────────────────────────
+
+export interface ProcedimientoRAG {
+  id: string;           // Airtable record ID
+  idDocumento?: string; // Campo ID_Documento (ej: "SOP-001")
+  titulo: string;
+  tipo: string;         // SOP | Spec Técnica | Decisión | User Flow | API Docs | Research
+  contenido: string;    // Markdown
+  modulos?: string;     // Módulos relacionados (texto libre)
+  tags?: string;
+  version?: string;
+  autor?: string;
+  embeddingStatus?: string;
+  ultimaActualizacion?: string;
+}
+
+export async function getProcedimientosRAG(): Promise<ProcedimientoRAG[]> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return [];
+  try {
+    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PROCEDIMIENTOS_RAG)}?pageSize=100`;
+    const res = await axios.get(url, { headers: getHeaders() });
+    const records: any[] = res.data?.records ?? [];
+    return records.map(r => ({
+      id: r.id,
+      idDocumento:         r.fields['ID_Documento']        ?? r.fields['id_documento']        ?? '',
+      titulo:              r.fields['Título']               ?? r.fields['titulo']               ?? r.fields['Titulo'] ?? '(sin título)',
+      tipo:                r.fields['Tipo']                 ?? r.fields['tipo']                 ?? '',
+      contenido:           r.fields['Contenido_Markdown']   ?? r.fields['contenido']            ?? r.fields['Contenido'] ?? '',
+      modulos:             r.fields['Módulos_Relacionados'] ?? r.fields['modulos']              ?? '',
+      tags:                r.fields['Tags']                 ?? r.fields['tags']                 ?? '',
+      version:             r.fields['Versión']              ?? r.fields['version']              ?? '1.0',
+      autor:               r.fields['Autor']                ?? r.fields['autor']                ?? '',
+      embeddingStatus:     r.fields['Embedding_Status']     ?? r.fields['embedding_status']     ?? '',
+      ultimaActualizacion: r.fields['Última_Actualización'] ?? r.fields['ultima_actualizacion'] ?? '',
+    }));
+  } catch (e) {
+    console.error('❌ getProcedimientosRAG:', e);
+    return [];
+  }
+}
+
+export async function createProcedimientoRAG(data: Omit<ProcedimientoRAG, 'id'>): Promise<ProcedimientoRAG | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return null;
+  try {
+    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PROCEDIMIENTOS_RAG)}`;
+    const fields: Record<string, any> = {
+      'Título':               data.titulo,
+      'Tipo':                 data.tipo,
+      'Contenido_Markdown':   data.contenido,
+      'Módulos_Relacionados': data.modulos  ?? '',
+      'Tags':                 data.tags     ?? '',
+      'Versión':              data.version  ?? '1.0',
+      'Autor':                data.autor    ?? 'GuanaGO Admin',
+      'Embedding_Status':     'Pendiente',
+      'Última_Actualización': new Date().toISOString().slice(0, 10),
+    };
+    if (data.idDocumento) fields['ID_Documento'] = data.idDocumento;
+    const res = await axios.post(url, { fields }, { headers: getHeaders() });
+    return { id: res.data.id, ...data };
+  } catch (e) {
+    console.error('❌ createProcedimientoRAG:', e);
+    return null;
+  }
+}
+
+export async function updateProcedimientoRAG(recordId: string, data: Partial<Omit<ProcedimientoRAG, 'id'>>): Promise<boolean> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return false;
+  try {
+    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PROCEDIMIENTOS_RAG)}/${recordId}`;
+    const fields: Record<string, any> = { 'Última_Actualización': new Date().toISOString().slice(0, 10) };
+    if (data.titulo)    fields['Título']               = data.titulo;
+    if (data.tipo)      fields['Tipo']                 = data.tipo;
+    if (data.contenido) fields['Contenido_Markdown']   = data.contenido;
+    if (data.modulos  !== undefined) fields['Módulos_Relacionados'] = data.modulos;
+    if (data.tags     !== undefined) fields['Tags']                 = data.tags;
+    if (data.version  !== undefined) fields['Versión']              = data.version;
+    if (data.embeddingStatus !== undefined) fields['Embedding_Status'] = data.embeddingStatus;
+    await axios.patch(url, { fields }, { headers: getHeaders() });
+    return true;
+  } catch (e) {
+    console.error('❌ updateProcedimientoRAG:', e);
+    return false;
+  }
+}
+
+export async function deleteProcedimientoRAG(recordId: string): Promise<boolean> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return false;
+  try {
+    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PROCEDIMIENTOS_RAG)}/${recordId}`;
+    await axios.delete(url, { headers: getHeaders() });
+    return true;
+  } catch (e) {
+    console.error('❌ deleteProcedimientoRAG:', e);
+    return false;
+  }
 }

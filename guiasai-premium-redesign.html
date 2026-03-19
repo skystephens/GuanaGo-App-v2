@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuiaSAI Business - Hub Turístico Premium San Andrés y Providencia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           GUIASAI BUSINESS PREMIUM - DESIGN SYSTEM
+           San Andrés & Providencia Caribbean Hub
+           ============================================ */
+        
+        :root {
+            /* Paleta Premium Caribeña */
+            --primary-ocean: #00B4D8;
+            --primary-coral: #FF6B35;
+            --primary-sunset: #FF8C42;
+            --secondary-turquoise: #06FFA5;
+            --secondary-deepblue: #023E8A;
+            --accent-sand: #F4E4C1;
+            --accent-palm: #2D6A4F;
+            
+            /* Gradientes de Lujo */
+            --gradient-ocean: linear-gradient(135deg, #00B4D8 0%, #0077B6 50%, #023E8A 100%);
+            --gradient-sunset: linear-gradient(135deg, #FF8C42 0%, #FF6B35 50%, #E63946 100%);
+            --gradient-paradise: linear-gradient(135deg, #06FFA5 0%, #00B4D8 50%, #023E8A 100%);
+            --gradient-coral: linear-gradient(45deg, #FF6B35, #FFB627);
+            --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.7) 100%);
+            
+            /* Neutros Sofisticados */
+            --white: #FFFFFF;
+            --cream: #FEFEFE;
+            --sand-light: #FAF9F6;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-300: #D1D5DB;
+            --gray-400: #9CA3AF;
+            --gray-500: #6B7280;
+            --gray-600: #4B5563;
+            --gray-700: #374151;
+            --gray-800: #1F2937;
+            --gray-900: #0F1419;
+            --black: #000000;
+            
+            /* Sombras Premium */
+            --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+            --shadow-soft: 0 2px 8px -2px rgba(0, 0, 0, 0.08);
+            --shadow-medium: 0 8px 16px -4px rgba(0, 0, 0, 0.12);
+            --shadow-large: 0 16px 32px -8px rgba(0, 0, 0, 0.16);
+            --shadow-xl: 0 24px 48px -12px rgba(0, 0, 0, 0.20);
+            --shadow-glow: 0 0 32px rgba(0, 180, 216, 0.3);
+            --shadow-glow-coral: 0 0 32px rgba(255, 107, 53, 0.3);
+            
+            /* Bordes Modernos */
+            --radius-xs: 0.25rem;
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --radius-2xl: 2rem;
+            --radius-3xl: 3rem;
+            --radius-full: 9999px;
+            
+            /* Transiciones Elegantes */
+            --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+            --ease-out: cubic-bezier(0, 0, 0.2, 1);
+            --ease-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            --duration-fast: 150ms;
+            --duration-normal: 250ms;
+            --duration-slow: 350ms;
+            --duration-slower: 500ms;
+        }
+        
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--sand-light);
+            color: var(--gray-900);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* ============================================
+           HEADER PREMIUM CON GLASS MORPHISM
+           ============================================ */
+        
+        .premium-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: var(--shadow-soft);
+            transition: all var(--duration-normal) var(--ease-out);
+        }
+        
+        .premium-header.scrolled {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: var(--shadow-medium);
+        }
+        
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+        
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-premium {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            transition: transform var(--duration-normal) var(--ease-spring);
+        }
+        
+        .logo-premium:hover {
+            transform: scale(1.05);
+        }
+        
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-ocean);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow-glow);
+        }
+        
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            background: var(--gradient-ocean);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        
+        .logo-subtitle {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--primary-coral);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .nav-premium {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-link-premium {
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--gray-700);
+            text-decoration: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius-full);
+            transition: all var(--duration-fast) var(--ease-out);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-link-premium::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-ocean);
+            opacity: 0;
+            transition: opacity var(--duration-fast) var(--ease-out);
+            border-radius: var(--radius-full);
+        }
+        
+        .nav-link-premium:hover {
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+        
+        .nav-link-premium:hover::before {
+            opacity: 1;
+        }
+        
+        .nav-link-premium span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .nav-link-premium.active {
+            background: var(--gradient-ocean);
+            color: var(--white);
+            font-weight: 600;
+            box-shadow: var(--shadow-glow);
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .quote-indicator {
+            position: relative;
+            padding: 0.75rem 1.25rem;
+            background: var(--gradient-coral);
+            color: var(--white);
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-spring);
+            box-shadow: var(--shadow-glow-coral);
+        }
+        
+        .quote-indicator:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+        }
+        
+        .quote-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--secondary-turquoise);
+            color: var(--gray-900);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--gradient-paradise);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-spring);
+            box-shadow: var(--shadow-medium);
+        }
+        
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-large);
+        }
+        
+        /* ============================================
+           HERO SECTION PREMIUM
+           ============================================ */
+        
+        .hero-premium {
+            margin-top: 80px;
+            padding: 4rem 2rem;
+            background: var(--gradient-ocean);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+        }
+        
+        .hero-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+        
+        .hero-stats {
+            display: flex;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-number {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--secondary-turquoise);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        /* ============================================
+           FILTROS PREMIUM CON GLASS EFFECT
+           ============================================ */
+        
+        .filters-premium {
+            max-width: 1400px;
+            margin: -3rem auto 3rem;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .filter-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--radius-2xl);
+            padding: 2rem;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            align-items: end;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .filter-label {
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .filter-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            background: var(--white);
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--primary-ocean);
+            box-shadow: 0 0 0 4px rgba(0, 180, 216, 0.1);
+        }
+        
+        .btn-filter {
+            padding: 1rem 2rem;
+            background: var(--gradient-coral);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-spring);
+            box-shadow: var(--shadow-medium);
+            white-space: nowrap;
+        }
+        
+        .btn-filter:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-large);
+        }
+        
+        /* ============================================
+           SERVICE CARDS PREMIUM
+           ============================================ */
+        
+        .services-section {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+        
+        .section-header {
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+        
+        .section-description {
+            font-size: 1.125rem;
+            color: var(--gray-600);
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 2rem;
+        }
+        
+        .service-card-premium {
+            background: var(--white);
+            border-radius: var(--radius-2xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--gray-100);
+            transition: all var(--duration-slow) var(--ease-out);
+            position: relative;
+        }
+        
+        .service-card-premium:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-xl);
+            border-color: rgba(0, 180, 216, 0.3);
+        }
+        
+        .card-image-wrapper {
+            position: relative;
+            aspect-ratio: 16 / 10;
+            overflow: hidden;
+        }
+        
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform var(--duration-slower) var(--ease-out);
+        }
+        
+        .service-card-premium:hover .card-image {
+            transform: scale(1.1);
+        }
+        
+        .card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1.5rem;
+        }
+        
+        .card-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .badge-premium {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: var(--shadow-soft);
+        }
+        
+        .badge-luxury {
+            background: var(--gradient-coral);
+            color: var(--white);
+        }
+        
+        .badge-category {
+            color: var(--primary-ocean);
+        }
+        
+        .card-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-full);
+            backdrop-filter: blur(10px);
+        }
+        
+        .stars {
+            color: #FFB627;
+            font-size: 0.875rem;
+        }
+        
+        .rating-number {
+            font-weight: 700;
+            color: var(--gray-900);
+            font-size: 0.875rem;
+        }
+        
+        .card-content {
+            padding: 1.75rem;
+        }
+        
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.75rem;
+            line-height: 1.3;
+        }
+        
+        .card-location {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--gray-600);
+            font-size: 0.95rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .card-description {
+            color: var(--gray-600);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature-tag {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--gray-50);
+            border-radius: var(--radius-full);
+            font-size: 0.875rem;
+            color: var(--gray-700);
+            border: 1px solid var(--gray-200);
+        }
+        
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--gray-100);
+        }
+        
+        .card-price {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .price-label {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .price-amount {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--gradient-ocean);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        
+        .btn-add-quote {
+            padding: 1rem 1.75rem;
+            background: var(--gradient-coral);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-spring);
+            box-shadow: var(--shadow-medium);
+            white-space: nowrap;
+        }
+        
+        .btn-add-quote:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: var(--shadow-large);
+        }
+        
+        /* ============================================
+           FLOATING QUOTE SUMMARY
+           ============================================ */
+        
+        .quote-floating {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--white);
+            border-radius: var(--radius-2xl);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-100);
+            min-width: 320px;
+            z-index: 999;
+            transform: translateY(150%);
+            transition: transform var(--duration-slow) var(--ease-spring);
+        }
+        
+        .quote-floating.active {
+            transform: translateY(0);
+        }
+        
+        .quote-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--gray-100);
+        }
+        
+        .quote-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: var(--gray-900);
+        }
+        
+        .quote-items-count {
+            background: var(--gradient-ocean);
+            color: var(--white);
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        
+        .quote-items {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+        
+        .quote-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            margin-bottom: 0.5rem;
+        }
+        
+        .quote-item-image {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-md);
+            object-fit: cover;
+        }
+        
+        .quote-item-info {
+            flex: 1;
+        }
+        
+        .quote-item-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--gray-900);
+        }
+        
+        .quote-item-price {
+            font-size: 0.75rem;
+            color: var(--primary-ocean);
+            font-weight: 600;
+        }
+        
+        .quote-total {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--gradient-ocean);
+            border-radius: var(--radius-lg);
+            margin-bottom: 1rem;
+        }
+        
+        .total-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .total-amount {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--white);
+        }
+        
+        .quote-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .btn-view-quote {
+            flex: 1;
+            padding: 1rem;
+            background: var(--white);
+            border: 2px solid var(--primary-ocean);
+            color: var(--primary-ocean);
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+        
+        .btn-view-quote:hover {
+            background: var(--primary-ocean);
+            color: var(--white);
+        }
+        
+        .btn-send-quote {
+            flex: 1;
+            padding: 1rem;
+            background: var(--gradient-coral);
+            border: none;
+            color: var(--white);
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-spring);
+        }
+        
+        .btn-send-quote:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-large);
+        }
+        
+        /* ============================================
+           TRUST SECTION
+           ============================================ */
+        
+        .trust-section {
+            background: var(--gradient-ocean);
+            padding: 4rem 2rem;
+            margin-top: 4rem;
+        }
+        
+        .trust-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .trust-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--white);
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .trust-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+        
+        .trust-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 2rem;
+            border-radius: var(--radius-xl);
+            text-align: center;
+            box-shadow: var(--shadow-large);
+        }
+        
+        .trust-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--gradient-coral);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+        }
+        
+        .trust-card-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.75rem;
+        }
+        
+        .trust-card-text {
+            color: var(--gray-600);
+            line-height: 1.6;
+        }
+        
+        /* ============================================
+           ANIMATIONS
+           ============================================ */
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+        
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s var(--ease-out);
+        }
+        
+        /* ============================================
+           RESPONSIVE DESIGN
+           ============================================ */
+        
+        @media (max-width: 1024px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .services-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .nav-premium {
+                width: 100%;
+                justify-content: center;
+                order: 3;
+            }
+            
+            .hero-premium {
+                padding: 3rem 1.5rem;
+            }
+            
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quote-floating {
+                bottom: 1rem;
+                right: 1rem;
+                left: 1rem;
+                min-width: auto;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER PREMIUM -->
+    <header class="premium-header" id="mainHeader">
+        <div class="header-container">
+            <div class="brand-section">
+                <a href="#" class="logo-premium">
+                    <div class="logo-icon">🌴</div>
+                    <div class="logo-text">
+                        <span class="logo-title">GuiaSAI</span>
+                        <span class="logo-subtitle">Business Hub</span>
+                    </div>
+                </a>
+            </div>
+            
+            <nav class="nav-premium">
+                <a href="#alojamientos" class="nav-link-premium active"><span>🏨 Alojamientos</span></a>
+                <a href="#tours" class="nav-link-premium"><span>🚤 Tours</span></a>
+                <a href="#transportes" class="nav-link-premium"><span>✈️ Transportes</span></a>
+            </nav>
+            
+            <div class="header-actions">
+                <div class="quote-indicator" onclick="toggleQuote()">
+                    <span>Mi Cotización</span>
+                    <div class="quote-badge">3</div>
+                </div>
+                <div class="user-avatar">AG</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO PREMIUM -->
+    <section class="hero-premium">
+        <div class="hero-pattern"></div>
+        <div class="hero-content animate-fade-in-up">
+            <h1 class="hero-title">El Paraíso del Caribe<br>para tus Clientes</h1>
+            <p class="hero-subtitle">
+                Conecta con los mejores proveedores locales de San Andrés y Providencia. 
+                Experiencias únicas, soporte personalizado, comisiones competitivas.
+            </p>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <div class="stat-number">150+</div>
+                    <div class="stat-label">Proveedores Certificados</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Soporte Dedicado</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">98%</div>
+                    <div class="stat-label">Satisfacción Garantizada</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FILTROS PREMIUM -->
+    <section class="filters-premium">
+        <div class="filter-card">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label class="filter-label">📅 Fecha Check-in</label>
+                    <input type="date" class="filter-input" placeholder="Seleccionar fecha">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">📅 Fecha Check-out</label>
+                    <input type="date" class="filter-input" placeholder="Seleccionar fecha">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">👥 Huéspedes</label>
+                    <input type="number" class="filter-input" placeholder="Número de personas" min="1" value="2">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">💰 Presupuesto</label>
+                    <select class="filter-input">
+                        <option>Todos los precios</option>
+                        <option>$50 - $100 USD</option>
+                        <option>$100 - $200 USD</option>
+                        <option>$200+ USD</option>
+                    </select>
+                </div>
+                <button class="btn-filter">🔍 Buscar Servicios</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICIOS PREMIUM -->
+    <section class="services-section">
+        <div class="section-header">
+            <h2 class="section-title">Alojamientos de Ensueño</h2>
+            <p class="section-description">Hoteles boutique, resorts de lujo y experiencias únicas en el corazón del Caribe</p>
+        </div>
+        
+        <div class="services-grid">
+            <!-- Card 1 -->
+            <article class="service-card-premium">
+                <div class="card-image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800" alt="Decameron San Luis" class="card-image">
+                    <div class="card-overlay">
+                        <div class="card-badges">
+                            <span class="badge-premium badge-luxury">⭐ Luxury</span>
+                            <span class="badge-premium badge-category">All-Inclusive</span>
+                        </div>
+                        <div class="card-rating">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                            <span class="rating-number">4.9</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Decameron San Luis</h3>
+                    <div class="card-location">
+                        <span>📍</span>
+                        <span>San Andrés, Playa Spratt Bight</span>
+                    </div>
+                    <p class="card-description">
+                        Resort frente al mar con todo incluido, piscinas infinity, spa de clase mundial y acceso directo a la playa más hermosa del Caribe.
+                    </p>
+                    <div class="card-features">
+                        <div class="feature-tag">🏊 3 Piscinas</div>
+                        <div class="feature-tag">🍽️ 5 Restaurantes</div>
+                        <div class="feature-tag">💆 Spa & Wellness</div>
+                        <div class="feature-tag">🏖️ Playa Privada</div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-price">
+                            <span class="price-label">Desde</span>
+                            <span class="price-amount">$189</span>
+                        </div>
+                        <button class="btn-add-quote" onclick="addToQuote('Decameron San Luis', 189)">
+                            ➕ Agregar
+                        </button>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Card 2 -->
+            <article class="service-card-premium">
+                <div class="card-image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800" alt="Casa Harb Hotel Boutique" class="card-image">
+                    <div class="card-overlay">
+                        <div class="card-badges">
+                            <span class="badge-premium badge-luxury">🏆 Boutique</span>
+                            <span class="badge-premium badge-category">Eco-Friendly</span>
+                        </div>
+                        <div class="card-rating">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                            <span class="rating-number">5.0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Casa Harb Hotel Boutique</h3>
+                    <div class="card-location">
+                        <span>📍</span>
+                        <span>Centro Histórico, San Andrés</span>
+                    </div>
+                    <p class="card-description">
+                        Exclusivo hotel boutique con arquitectura caribeña auténtica, solo 12 suites de lujo con atención personalizada y vistas panorámicas.
+                    </p>
+                    <div class="card-features">
+                        <div class="feature-tag">👥 12 Suites</div>
+                        <div class="feature-tag">🍳 Desayuno Gourmet</div>
+                        <div class="feature-tag">🌿 Terraza Jardín</div>
+                        <div class="feature-tag">🎯 Concierge 24/7</div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-price">
+                            <span class="price-label">Desde</span>
+                            <span class="price-amount">$245</span>
+                        </div>
+                        <button class="btn-add-quote" onclick="addToQuote('Casa Harb Boutique', 245)">
+                            ➕ Agregar
+                        </button>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Card 3 -->
+            <article class="service-card-premium">
+                <div class="card-image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800" alt="Posada Nativa Islander" class="card-image">
+                    <div class="card-overlay">
+                        <div class="card-badges">
+                            <span class="badge-premium badge-category">🏡 Posada</span>
+                        </div>
+                        <div class="card-rating">
+                            <span class="stars">⭐⭐⭐⭐</span>
+                            <span class="rating-number">4.7</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Posada Nativa Islander</h3>
+                    <div class="card-location">
+                        <span>📍</span>
+                        <span>San Luis, Costa Este</span>
+                    </div>
+                    <p class="card-description">
+                        Experiencia auténtica raizal en posada familiar, habitaciones acogedoras con vista al mar y cocina tradicional del archipiélago.
+                    </p>
+                    <div class="card-features">
+                        <div class="feature-tag">🌊 Vista al Mar</div>
+                        <div class="feature-tag">🍲 Cocina Local</div>
+                        <div class="feature-tag">🚴 Bikes Gratis</div>
+                        <div class="feature-tag">💚 Cultura Raizal</div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-price">
+                            <span class="price-label">Desde</span>
+                            <span class="price-amount">$85</span>
+                        </div>
+                        <button class="btn-add-quote" onclick="addToQuote('Posada Islander', 85)">
+                            ➕ Agregar
+                        </button>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- TRUST SECTION -->
+    <section class="trust-section">
+        <div class="trust-container">
+            <h2 class="trust-title">¿Por qué elegir GuiaSAI Business?</h2>
+            <div class="trust-grid">
+                <div class="trust-card">
+                    <div class="trust-icon">🤝</div>
+                    <h3 class="trust-card-title">Soporte Post-Venta</h3>
+                    <p class="trust-card-text">
+                        Equipo local dedicado 24/7 para resolver cualquier incidencia durante la estadía de tus clientes
+                    </p>
+                </div>
+                <div class="trust-card">
+                    <div class="trust-icon">💎</div>
+                    <h3 class="trust-card-title">Proveedores Verificados</h3>
+                    <p class="trust-card-text">
+                        Todos nuestros aliados son empresarios locales certificados con altos estándares de calidad
+                    </p>
+                </div>
+                <div class="trust-card">
+                    <div class="trust-icon">⚡</div>
+                    <h3 class="trust-card-title">Respuesta Inmediata</h3>
+                    <p class="trust-card-text">
+                        Cotizaciones en menos de 2 horas y confirmaciones de reserva al instante
+                    </p>
+                </div>
+                <div class="trust-card">
+                    <div class="trust-icon">💰</div>
+                    <h3 class="trust-card-title">Mejores Comisiones</h3>
+                    <p class="trust-card-text">
+                        Estructura de comisiones competitiva y pagos transparentes sin costos ocultos
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FLOATING QUOTE SUMMARY -->
+    <aside class="quote-floating" id="quoteWidget">
+        <div class="quote-header">
+            <h3 class="quote-title">Mi Cotización</h3>
+            <span class="quote-items-count">3 servicios</span>
+        </div>
+        <div class="quote-items">
+            <div class="quote-item">
+                <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=100" alt="" class="quote-item-image">
+                <div class="quote-item-info">
+                    <div class="quote-item-name">Decameron San Luis</div>
+                    <div class="quote-item-price">$189 USD/noche</div>
+                </div>
+            </div>
+            <div class="quote-item">
+                <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=100" alt="" class="quote-item-image">
+                <div class="quote-item-info">
+                    <div class="quote-item-name">Casa Harb Boutique</div>
+                    <div class="quote-item-price">$245 USD/noche</div>
+                </div>
+            </div>
+            <div class="quote-item">
+                <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=100" alt="" class="quote-item-image">
+                <div class="quote-item-info">
+                    <div class="quote-item-name">Posada Islander</div>
+                    <div class="quote-item-price">$85 USD/noche</div>
+                </div>
+            </div>
+        </div>
+        <div class="quote-total">
+            <span class="total-label">Total Estimado</span>
+            <span class="total-amount">$519</span>
+        </div>
+        <div class="quote-actions">
+            <button class="btn-view-quote">Ver Detalle</button>
+            <button class="btn-send-quote">Enviar Cotización</button>
+        </div>
+    </aside>
+
+    <script>
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('mainHeader');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Toggle quote widget
+        function toggleQuote() {
+            const widget = document.getElementById('quoteWidget');
+            widget.classList.toggle('active');
+        }
+
+        // Add to quote (demo function)
+        function addToQuote(name, price) {
+            alert(`✅ "${name}" agregado a tu cotización por $${price} USD/noche`);
+            const widget = document.getElementById('quoteWidget');
+            widget.classList.add('active');
+        }
+
+        // Show quote widget on load (demo)
+        setTimeout(() => {
+            document.getElementById('quoteWidget').classList.add('active');
+        }, 1500);
+    </script>
+
+</body>
+</html>

@@ -1,30 +1,31 @@
-# Ideas para mejorar la app
-Reporte del clima en App
-Basado en Dimar y noticias de idea y otros
-Revisar compra de paquete superior de github Copilot, analizar y escalar el desarrollo usando la misma app para mejorar en tiempo real y ocultar paneles de administración.
+# 🗺️ Guana Go: Arquitectura Técnica (V4.1 - Febrero 2026)
 
-Oferta pata cobernackon y sec de turismo.
-Estrategia de GuiaSAI para registrar la feria y negocios.
-Mapeando los que estaremos allá podemos agregar su información si se vuelven socios y se afilian usando una de las membresías se les da descuento. Acceso a herramientas para administrar e informar a autoridafes data de los huéspedes para verificar identidad y generar transparencia, evitar trata de menores y temas sexuales en el turismo o de cosas que se manejan en cada destino turístico.
+> **Visión:** Sistema Operativo de Destino para San Andrés Isla.
+> **Estado:** En desarrollo activo (B2C funcional, B2B en construcción).
 
-Ver clases de surf como tour que se maneja según el clima y tienen una corta ventana para anticipar la disponibilidad.
+---
 
-Usar el Copilot para trabajar alrededor de lo que se viene trabajando en gemini
+## 🏛️ El Ecosistema: Dos Corazones, Un Sistema
 
+El sistema se divide en dos bases de código separadas para optimizar el rendimiento y la seguridad:
 
-# 🗺️ Guana Go: Arquitectura Técnica (V4.0 - Enero 2026)
+### 1. Este Repositorio (B2C + B2B Local)
+**Enfoque:** Experiencia en destino y operación local.
+*   **B2C Turista & Residente:** PWA para descubrimiento, reservas y lealtad (Guana Points).
+*   **B2B Aliados Locales:** Panel para restaurantes, hoteles y comercios (Gestión de inventario, QR, validación).
+*   **Tech Key:** PWA rápida, Mapbox, Chatbot IA (Groq/claude), Pasarela de pagos.
 
-Alianza Guana Go y Cluster de musica RIMM kriol myussik de san 
-esto es soberanía cultural pura! Lo que planteas es convertir el talento de los artistas raizales en un Activo Digital Real. Ya no es solo música sonando en una noche de eventos; es una colección de activos que el turista se lleva en su Wallet y que financia directamente la industria local.Aquí tienes la hoja de ruta para integrar los NFTs del Clúster de Música RIMM en el ecosistema GuanaGO usando Hedera (HTS):1. El Concepto: "Vibrant Heritage NFTs"En lugar de ver el NFT como un "dibujo", lo planteamos como un Utility Token de Cultura.El Activo: Una pieza musical exclusiva, un video behind-the-scenes de la Caribbean Night o un arte digital del clúster.La Utilidad: Poseer el NFT da acceso a:Entrada VIP a la próxima Caribbean Night.Descuentos en Coco ART.Un porcentaje de "royalties sociales" o puntos $GUANA extra.2. Organización de la DB en Airtable (El Backend)Para que el proceso sea escalable, tu base de datos debe actuar como el "Puente de Metadatos". Necesitas una tabla llamada Colecciones_NFT:Campo AirtableTipo de DatoFunciónNombre_ColeccionTextoEj: "Caribbean Night - Live Stieg 2026"Artista_IDLink a ArtistasVincula al creador del clúster RIMM.IPFS_CIDTextoEl enlace descentralizado donde vive el audio/imagen.Token_ID_HederaTextoEl ID único una vez minteado en la red.Precio_GGONúmeroCosto en puntos o moneda local.Royalty_SocialPorcentajeCuánto recibe el artista por cada re-venta (Ej. 10%).3. Proceso de Minteo con Hedera Token Service (HTS)A diferencia de Ethereum, en Hedera el minteo es ultra barato ($1 USD aprox.) y muy rápido.Captura en la App: El artista sube su obra desde el portal B2B de GuanaGO.Almacenamiento: El archivo se sube a IPFS (usando servicios como Pinata o NFT.storage) para que sea eterno.Minteo: Tu backend de Node.js usa el SDK de Hedera para crear el NFT vinculado al IPFS CID.Vinculación: El TokenID se guarda en tu Airtable y aparece automáticamente en la sección "Novedades" de la App.4. El Modelo de Trabajo AliadoEste es el corazón de la alianza con el Clúster:Transparencia: El artista puede ver en tiempo real cuántas personas poseen su activo.Financiamiento: El 70% va al artista, 20% al Clúster RIMM (para nuevos eventos) y 10% a GuanaGO (mantenimiento de plataforma).Captura de Data: La App registra qué turistas compran qué géneros. Esta data es oro para el Secretario de Turismo: "Secretario, sabemos que el 60% de los europeos prefiere el Reggae Raizal; enfoquemos la promoción de verano en ese nicho".
+### 2. Repositorio Externo (GuiaSAI - B2B Agencias)
+**Enfoque:** Comercialización mayorista y distribución.
+*   **Usuario:** Agencias de Viaje Nacionales e Internacionales.
+*   **Funcionalidad:** Cotizador masivo, gestión de markup, facturación compleja.
+*   **Integración:** Se conecta a este sistema vía API/Webhooks para consultar disponibilidad real.
 
-necesito implementar una estrategia para ser ese apoyo tecnologico y de creacion de valor de artistas musicales que hacen parte del cluster pero que no tienen casi movimiento economico con su musica y no saben lo que es un nft o cripto y tendre que ser su apoyo y asesor, y recibir un % de cada elemento y asi tendre una coleccion de musica avalada por los mismos artistas, los cuales pueden vender sus servicios o la posibilidad de comer, almorzar, ir a un paseo con un artista y conocerlo un poco mas en una experiencia Vip o un tour de los que manejamos en nuestro portal. y obtener un % de cada servicio, venta de memorias usb o nfts con musica del artista etc.
-
-ayudame a crear algo asi para el cluster y en un futuro lo podre usar para otros artistas plasticos etc.
-
+---
 
 ## 📋 Resumen Ejecutivo
 
-**GuanaGO** es una PWA (Progressive Web App) de turismo para San Andrés Isla, Colombia. Conecta turistas con operadores locales mediante un sistema de reservas con validación blockchain, chatbot IA y mapas interactivos.
+**GuanaGO** es una PWA (Progressive Web App y en el futuro una App movil en playstore y appstore) de turismo para San Andrés Isla, Colombia. Conecta turistas con operadores locales mediante un sistema de reservas con validación blockchain, chatbot IA y mapas interactivos.
 
 ### Stack Tecnológico
 | Capa | Tecnología |
@@ -46,7 +47,7 @@ ayudame a crear algo asi para el cluster y en un futuro lo podre usar para otros
 ```
 [App Frontend] → [Make.com Webhooks] → [Airtable] 
                          ↓
-                  [Groq AI / Hedera]
+                  [ claude / Hedera]
 ```
 
 ### Webhooks Configurados (Make.com)
@@ -63,6 +64,16 @@ ayudame a crear algo asi para el cluster y en un futuro lo podre usar para otros
 | `Directorio_Mapa` | 31 puntos de interés | Nombre, Lat, Lon, Categoria, Descripcion |
 | `Usuarios_SAI` | Usuarios y partners | Email, Rol, Estado, WalletBalance |
 | `Artistas_RIMM` | Artistas Caribbean Night | Nombre, Genero, Bio, Imagen, Redes |
+
+---
+
+## 🎨 5 Pilares de UX (Guía de Diseño)
+
+1.  **Descubrimiento Confiable (B2C):** Mapa interactivo y Chatbot IA para encontrar "Hidden Gems".
+2.  **Operación sin Fricción (Socios):** Panel móvil simple para validación rápida (QR).
+3.  **Mayorista Digital (Agencias):** Cotizador grupal rápido y generación de vouchers.
+4.  **Identidad Cultural:** Estética "Kriol Modernista", evitando clichés.
+5.  **Lealtad y Economía Local:** Gamificación (Guana Points) y tokenización futura.
 
 ---
 
@@ -236,11 +247,11 @@ POST https://guanago-backend.onrender.com/api/chatbot/cotizar
 ### SanAndresMap (Zonas de Taxi)
 | Zona | Nombre | Taxi (1-4) | Van (5+) |
 |------|--------|------------|----------|
-| Z1 | Centro/North End | $13,000 | $26,000 |
-| Z2 | San Luis | $30,000 | $50,000 |
-| Z3 | La Loma/El Cove | $35,000 | $55,000 |
-| Z4 | Sur/Punta Sur | $45,000 | $70,000 |
-| Z5 | West View | $40,000 | $60,000 |
+| Z1 | Centro/North End | 
+| Z2 | San Luis | 
+| Z3 | La Loma/El Cove |
+| Z4 | Sur/Punta Sur | $
+| Z5 | West View | 
 
 ---
 
@@ -250,8 +261,8 @@ POST https://guanago-backend.onrender.com/api/chatbot/cotizar
 | Tier | Nombre | Precio | Incluye |
 |------|--------|--------|---------|
 | 1 | Básico | $150,000 | Entrada general |
-| 2 | Con Transporte | $220,000 | Entrada + Transfer |
-| 3 | VIP Experience | $350,000 | Entrada + Transfer + Mesa VIP |
+| 2 | Con Transporte |  Entrada + Transfer |
+| 3 | VIP Experience | Entrada + Transfer + Mesa VIP |
 
 ### Flujo
 1. Usuario selecciona paquete en `MusicEventDetail.tsx`

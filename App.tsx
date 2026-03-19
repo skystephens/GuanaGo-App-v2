@@ -12,6 +12,7 @@ import GroupQuote from './components/GroupQuote';
 import MyItinerary from './pages/MyItinerary';
 import DynamicItineraryBuilder from './pages/admin/DynamicItineraryBuilder';
 import Planner from './pages/Planner';
+import PartnerAccess from './pages/PartnerAccess';
 
 // List Pages
 import TourList from './pages/TourList';
@@ -28,6 +29,9 @@ import ArtistDetail from './pages/ArtistDetail';
 import Reviews from './pages/Reviews';
 import Checkout from './pages/Checkout';
 
+// Auth
+import AuthGate from './pages/AuthGate';
+
 // Partner Pages
 import Login from './pages/Login';
 import PartnerRegister from './pages/PartnerRegister';
@@ -40,6 +44,7 @@ import PartnerServices from './pages/partner/PartnerServices';
 import PartnerServiceForm from './pages/partner/PartnerServiceForm';
 import PartnerServiceDetail from './pages/partner/PartnerServiceDetail';
 import PartnerAccommodations from './pages/partner/PartnerAccommodations';
+import PartnerDashboardPro from './pages/partner/PartnerDashboardPro';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -55,6 +60,9 @@ import AdminTasks from './pages/admin/AdminTasks';
 import AdminQuotes from './pages/admin/AdminQuotes';
 import AdminReservations from './pages/admin/AdminReservations';
 import AdminStructureMap from './pages/admin/AdminStructureMap';
+import AdminTorreControl from './pages/admin/AdminTorreControl';
+import AdminProcedimientosRAG from './pages/admin/AdminProcedimientosRAG';
+import AdminMapaMental from './pages/admin/AdminMapaMental';
 
 // Artista Portal
 import ArtistaPortal from './pages/ArtistaPortal';
@@ -67,6 +75,7 @@ import Navigation from './components/Navigation';
 import GuanaChatbot from './components/GuanaChatbot';
 import DirectoryMapbox from './components/DirectoryMapbox';
 import { AppRoute, UserRole } from './types';
+import { useAuth } from './context/AuthContext';
 import { GUANA_LOGO } from './constants';
 
 // Sistema de caché local
@@ -76,10 +85,8 @@ const App: React.FC = () => {
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(AppRoute.HOME);
   const [history, setHistory] = useState<AppRoute[]>([]);
   
-  // Auth State
-  const [userRole, setUserRole] = useState<UserRole>('Turista');
-  const [isAuthenticated, setIsAuthenticated] = useState(false); 
-  const [userName, setUserName] = useState('Usuario');
+  // Auth State (from Firebase AuthContext)
+  const { isAuthenticated, userRole, userName, logout, switchRole: authSwitchRole } = useAuth();
   const [detailData, setDetailData] = useState<any>(null);
 
   // Inicializar sistema de caché al arrancar la app
@@ -101,40 +108,26 @@ const App: React.FC = () => {
       setHistory((prev) => prev.slice(0, -1));
     } else {
       if (userRole === 'Turista') setCurrentRoute(AppRoute.HOME);
-      else if (userRole === 'Socio' || userRole === 'Aliado' || userRole === 'Operador' || userRole === 'Artista') setCurrentRoute(AppRoute.PARTNER_DASHBOARD);
+      else if (userRole === 'Socio' || userRole === 'Aliado' || userRole === 'Operador' || userRole === 'Artista') setCurrentRoute(AppRoute.PARTNER_DASHBOARD_PRO);
       else setCurrentRoute(AppRoute.ADMIN_DASHBOARD);
     }
   };
 
   const switchRole = (newRole: UserRole) => {
-    setUserRole(newRole);
-     if (newRole === 'Turista') {
-       setIsAuthenticated(false);
-       setCurrentRoute(AppRoute.HOME);
-     } else {
-       setIsAuthenticated(true);
-       if (newRole === 'Socio' || newRole === 'Aliado' || newRole === 'Operador' || newRole === 'Artista') setCurrentRoute(AppRoute.PARTNER_DASHBOARD);
-       if (newRole === 'SuperAdmin') setCurrentRoute(AppRoute.ADMIN_DASHBOARD);
-     }
+    authSwitchRole(newRole);
+    if (newRole === 'Turista' || newRole === 'Local') {
+      setCurrentRoute(AppRoute.HOME);
+    } else if (newRole === 'Socio' || newRole === 'Aliado' || newRole === 'Operador' || newRole === 'Artista') {
+      setCurrentRoute(AppRoute.PARTNER_DASHBOARD_PRO);
+    } else if (newRole === 'SuperAdmin') {
+      setCurrentRoute(AppRoute.ADMIN_DASHBOARD);
+    }
     setHistory([]);
     window.scrollTo(0, 0);
   };
 
-  const handleTouristLogin = () => {
-     setIsAuthenticated(true);
-     setCurrentRoute(AppRoute.PROFILE); // Ir al dashboard después de login
-  };
-
-  const handleLogout = () => {
-    // Limpiar TODAS las sesiones del localStorage
-    localStorage.removeItem('admin_session');
-    localStorage.removeItem('user_session');
-    localStorage.removeItem('partner_session');
-    
-    // Resetear estado
-    setIsAuthenticated(false);
-    setUserRole('Turista');
-    setUserName('Usuario');
+  const handleLogout = async () => {
+    await logout();
     setHistory([]);
     setCurrentRoute(AppRoute.HOME);
     window.scrollTo(0, 0);
@@ -147,12 +140,9 @@ const App: React.FC = () => {
       case AppRoute.DYNAMIC_ITINERARY: return <Planner onNavigate={navigateTo} initialCategory={detailData?.category} />;
       case AppRoute.MY_ITINERARY: return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.PROFILE: return (
-        <AccountDashboard 
-          isAuthenticated={isAuthenticated}
-          userRole={userRole}
-          onLogin={handleTouristLogin} 
-          onLogout={handleLogout} 
-          onSwitchRole={switchRole} 
+        <AccountDashboard
+          onLogout={handleLogout}
+          onSwitchRole={switchRole}
           onNavigate={navigateTo}
           onBack={goBack}
         />
@@ -172,9 +162,25 @@ const App: React.FC = () => {
       case AppRoute.PACKAGE_DETAIL: return <Detail type="package" data={detailData} onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.TAXI_DETAIL: return <Taxi onBack={goBack} />;
       case AppRoute.REVIEWS: return <Reviews onBack={goBack} />;
-      case AppRoute.LOGIN: return <Login onBack={() => { setUserRole('tourist'); navigateTo(AppRoute.PROFILE); }} onNavigate={navigateTo} onLoginSuccess={() => { setIsAuthenticated(true); navigateTo(AppRoute.PARTNER_DASHBOARD); }} />;
-      case AppRoute.PARTNER_REGISTER: return <PartnerRegister onBack={goBack} onComplete={() => navigateTo(AppRoute.PARTNER_DASHBOARD)} />;
-      case AppRoute.PARTNER_DASHBOARD: return <PartnerDashboard onNavigate={navigateTo} />;
+      case AppRoute.AUTH_GATE: return (
+        <AuthGate
+          onAuthenticated={(role) => {
+            if (role === 'SuperAdmin') {
+              navigateTo(AppRoute.ADMIN_DASHBOARD);
+            } else if (['Socio', 'Aliado', 'Operador', 'Artista'].includes(role)) {
+              navigateTo(AppRoute.PARTNER_DASHBOARD_PRO);
+            } else {
+              navigateTo(AppRoute.HOME);
+            }
+          }}
+          onNavigate={navigateTo}
+        />
+      );
+      case AppRoute.LOGIN: return <Login onBack={() => { authSwitchRole('Turista' as UserRole); navigateTo(AppRoute.PROFILE); }} onNavigate={navigateTo} onLoginSuccess={() => { navigateTo(AppRoute.PARTNER_DASHBOARD_PRO); }} />;
+      case AppRoute.PARTNER_ACCESS: return <PartnerAccess onNavigate={navigateTo} />;
+      case AppRoute.PARTNER_REGISTER: return <PartnerRegister onBack={goBack} onComplete={() => navigateTo(AppRoute.PARTNER_DASHBOARD_PRO)} />;
+        case AppRoute.PARTNER_DASHBOARD: return <PartnerDashboard onNavigate={navigateTo} />;
+        case AppRoute.PARTNER_DASHBOARD_PRO: return <PartnerDashboardPro onNavigate={navigateTo} onLogout={handleLogout} />;
       case AppRoute.PARTNER_OPERATIONS: return <PartnerOperations onNavigate={navigateTo} />;
       case AppRoute.PARTNER_SCANNER: return <PartnerScanner onBack={goBack} />;
       case AppRoute.PARTNER_WALLET: return <PartnerWallet />;
@@ -195,17 +201,20 @@ const App: React.FC = () => {
       case AppRoute.RIMM_CLUSTER: return <RimmCluster onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.MUSIC_EVENT_DETAIL: return <MusicEventDetail data={detailData} onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ARTIST_DETAIL: return <ArtistDetail data={detailData} onBack={goBack} onNavigate={navigateTo} />;
-      case AppRoute.ADMIN_CARIBBEAN_NIGHT: return <AdminCaribbeanNight onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_CARIBBEAN: return <AdminCaribbeanNight onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_ARTISTAS: return <AdminArtistas onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ARTISTA_PORTAL: return <ArtistaPortal onBack={goBack} onNavigate={navigateTo} artistaId={detailData?.artistaId} />;
       case AppRoute.ADMIN_SOCIOS: return <AdminSocios onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_TASKS: return <AdminTasks onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_QUOTES: return <AdminQuotes onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_TORRE_CONTROL: return <AdminTorreControl onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_PROCEDIMIENTOS_RAG: return <AdminProcedimientosRAG onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_MAPA_MENTAL: return <AdminMapaMental onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };
 
-  const isDark = userRole !== 'tourist' && currentRoute !== AppRoute.LOGIN && currentRoute !== AppRoute.PARTNER_REGISTER;
+  const isDark = !['tourist', 'Turista', 'Local'].includes(userRole) && currentRoute !== AppRoute.LOGIN && currentRoute !== AppRoute.PARTNER_REGISTER;
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-300
@@ -239,7 +248,7 @@ const App: React.FC = () => {
         
         <Navigation currentRoute={currentRoute} onNavigate={navigateTo} role={userRole} isAuthenticated={isAuthenticated} onLogout={handleLogout} />
 
-        {userRole === 'tourist' && (
+        {['tourist', 'Turista', 'Local'].includes(userRole) && (
           <GuanaChatbot />
         )}
       </div>

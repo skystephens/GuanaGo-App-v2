@@ -1,3 +1,20 @@
+// Tipo Quotation para compatibilidad con el cotizador de guiasai-b2b
+export interface Quotation {
+  id: string;
+  userId?: string;
+  accommodations: any[];
+  tours: any[];
+  transports: any[];
+  total: number;
+  currency?: 'COP' | 'USD';
+  status?: string;
+  confirmationStatus?: any;
+  createdAt?: Date;
+  expiresAt?: Date;
+  notes?: string;
+  paymentLink?: string;
+  voucherId?: string;
+}
 
 export interface Tour {
   id: string;
@@ -245,7 +262,9 @@ export enum AppRoute {
   TAXI_DETAIL = 'TAXI_DETAIL',
   PACKAGE_DETAIL = 'PACKAGE_DETAIL',
   REVIEWS = 'REVIEWS',
+  AUTH_GATE = 'AUTH_GATE',
   LOGIN = 'LOGIN',
+  PARTNER_ACCESS = 'PARTNER_ACCESS',
   PARTNER_REGISTER = 'PARTNER_REGISTER',
   PARTNER_DASHBOARD = 'PARTNER_DASHBOARD',
   PARTNER_OPERATIONS = 'PARTNER_OPERATIONS',
@@ -256,6 +275,7 @@ export enum AppRoute {
   PARTNER_CREATE_SERVICE = 'PARTNER_CREATE_SERVICE',
   PARTNER_SERVICE_DETAIL = 'PARTNER_SERVICE_DETAIL',
   PARTNER_ACCOMMODATIONS = 'PARTNER_ACCOMMODATIONS',
+  PARTNER_DASHBOARD_PRO = 'PARTNER_DASHBOARD_PRO',
   ADMIN_DASHBOARD = 'ADMIN_DASHBOARD',
   ADMIN_USERS = 'ADMIN_USERS',
   ADMIN_FINANCE = 'ADMIN_FINANCE',
@@ -269,15 +289,19 @@ export enum AppRoute {
   ADMIN_CARIBBEAN = 'ADMIN_CARIBBEAN_NIGHT',
   ADMIN_ARTISTAS = 'ADMIN_ARTISTAS',
   ADMIN_SOCIOS = 'ADMIN_SOCIOS',
+  ADMIN_TORRE_CONTROL = 'ADMIN_TORRE_CONTROL',
+  ADMIN_PROCEDIMIENTOS_RAG = 'ADMIN_PROCEDIMIENTOS_RAG',
+  ADMIN_MAPA_MENTAL = 'ADMIN_MAPA_MENTAL',
   GROUP_QUOTE = 'GROUP_QUOTE',
   MY_ITINERARY = 'MY_ITINERARY',
   DYNAMIC_ITINERARY = 'DYNAMIC_ITINERARY',
   RIMM_CLUSTER = 'RIMM_CLUSTER',
   MUSIC_EVENT_DETAIL = 'MUSIC_EVENT_DETAIL',
   ARTIST_DETAIL = 'ARTIST_DETAIL',
+  ARTISTA_PORTAL = 'ARTISTA_PORTAL',
 }
 
-export type UserRole = 'tourist' | 'partner' | 'admin' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';
+export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';
 
 export type TaskStatus = 'pendiente' | 'en_progreso' | 'urgente_pendiente' | 'terminado' | 'bloqueado';
 export type TaskPriority = 'baja' | 'media' | 'alta' | 'critica';

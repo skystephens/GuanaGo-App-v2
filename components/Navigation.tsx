@@ -29,13 +29,13 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
     { route: AppRoute.HOME, icon: <Compass size={22} />, label: 'Explora' },
     { route: AppRoute.INTERACTIVE_MAP, icon: <MapIcon size={22} />, label: 'Mapa' },
     { route: AppRoute.DYNAMIC_ITINERARY, icon: <CalendarDays size={22} />, label: 'Planifica' },
-    { route: AppRoute.PROFILE, icon: <UserCircle size={22} />, label: 'Cuenta' },
+    { route: AppRoute.AUTH_GATE, icon: <UserCircle size={22} />, label: 'Ingresar' },
   ];
 
   // MENU SOCIO/ALIADO: 5 Items
   const partnerNavItems = [
     { route: AppRoute.UNIFIED_PANEL, icon: <Grid3x3 size={22} />, label: 'Panel' },
-    { route: AppRoute.PARTNER_DASHBOARD, icon: <LayoutDashboard size={22} />, label: 'Dashboard' },
+    { route: AppRoute.PARTNER_DASHBOARD_PRO, icon: <LayoutDashboard size={22} />, label: 'Dashboard' },
     { route: AppRoute.PARTNER_RESERVATIONS, icon: <CalendarDays size={22} />, label: 'Reservas' },
     { route: AppRoute.PARTNER_WALLET, icon: <Wallet size={22} />, label: 'Caja' },
     { route: AppRoute.PROFILE, icon: <UserCircle size={22} />, label: 'Perfil' },
