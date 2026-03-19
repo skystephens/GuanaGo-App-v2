@@ -87,8 +87,11 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
     setEmail('');
     setPassword('');
     setAdminPin('');
-    // Todos los tipos van al login unificado (email/password + Google)
-    setCurrentStep('login');
+    if (type === 'admin') {
+      setCurrentStep('admin-pin');
+    } else {
+      setCurrentStep('login');
+    }
   };
 
   // ============================================
