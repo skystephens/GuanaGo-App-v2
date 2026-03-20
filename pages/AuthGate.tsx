@@ -31,6 +31,10 @@ async function verifyWithBackend(firebaseUser: any, userType: string) {
   if (!data.success) {
     throw new Error(data.error || 'Error verificando perfil');
   }
+  // Refrescar token para que los Custom Claims (role) queden activos en Firestore Rules
+  try {
+    await firebaseUser.getIdToken(true);
+  } catch { /* no-op si falla el refresh */ }
   return data;
 }
 

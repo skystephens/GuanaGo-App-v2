@@ -27,6 +27,7 @@ try {
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${serviceAccount.project_id}.appspot.com`,
     });
     initialized = true;
     console.log('✅ Firebase Admin initialized');

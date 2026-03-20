@@ -16,6 +16,9 @@ import tasksRoutes from './backend/routes/tasks.js';
 import availabilityRoutes from './backend/routes/availability.js';
 import systemRoutes from './backend/routes/system.js';
 import accommodationsRoutes from './backend/routes/accommodations.js';
+import agentRoutes from './backend/routes/agent.js';
+import quotationsRoutes from './backend/routes/quotations.js';
+import storageRoutes from './backend/routes/storage.js';
 
 // Import middleware
 import { requestLogger } from './backend/middleware/logger.js';
@@ -127,6 +130,15 @@ app.use('/api/system', systemRoutes);
 
 // Accommodations submissions routes
 app.use('/api/accommodations', accommodationsRoutes);
+
+// Agent IA multi-modo (turista / cotizador / admin) + Firestore
+app.use('/api/agent', agentRoutes);
+
+// Quotations (cotizaciones B2B)
+app.use('/api/quotations', quotationsRoutes);
+
+// Firebase Storage (imágenes de servicios)
+app.use('/api/storage', storageRoutes);
 
 console.log('✅ Rutas API configuradas');
 

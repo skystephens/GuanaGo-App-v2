@@ -6,7 +6,8 @@ import {
   XCircle, Clock, Filter, Download, BarChart2,
   ArrowLeft, Plus, Trash2, Edit3, X, Calendar, Save,
   Smartphone, Database, FolderPlus, GripVertical, StickyNote,
-  ChevronUp, MoreVertical, Cpu
+  ChevronUp, MoreVertical, Cpu,
+  Globe, TrendingUp, Coins, Link2, Target, Layers, Zap, BookOpen
 } from 'lucide-react';
 import PanelEstadoSistema from './PanelEstadoSistema';
 import PanelIAAsistente from './PanelIAAsistente';
@@ -219,6 +220,72 @@ const SEED_SECCIONES: SeccionControl[] = [
       { id: 'mar-06', titulo: 'Plan lanzamiento oficial de la app', descripcion: 'Fecha objetivo, evento de lanzamiento, aliados confirmados, press release, campaña digital', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
     ],
   },
+  {
+    id: 'guiasai_agencias', titulo: 'GuiaSAI Agencias — Cotizador B2B',
+    subtitulo: 'Mapa del trabajo desarrollado en guiasanandresislas.com/agencias y su integración',
+    icono: 'Globe', color: 'text-orange-400', gradiente: 'from-orange-900 to-orange-800',
+    creadaEn: new Date().toISOString(),
+    tareas: [
+      { id: 'gsa-01', titulo: 'ServiceCard con fechas y huéspedes', descripcion: 'Componente ServiceBookingCard adaptado de GuiaSAI Business. Imagen, tipo, check-in/out, adultos/niños/bebés, total estimado, Agregar al Carrito.', prioridad: 'critica', estado: 'completado', creadaEn: new Date().toISOString() },
+      { id: 'gsa-02', titulo: 'extractImageUrl: soporte URLs WordPress', descripcion: 'airtableService.ts maneja campo Imagenurl como string directo (WordPress) o attachment array. Soluciona imágenes 410 Gone.', prioridad: 'critica', estado: 'completado', creadaEn: new Date().toISOString() },
+      { id: 'gsa-03', titulo: 'Cotizador instantáneo B2B (GuiaSAI Business)', descripcion: 'guiasanandresislas.com/agencias: panel de agencias con filtros globales, carrito de cotización, PDF descargable, Airtable sync. Fuente de verdad: ServiciosTuristicos_SAI.', prioridad: 'alta', estado: 'completado', creadaEn: new Date().toISOString() },
+      { id: 'gsa-04', titulo: 'Pricing dinámico por huéspedes en alojamientos', descripcion: 'calculateAccommodationPrice(): precio varía según número de huéspedes (precio1Huesped, precio2Huespedes, etc.). Implementar en GuanaGO B2C.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'gsa-05', titulo: 'Horarios de tours (schedules)', descripcion: 'Tours tienen slots horarios en Airtable. GuiaSAI Business los muestra por dropdown. Implementar selector de horario en ServiceBookingCard de GuanaGO.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'gsa-06', titulo: 'PDF de cotización desde GuanaGO B2C', descripcion: 'Adaptar pdfService.ts de GuiaSAI Business para generar voucher/cotización descargable desde el carrito de GuanaGO.', prioridad: 'media', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'gsa-07', titulo: 'Login unificado: mismas credenciales B2B y B2C', descripcion: 'Usuario de agencia (GuiaSAI) y turista (GuanaGO) con el mismo Firebase Auth. Rol determina vista: agencia → cotizador, turista → home, admin → torre control.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'gsa-08', titulo: 'Mis cotizaciones: historial en Airtable + Firestore', descripcion: 'Guardar cotizaciones del B2C en tabla Cotizaciones_GG (Airtable). Visor en AccountDashboard con estado: borrador, enviada, confirmada.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'gsa-09', titulo: 'Paquetes combo: alojamiento + tour + traslado', descripcion: 'Igual que GuiaSAI Business. El usuario arma un paquete seleccionando 1 hotel + N tours + traslado. Precio total con descuento por combo.', prioridad: 'media', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'gsa-10', titulo: 'Micro-sitio de cada servicio (/servicio/:slug)', descripcion: 'Página de detalle con galería, descripción larga, mapa, reseñas, disponibilidad y botón reservar. Igual al /servicio/:slug de GuiaSAI Business.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+    ],
+  },
+  {
+    id: 'lean_canvas', titulo: 'Lean Canvas — Modelo de Negocio',
+    subtitulo: 'Propuesta de valor, segmentos, canales, ingresos, costos y ventaja competitiva',
+    icono: 'Layers', color: 'text-indigo-400', gradiente: 'from-indigo-900 to-indigo-800',
+    creadaEn: new Date().toISOString(),
+    tareas: [
+      { id: 'lc-01', titulo: 'Propuesta de valor B2C definida y documentada', descripcion: '"GuanaGO es la guía turística inteligente de San Andrés: descubre, reserva y vive el Caribe en un solo lugar." Diferencial: contenido raizal + IA local + GuanaPoints.', prioridad: 'critica', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'lc-02', titulo: 'Propuesta de valor B2B (agencias + aliados)', descripcion: '"Conecta tu negocio turístico con miles de turistas. Gestiona reservas, pagos y marketing desde un solo panel." Diferencial: cotizador instantáneo + comisiones automáticas.', prioridad: 'critica', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'lc-03', titulo: 'Segmentos de clientes priorizados', descripcion: 'Primario: turista nacional 25-45 años planificando viaje. Secundario: agencias ANATO. Terciario: negocios locales aliados. Documentar en Notion/CLAUDE.md.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'lc-04', titulo: 'Canales de adquisición por segmento', descripcion: 'B2C: Instagram + TikTok + Google Ads + SEO. B2B: LinkedIn + ANATO + contacto directo. Aliados: WhatsApp masivo + ferias de turismo SAI.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'lc-05', titulo: 'Flujos de ingresos documentados', descripcion: '1. Comisión por reserva (10-15%). 2. Suscripción aliados premium. 3. Pauta directa (banners). 4. GuanaPass (suscripción turista premium). 5. GuanaToken utilidad.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'lc-06', titulo: 'Estructura de costos principal', descripcion: 'Render (backend), Airtable Pro, Firebase Blaze, APIs (Mapbox/Groq/Gemini), Make.com, Wompi fees. Proyectar costos para 1k, 10k y 100k usuarios.', prioridad: 'media', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'lc-07', titulo: 'Métricas clave del negocio (KPIs)', descripcion: 'DAU/MAU, CAC, LTV, tasa conversión reservas, NPS, aliados activos, GMV (Gross Merchandise Value). Dashboard CEO en AdminTorreControl.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'lc-08', titulo: 'Ventaja injusta (Unfair Advantage)', descripcion: 'Contenido curado raizal auténtico + red de aliados comunitarios + IA contextual entrenada en destino SAI. Barreras: relaciones locales + data propietaria.', prioridad: 'media', estado: 'pendiente', creadaEn: new Date().toISOString() },
+    ],
+  },
+  {
+    id: 'marketing', titulo: 'Marketing & Crecimiento',
+    subtitulo: 'Estrategia digital, contenido, SEO, paid y viralidad',
+    icono: 'TrendingUp', color: 'text-pink-400', gradiente: 'from-pink-900 to-pink-800',
+    creadaEn: new Date().toISOString(),
+    tareas: [
+      { id: 'mkt-01', titulo: 'Presencia IG + TikTok operativa', descripcion: 'Perfiles optimizados, bio con link a app, highlights. Calendario de contenido: 3 posts/sem. Reels de destinos, raizal, food, adventures.', prioridad: 'critica', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'mkt-02', titulo: 'SEO: landing page guanago.travel', descripcion: 'Meta title/desc, OG tags, structured data (turismo), sitemap. Keywords: "qué hacer San Andrés", "hoteles San Andrés", "tours San Andrés Colombia".', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'mkt-03', titulo: 'Estrategia de referidos (viral loop)', descripcion: 'Usuario refiere amigo → ambos ganan GuanaPoints. Implementar código referido en registro. Meta: reducir CAC 30%.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'mkt-04', titulo: 'Google Ads: campañas de intención de viaje', descripcion: 'Campañas search para "hoteles San Andrés", "tours caribe colombiano". ROI objetivo: 3x. Presupuesto inicial sugerido: $500k COP/mes para prueba.', prioridad: 'media', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'mkt-05', titulo: 'WhatsApp Business + broadcast a red local', descripcion: 'Base de 20k contactos identificados. Broadcasts segmentados: turistas vs aliados. Integrar CRM básico con Airtable Leads table.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'mkt-06', titulo: 'Alianzas con creadores de contenido SAI', descripcion: 'Identificar 5-10 micro-influencers locales (5k-50k followers). Barter: experiencias gratis a cambio de contenido autenticado.', prioridad: 'media', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'mkt-07', titulo: 'Email marketing: onboarding + reactivación', descripcion: 'Resend.com para secuencia de bienvenida (3 emails). Reactivar usuarios inactivos 30d con oferta personalizada. Segmentar por tipo de visita (playa, aventura, gastronomía).', prioridad: 'media', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'mkt-08', titulo: 'Programa "Embajadores Raizales"', descripcion: 'Negocios y guías raizales certificados con badge especial en la app. Marketing auténtico: ellos promueven, GuanaGO amplifica. Diferenciador cultural.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+    ],
+  },
+  {
+    id: 'tokens_blockchain', titulo: 'Utility Tokens & Blockchain',
+    subtitulo: 'GuanaToken, tokenización de reservas, NFT vouchers y DeFi turístico',
+    icono: 'Coins', color: 'text-yellow-400', gradiente: 'from-yellow-900 to-yellow-800',
+    creadaEn: new Date().toISOString(),
+    tareas: [
+      { id: 'tok-01', titulo: 'Definir modelo GuanaToken (utility token)', descripcion: 'GuanaToken = loyalty token no especulativo. Usos: descuentos, acceso premium, votación de destinos, rewards por reseñas. Modelo ERC-20 o Hedera HTS.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'tok-02', titulo: 'Smart contract GuanaToken en testnet', descripcion: 'Deploy en Polygon testnet (bajo costo/gas) o Hedera Hashgraph (ya integrado en tipos.ts). Supply inicial, mint por reserva, burn por canje.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'tok-03', titulo: 'GuanaPoints → GuanaToken: bridge', descripcion: 'X GuanaPoints acumulados = 1 GuanaToken convertible. Implementar función de conversión en Wallet. Transparencia: cada conversión registrada on-chain.', prioridad: 'media', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'tok-04', titulo: 'NFT Vouchers: reservas como NFT', descripcion: 'Cada reserva confirmada genera un NFT-voucher único (Hedera HTS o Polygon). El socio escanea QR del NFT para confirmar check-in. Transferible = resale market.', prioridad: 'media', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'tok-05', titulo: 'Auditoria blockchain de transacciones (Hedera)', descripcion: 'Ya implementado: BlockchainAudit interface en types.ts con hederaTransactionId + consensusTimestamp. Activar en pagos reales Wompi → log en Hedera Consensus Service.', prioridad: 'alta', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'tok-06', titulo: 'Dashboard blockchain en AdminDashboard', descripcion: 'Panel que muestra: tokens emitidos, transacciones auditadas, NFT vouchers activos, holders de GuanaToken. Conectar a Hedera Mirror Node API.', prioridad: 'media', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'tok-07', titulo: 'Whitepaper GuanaToken (para aliados e inversores)', descripcion: 'Documento: tokenomics, distribución, utilidad, roadmap blockchain, caso de uso turístico. Publicar en guanago.travel/token.', prioridad: 'baja', estado: 'pendiente', creadaEn: new Date().toISOString() },
+      { id: 'tok-08', titulo: 'Integración wallet externa (MetaMask / Hbar Wallet)', descripcion: 'Permitir a usuarios conectar wallet externa para recibir GuanaTokens. ethers.js o @hashgraph/sdk. Opcional: custodial wallet para usuarios no-cripto.', prioridad: 'baja', estado: 'pendiente', creadaEn: new Date().toISOString() },
+    ],
+  },
 ];
 
 // ─── Helpers de persistencia ─────────────────────────────────────────────────
@@ -266,6 +333,9 @@ const ICONO_MAP: Record<string, React.ReactNode> = {
   FileText: <FileText size={16} />, Megaphone: <Megaphone size={16} />, Bell: <Bell size={16} />,
   Rocket: <Rocket size={16} />, Database: <Database size={16} />, Smartphone: <Smartphone size={16} />,
   Activity: <Activity size={16} />, TowerControl: <TowerControl size={16} />, FolderPlus: <FolderPlus size={16} />,
+  Globe: <Globe size={16} />, TrendingUp: <TrendingUp size={16} />, Coins: <Coins size={16} />,
+  Link2: <Link2 size={16} />, Target: <Target size={16} />, Layers: <Layers size={16} />,
+  Zap: <Zap size={16} />, BookOpen: <BookOpen size={16} />, BarChart2: <BarChart2 size={16} />, Cpu: <Cpu size={16} />,
 };
 
 const COLOR_OPTIONS = [

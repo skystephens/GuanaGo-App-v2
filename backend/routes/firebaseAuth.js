@@ -34,6 +34,18 @@ router.post('/verify', verifyFirebaseToken, async (req, res) => {
       return res.status(400).json(result);
     }
 
+    // Asignar Custom Claims en Firebase según el rol de Airtable.
+    // Esto permite que las Firestore Security Rules funcionen con request.auth.token.role
+    if (firebaseInitialized && result.user?.role) {
+      const role = result.user.role; // 'SuperAdmin', 'admin', 'Socio', 'Turista', etc.
+      try {
+        await admin.auth().setCustomUserClaims(uid, { role });
+        console.log(`✅ Custom claim [role=${role}] asignado a ${email}`);
+      } catch (claimErr) {
+        console.warn('⚠️ No se pudo asignar custom claim:', claimErr.message);
+      }
+    }
+
     res.json(result);
   } catch (error) {
     console.error('❌ Error en /firebase-auth/verify:', error);
@@ -110,7 +122,17 @@ router.post('/migrate-login', async (req, res) => {
       }
     }
 
-    // 3. Crear custom token para que el frontend establezca sesion Firebase
+    // 3. Asignar Custom Claims según rol Airtable
+    if (airtableResult.user?.role) {
+      try {
+        await admin.auth().setCustomUserClaims(firebaseUser.uid, { role: airtableResult.user.role });
+        console.log(`✅ Custom claim [role=${airtableResult.user.role}] asignado en migrate-login`);
+      } catch (claimErr) {
+        console.warn('⚠️ Custom claim migrate error:', claimErr.message);
+      }
+    }
+
+    // 4. Crear custom token para que el frontend establezca sesion Firebase
     const customToken = await admin.auth().createCustomToken(firebaseUser.uid);
 
     res.json({
