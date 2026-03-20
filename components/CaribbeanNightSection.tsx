@@ -1,18 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { Music, Calendar, ExternalLink, Loader2, AlertCircle, Ticket, Sparkles } from 'lucide-react';
+import { Music, Calendar, ExternalLink, Loader2, AlertCircle, Ticket, Sparkles, Clock, MapPin, Images } from 'lucide-react';
 import { api } from '../services/api';
+import { airtableService } from '../services/airtableService';
 import { AppRoute } from '../types';
 
-// Estructura de datos esperada del backend
 interface MusicEvent {
   id: string;
   eventName: string;
   date: string;
+  time?: string;
+  dayOfWeek?: string;
   price: number;
   artistName: string;
   imageUrl: string;
   spotifyLink?: string;
+  instagramLink?: string;
   description?: string;
+  genre?: string;
+}
+
+interface GalleryItem {
+  id: string;
+  title: string;
+  image: string;
+  category: string;
+  price?: number;
 }
 
 interface CaribbeanNightSectionProps {
@@ -21,21 +33,43 @@ interface CaribbeanNightSectionProps {
 
 const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigate }) => {
   const [events, setEvents] = useState<MusicEvent[]>([]);
+  const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeGalleryIdx, setActiveGalleryIdx] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchMusicEvents();
+    fetchAll();
   }, []);
 
-  const fetchMusicEvents = async () => {
+  const fetchAll = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.musicEvents.list();
-      setEvents(data || []);
+      const [eventsData, servicesData] = await Promise.all([
+        api.musicEvents.list(),
+        airtableService.getServices().catch(() => []),
+      ]);
+
+      setEvents(eventsData || []);
+
+      // Construir galería desde ServiciosTuristicos_SAI
+      const items: GalleryItem[] = [];
+      (servicesData || []).forEach((s: any) => {
+        const imgs: string[] = s.images?.length ? s.images : s.gallery?.length ? s.gallery : s.image ? [s.image] : [];
+        imgs.slice(0, 3).forEach((img: string, i: number) => {
+          if (img) items.push({ id: `${s.id}-${i}`, title: s.title || s.name || s.nombre || '', image: img, category: s.type || s.tipo || s.category || '', price: s.price || s.precio });
+        });
+      });
+      // También añadir fotos de artistas si quedan pocos
+      if (items.length < 6) {
+        (eventsData || []).forEach((e: MusicEvent, i: number) => {
+          if (e.imageUrl) items.push({ id: `artist-${i}`, title: e.artistName, image: e.imageUrl, category: e.genre || 'Artista' });
+        });
+      }
+      setGallery(items);
     } catch (err) {
-      console.error('Error fetching Caribbean Night events:', err);
+      console.error('Error fetching Caribbean Night:', err);
       setError('No pudimos cargar los eventos. Intenta de nuevo.');
     } finally {
       setLoading(false);
@@ -43,211 +77,304 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
   };
 
   const handleReservation = (event: MusicEvent) => {
-    // Navegar a la página de detalle del evento musical
     onNavigate(AppRoute.MUSIC_EVENT_DETAIL, {
-      id: event.id,
-      eventName: event.eventName,
-      date: event.date,
-      price: event.price,
-      artistName: event.artistName,
-      imageUrl: event.imageUrl,
-      spotifyLink: event.spotifyLink,
-      description: event.description
+      id: event.id, eventName: event.eventName, date: event.date,
+      price: event.price, artistName: event.artistName,
+      imageUrl: event.imageUrl, spotifyLink: event.spotifyLink,
+      description: event.description,
     });
   };
 
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('es-CO', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
+    return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  // Featured event (el próximo evento)
   const featuredEvent = events.length > 0 ? events[0] : null;
-  
-  // Artistas únicos del clúster
-  const artists = events.reduce((acc: { name: string; image: string; spotifyLink?: string }[], event) => {
-    if (!acc.find(a => a.name === event.artistName)) {
-      acc.push({
-        name: event.artistName,
-        image: event.imageUrl,
-        spotifyLink: event.spotifyLink
-      });
-    }
+  const otherEvents = events.slice(1, 4);
+
+  // Artistas únicos
+  const artists = events.reduce((acc: MusicEvent[], event) => {
+    if (!acc.find(a => a.artistName === event.artistName)) acc.push(event);
     return acc;
   }, []);
 
   return (
-    <section className="px-6 py-8 bg-gradient-to-br from-cyan-900 via-teal-800 to-emerald-900 rounded-3xl mx-4 my-6 shadow-xl overflow-hidden relative">
-      {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-orange-400 opacity-20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-40 h-40 bg-cyan-400 opacity-15 rounded-full blur-3xl"></div>
-      
-      {/* Header - Novedades RIMM */}
-      <div className="relative z-10 mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles size={16} className="text-orange-400" />
-          <span className="text-orange-400 text-xs font-black uppercase tracking-widest">
-            Novedades RIMM
-          </span>
+    <section className="mx-4 my-6 overflow-hidden rounded-3xl shadow-2xl" style={{ background: 'linear-gradient(160deg, #0d1f2d 0%, #0e2233 40%, #071a1a 100%)' }}>
+
+      {/* ── HERO BANNER ── */}
+      <div className="relative overflow-hidden">
+        {/* Fondo con imagen del evento destacado */}
+        {featuredEvent && (
+          <div className="absolute inset-0">
+            <img src={featuredEvent.imageUrl} alt="" className="w-full h-full object-cover opacity-30" />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(13,31,45,0.5) 0%, rgba(7,26,26,0.95) 100%)' }} />
+          </div>
+        )}
+        {/* Glow orbs */}
+        <div className="absolute top-4 right-6 w-36 h-36 rounded-full opacity-25 blur-3xl" style={{ background: '#f97316' }} />
+        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-15 blur-3xl" style={{ background: '#06b6d4' }} />
+
+        <div className="relative z-10 px-5 pt-6 pb-4">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 rounded-full border" style={{ background: 'rgba(249,115,22,0.15)', borderColor: 'rgba(249,115,22,0.4)' }}>
+            <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+            <span className="text-orange-400 text-[11px] font-black uppercase tracking-widest">Novedades RIMM</span>
+          </div>
+
+          <h2 className="text-3xl font-black text-white leading-none mb-1">
+            Caribbean <span style={{ color: '#22d3ee' }}>Night</span>
+          </h2>
+          <p className="text-sm font-medium mb-5" style={{ color: 'rgba(165,243,252,0.7)' }}>
+            🎵 Jueves 9:30 PM · Música Kriol en vivo · San Andrés Isla
+          </p>
+
+          {/* Loading */}
+          {loading && (
+            <div className="flex items-center gap-3 py-10 justify-center">
+              <Loader2 size={28} className="animate-spin" style={{ color: '#22d3ee' }} />
+              <span className="text-sm font-medium" style={{ color: 'rgba(165,243,252,0.8)' }}>Cargando eventos...</span>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && !loading && (
+            <div className="rounded-2xl p-4 flex items-center gap-3 mb-4" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}>
+              <AlertCircle size={22} className="text-red-400 flex-shrink-0" />
+              <div>
+                <p className="text-red-200 text-sm font-medium">{error}</p>
+                <button onClick={fetchAll} className="text-red-300 text-xs underline mt-1">Reintentar</button>
+              </div>
+            </div>
+          )}
+
+          {/* ── EVENTO DESTACADO ── */}
+          {!loading && !error && featuredEvent && (
+            <div className="rounded-2xl overflow-hidden mb-4" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+              {/* Imagen grande */}
+              <div className="relative h-52 w-full">
+                <img src={featuredEvent.imageUrl} alt={featuredEvent.eventName} className="w-full h-full object-cover" />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 55%)' }} />
+
+                {/* Badges */}
+                <div className="absolute top-3 left-3 flex gap-2">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-white text-xs font-bold shadow-lg" style={{ background: '#f97316' }}>
+                    <Calendar size={12} />
+                    {formatDate(featuredEvent.date)}
+                  </div>
+                  {featuredEvent.time && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-white text-xs font-bold" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}>
+                      <Clock size={12} />
+                      {featuredEvent.time}
+                    </div>
+                  )}
+                </div>
+                <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-lg text-white text-[10px] font-black uppercase animate-pulse" style={{ background: '#ef4444' }}>
+                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                  Live
+                </div>
+
+                {/* Info sobre la imagen */}
+                <div className="absolute bottom-3 left-4 right-4">
+                  <h3 className="text-white font-black text-lg leading-tight">{featuredEvent.eventName}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Music size={13} style={{ color: '#67e8f9' }} />
+                    <span className="text-sm font-semibold" style={{ color: '#67e8f9' }}>{featuredEvent.artistName}</span>
+                    {featuredEvent.genre && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(6,182,212,0.25)', color: '#a5f3fc' }}>{featuredEvent.genre}</span>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Info + CTA */}
+              <div className="p-4">
+                {featuredEvent.description && (
+                  <p className="text-xs mb-3 leading-relaxed line-clamp-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    {featuredEvent.description}
+                  </p>
+                )}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>Entrada desde</span>
+                    <p className="font-black text-2xl leading-none mt-0.5" style={{ color: '#fb923c' }}>
+                      ${featuredEvent.price.toLocaleString()}
+                      <span className="text-xs font-normal ml-1" style={{ color: 'rgba(255,255,255,0.45)' }}>COP</span>
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleReservation(featuredEvent)}
+                    className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm text-white active:scale-95 transition-all shadow-lg"
+                    style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}
+                  >
+                    <Ticket size={15} />
+                    Reservar Cupo
+                  </button>
+                </div>
+                {/* Social links */}
+                <div className="flex gap-3 mt-3">
+                  {featuredEvent.spotifyLink && (
+                    <a href={featuredEvent.spotifyLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: '#4ade80' }}>
+                      <ExternalLink size={11} /> Spotify
+                    </a>
+                  )}
+                  {featuredEvent.instagramLink && (
+                    <a href={featuredEvent.instagramLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: '#f9a8d4' }}>
+                      <ExternalLink size={11} /> Instagram
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── PRÓXIMOS EVENTOS (scroll horizontal) ── */}
+          {!loading && !error && otherEvents.length > 0 && (
+            <div className="mb-2">
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(165,243,252,0.5)' }}>Próximas fechas</p>
+              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
+                {otherEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    onClick={() => handleReservation(event)}
+                    className="flex-shrink-0 w-44 rounded-2xl overflow-hidden cursor-pointer active:scale-95 transition-all"
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <div className="relative h-24 w-full">
+                      <img src={event.imageUrl} alt={event.artistName} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)' }} />
+                      <span className="absolute bottom-2 left-2 text-xs font-bold text-white leading-tight">{event.artistName}</span>
+                    </div>
+                    <div className="px-3 py-2">
+                      <p className="text-[10px] font-medium" style={{ color: 'rgba(165,243,252,0.6)' }}>{formatDate(event.date)}</p>
+                      <p className="text-sm font-black" style={{ color: '#fb923c' }}>${event.price.toLocaleString()}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!loading && !error && events.length === 0 && (
+            <div className="text-center py-8">
+              <Music size={44} className="mx-auto mb-3 opacity-40" style={{ color: '#22d3ee' }} />
+              <p className="text-sm" style={{ color: 'rgba(165,243,252,0.6)' }}>No hay eventos programados por ahora</p>
+              <p className="text-xs mt-1" style={{ color: 'rgba(165,243,252,0.35)' }}>¡Pronto anunciaremos nuevas fechas!</p>
+            </div>
+          )}
         </div>
-        <h2 className="text-2xl font-black text-white leading-tight">
-          Próximas <span className="text-cyan-300">Caribbean Nights</span>
-        </h2>
-        <p className="text-cyan-100/70 text-sm mt-1">
-          Vive la música Kriol en San Andrés 🎵
-        </p>
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 size={32} className="animate-spin text-cyan-300" />
-          <span className="ml-3 text-cyan-100 font-medium">Cargando eventos...</span>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && !loading && (
-        <div className="bg-red-500/20 border border-red-400/30 rounded-2xl p-4 flex items-center gap-3">
-          <AlertCircle size={24} className="text-red-400 flex-shrink-0" />
-          <div>
-            <p className="text-red-200 font-medium text-sm">{error}</p>
-            <button 
-              onClick={fetchMusicEvents}
-              className="text-red-300 text-xs underline mt-1 hover:text-white transition-colors"
-            >
-              Reintentar
-            </button>
+      {/* ── GALERÍA ── */}
+      {!loading && gallery.length > 0 && (
+        <div className="px-5 pb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Images size={16} style={{ color: '#fb923c' }} />
+            <h3 className="font-bold text-sm uppercase tracking-wider text-white">Galería</h3>
+            <span className="text-xs px-2 py-0.5 rounded-full ml-1" style={{ background: 'rgba(249,115,22,0.2)', color: '#fb923c' }}>
+              {gallery.length} fotos
+            </span>
           </div>
-        </div>
-      )}
 
-      {/* Featured Event Card */}
-      {!loading && !error && featuredEvent && (
-        <div className="relative z-10 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden mb-6">
-          {/* Event Image */}
-          <div className="relative h-40 w-full">
-            <img 
-              src={featuredEvent.imageUrl} 
-              alt={featuredEvent.eventName}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
-            
-            {/* Date Badge */}
-            <div className="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1.5 rounded-xl flex items-center gap-2 shadow-lg">
-              <Calendar size={14} />
-              <span className="text-xs font-bold">{formatDate(featuredEvent.date)}</span>
-            </div>
-            
-            {/* Live Badge */}
-            <div className="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded-lg flex items-center gap-1 animate-pulse">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span className="text-[10px] font-black uppercase">Live</span>
-            </div>
-          </div>
-          
-          {/* Event Info */}
-          <div className="p-4">
-            <h3 className="text-white font-black text-lg leading-tight mb-1">
-              {featuredEvent.eventName}
-            </h3>
-            <p className="text-cyan-200 text-sm mb-3 flex items-center gap-2">
-              <Music size={14} />
-              Artista: <span className="font-semibold">{featuredEvent.artistName}</span>
-            </p>
-            
-            {featuredEvent.description && (
-              <p className="text-white/70 text-xs mb-4 line-clamp-2">
-                {featuredEvent.description}
-              </p>
-            )}
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-white/60 text-xs">Desde</span>
-                <p className="text-orange-400 font-black text-xl">
-                  ${featuredEvent.price.toLocaleString()} <span className="text-sm font-normal text-white/60">COP</span>
-                </p>
-              </div>
-              
-              <button 
-                onClick={() => handleReservation(featuredEvent)}
-                className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-5 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg active:scale-95"
+          {/* Grid 2 columnas + scroll */}
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
+            {/* Primera columna: imagen grande */}
+            {gallery[0] && (
+              <div
+                className="flex-shrink-0 w-52 rounded-2xl overflow-hidden cursor-pointer relative group"
+                style={{ height: 220, border: '1px solid rgba(255,255,255,0.1)' }}
+                onClick={() => setActiveGalleryIdx(activeGalleryIdx === 0 ? null : 0)}
               >
-                <Ticket size={16} />
-                Reservar Cupo
+                <img src={gallery[0].image} alt={gallery[0].title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)' }} />
+                <div className="absolute bottom-0 left-0 right-0 p-3">
+                  <p className="text-white text-xs font-bold leading-tight truncate">{gallery[0].title}</p>
+                  {gallery[0].category && <p className="text-[10px] mt-0.5 truncate" style={{ color: 'rgba(165,243,252,0.7)' }}>{gallery[0].category}</p>}
+                  {gallery[0].price ? <p className="text-[10px] font-black mt-0.5" style={{ color: '#fb923c' }}>${gallery[0].price.toLocaleString()}</p> : null}
+                </div>
+              </div>
+            )}
+
+            {/* Resto: columnas de 2 fotos apiladas */}
+            {Array.from({ length: Math.ceil((gallery.length - 1) / 2) }).map((_, colIdx) => {
+              const i1 = 1 + colIdx * 2;
+              const i2 = i1 + 1;
+              return (
+                <div key={colIdx} className="flex-shrink-0 flex flex-col gap-2" style={{ width: 128 }}>
+                  {[i1, i2].map((idx) => gallery[idx] && (
+                    <div
+                      key={idx}
+                      className="rounded-xl overflow-hidden cursor-pointer relative group"
+                      style={{ height: 104, border: '1px solid rgba(255,255,255,0.08)' }}
+                      onClick={() => setActiveGalleryIdx(activeGalleryIdx === idx ? null : idx)}
+                    >
+                      <img src={gallery[idx].image} alt={gallery[idx].title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)' }} />
+                      <div className="absolute bottom-0 left-0 right-0 p-2">
+                        <p className="text-white text-[10px] font-bold leading-tight truncate">{gallery[idx].title}</p>
+                        {gallery[idx].price ? <p className="text-[9px] font-black" style={{ color: '#fb923c' }}>${gallery[idx].price.toLocaleString()}</p> : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Detalle expandido al tocar imagen */}
+          {activeGalleryIdx !== null && gallery[activeGalleryIdx] && (
+            <div className="mt-3 rounded-2xl p-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <img src={gallery[activeGalleryIdx].image} alt="" className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-bold text-sm truncate">{gallery[activeGalleryIdx].title}</p>
+                <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(165,243,252,0.6)' }}>{gallery[activeGalleryIdx].category}</p>
+                {gallery[activeGalleryIdx].price && <p className="text-sm font-black mt-0.5" style={{ color: '#fb923c' }}>${gallery[activeGalleryIdx].price.toLocaleString()} COP</p>}
+              </div>
+              <button
+                onClick={() => setActiveGalleryIdx(null)}
+                className="text-xs px-3 py-1.5 rounded-lg font-semibold flex-shrink-0"
+                style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}
+              >
+                ✕
               </button>
             </div>
-          </div>
+          )}
         </div>
       )}
 
-      {/* Empty State */}
-      {!loading && !error && events.length === 0 && (
-        <div className="text-center py-8">
-          <Music size={48} className="text-cyan-300/50 mx-auto mb-3" />
-          <p className="text-cyan-100/70 text-sm">
-            No hay eventos programados por ahora
-          </p>
-          <p className="text-cyan-200/50 text-xs mt-1">
-            ¡Pronto anunciaremos nuevas fechas!
-          </p>
-        </div>
-      )}
-
-      {/* Artist Showcase */}
+      {/* ── ARTISTAS ── */}
       {!loading && !error && artists.length > 0 && (
-        <div className="relative z-10">
+        <div className="px-5 pb-5">
           <div className="flex items-center gap-2 mb-4">
-            <Music size={16} className="text-orange-400" />
-            <h3 className="text-white font-bold text-sm uppercase tracking-wider">
-              Nuestros Artistas
-            </h3>
+            <Music size={16} style={{ color: '#fb923c' }} />
+            <h3 className="font-bold text-sm uppercase tracking-wider text-white">Artistas</h3>
           </div>
-          
-          {/* Horizontal Scrollable Grid */}
-          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2">
+          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
             {artists.map((artist, index) => (
-              <div 
+              <div
                 key={index}
-                onClick={() => onNavigate(AppRoute.ARTIST_DETAIL, { name: artist.name, image: artist.image, spotifyLink: artist.spotifyLink })}
-                className="flex-shrink-0 w-28 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden hover:bg-white/20 transition-all cursor-pointer group"
+                onClick={() => onNavigate(AppRoute.ARTIST_DETAIL, { name: artist.artistName, image: artist.imageUrl, spotifyLink: artist.spotifyLink })}
+                className="flex-shrink-0 w-28 rounded-2xl overflow-hidden cursor-pointer group active:scale-95 transition-all"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
               >
-                {/* Artist Image */}
-                <div className="h-28 w-full relative overflow-hidden">
-                  <img 
-                    src={artist.image} 
-                    alt={artist.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                <div className="relative h-28 overflow-hidden">
+                  <img src={artist.imageUrl} alt={artist.artistName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 60%)' }} />
+                  {artist.genre && (
+                    <span className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,182,212,0.7)', color: '#fff' }}>
+                      {artist.genre}
+                    </span>
+                  )}
                 </div>
-                
-                {/* Artist Info */}
-                <div className="p-3 text-center">
-                  <h4 className="text-white font-bold text-xs truncate mb-2">
-                    {artist.name}
-                  </h4>
-                  
+                <div className="p-2.5 text-center">
+                  <h4 className="text-white font-bold text-[11px] truncate mb-1">{artist.artistName}</h4>
                   {artist.spotifyLink ? (
-                    <a 
-                      href={artist.spotifyLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-400 hover:text-green-300 transition-colors"
-                    >
-                      <ExternalLink size={10} />
-                      Spotify
-                    </a>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#4ade80' }}>
+                      <ExternalLink size={9} /> Spotify
+                    </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-cyan-300">
-                      <Sparkles size={10} />
-                      Ver Creaciones
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#67e8f9' }}>
+                      <Sparkles size={9} /> Ver perfil
                     </span>
                   )}
                 </div>
@@ -257,13 +384,15 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
         </div>
       )}
 
-      {/* Footer CTA */}
+      {/* ── FOOTER CTA ── */}
       {!loading && !error && events.length > 0 && (
-        <div className="mt-6 text-center">
-          <button 
+        <div className="px-5 pb-6 pt-1 text-center">
+          <button
             onClick={() => onNavigate(AppRoute.RIMM_CLUSTER)}
-            className="text-cyan-200 text-sm font-semibold hover:text-white transition-colors underline underline-offset-4"
+            className="inline-flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl transition-all active:scale-95"
+            style={{ background: 'rgba(6,182,212,0.15)', border: '1px solid rgba(6,182,212,0.3)', color: '#22d3ee' }}
           >
+            <MapPin size={14} />
             Ver todos los eventos →
           </button>
         </div>
