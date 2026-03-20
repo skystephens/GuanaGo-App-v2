@@ -1,6 +1,36 @@
 // ================= FUNCIONES COTIZADOR B2B (importadas y adaptadas) =================
 import axios from 'axios';
 
+/**
+ * Extrae la URL de imagen desde el campo Imagenurl/ImagenURL de Airtable.
+ * Maneja 3 formatos:
+ *  1. String directo (URL de WordPress u otra fuente estable)
+ *  2. Array de adjuntos Airtable: [{url: '...', filename: '...'}]
+ *  3. Array de strings
+ */
+function extractImageUrl(field: any): string {
+  if (!field) return '';
+  if (typeof field === 'string') return field;
+  if (Array.isArray(field) && field.length > 0) {
+    const first = field[0];
+    if (typeof first === 'string') return first;
+    if (first?.url) return first.url;
+    if (first?.thumbnails?.large?.url) return first.thumbnails.large.url;
+  }
+  return '';
+}
+
+function extractAllImageUrls(field: any): string[] {
+  if (!field) return [];
+  if (typeof field === 'string' && field) return [field];
+  if (Array.isArray(field)) {
+    return field
+      .map((img: any) => (typeof img === 'string' ? img : img?.url || ''))
+      .filter((url: string) => !!url);
+  }
+  return [];
+}
+
 // Calcula el precio de alojamiento según tipo y cantidad de huéspedes
 export function calculateAccommodationPrice(accommodation: any, numHuespedes: number): number {
   const tipo = accommodation.accommodationType || 'Hotel';
@@ -139,8 +169,8 @@ export async function getAccommodations() {
       ubicacion: record.fields.Ubicacion || '',
       telefono: record.fields['Telefono Contacto'] || record.fields.Telefono || '',
       email: record.fields['Email Contacto'] || record.fields.Email || '',
-      imageUrl: record.fields.Imagenurl?.[0]?.url || record.fields.ImagenURL?.[0]?.url || record.fields.Imagenurl?.[0] || record.fields.ImagenURL?.[0] || '',
-      images: (record.fields.Imagenurl || record.fields.ImagenURL || []).map((img: any) => typeof img === 'string' ? img : img?.url || '').filter((url: string) => url),
+      imageUrl: extractImageUrl(record.fields.Imagenurl ?? record.fields.ImagenURL),
+      images: extractAllImageUrls(record.fields.Imagenurl ?? record.fields.ImagenURL),
       estrellas: parseInt(record.fields.Rating || record.fields.Estrellas || 0),
       amenities: record.fields.Amenities || [],
       servicios: record.fields.Servicios || record.fields.Amenities || [],
