@@ -4,6 +4,7 @@ import { ArrowLeft, Filter, Star, Clock, Anchor, MapPin, Users, Calendar } from 
 import { api } from '../services/api';
 import { AppRoute, Tour } from '../types';
 import { POPULAR_TOURS } from '../constants';
+import ServiceBookingCard from '../components/ServiceBookingCard';
 
 interface TourListProps {
   onBack: () => void;
@@ -123,81 +124,11 @@ const TourList: React.FC<TourListProps> = ({ onBack, onNavigate }) => {
                 </div>
              ) : (
                 filteredTours.map(tour => (
-                    <div 
-                      key={tour.id} 
-                      onClick={() => onNavigate(AppRoute.TOUR_DETAIL, tour)}
-                      className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer group"
-                    >
-                      <div className="relative h-52 overflow-hidden">
-                        <img 
-                          src={tour.image} 
-                          alt={tour.title} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400';
-                          }}
-                        />
-                        {/* Badge de rating */}
-                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-sm">
-                          <Star size={14} className="text-yellow-400 fill-current" />
-                          <span className="text-sm font-bold text-gray-900">{tour.rating || 4.5}</span>
-                        </div>
-                        {/* Badge raizal */}
-                        {tour.isRaizal && (
-                          <div className="absolute top-3 left-3 bg-amber-500 text-white px-2.5 py-1 rounded-lg text-xs font-bold">
-                            ⭐ Raizal
-                          </div>
-                        )}
-                        {/* Overlay gradient */}
-                        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent" />
-                      </div>
-                      
-                      <div className="p-5">
-                        <h3 className="text-lg font-bold text-gray-900 mb-2 leading-tight group-hover:text-green-600 transition-colors">
-                          {tour.title}
-                        </h3>
-                        
-                        {/* Descripción */}
-                        {tour.description && (
-                          <p className="text-gray-500 text-sm mb-3 line-clamp-2">
-                            {tour.description}
-                          </p>
-                        )}
-                        
-                        {/* Info row */}
-                        <div className="flex flex-wrap items-center gap-3 text-gray-500 text-xs mb-4">
-                          <div className="flex items-center gap-1">
-                            <Clock size={14} className="text-green-500" />
-                            <span>{tour.duration || '4 horas'}</span>
-                          </div>
-                          <span className="text-gray-300">•</span>
-                          <div className="flex items-center gap-1">
-                            <MapPin size={14} className="text-green-500" />
-                            <span>San Andrés</span>
-                          </div>
-                          <span className="text-gray-300">•</span>
-                          <div className="flex items-center gap-1">
-                            <Calendar size={14} className="text-green-500" />
-                            <span>Disponible</span>
-                          </div>
-                        </div>
-                        
-                        {/* Price and CTA */}
-                        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                          <div>
-                            <span className="text-xs text-gray-400 block">Desde</span>
-                            <span className="text-2xl font-bold text-green-600">
-                              ${typeof tour.price === 'number' ? tour.price.toLocaleString('es-CO') : tour.price}
-                            </span>
-                            <span className="text-xs text-gray-400 ml-1">COP</span>
-                          </div>
-                          <button className="bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold group-hover:bg-green-700 transition-colors shadow-md hover:shadow-lg flex items-center gap-2">
-                            <Users size={16} />
-                            Reservar
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <ServiceBookingCard
+                      key={tour.id}
+                      service={tour}
+                      onViewDetails={() => onNavigate(AppRoute.TOUR_DETAIL, tour)}
+                    />
                 ))
              )}
           </div>

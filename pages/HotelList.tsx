@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Filter, MapPin, Star, Wifi, Droplets, Calendar, Users, Search, ChevronDown, X } from 'lucide-react';
 import { hotelCacheService } from '../services/hotelCacheService';
 import { Tour, AppRoute } from '../types';
+import ServiceBookingCard from '../components/ServiceBookingCard';
 
 interface HotelListProps {
   onBack: () => void;
@@ -322,70 +323,11 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
               {filteredAccommodations.length} alojamiento{filteredAccommodations.length !== 1 ? 's' : ''} disponible{filteredAccommodations.length !== 1 ? 's' : ''}
             </p>
             {filteredAccommodations.map(hotel => (
-              <div
+              <ServiceBookingCard
                 key={hotel.id}
-                onClick={() => {
-                  console.log('🏨 Navegando a HOTEL_DETAIL con:', {
-                    id: hotel.id,
-                    title: hotel.title,
-                    price: hotel.price,
-                    keys: Object.keys(hotel)
-                  });
-                  onNavigate(AppRoute.HOTEL_DETAIL, hotel);
-                }}
-                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer flex flex-col"
-              >
-                <div className="h-48 relative bg-gray-100">
-                  <img
-                    src={hotel.image}
-                    alt={hotel.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80';
-                    }}
-                  />
-                  <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-lg flex items-center gap-1 text-white">
-                    <MapPin size={12} />
-                    <span className="text-xs font-medium truncate max-w-[200px]">
-                      {hotel.location || 'San Andrés'}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-gray-900 leading-tight flex-1 mr-2">
-                      {hotel.title}
-                    </h3>
-                    <div className="flex flex-col items-end">
-                      <div className="flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-md">
-                        <Star size={12} className="text-green-600 fill-current" />
-                        <span className="text-xs font-bold text-green-700">
-                          {hotel.rating || 4.5}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-xs text-gray-600 mb-3">
-                    <p>Capacidad: {hotel.capacity} huésped{hotel.capacity !== '1' ? 'es' : ''}</p>
-                  </div>
-
-                  <div className="flex items-end justify-between border-t border-gray-100 pt-3">
-                    <p className="text-xs text-gray-500 line-clamp-1 flex-1 mr-4">
-                      {hotel.description}
-                    </p>
-                    <div className="text-right whitespace-nowrap">
-                      <span className="text-xl font-bold text-gray-900">
-                        ${(parseInt(hotel.price?.toString() || '0') * nights).toLocaleString()}
-                      </span>
-                      <span className="text-xs text-gray-400 block">
-                        ${hotel.price?.toLocaleString() || 'N/A'} / noche
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                service={hotel}
+                onViewDetails={() => onNavigate(AppRoute.HOTEL_DETAIL, hotel)}
+              />
             ))}
           </div>
         ) : (

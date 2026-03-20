@@ -5,24 +5,37 @@ import {
   Handle, Position, Panel,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { ArrowLeft, TowerControl, RefreshCw, Network, Info } from 'lucide-react';
+import { ArrowLeft, TowerControl, RefreshCw, Network, Info, Layers } from 'lucide-react';
 import { AppRoute } from '../../types';
 import type { SeccionControl, TareaControl, EstadoTarea } from './AdminTorreControl';
+
+type MapaVista = 'proyectos' | 'arquitectura';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const TORRE_KEY = 'guanago_torre_v3';
 
 const SECTION_COLORS: Record<string, { bg: string; border: string; text: string; glow: string }> = {
-  aliados:     { bg: '#022c22', border: '#34d399', text: '#6ee7b7', glow: '#34d39933' },
-  pwa:         { bg: '#0c1a2e', border: '#60a5fa', text: '#93c5fd', glow: '#60a5fa33' },
-  ads:         { bg: '#2d1800', border: '#fbbf24', text: '#fde68a', glow: '#fbbf2433' },
-  seguridad:   { bg: '#2d0a0a', border: '#f87171', text: '#fca5a5', glow: '#f8717133' },
-  pagos:       { bg: '#1e0a3d', border: '#c084fc', text: '#d8b4fe', glow: '#c084fc33' },
-  lanzamiento: { bg: '#2d0a1e', border: '#f472b6', text: '#fbcfe8', glow: '#f472b633' },
-  firebase:    { bg: '#2d1000', border: '#fb923c', text: '#fed7aa', glow: '#fb923c33' },
-  ia:          { bg: '#1a0533', border: '#a78bfa', text: '#ddd6fe', glow: '#a78bfa33' },
-  comercial:   { bg: '#022926', border: '#2dd4bf', text: '#99f6e4', glow: '#2dd4bf33' },
-  marca:       { bg: '#031d26', border: '#22d3ee', text: '#a5f3fc', glow: '#22d3ee33' },
+  aliados:           { bg: '#022c22', border: '#34d399', text: '#6ee7b7', glow: '#34d39933' },
+  pwa:               { bg: '#0c1a2e', border: '#60a5fa', text: '#93c5fd', glow: '#60a5fa33' },
+  ads:               { bg: '#2d1800', border: '#fbbf24', text: '#fde68a', glow: '#fbbf2433' },
+  seguridad:         { bg: '#2d0a0a', border: '#f87171', text: '#fca5a5', glow: '#f8717133' },
+  pagos:             { bg: '#1e0a3d', border: '#c084fc', text: '#d8b4fe', glow: '#c084fc33' },
+  lanzamiento:       { bg: '#2d0a1e', border: '#f472b6', text: '#fbcfe8', glow: '#f472b633' },
+  firebase:          { bg: '#2d1000', border: '#fb923c', text: '#fed7aa', glow: '#fb923c33' },
+  ia:                { bg: '#1a0533', border: '#a78bfa', text: '#ddd6fe', glow: '#a78bfa33' },
+  comercial:         { bg: '#022926', border: '#2dd4bf', text: '#99f6e4', glow: '#2dd4bf33' },
+  marca:             { bg: '#031d26', border: '#22d3ee', text: '#a5f3fc', glow: '#22d3ee33' },
+  guiasai_agencias:  { bg: '#2d1500', border: '#fb7235', text: '#fed7b0', glow: '#fb723533' },
+  lean_canvas:       { bg: '#140a2d', border: '#818cf8', text: '#c7d2fe', glow: '#818cf833' },
+  marketing:         { bg: '#2d0a1a', border: '#f472b6', text: '#fce7f3', glow: '#f472b633' },
+  tokens_blockchain: { bg: '#2d2400', border: '#eab308', text: '#fef08a', glow: '#eab30833' },
+  experiencia_b2c:   { bg: '#052e16', border: '#4ade80', text: '#86efac', glow: '#4ade8033' },
+  airtable_datos:    { bg: '#1a2e05', border: '#a3e635', text: '#d9f99d', glow: '#a3e63533' },
+  backend_faltante:  { bg: '#0a1a2e', border: '#38bdf8', text: '#7dd3fc', glow: '#38bdf833' },
+  admin_metricas:    { bg: '#2e0a0a', border: '#f87171', text: '#fecaca', glow: '#f8717133' },
+  b2c:               { bg: '#0a1e2e', border: '#7dd3fc', text: '#bae6fd', glow: '#7dd3fc33' },
+  b2b:               { bg: '#1e1a05', border: '#fbbf24', text: '#fde68a', glow: '#fbbf2433' },
+  ceo:               { bg: '#2e0a14', border: '#fb7185', text: '#fecdd3', glow: '#fb718533' },
 };
 
 const ESTADO_COLOR: Record<EstadoTarea, { dot: string; label: string }> = {
@@ -169,10 +182,121 @@ function TaskNode({ data }: NodeProps) {
   );
 }
 
+// ─── Node: Architecture Block ─────────────────────────────────────────────────
+function ArchNode({ data }: NodeProps) {
+  const { label, sublabel, emoji, color, border, bg, done } = data as {
+    label: string; sublabel: string; emoji: string;
+    color: string; border: string; bg: string; done: boolean;
+  };
+  return (
+    <div style={{
+      background: bg,
+      border: `2px solid ${border}`,
+      borderRadius: 12,
+      padding: '10px 14px',
+      minWidth: 148,
+      maxWidth: 180,
+      boxShadow: `0 0 18px ${border}44`,
+      opacity: done ? 1 : 0.75,
+    }}>
+      <Handle type="target" position={Position.Left}  style={{ opacity: 0, pointerEvents: 'none' }} />
+      <Handle type="source" position={Position.Right} style={{ opacity: 0, pointerEvents: 'none' }} />
+      <Handle type="target" position={Position.Top}   style={{ opacity: 0, pointerEvents: 'none' }} />
+      <Handle type="source" position={Position.Bottom} style={{ opacity: 0, pointerEvents: 'none' }} />
+      <div style={{ fontSize: 18, marginBottom: 4 }}>{emoji}</div>
+      <div style={{ color, fontWeight: 700, fontSize: 12, lineHeight: 1.3 }}>{label}</div>
+      <div style={{ color: '#64748b', fontSize: 10, marginTop: 3, lineHeight: 1.4 }}>{sublabel}</div>
+      {done && <div style={{ color: '#22c55e', fontSize: 9, marginTop: 4, fontWeight: 700 }}>✓ ACTIVO</div>}
+      {!done && <div style={{ color: '#f59e0b', fontSize: 9, marginTop: 4, fontWeight: 700 }}>⬡ PENDIENTE</div>}
+    </div>
+  );
+}
+
+// ─── Architecture graph (static) ─────────────────────────────────────────────
+function buildArchNodes(): { nodes: Node[]; edges: Edge[] } {
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
+  const x0 = -600;
+
+  // ── CAPA 0: Centro/marca ──
+  nodes.push({ id: 'arch-root', type: 'archNode', position: { x: -90, y: 0 }, data: {
+    label: 'GuanaGO', sublabel: 'Plataforma turismo San Andrés', emoji: '🗺️',
+    color: '#38bdf8', border: '#38bdf8', bg: '#071728', done: true,
+  }});
+
+  // ── CAPA 1: Canales de acceso (arriba) ──
+  const canales = [
+    { id: 'ch-b2c',     label: 'App B2C Turista',    sublabel: 'Descubrir, reservar, itinerario', emoji: '🌴', color: '#4ade80', border: '#4ade80', bg: '#052e16', done: true },
+    { id: 'ch-b2b',     label: 'Portal Agencias',    sublabel: 'GuiaSAI · cotizador B2B + PDF', emoji: '🏢', color: '#fbbf24', border: '#fbbf24', bg: '#1c1100', done: true },
+    { id: 'ch-partner', label: 'Portal Aliado',       sublabel: 'Dashboard + Scanner QR + Wallet', emoji: '🤝', color: '#a78bfa', border: '#a78bfa', bg: '#1a0533', done: true },
+    { id: 'ch-admin',   label: 'Panel Admin CEO',     sublabel: 'Torre Control · IA · Métricas', emoji: '⚙️', color: '#fb7185', border: '#fb7185', bg: '#2e0714', done: true },
+  ];
+  canales.forEach((c, i) => {
+    const xPos = x0 + i * 320;
+    nodes.push({ id: c.id, type: 'archNode', position: { x: xPos, y: -230 }, data: c });
+    edges.push({ id: `e-root-${c.id}`, source: 'arch-root', target: c.id, type: 'smoothstep',
+      style: { stroke: c.border + '66', strokeWidth: 1.5 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: c.border + '66', width: 10, height: 10 }});
+  });
+
+  // ── CAPA 2: Features core (debajo del root) ──
+  const features = [
+    { id: 'ft-catalogo',    label: 'Catálogo Servicios', sublabel: 'Tours · Hoteles · Taxis · Paquetes', emoji: '📋', color: '#34d399', border: '#34d399', bg: '#022c22', done: true },
+    { id: 'ft-itinerario',  label: 'Itinerario IA',      sublabel: 'Plan día a día personalizado', emoji: '📅', color: '#60a5fa', border: '#60a5fa', bg: '#0c1a2e', done: false },
+    { id: 'ft-reservas',    label: 'Reservas & Pagos',   sublabel: 'Carrito → Wompi → Voucher', emoji: '💳', color: '#c084fc', border: '#c084fc', bg: '#1e0a3d', done: false },
+    { id: 'ft-mapa',        label: 'Mapa Interactivo',   sublabel: 'Mapbox · Directorio · POIs', emoji: '🗺️', color: '#fbbf24', border: '#fbbf24', bg: '#2d1800', done: true },
+    { id: 'ft-caribbean',   label: 'Caribbean Night',    sublabel: 'Eventos RIMM · Artistas · Tickets', emoji: '🎶', color: '#f472b6', border: '#f472b6', bg: '#2d0a1e', done: true },
+    { id: 'ft-recomen',     label: 'Recomendaciones',    sublabel: 'IA personalizada por perfil', emoji: '✨', color: '#a78bfa', border: '#a78bfa', bg: '#1a0533', done: false },
+    { id: 'ft-reseñas',     label: 'Reseñas',            sublabel: 'Calificaciones verificadas', emoji: '⭐', color: '#fde68a', border: '#fbbf24', bg: '#2d1800', done: false },
+    { id: 'ft-wallet',      label: 'GuanaWallet',        sublabel: 'Puntos · Tokens · Beneficios', emoji: '👛', color: '#6ee7b7', border: '#34d399', bg: '#022c22', done: true },
+  ];
+  const featCols = 4;
+  features.forEach((f, i) => {
+    const col = i % featCols;
+    const row = Math.floor(i / featCols);
+    nodes.push({ id: f.id, type: 'archNode', position: { x: x0 + col * 310, y: 200 + row * 190 }, data: f });
+    edges.push({ id: `e-root-${f.id}`, source: 'arch-root', target: f.id, type: 'smoothstep',
+      style: { stroke: f.border + '44', strokeWidth: 1.2 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: f.border + '44', width: 9, height: 9 }});
+  });
+
+  // ── CAPA 3: Infraestructura (fondo) ──
+  const infra = [
+    { id: 'in-airtable',  label: 'Airtable',       sublabel: 'Captura datos · Fuente verdad', emoji: '📊', color: '#a3e635', border: '#a3e635', bg: '#1a2e05', done: true },
+    { id: 'in-firestore', label: 'Firestore',       sublabel: 'Runtime · Conversaciones · Cache', emoji: '🔥', color: '#fb923c', border: '#fb923c', bg: '#2d1000', done: false },
+    { id: 'in-auth',      label: 'Firebase Auth',   sublabel: 'Google · Email · Custom Claims', emoji: '🔐', color: '#f87171', border: '#f87171', bg: '#2d0a0a', done: true },
+    { id: 'in-groq',      label: 'Groq / Llama',    sublabel: 'IA: cotizador · turista · admin', emoji: '🤖', color: '#ddd6fe', border: '#a78bfa', bg: '#1a0533', done: true },
+    { id: 'in-mapbox',    label: 'Mapbox',           sublabel: 'Mapas interactivos + rutas', emoji: '📍', color: '#7dd3fc', border: '#38bdf8', bg: '#071728', done: true },
+    { id: 'in-storage',   label: 'Firebase Storage', sublabel: 'Imágenes servicios + galería', emoji: '🖼️', color: '#fed7aa', border: '#fb923c', bg: '#2d1000', done: false },
+    { id: 'in-make',      label: 'Make.com',         sublabel: 'Automatizaciones · Sync · Email', emoji: '⚡', color: '#fde68a', border: '#fbbf24', bg: '#2d1800', done: true },
+    { id: 'in-wompi',     label: 'Wompi / PayU',     sublabel: 'Pasarela de pago Colombia', emoji: '💰', color: '#d8b4fe', border: '#c084fc', bg: '#1e0a3d', done: false },
+  ];
+  infra.forEach((inf, i) => {
+    const col = i % featCols;
+    const row = Math.floor(i / featCols);
+    nodes.push({ id: inf.id, type: 'archNode', position: { x: x0 + col * 310, y: 580 + row * 190 }, data: inf });
+  });
+  // Conectar features → infra
+  const featureInfra: [string, string][] = [
+    ['ft-catalogo', 'in-airtable'], ['ft-catalogo', 'in-firestore'],
+    ['ft-itinerario', 'in-firestore'], ['ft-recomen', 'in-groq'],
+    ['ft-reservas', 'in-wompi'], ['ft-reservas', 'in-airtable'],
+    ['ft-mapa', 'in-mapbox'], ['ft-reseñas', 'in-firestore'],
+    ['ft-wallet', 'in-firestore'],
+  ];
+  featureInfra.forEach(([s, t]) => {
+    edges.push({ id: `e-${s}-${t}`, source: s, target: t, type: 'smoothstep',
+      style: { stroke: '#33415566', strokeWidth: 1 }});
+  });
+
+  return { nodes, edges };
+}
+
 const nodeTypes = {
   rootNode:    RootNode,
   sectionNode: SectionNode,
   taskNode:    TaskNode,
+  archNode:    ArchNode,
 };
 
 // ─── Legend ───────────────────────────────────────────────────────────────────
@@ -233,6 +357,7 @@ interface Props {
 export default function AdminMapaMental({ onBack, onNavigate }: Props) {
   const [secciones, setSecciones] = useState<SeccionControl[]>(() => loadTorre());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [vista, setVista] = useState<MapaVista>('proyectos');
 
   const toggleSection = useCallback((id: string) => {
     setExpanded(prev => {
@@ -322,11 +447,19 @@ export default function AdminMapaMental({ onBack, onNavigate }: Props) {
     return { builtNodes: nodes, builtEdges: edges };
   }, [secciones, expanded, toggleSection]);
 
+  const archData = useMemo(() => buildArchNodes(), []);
+
   const [nodes, setNodes, onNodesChange] = useNodesState(builtNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(builtEdges);
 
-  useEffect(() => { setNodes(builtNodes); }, [builtNodes, setNodes]);
-  useEffect(() => { setEdges(builtEdges); }, [builtEdges, setEdges]);
+  useEffect(() => { if (vista === 'proyectos') setNodes(builtNodes); }, [builtNodes, setNodes, vista]);
+  useEffect(() => { if (vista === 'proyectos') setEdges(builtEdges); }, [builtEdges, setEdges, vista]);
+  useEffect(() => {
+    if (vista === 'arquitectura') {
+      setNodes(archData.nodes);
+      setEdges(archData.edges);
+    }
+  }, [vista, archData, setNodes, setEdges]);
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -349,24 +482,54 @@ export default function AdminMapaMental({ onBack, onNavigate }: Props) {
 
         <Network size={18} style={{ color: '#38bdf8' }} />
         <span style={{ color: '#e2e8f0', fontWeight: 700, fontSize: 15 }}>Mapa Mental</span>
-        <span style={{ color: '#334155', fontSize: 13 }}>—</span>
-        <span style={{ color: '#64748b', fontSize: 12 }}>Haz clic en un nodo para expandir sus tareas</span>
+
+        {/* Vista toggle */}
+        <div style={{ display: 'flex', background: '#1e293b', borderRadius: 8, padding: 3, gap: 2, marginLeft: 6 }}>
+          <button
+            onClick={() => setVista('proyectos')}
+            style={{
+              color: vista === 'proyectos' ? '#e2e8f0' : '#64748b',
+              background: vista === 'proyectos' ? '#0f172a' : 'transparent',
+              border: 'none', borderRadius: 6, padding: '4px 11px', cursor: 'pointer', fontSize: 12,
+              display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s',
+            }}
+          >
+            <Network size={13} /> Proyectos
+          </button>
+          <button
+            onClick={() => setVista('arquitectura')}
+            style={{
+              color: vista === 'arquitectura' ? '#e2e8f0' : '#64748b',
+              background: vista === 'arquitectura' ? '#0f172a' : 'transparent',
+              border: 'none', borderRadius: 6, padding: '4px 11px', cursor: 'pointer', fontSize: 12,
+              display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s',
+            }}
+          >
+            <Layers size={13} /> Arquitectura
+          </button>
+        </div>
+
+        <span style={{ color: '#64748b', fontSize: 11, marginLeft: 6 }}>
+          {vista === 'proyectos' ? 'Clic en sección para expandir tareas' : 'Plataforma GuanaGO · componentes activos y pendientes'}
+        </span>
 
         <div style={{ flex: 1 }} />
 
-        {/* Expand / Collapse all */}
-        <button
-          onClick={expandAll}
-          style={{ color: '#94a3b8', background: '#1e293b', border: '1px solid #334155', borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontSize: 12 }}
-        >
-          Expandir todo
-        </button>
-        <button
-          onClick={collapseAll}
-          style={{ color: '#94a3b8', background: '#1e293b', border: '1px solid #334155', borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontSize: 12 }}
-        >
-          Contraer todo
-        </button>
+        {/* Expand / Collapse all — only for proyectos */}
+        {vista === 'proyectos' && (<>
+          <button
+            onClick={expandAll}
+            style={{ color: '#94a3b8', background: '#1e293b', border: '1px solid #334155', borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontSize: 12 }}
+          >
+            Expandir todo
+          </button>
+          <button
+            onClick={collapseAll}
+            style={{ color: '#94a3b8', background: '#1e293b', border: '1px solid #334155', borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontSize: 12 }}
+          >
+            Contraer todo
+          </button>
+        </>)}
 
         <button
           onClick={reload}
@@ -420,15 +583,41 @@ export default function AdminMapaMental({ onBack, onNavigate }: Props) {
             maskColor="#02061766"
           />
 
-          {/* Stats panel — top right */}
-          <Panel position="top-right" style={{ margin: 12 }}>
-            <StatsBar secciones={secciones} />
-          </Panel>
+          {/* Stats panel — top right (proyectos only) */}
+          {vista === 'proyectos' && (
+            <Panel position="top-right" style={{ margin: 12 }}>
+              <StatsBar secciones={secciones} />
+            </Panel>
+          )}
 
-          {/* Legend — bottom left */}
-          <Panel position="bottom-left" style={{ margin: 12 }}>
-            <Legend />
-          </Panel>
+          {/* Arch legend — top right (arquitectura only) */}
+          {vista === 'arquitectura' && (
+            <Panel position="top-right" style={{ margin: 12 }}>
+              <div style={{
+                background: '#0f172a', border: '1px solid #1e293b',
+                borderRadius: 10, padding: '10px 14px', fontSize: 11, color: '#94a3b8',
+              }}>
+                <div style={{ fontWeight: 600, color: '#e2e8f0', marginBottom: 7 }}>Estado del componente</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
+                  <span style={{ color: '#22c55e', fontSize: 13 }}>✓</span>
+                  <span style={{ color: '#22c55e', fontWeight: 600 }}>ACTIVO</span>
+                  <span style={{ color: '#475569' }}>— en producción</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <span style={{ color: '#f59e0b', fontSize: 13 }}>⬡</span>
+                  <span style={{ color: '#f59e0b', fontWeight: 600 }}>PENDIENTE</span>
+                  <span style={{ color: '#475569' }}>— por implementar</span>
+                </div>
+              </div>
+            </Panel>
+          )}
+
+          {/* Legend — bottom left (proyectos only) */}
+          {vista === 'proyectos' && (
+            <Panel position="bottom-left" style={{ margin: 12 }}>
+              <Legend />
+            </Panel>
+          )}
 
           {/* Hint — bottom right */}
           <Panel position="bottom-right" style={{ margin: 12 }}>
