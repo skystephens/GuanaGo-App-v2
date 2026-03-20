@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Music, Calendar, ExternalLink, Loader2, AlertCircle, Ticket, Sparkles, Clock, MapPin, Images } from 'lucide-react';
+import { Music, Calendar, ExternalLink, Loader2, AlertCircle, Ticket, Sparkles, Clock, MapPin } from 'lucide-react';
 import { api } from '../services/api';
-import { airtableService } from '../services/airtableService';
 import { AppRoute } from '../types';
 
 interface MusicEvent {
@@ -19,24 +18,14 @@ interface MusicEvent {
   genre?: string;
 }
 
-interface GalleryItem {
-  id: string;
-  title: string;
-  image: string;
-  category: string;
-  price?: number;
-}
-
 interface CaribbeanNightSectionProps {
   onNavigate: (route: AppRoute, data?: any) => void;
 }
 
 const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigate }) => {
   const [events, setEvents] = useState<MusicEvent[]>([]);
-  const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeGalleryIdx, setActiveGalleryIdx] = useState<number | null>(null);
 
   useEffect(() => {
     fetchAll();
@@ -46,28 +35,8 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
     setLoading(true);
     setError(null);
     try {
-      const [eventsData, servicesData] = await Promise.all([
-        api.musicEvents.list(),
-        airtableService.getServices().catch(() => []),
-      ]);
-
+      const eventsData = await api.musicEvents.list();
       setEvents(eventsData || []);
-
-      // Construir galería desde ServiciosTuristicos_SAI
-      const items: GalleryItem[] = [];
-      (servicesData || []).forEach((s: any) => {
-        const imgs: string[] = s.images?.length ? s.images : s.gallery?.length ? s.gallery : s.image ? [s.image] : [];
-        imgs.slice(0, 3).forEach((img: string, i: number) => {
-          if (img) items.push({ id: `${s.id}-${i}`, title: s.title || s.name || s.nombre || '', image: img, category: s.type || s.tipo || s.category || '', price: s.price || s.precio });
-        });
-      });
-      // También añadir fotos de artistas si quedan pocos
-      if (items.length < 6) {
-        (eventsData || []).forEach((e: MusicEvent, i: number) => {
-          if (e.imageUrl) items.push({ id: `artist-${i}`, title: e.artistName, image: e.imageUrl, category: e.genre || 'Artista' });
-        });
-      }
-      setGallery(items);
     } catch (err) {
       console.error('Error fetching Caribbean Night:', err);
       setError('No pudimos cargar los eventos. Intenta de nuevo.');
@@ -264,83 +233,6 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
           )}
         </div>
       </div>
-
-      {/* ── GALERÍA ── */}
-      {!loading && gallery.length > 0 && (
-        <div className="px-5 pb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Images size={16} style={{ color: '#fb923c' }} />
-            <h3 className="font-bold text-sm uppercase tracking-wider text-white">Galería</h3>
-            <span className="text-xs px-2 py-0.5 rounded-full ml-1" style={{ background: 'rgba(249,115,22,0.2)', color: '#fb923c' }}>
-              {gallery.length} fotos
-            </span>
-          </div>
-
-          {/* Grid 2 columnas + scroll */}
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
-            {/* Primera columna: imagen grande */}
-            {gallery[0] && (
-              <div
-                className="flex-shrink-0 w-52 rounded-2xl overflow-hidden cursor-pointer relative group"
-                style={{ height: 220, border: '1px solid rgba(255,255,255,0.1)' }}
-                onClick={() => setActiveGalleryIdx(activeGalleryIdx === 0 ? null : 0)}
-              >
-                <img src={gallery[0].image} alt={gallery[0].title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)' }} />
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <p className="text-white text-xs font-bold leading-tight truncate">{gallery[0].title}</p>
-                  {gallery[0].category && <p className="text-[10px] mt-0.5 truncate" style={{ color: 'rgba(165,243,252,0.7)' }}>{gallery[0].category}</p>}
-                  {gallery[0].price ? <p className="text-[10px] font-black mt-0.5" style={{ color: '#fb923c' }}>${gallery[0].price.toLocaleString()}</p> : null}
-                </div>
-              </div>
-            )}
-
-            {/* Resto: columnas de 2 fotos apiladas */}
-            {Array.from({ length: Math.ceil((gallery.length - 1) / 2) }).map((_, colIdx) => {
-              const i1 = 1 + colIdx * 2;
-              const i2 = i1 + 1;
-              return (
-                <div key={colIdx} className="flex-shrink-0 flex flex-col gap-2" style={{ width: 128 }}>
-                  {[i1, i2].map((idx) => gallery[idx] && (
-                    <div
-                      key={idx}
-                      className="rounded-xl overflow-hidden cursor-pointer relative group"
-                      style={{ height: 104, border: '1px solid rgba(255,255,255,0.08)' }}
-                      onClick={() => setActiveGalleryIdx(activeGalleryIdx === idx ? null : idx)}
-                    >
-                      <img src={gallery[idx].image} alt={gallery[idx].title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)' }} />
-                      <div className="absolute bottom-0 left-0 right-0 p-2">
-                        <p className="text-white text-[10px] font-bold leading-tight truncate">{gallery[idx].title}</p>
-                        {gallery[idx].price ? <p className="text-[9px] font-black" style={{ color: '#fb923c' }}>${gallery[idx].price.toLocaleString()}</p> : null}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Detalle expandido al tocar imagen */}
-          {activeGalleryIdx !== null && gallery[activeGalleryIdx] && (
-            <div className="mt-3 rounded-2xl p-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <img src={gallery[activeGalleryIdx].image} alt="" className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-bold text-sm truncate">{gallery[activeGalleryIdx].title}</p>
-                <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(165,243,252,0.6)' }}>{gallery[activeGalleryIdx].category}</p>
-                {gallery[activeGalleryIdx].price && <p className="text-sm font-black mt-0.5" style={{ color: '#fb923c' }}>${gallery[activeGalleryIdx].price.toLocaleString()} COP</p>}
-              </div>
-              <button
-                onClick={() => setActiveGalleryIdx(null)}
-                className="text-xs px-3 py-1.5 rounded-lg font-semibold flex-shrink-0"
-                style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}
-              >
-                ✕
-              </button>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ── ARTISTAS ── */}
       {!loading && !error && artists.length > 0 && (
