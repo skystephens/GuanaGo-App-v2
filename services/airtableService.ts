@@ -1069,6 +1069,12 @@ export async function getArtists() {
 /**
  * Crear un nuevo lead en Airtable
  */
+/** Obtener todos los leads/clientes (CRM admin) */
+export async function getAllLeads(maxRecords = 100) {
+  const records = await fetchTable(TABLES.LEADS, { maxRecords });
+  return records.map((r: any) => mapLeadToUser(r));
+}
+
 export async function createLead(leadData: {
   nombre: string;
   email: string;
