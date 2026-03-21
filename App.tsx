@@ -64,6 +64,7 @@ import AdminTorreControl from './pages/admin/AdminTorreControl';
 import AdminProcedimientosRAG from './pages/admin/AdminProcedimientosRAG';
 import AdminMapaMental from './pages/admin/AdminMapaMental';
 import AdminOperaciones from './pages/admin/AdminOperaciones';
+import AdminCerebro from './pages/admin/AdminCerebro';
 
 // Artista Portal
 import ArtistaPortal from './pages/ArtistaPortal';
@@ -212,6 +213,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_PROCEDIMIENTOS_RAG: return <AdminProcedimientosRAG onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_MAPA_MENTAL: return <AdminMapaMental onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_OPERACIONES: return <AdminOperaciones onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_CEREBRO: return <AdminCerebro onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };

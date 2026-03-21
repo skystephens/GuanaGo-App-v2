@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList, Clock, FileText, TowerControl, LayoutGrid } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList, Clock, FileText, TowerControl, LayoutGrid, Brain } from 'lucide-react';
 import { ADMIN_STATS, POPULAR_TOURS } from '../../constants';
 import { AppRoute } from '../../types';
 import { api } from '../../services/api';
@@ -232,6 +232,16 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                <div className="text-left">
                  <span className="text-sm font-bold text-emerald-300 block">Operaciones</span>
                  <span className="text-xs text-emerald-700">Catálogo · Channel Manager · CRM · Cotizaciones</span>
+               </div>
+             </button>
+             <button
+               onClick={() => onNavigate(AppRoute.ADMIN_CEREBRO)}
+               className="col-span-4 bg-gradient-to-r from-indigo-950 via-violet-950 to-indigo-950 p-4 rounded-xl border border-indigo-600 hover:border-indigo-400 flex items-center justify-center gap-3 text-center relative overflow-hidden"
+             >
+               <Brain size={22} className="text-indigo-400" />
+               <div className="text-left">
+                 <span className="text-sm font-bold text-indigo-300 block">Cerebro</span>
+                 <span className="text-xs text-indigo-700">Notas · Oportunidades · Exportar contexto para Claude</span>
                </div>
              </button>
              <button
