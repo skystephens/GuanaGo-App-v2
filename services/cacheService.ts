@@ -44,7 +44,7 @@ const METADATA_KEY = 'guanago_cache_metadata';
 
 // Tiempo máximo antes de considerar datos "viejos" (en ms)
 const MAX_AGE: Record<CacheKey, number> = {
-  services_turisticos: 1000 * 60 * 60 * 6,  // 6 horas
+  services_turisticos: 1000 * 60 * 60 * 48, // 48 horas — servicios cambian poco, se refresca manualmente
   directory_map: 1000 * 60 * 60 * 24,       // 24 horas
   artistas_rimm: 1000 * 60 * 60 * 12,       // 12 horas
   taxi_zones: 1000 * 60 * 60 * 24 * 7,      // 7 días (cambian poco)

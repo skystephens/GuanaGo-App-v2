@@ -17,7 +17,7 @@ import {
   validateCapacity,
   validateOperatingDay
 } from '../../services/quotesService';
-import { getServices } from '../../services/airtableService';
+import { cachedApi } from '../../services/cachedApi';
 import { downloadQuotePDF, previewQuote } from '../../services/pdfService';
 
 interface AdminQuotesProps {
@@ -83,8 +83,9 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   };
 
   const loadServices = async () => {
-    const data = await getServices();
-    setServices(data);
+    // Usa caché local (localStorage, TTL 48h) — evita llamar Airtable en cada apertura
+    const data = await cachedApi.getServices();
+    setServices(data as unknown as Tour[]);
   };
 
   const handleCreateCotizacion = async () => {

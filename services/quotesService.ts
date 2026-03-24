@@ -562,9 +562,10 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
   // Campos que PUEDEN editarse manualmente
   if (item.fecha !== undefined) fields['Fecha Inicio'] = item.fecha;
   if (item.fechaFin !== undefined) fields['Fecha Fin'] = item.fechaFin;
-  if (item.adultos !== undefined) fields['Adultos 18 - 99 años'] = item.adultos;
-  if (item.ninos !== undefined) fields['Niños 4 - 17 años'] = item.ninos;
-  if (item.bebes !== undefined) fields['Bebes 0 - 3 años'] = item.bebes;
+  // Solo enviar campos numéricos cuando tienen valor real (>0) para evitar 422
+  if (item.adultos !== undefined && item.adultos > 0) fields['Adultos 18 - 99 años'] = item.adultos;
+  if (item.ninos !== undefined && item.ninos > 0) fields['Niños 4 - 17 años'] = item.ninos;
+  if (item.bebes !== undefined && item.bebes > 0) fields['Bebes 0 - 3 años'] = item.bebes;
   if (item.precioEditado !== undefined && item.precioEditado > 0) fields['Precio Editado'] = item.precioEditado;
   if (item.subtotal !== undefined) fields['Precio Subtotal'] = item.subtotal;
   // Status no se envía al crear — Airtable lo maneja como campo calculado/default
