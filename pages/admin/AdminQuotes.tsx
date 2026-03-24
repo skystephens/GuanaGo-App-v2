@@ -103,7 +103,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       ninos: formData.ninos,
       bebes: formData.bebes,
       fechaCreacion: new Date().toISOString(),
-      estado: 'draft',
+      estado: 'Draft',
       precioTotal: 0,
       notasInternas: formData.notasInternas
     };
