@@ -567,7 +567,8 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
   if (item.bebes !== undefined) fields['Bebes 0 - 3 años'] = item.bebes;
   if (item.precioEditado !== undefined && item.precioEditado > 0) fields['Precio Editado'] = item.precioEditado;
   if (item.subtotal !== undefined) fields['Precio Subtotal'] = item.subtotal;
-  if (item.status !== undefined) fields.Status = item.status;
+  // Status no se envía al crear — Airtable lo maneja como campo calculado/default
+  // Solo se actualiza explícitamente en operaciones de actualización
   if (item.incluyeHuespedes !== undefined) fields['Incluye Huespedes'] = item.incluyeHuespedes;
   
   // SOLO los dos campos de vínculo necesarios (al crear)
