@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList, Clock, FileText, TowerControl, LayoutGrid, Brain } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList, Clock, FileText, TowerControl, LayoutGrid, Brain, Route, Map } from 'lucide-react';
 import { ADMIN_STATS, POPULAR_TOURS } from '../../constants';
 import { AppRoute } from '../../types';
 import { api } from '../../services/api';
@@ -137,124 +137,143 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             </div>
          </div>
 
-         {/* Quick Actions */}
-             <div className="grid grid-cols-4 gap-3 pt-2">
-                   <button 
-               onClick={() => onNavigate(AppRoute.ADMIN_USERS)}
-               className="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:bg-gray-750 flex flex-col items-center gap-2 text-center"
-             >
-               <Users size={24} className="text-blue-500" />
-               <span className="text-xs font-bold">Usuarios</span>
-             </button>
-                   <button 
-                      onClick={() => onNavigate(AppRoute.ADMIN_STRUCTURE)}
-                      className="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:bg-gray-750 flex flex-col items-center gap-2 text-center"
-                   >
-                      <Server size={24} className="text-purple-400" />
-                      <span className="text-xs font-bold">Estructura</span>
-                   </button>
-                   <button 
-                      onClick={() => onNavigate(AppRoute.ADMIN_RESERVATIONS)}
-                      className="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:bg-gray-750 flex flex-col items-center gap-2 text-center"
-                   >
-                      <Calendar size={24} className="text-blue-400" />
-                      <span className="text-xs font-bold">Reservas</span>
-                   </button>
-             <button 
-               onClick={() => onNavigate(AppRoute.ADMIN_APPROVALS)}
-               className="bg-gradient-to-br from-yellow-900 to-orange-900 p-4 rounded-xl border border-yellow-600 hover:border-yellow-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"
-             >
-               <div className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-               <Clock size={24} className="text-yellow-400" />
-               <span className="text-xs font-bold">Aprobaciones</span>
-             </button>
-             <button 
-               onClick={() => onNavigate(AppRoute.ADMIN_FINANCE)}
-               className="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:bg-gray-750 flex flex-col items-center gap-2 text-center"
-             >
-               <DollarSign size={24} className="text-green-500" />
-               <span className="text-xs font-bold">Finanzas</span>
-             </button>
-             <button 
-               onClick={() => onNavigate(AppRoute.ADMIN_CARIBBEAN)}
-               className="bg-gradient-to-br from-orange-900 to-cyan-900 p-4 rounded-xl border border-orange-600 hover:border-orange-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"
-             >
-               <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
-               <Music size={24} className="text-orange-400" />
-               <span className="text-xs font-bold">Caribbean</span>
-             </button>
-             <button 
-               onClick={() => onNavigate(AppRoute.ADMIN_ARTISTAS)}
-               className="bg-gradient-to-br from-purple-900 to-pink-900 p-4 rounded-xl border border-purple-600 hover:border-purple-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"
-             >
-               <div className="absolute top-1 right-1 w-2 h-2 bg-pink-500 rounded-full animate-pulse"></div>
-               <Palette size={24} className="text-pink-400" />
-               <span className="text-xs font-bold">Artistas</span>
-             </button>
-             <button 
-               onClick={() => onNavigate(AppRoute.ADMIN_SOCIOS)}
-               className="bg-gradient-to-br from-emerald-900 to-teal-900 p-4 rounded-xl border border-emerald-600 hover:border-emerald-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"
-             >
-               <div className="absolute top-1 right-1 w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
-               <Handshake size={24} className="text-emerald-400" />
-               <span className="text-xs font-bold">Socios</span>
-             </button>
-             <button 
-               onClick={() => onNavigate(AppRoute.ADMIN_BACKEND)}
-               className="bg-gradient-to-br from-purple-900 to-blue-900 p-4 rounded-xl border border-purple-600 hover:border-purple-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"
-             >
-               <div className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-               <Server size={24} className="text-purple-400" />
-               <span className="text-xs font-bold">Backend</span>
-             </button>
-             <button 
-               onClick={() => onNavigate(AppRoute.ADMIN_TASKS)}
-               className="bg-gradient-to-br from-cyan-900 to-blue-900 p-4 rounded-xl border border-cyan-600 hover:border-cyan-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"
-             >
-               <div className="absolute top-1 right-1 w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-               <ClipboardList size={24} className="text-cyan-400" />
-               <span className="text-xs font-bold">Tareas</span>
-             </button>
-             <button
-               onClick={() => onNavigate(AppRoute.ADMIN_QUOTES)}
-               className="bg-gradient-to-br from-emerald-900 to-green-900 p-4 rounded-xl border border-emerald-600 hover:border-emerald-400 flex flex-col items-center gap-2 text-center relative overflow-hidden"
-             >
-               <div className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-               <FileText size={24} className="text-emerald-400" />
-               <span className="text-xs font-bold">Cotizaciones</span>
-             </button>
-             <button
-               onClick={() => onNavigate(AppRoute.ADMIN_OPERACIONES)}
-               className="col-span-4 bg-gradient-to-r from-emerald-950 via-teal-950 to-emerald-950 p-4 rounded-xl border border-emerald-700 hover:border-emerald-400 flex items-center justify-center gap-3 text-center relative overflow-hidden"
-             >
-               <div className="absolute top-1 right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-               <LayoutGrid size={22} className="text-emerald-400" />
-               <div className="text-left">
-                 <span className="text-sm font-bold text-emerald-300 block">Operaciones</span>
-                 <span className="text-xs text-emerald-700">Catálogo · Channel Manager · CRM · Cotizaciones</span>
+         {/* ═══ Módulos del Panel ═══ */}
+         <div className="space-y-5 pt-2">
+
+            {/* ── Sección 1: Operaciones & Logística ── */}
+            <div className="space-y-2">
+               <div className="flex items-center gap-2">
+                  <span className="h-px flex-1 bg-emerald-800/50" />
+                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Operaciones & Logística</span>
+                  <span className="h-px flex-1 bg-emerald-800/50" />
                </div>
-             </button>
-             <button
-               onClick={() => onNavigate(AppRoute.ADMIN_CEREBRO)}
-               className="col-span-4 bg-gradient-to-r from-indigo-950 via-violet-950 to-indigo-950 p-4 rounded-xl border border-indigo-600 hover:border-indigo-400 flex items-center justify-center gap-3 text-center relative overflow-hidden"
-             >
-               <Brain size={22} className="text-indigo-400" />
-               <div className="text-left">
-                 <span className="text-sm font-bold text-indigo-300 block">Cerebro</span>
-                 <span className="text-xs text-indigo-700">Notas · Oportunidades · Exportar contexto para Claude</span>
+               <button
+                  onClick={() => onNavigate(AppRoute.ADMIN_OPERACIONES)}
+                  className="w-full bg-gradient-to-r from-emerald-950 via-teal-950 to-emerald-950 p-4 rounded-xl border border-emerald-700 hover:border-emerald-400 flex items-center gap-3 relative overflow-hidden transition-colors"
+               >
+                  <div className="absolute top-1 right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                  <LayoutGrid size={20} className="text-emerald-400 flex-shrink-0" />
+                  <div className="text-left">
+                     <span className="text-sm font-bold text-emerald-300 block">Operaciones</span>
+                     <span className="text-xs text-emerald-700">Catálogo · Channel Manager · CRM · Cotizaciones</span>
+                  </div>
+               </button>
+               <div className="grid grid-cols-4 gap-2">
+                  <button onClick={() => onNavigate(AppRoute.ADMIN_RESERVATIONS)} className="bg-gray-800 p-3 rounded-xl border border-gray-700 hover:border-blue-700 flex flex-col items-center gap-1.5 text-center transition-colors">
+                     <Calendar size={20} className="text-blue-400" />
+                     <span className="text-[10px] font-bold">Reservas</span>
+                  </button>
+                  <button onClick={() => onNavigate(AppRoute.ADMIN_APPROVALS)} className="bg-gradient-to-br from-yellow-900/60 to-orange-900/60 p-3 rounded-xl border border-yellow-700 hover:border-yellow-500 flex flex-col items-center gap-1.5 text-center relative overflow-hidden transition-colors">
+                     <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+                     <Clock size={20} className="text-yellow-400" />
+                     <span className="text-[10px] font-bold">Aprobaciones</span>
+                  </button>
+                  <button onClick={() => onNavigate(AppRoute.ADMIN_QUOTES)} className="bg-gray-800 p-3 rounded-xl border border-gray-700 hover:border-emerald-700 flex flex-col items-center gap-1.5 text-center transition-colors">
+                     <FileText size={20} className="text-emerald-400" />
+                     <span className="text-[10px] font-bold">Cotizaciones</span>
+                  </button>
+                  <button onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY)} className="bg-gray-800 p-3 rounded-xl border border-gray-700 hover:border-cyan-700 flex flex-col items-center gap-1.5 text-center transition-colors">
+                     <Route size={20} className="text-cyan-400" />
+                     <span className="text-[10px] font-bold">Itinerarios</span>
+                  </button>
                </div>
-             </button>
-             <button
-               onClick={() => onNavigate(AppRoute.ADMIN_TORRE_CONTROL)}
-               className="col-span-4 bg-gradient-to-r from-cyan-900 via-blue-900 to-cyan-900 p-4 rounded-xl border border-cyan-500 hover:border-cyan-300 flex items-center justify-center gap-3 text-center relative overflow-hidden"
-             >
-               <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-               <TowerControl size={22} className="text-cyan-400" />
-               <div className="text-left">
-                 <span className="text-sm font-bold text-cyan-300 block">Torre de Control</span>
-                 <span className="text-xs text-cyan-600">Checklist de lanzamiento · Super Admin</span>
+            </div>
+
+            {/* ── Sección 2: Socios & Usuarios ── */}
+            <div className="space-y-2">
+               <div className="flex items-center gap-2">
+                  <span className="h-px flex-1 bg-blue-800/50" />
+                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Socios & Usuarios</span>
+                  <span className="h-px flex-1 bg-blue-800/50" />
                </div>
-             </button>
+               <div className="grid grid-cols-3 gap-2">
+                  <button onClick={() => onNavigate(AppRoute.ADMIN_SOCIOS)} className="bg-gradient-to-br from-emerald-900/60 to-teal-900/60 p-3 rounded-xl border border-emerald-700 hover:border-emerald-500 flex flex-col items-center gap-1.5 text-center relative overflow-hidden transition-colors">
+                     <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse" />
+                     <Handshake size={20} className="text-emerald-400" />
+                     <span className="text-[10px] font-bold">Socios</span>
+                  </button>
+                  <button onClick={() => onNavigate(AppRoute.ADMIN_USERS)} className="bg-gray-800 p-3 rounded-xl border border-gray-700 hover:border-blue-700 flex flex-col items-center gap-1.5 text-center transition-colors">
+                     <Users size={20} className="text-blue-500" />
+                     <span className="text-[10px] font-bold">Usuarios</span>
+                  </button>
+                  <button onClick={() => onNavigate(AppRoute.ADMIN_FINANCE)} className="bg-gray-800 p-3 rounded-xl border border-gray-700 hover:border-green-700 flex flex-col items-center gap-1.5 text-center transition-colors">
+                     <DollarSign size={20} className="text-green-500" />
+                     <span className="text-[10px] font-bold">Finanzas</span>
+                  </button>
+               </div>
+            </div>
+
+            {/* ── Sección 3: Contenido & Cultura ── */}
+            <div className="space-y-2">
+               <div className="flex items-center gap-2">
+                  <span className="h-px flex-1 bg-orange-800/50" />
+                  <span className="text-[10px] font-bold text-orange-600 uppercase tracking-widest">Contenido & Cultura</span>
+                  <span className="h-px flex-1 bg-orange-800/50" />
+               </div>
+               <div className="grid grid-cols-3 gap-2">
+                  <button onClick={() => onNavigate(AppRoute.ADMIN_SERVICES)} className="bg-gray-800 p-3 rounded-xl border border-gray-700 hover:border-orange-700 flex flex-col items-center gap-1.5 text-center transition-colors">
+                     <PackageIcon size={20} className="text-orange-400" />
+                     <span className="text-[10px] font-bold">Servicios</span>
+                  </button>
+                  <button onClick={() => onNavigate(AppRoute.ADMIN_CARIBBEAN)} className="bg-gradient-to-br from-orange-900/60 to-cyan-900/60 p-3 rounded-xl border border-orange-700 hover:border-orange-500 flex flex-col items-center gap-1.5 text-center relative overflow-hidden transition-colors">
+                     <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse" />
+                     <Music size={20} className="text-orange-400" />
+                     <span className="text-[10px] font-bold">Caribbean</span>
+                  </button>
+                  <button onClick={() => onNavigate(AppRoute.ADMIN_ARTISTAS)} className="bg-gradient-to-br from-purple-900/60 to-pink-900/60 p-3 rounded-xl border border-purple-700 hover:border-purple-500 flex flex-col items-center gap-1.5 text-center relative overflow-hidden transition-colors">
+                     <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-pink-500 rounded-full animate-pulse" />
+                     <Palette size={20} className="text-pink-400" />
+                     <span className="text-[10px] font-bold">Artistas</span>
+                  </button>
+               </div>
+            </div>
+
+            {/* ── Sección 4: Cerebro & Sistema ── */}
+            <div className="space-y-2">
+               <div className="flex items-center gap-2">
+                  <span className="h-px flex-1 bg-indigo-800/50" />
+                  <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Cerebro & Sistema</span>
+                  <span className="h-px flex-1 bg-indigo-800/50" />
+               </div>
+               <button
+                  onClick={() => onNavigate(AppRoute.ADMIN_CEREBRO)}
+                  className="w-full bg-gradient-to-r from-indigo-950 via-violet-950 to-indigo-950 p-4 rounded-xl border border-indigo-600 hover:border-indigo-400 flex items-center gap-3 transition-colors"
+               >
+                  <Brain size={20} className="text-indigo-400 flex-shrink-0" />
+                  <div className="text-left">
+                     <span className="text-sm font-bold text-indigo-300 block">Cerebro</span>
+                     <span className="text-xs text-indigo-700">Notas · Oportunidades · Trazabilidad · Contexto Claude</span>
+                  </div>
+               </button>
+               <button
+                  onClick={() => onNavigate(AppRoute.ADMIN_TORRE_CONTROL)}
+                  className="w-full bg-gradient-to-r from-cyan-900/60 via-blue-900/60 to-cyan-900/60 p-3 rounded-xl border border-cyan-700 hover:border-cyan-500 flex items-center gap-3 relative overflow-hidden transition-colors"
+               >
+                  <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
+                  <TowerControl size={18} className="text-cyan-400 flex-shrink-0" />
+                  <div className="text-left">
+                     <span className="text-sm font-bold text-cyan-300">Torre de Control</span>
+                     <span className="text-xs text-cyan-700 ml-2">Checklist lanzamiento · Super Admin</span>
+                  </div>
+               </button>
+               <div className="grid grid-cols-3 gap-2">
+                  <button onClick={() => onNavigate(AppRoute.ADMIN_TASKS)} className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 p-3 rounded-xl border border-cyan-800 hover:border-cyan-600 flex flex-col items-center gap-1.5 text-center relative overflow-hidden transition-colors">
+                     <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse" />
+                     <ClipboardList size={20} className="text-cyan-400" />
+                     <span className="text-[10px] font-bold">Tareas</span>
+                  </button>
+                  <button onClick={() => onNavigate(AppRoute.ADMIN_BACKEND)} className="bg-gradient-to-br from-purple-900/50 to-blue-900/50 p-3 rounded-xl border border-purple-800 hover:border-purple-600 flex flex-col items-center gap-1.5 text-center relative overflow-hidden transition-colors">
+                     <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                     <Server size={20} className="text-purple-400" />
+                     <span className="text-[10px] font-bold">Backend</span>
+                  </button>
+                  <button onClick={() => onNavigate(AppRoute.ADMIN_STRUCTURE)} className="bg-gray-800 p-3 rounded-xl border border-gray-700 hover:border-purple-700 flex flex-col items-center gap-1.5 text-center transition-colors">
+                     <Map size={20} className="text-purple-400" />
+                     <span className="text-[10px] font-bold">Estructura</span>
+                  </button>
+               </div>
+            </div>
+
          </div>
       </div>
     </div>

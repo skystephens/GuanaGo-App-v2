@@ -5,6 +5,7 @@ import {
   Save, ArrowLeft, Star, Circle, CheckCircle2, AlertCircle,
   Building2, Smartphone, Globe, Coins, Users, Zap,
   Copy, Check, MoreVertical, Filter,
+  Activity, Calendar, MessageCircle, Package, Server,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 
@@ -13,6 +14,21 @@ import { AppRoute } from '../../types';
 type NotaCategoria = 'reunión' | 'idea' | 'dev' | 'oportunidad' | 'contexto' | 'general';
 type OportunidadEstado = 'identificada' | 'contactada' | 'negociación' | 'cerrada' | 'descartada';
 type Proyecto = 'GuanaGO' | 'GuiaSAI' | 'Taxi App' | 'Web3/Token' | 'Otro';
+type EventoTipo = 'reserva' | 'cotización' | 'reunión' | 'cliente' | 'mensaje' | 'operación' | 'sistema';
+
+interface EventoTrazabilidad {
+  id: string;
+  tipo: EventoTipo;
+  titulo: string;
+  descripcion: string;
+  proyecto: Proyecto;
+  fecha: string;
+  participantes: string;
+  resultado: string;
+  siguientePaso: string;
+  referenciaId: string;
+  creadaEn: string;
+}
 
 interface Nota {
   id: string;
@@ -40,6 +56,7 @@ interface Oportunidad {
 
 const STORAGE_NOTAS   = 'guanago_cerebro_notas_v1';
 const STORAGE_OPORS   = 'guanago_cerebro_oportunidades_v1';
+const STORAGE_TRAZ    = 'guanago_cerebro_trazabilidad_v1';
 
 const genId = () => `c-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`;
 
@@ -95,7 +112,37 @@ const SEED_OPORTUNIDADES: Oportunidad[] = [
   },
 ];
 
+// ─── Trazabilidad seed ────────────────────────────────────────────────────────
+
+const SEED_TRAZ: EventoTrazabilidad[] = [
+  {
+    id: genId(),
+    tipo: 'sistema',
+    titulo: 'Módulo Trazabilidad activado',
+    descripcion: 'El módulo de trazabilidad del Cerebro fue activado. A partir de ahora se pueden registrar interacciones con clientes, reservas, cotizaciones y eventos clave del proyecto.',
+    proyecto: 'GuanaGO',
+    fecha: new Date().toISOString(),
+    participantes: '',
+    resultado: 'Módulo funcionando correctamente',
+    siguientePaso: 'Registrar las primeras interacciones reales con clientes',
+    referenciaId: '',
+    creadaEn: new Date().toISOString(),
+  },
+];
+
 // ─── Config ───────────────────────────────────────────────────────────────────
+
+const TIPO_CONFIG: Record<EventoTipo, { label: string; color: string; bg: string; icon: React.ElementType }> = {
+  reserva:    { label: 'Reserva',     color: 'text-blue-300',    bg: 'bg-blue-900/40 border-blue-700',    icon: Calendar },
+  cotización: { label: 'Cotización',  color: 'text-emerald-300', bg: 'bg-emerald-900/40 border-emerald-700', icon: FileCode },
+  reunión:    { label: 'Reunión',     color: 'text-yellow-300',  bg: 'bg-yellow-900/40 border-yellow-700', icon: Users },
+  cliente:    { label: 'Cliente',     color: 'text-cyan-300',    bg: 'bg-cyan-900/40 border-cyan-700',    icon: Users },
+  mensaje:    { label: 'Mensaje',     color: 'text-pink-300',    bg: 'bg-pink-900/40 border-pink-700',    icon: MessageCircle },
+  operación:  { label: 'Operación',   color: 'text-orange-300',  bg: 'bg-orange-900/40 border-orange-700', icon: Package },
+  sistema:    { label: 'Sistema',     color: 'text-gray-400',    bg: 'bg-gray-800/60 border-gray-700',    icon: Server },
+};
+
+const TIPOS_EVENTO: EventoTipo[] = ['reserva', 'cotización', 'reunión', 'cliente', 'mensaje', 'operación', 'sistema'];
 
 const CAT_CONFIG: Record<NotaCategoria, { label: string; color: string; bg: string }> = {
   reunión:    { label: 'Reunión',    color: 'text-blue-300',   bg: 'bg-blue-900/50 border-blue-700' },
@@ -131,7 +178,7 @@ interface Props {
   onNavigate: (route: AppRoute) => void;
 }
 
-type Tab = 'notas' | 'oportunidades' | 'exportar';
+type Tab = 'notas' | 'oportunidades' | 'trazabilidad' | 'exportar';
 
 export default function AdminCerebro({ onBack }: Props) {
   const [tab, setTab] = useState<Tab>('notas');
@@ -155,11 +202,21 @@ export default function AdminCerebro({ onBack }: Props) {
   const [editandoOpor, setEditandoOpor] = useState<Oportunidad | null>(null);
   const [nuevaOpor, setNuevaOpor]   = useState(false);
 
+  // Trazabilidad
+  const [eventos, setEventos] = useState<EventoTrazabilidad[]>(() => {
+    try { const s = localStorage.getItem(STORAGE_TRAZ); return s ? JSON.parse(s) : SEED_TRAZ; }
+    catch { return SEED_TRAZ; }
+  });
+  const [editandoEvento, setEditandoEvento] = useState<EventoTrazabilidad | null>(null);
+  const [nuevoEvento, setNuevoEvento] = useState(false);
+  const [filtroTipo, setFiltroTipo]   = useState<EventoTipo | 'todos'>('todos');
+
   // Export
   const [copiado, setCopiado] = useState(false);
 
   useEffect(() => { localStorage.setItem(STORAGE_NOTAS, JSON.stringify(notas)); }, [notas]);
   useEffect(() => { localStorage.setItem(STORAGE_OPORS, JSON.stringify(opors)); }, [opors]);
+  useEffect(() => { localStorage.setItem(STORAGE_TRAZ, JSON.stringify(eventos)); }, [eventos]);
 
   // ── Notas helpers ──────────────────────────────────────────────────────────
 
@@ -206,6 +263,80 @@ export default function AdminCerebro({ onBack }: Props) {
     if (confirm('¿Eliminar esta oportunidad?')) setOpors(prev => prev.filter(o => o.id !== id));
   };
 
+  // ── Trazabilidad helpers ───────────────────────────────────────────────────
+
+  const eventosFiltrados = eventos
+    .filter(e => filtroTipo === 'todos' || e.tipo === filtroTipo)
+    .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+
+  const guardarEvento = (ev: EventoTrazabilidad) => {
+    setEventos(prev => {
+      const exists = prev.find(e => e.id === ev.id);
+      if (exists) return prev.map(e => e.id === ev.id ? ev : e);
+      return [ev, ...prev];
+    });
+    setEditandoEvento(null);
+    setNuevoEvento(false);
+  };
+
+  const eliminarEvento = (id: string) => {
+    if (confirm('¿Eliminar este registro de trazabilidad?')) setEventos(prev => prev.filter(e => e.id !== id));
+  };
+
+  const descargarEventoMD = (ev: EventoTrazabilidad) => {
+    const cfg = TIPO_CONFIG[ev.tipo];
+    const md = `# [${cfg.label}] ${ev.titulo}
+
+**Fecha:** ${new Date(ev.fecha).toLocaleString('es-CO', { dateStyle: 'long', timeStyle: 'short' })}
+**Tipo:** ${cfg.label}
+**Proyecto:** ${ev.proyecto}${ev.referenciaId ? `\n**Referencia:** ${ev.referenciaId}` : ''}${ev.participantes ? `\n**Participantes:** ${ev.participantes}` : ''}
+
+## Descripción
+
+${ev.descripcion}
+${ev.resultado ? `\n## Resultado\n\n${ev.resultado}\n` : ''}${ev.siguientePaso ? `\n## Siguiente Paso\n\n${ev.siguientePaso}\n` : ''}
+---
+*Generado por Cerebro GuanaGO · ID: ${ev.id}*
+`;
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `traza-${ev.tipo}-${ev.fecha.slice(0, 10)}-${ev.id.slice(-4)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const descargarTodosEventosMD = () => {
+    const fecha = new Date().toISOString().slice(0, 10);
+    const md = `# Trazabilidad GuanaGO / GuiaSAI
+> Exportado el ${fecha} · ${eventos.length} registros
+
+---
+
+${eventos
+  .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+  .map(ev => {
+    const cfg = TIPO_CONFIG[ev.tipo];
+    return `## [${cfg.label}] ${ev.titulo}
+
+**Fecha:** ${new Date(ev.fecha).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' })} · **Proyecto:** ${ev.proyecto}${ev.referenciaId ? ` · **Ref:** ${ev.referenciaId}` : ''}${ev.participantes ? `\n**Participantes:** ${ev.participantes}` : ''}
+
+${ev.descripcion}${ev.resultado ? `\n\n**Resultado:** ${ev.resultado}` : ''}${ev.siguientePaso ? `\n\n**Siguiente paso:** ${ev.siguientePaso}` : ''}`;
+  }).join('\n\n---\n\n')}
+
+---
+*Fin del registro · Generado por Cerebro GuanaGO*
+`;
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `trazabilidad-guanago-${fecha}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // ── Export helpers ─────────────────────────────────────────────────────────
 
   const generarContextoMD = () => {
@@ -219,6 +350,13 @@ export default function AdminCerebro({ onBack }: Props) {
 
     const oportsMD = oporsActivas.map(o =>
       `### ${o.titulo}\n**Proyecto:** ${o.proyecto} · **Estado:** ${ESTADO_CONFIG[o.estado].label} · **Valor:** ${o.valorEstimado || 'N/A'}\n**Fuente:** ${o.fuente}\n\n${o.descripcion}\n\n**Siguiente paso:** ${o.siguientePaso}${o.fechaLimite ? `\n**Fecha límite:** ${o.fechaLimite}` : ''}\n`
+    ).join('\n---\n\n');
+
+    const eventosRecientes = eventos
+      .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+      .slice(0, 10);
+    const eventosMD = eventosRecientes.map(ev =>
+      `### [${TIPO_CONFIG[ev.tipo].label}] ${ev.titulo}\n**Fecha:** ${ev.fecha.slice(0, 10)} · **Proyecto:** ${ev.proyecto}${ev.participantes ? ` · **Participantes:** ${ev.participantes}` : ''}\n\n${ev.descripcion}${ev.resultado ? `\n\n**Resultado:** ${ev.resultado}` : ''}${ev.siguientePaso ? `\n\n**Siguiente paso:** ${ev.siguientePaso}` : ''}\n`
     ).join('\n---\n\n');
 
     return `# Contexto Cerebro — GuiaSAI / GuanaGO
@@ -235,6 +373,12 @@ ${notasMD || '_Sin notas._'}
 ## Pipeline de Oportunidades (${oporsActivas.length})
 
 ${oportsMD || '_Sin oportunidades._'}
+
+---
+
+## Trazabilidad Reciente (${Math.min(eventos.length, 10)} de ${eventos.length})
+
+${eventosMD || '_Sin registros de trazabilidad._'}
 
 ---
 _Fin del contexto. Cargar este archivo en Claude Code para continuar con contexto completo._
@@ -281,16 +425,17 @@ _Fin del contexto. Cargar este archivo en Claude Code para continuar con context
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-900 p-1 rounded-xl">
+        <div className="flex gap-1 bg-gray-900 p-1 rounded-xl overflow-x-auto">
           {([
-            { key: 'notas',        label: 'Notas',        icon: StickyNote },
-            { key: 'oportunidades',label: 'Oportunidades',icon: TrendingUp },
-            { key: 'exportar',     label: 'Exportar',     icon: FileCode },
+            { key: 'notas',          label: 'Notas',    icon: StickyNote },
+            { key: 'oportunidades',  label: 'Pipeline', icon: TrendingUp },
+            { key: 'trazabilidad',   label: 'Traza',    icon: Activity },
+            { key: 'exportar',       label: 'Exportar', icon: FileCode },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setTab(key)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors
+              className={`flex-1 flex-shrink-0 flex items-center justify-center gap-1 py-2 px-1 rounded-lg text-xs font-bold transition-colors
                 ${tab === key ? 'bg-indigo-700 text-white' : 'text-gray-500 hover:text-gray-300'}`}
             >
               <Icon size={12} /> {label}
@@ -448,6 +593,75 @@ _Fin del contexto. Cargar este archivo en Claude Code para continuar con context
           </div>
         )}
 
+        {/* ── TAB: TRAZABILIDAD ── */}
+        {tab === 'trazabilidad' && (
+          <div className="px-4 py-4 space-y-3">
+
+            {/* Header actions */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setNuevoEvento(true); setEditandoEvento(null); }}
+                className="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-2 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-colors"
+              >
+                <Plus size={14} /> Registrar evento
+              </button>
+              {eventos.length > 0 && (
+                <button
+                  onClick={descargarTodosEventosMD}
+                  className="bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 px-3 py-2 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-colors ml-auto"
+                >
+                  <Download size={13} /> Descargar todos (.md)
+                </button>
+              )}
+            </div>
+
+            {/* Filtro por tipo */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+              <button
+                onClick={() => setFiltroTipo('todos')}
+                className={`flex-shrink-0 text-xs px-2.5 py-1 rounded-lg border font-bold transition-colors
+                  ${filtroTipo === 'todos' ? 'bg-indigo-700 border-indigo-500 text-white' : 'border-gray-700 text-gray-500 hover:text-gray-300'}`}
+              >Todos</button>
+              {TIPOS_EVENTO.map(tipo => {
+                const cfg = TIPO_CONFIG[tipo];
+                return (
+                  <button key={tipo} onClick={() => setFiltroTipo(tipo)}
+                    className={`flex-shrink-0 text-xs px-2.5 py-1 rounded-lg border font-bold transition-colors
+                      ${filtroTipo === tipo ? `${cfg.bg} ${cfg.color}` : 'border-gray-700 text-gray-500 hover:text-gray-300'}`}
+                  >{cfg.label}</button>
+                );
+              })}
+            </div>
+
+            {/* Form nuevo evento */}
+            {(nuevoEvento || editandoEvento) && (
+              <EventoForm
+                evento={editandoEvento ?? undefined}
+                onSave={guardarEvento}
+                onCancel={() => { setNuevoEvento(false); setEditandoEvento(null); }}
+              />
+            )}
+
+            {/* Lista eventos */}
+            {eventosFiltrados.length === 0 ? (
+              <div className="text-center text-gray-600 text-sm py-12">
+                <Activity size={32} className="mx-auto mb-3 opacity-30" />
+                <p>Sin registros. Crea el primero.</p>
+              </div>
+            ) : (
+              eventosFiltrados.map(ev => (
+                <EventoCard
+                  key={ev.id}
+                  evento={ev}
+                  onEdit={() => { setEditandoEvento(ev); setNuevoEvento(false); }}
+                  onDelete={() => eliminarEvento(ev.id)}
+                  onDescargar={() => descargarEventoMD(ev)}
+                />
+              ))
+            )}
+          </div>
+        )}
+
         {/* ── TAB: EXPORTAR ── */}
         {tab === 'exportar' && (
           <div className="px-4 py-4 space-y-4">
@@ -464,10 +678,11 @@ _Fin del contexto. Cargar este archivo en Claude Code para continuar con context
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-2">
               {[
                 { label: 'Notas', value: notas.length, color: 'text-indigo-300' },
-                { label: 'Oportunidades', value: opors.filter(o => o.estado !== 'descartada').length, color: 'text-emerald-300' },
+                { label: 'Pipeline', value: opors.filter(o => o.estado !== 'descartada').length, color: 'text-emerald-300' },
+                { label: 'Trazabilidad', value: eventos.length, color: 'text-yellow-300' },
                 { label: 'Proyectos', value: [...new Set([...notas.map(n => n.proyecto), ...opors.map(o => o.proyecto)])].length, color: 'text-cyan-300' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="bg-gray-900 border border-gray-700 rounded-xl p-3 text-center">
@@ -804,6 +1019,153 @@ function OportunidadForm({ opor, onSave, onCancel }: {
         className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 resize-none" />
       <input type="date" value={limite} onChange={e => setLimite(e.target.value)}
         className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-gray-400 focus:outline-none focus:border-indigo-500" />
+      <div className="flex gap-2">
+        <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl bg-gray-800 text-gray-400 text-sm font-bold hover:bg-gray-700">Cancelar</button>
+        <button onClick={guardar} disabled={!titulo.trim()}
+          className="flex-1 py-2.5 rounded-xl bg-indigo-700 hover:bg-indigo-600 text-white text-sm font-bold disabled:opacity-40 flex items-center justify-center gap-2">
+          <Save size={14} /> Guardar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── EventoCard ───────────────────────────────────────────────────────────────
+
+function EventoCard({ evento, onEdit, onDelete, onDescargar }: {
+  evento: EventoTrazabilidad;
+  onEdit: () => void;
+  onDelete: () => void;
+  onDescargar: () => void;
+}) {
+  const cfg = TIPO_CONFIG[evento.tipo];
+  const Icon = cfg.icon;
+  const PIcon = PROYECTO_ICON[evento.proyecto];
+
+  return (
+    <div className={`bg-gray-900 border rounded-2xl p-4 space-y-2 ${cfg.bg}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cfg.bg} ${cfg.color} flex items-center gap-1`}>
+              <Icon size={9} /> {cfg.label}
+            </span>
+            <span className="flex items-center gap-1 text-[10px] text-gray-600">
+              <PIcon size={10} /> {evento.proyecto}
+            </span>
+            {evento.referenciaId && (
+              <span className="text-[10px] text-gray-600 font-mono">#{evento.referenciaId}</span>
+            )}
+          </div>
+          <h3 className="text-sm font-bold text-white leading-snug">{evento.titulo}</h3>
+        </div>
+        <div className="flex gap-1 flex-shrink-0">
+          <button onClick={onDescargar} className="p-1.5 rounded-lg text-gray-600 hover:text-indigo-400 transition-colors" title="Descargar .md">
+            <Download size={13} />
+          </button>
+          <button onClick={onEdit} className="p-1.5 rounded-lg text-gray-600 hover:text-gray-300 transition-colors">
+            <Edit3 size={13} />
+          </button>
+          <button onClick={onDelete} className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 transition-colors">
+            <Trash2 size={13} />
+          </button>
+        </div>
+      </div>
+      <p className="text-xs text-gray-400 leading-relaxed line-clamp-3 whitespace-pre-line">{evento.descripcion}</p>
+      {evento.participantes && (
+        <p className="text-[10px] text-gray-600"><span className="text-gray-500 font-bold">Participantes:</span> {evento.participantes}</p>
+      )}
+      {evento.resultado && (
+        <p className="text-[10px] text-gray-500"><span className="text-gray-500 font-bold">Resultado:</span> {evento.resultado}</p>
+      )}
+      {evento.siguientePaso && (
+        <p className="text-[10px] text-indigo-500"><span className="font-bold">→</span> {evento.siguientePaso}</p>
+      )}
+      <p className="text-[10px] text-gray-700">
+        {new Date(evento.fecha).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' })}
+      </p>
+    </div>
+  );
+}
+
+// ─── EventoForm ───────────────────────────────────────────────────────────────
+
+function EventoForm({ evento, onSave, onCancel }: {
+  evento?: EventoTrazabilidad;
+  onSave: (e: EventoTrazabilidad) => void;
+  onCancel: () => void;
+}) {
+  const isNew = !evento;
+  const [tipo, setTipo]               = useState<EventoTipo>(evento?.tipo ?? 'reunión');
+  const [titulo, setTitulo]           = useState(evento?.titulo ?? '');
+  const [descripcion, setDescripcion] = useState(evento?.descripcion ?? '');
+  const [proyecto, setProyecto]       = useState<Proyecto>(evento?.proyecto ?? 'GuanaGO');
+  const [fecha, setFecha]             = useState(evento?.fecha ? evento.fecha.slice(0, 16) : new Date().toISOString().slice(0, 16));
+  const [participantes, setParticipantes] = useState(evento?.participantes ?? '');
+  const [resultado, setResultado]     = useState(evento?.resultado ?? '');
+  const [siguientePaso, setSiguiente] = useState(evento?.siguientePaso ?? '');
+  const [referenciaId, setRef]        = useState(evento?.referenciaId ?? '');
+
+  const guardar = () => {
+    if (!titulo.trim()) return;
+    onSave({
+      id: evento?.id ?? genId(),
+      tipo,
+      titulo: titulo.trim(),
+      descripcion,
+      proyecto,
+      fecha: new Date(fecha).toISOString(),
+      participantes,
+      resultado,
+      siguientePaso,
+      referenciaId,
+      creadaEn: evento?.creadaEn ?? new Date().toISOString(),
+    });
+  };
+
+  return (
+    <div className="bg-gray-900 border border-indigo-700 rounded-2xl p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-indigo-300">{isNew ? '+ Nuevo registro' : 'Editar registro'}</span>
+        <button onClick={onCancel} className="text-gray-500 hover:text-gray-300 p-1"><X size={13} /></button>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Tipo</label>
+          <select value={tipo} onChange={e => setTipo(e.target.value as EventoTipo)}
+            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+            {TIPOS_EVENTO.map(t => <option key={t} value={t}>{TIPO_CONFIG[t].label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Proyecto</label>
+          <select value={proyecto} onChange={e => setProyecto(e.target.value as Proyecto)}
+            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+            {PROYECTOS.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+        </div>
+      </div>
+      <input type="text" placeholder="Título del evento *"
+        value={titulo} onChange={e => setTitulo(e.target.value)}
+        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500" />
+      <textarea placeholder="Descripción detallada..."
+        value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={4}
+        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 resize-none leading-relaxed" />
+      <div className="grid grid-cols-2 gap-3">
+        <input type="text" placeholder="Participantes (nombres)" value={participantes} onChange={e => setParticipantes(e.target.value)}
+          className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500" />
+        <input type="text" placeholder="Ref. (ID reserva, etc.)" value={referenciaId} onChange={e => setRef(e.target.value)}
+          className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500" />
+      </div>
+      <input type="text" placeholder="Resultado" value={resultado} onChange={e => setResultado(e.target.value)}
+        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500" />
+      <input type="text" placeholder="Siguiente paso" value={siguientePaso} onChange={e => setSiguiente(e.target.value)}
+        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500" />
+      <div>
+        <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Fecha del evento</label>
+        <input type="datetime-local" value={fecha} onChange={e => setFecha(e.target.value)}
+          className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-indigo-500" />
+      </div>
       <div className="flex gap-2">
         <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl bg-gray-800 text-gray-400 text-sm font-bold hover:bg-gray-700">Cancelar</button>
         <button onClick={guardar} disabled={!titulo.trim()}

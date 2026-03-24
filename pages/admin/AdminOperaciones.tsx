@@ -5,13 +5,14 @@ import {
   Mail, Loader2, AlertCircle, RefreshCw, Plus,
   MapPin, Clock, CheckCircle2, XCircle, Hotel,
   Home, Tent, BedDouble, Tag, ChevronDown, ChevronUp,
+  DollarSign, Edit3, TrendingUp, Info,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { getServices, getAllLeads } from '../../services/airtableService';
 import { getCotizaciones } from '../../services/quotesService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Tab = 'catalogo' | 'channels' | 'crm' | 'cotizaciones';
+type Tab = 'catalogo' | 'channels' | 'crm' | 'cotizaciones' | 'tarifas';
 type ServiceCategory = 'all' | 'tour' | 'hotel' | 'taxi' | 'package';
 
 interface Service {
@@ -42,6 +43,22 @@ const loadChannels = (): Record<string, ChannelConfig> => {
   try { return JSON.parse(localStorage.getItem(CHANNEL_KEY) || '{}'); } catch { return {}; }
 };
 const saveChannels = (d: Record<string, ChannelConfig>) => localStorage.setItem(CHANNEL_KEY, JSON.stringify(d));
+
+// ─── TRM (Tasa Representativa del Mercado) ────────────────────────────────────
+const TRM_KEY = 'guanago_trm_v1';
+const TRM_DEFAULT = 4200;
+const loadTrm = (): number => {
+  try { const v = parseFloat(localStorage.getItem(TRM_KEY) || ''); return v > 0 ? v : TRM_DEFAULT; } catch { return TRM_DEFAULT; }
+};
+const saveTrm = (v: number) => localStorage.setItem(TRM_KEY, String(v));
+
+// Fórmula de tarifa para agencias en USD:
+//   precio_agencia_cop = precio_cop * 1.10  (colchón 10% por volatilidad)
+//   precio_usd = precio_agencia_cop / TRM
+const BUFFER_FACTOR = 1.10;
+const calcAgenciaCOP = (precioCOP: number) => Math.ceil(precioCOP * BUFFER_FACTOR);
+const calcAgenciaUSD = (precioCOP: number, trm: number) =>
+  trm > 0 ? (precioCOP * BUFFER_FACTOR) / trm : 0;
 
 // ─── Category & accommodation config ─────────────────────────────────────────
 const CAT_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -134,9 +151,15 @@ export default function AdminOperaciones({ onBack, onNavigate }: Props) {
   const [quotes, setQuotes]           = useState<any[]>([]);
   const [quotesLoading, setQuotesLoading] = useState(false);
 
+  // ── Tarifas Agencias ──
+  const [trm, setTrm]                 = useState<number>(loadTrm);
+  const [trmInput, setTrmInput]       = useState<string>(String(loadTrm()));
+  const [trmEditing, setTrmEditing]   = useState(false);
+  const [tarifasSearch, setTarifasSearch] = useState('');
+
   // ── Load per tab ──
   useEffect(() => {
-    if ((tab === 'catalogo' || tab === 'channels') && services.length === 0) fetchServices();
+    if ((tab === 'catalogo' || tab === 'channels' || tab === 'tarifas') && services.length === 0) fetchServices();
     if (tab === 'crm' && leads.length === 0) fetchLeads();
     if (tab === 'cotizaciones' && quotes.length === 0) fetchQuotes();
   }, [tab]);
@@ -210,6 +233,18 @@ export default function AdminOperaciones({ onBack, onNavigate }: Props) {
     });
   }, [leads, leadsSearch, leadStatus]);
 
+  // ── TRM helpers ──
+  const saveTrmValue = () => {
+    const v = parseFloat(trmInput);
+    if (v > 0) { setTrm(v); saveTrm(v); }
+    setTrmEditing(false);
+  };
+
+  const filteredTarifas = useMemo(() => {
+    const q = tarifasSearch.toLowerCase();
+    return services.filter(s => !q || (s.title + s.name + s.category).toLowerCase().includes(q));
+  }, [services, tarifasSearch]);
+
   // ── Channel helpers ──
   const getChannel = (id: string): ChannelConfig => channels[id] ?? { b2c: true, b2b: false, whatsapp: false };
   const toggleChannel = (id: string, key: keyof ChannelConfig) => {
@@ -272,6 +307,7 @@ export default function AdminOperaciones({ onBack, onNavigate }: Props) {
           <TabBtn id="channels"     label="Channels"    icon={<Globe size={13} />} />
           <TabBtn id="crm"          label="CRM"          icon={<Users size={13} />} />
           <TabBtn id="cotizaciones" label="Cotizaciones" icon={<FileText size={13} />} />
+          <TabBtn id="tarifas"      label="Tarifas USD"  icon={<DollarSign size={13} />} />
         </div>
       </div>
 
@@ -752,6 +788,198 @@ export default function AdminOperaciones({ onBack, onNavigate }: Props) {
                 </button>
               )}
             </div>
+          )}
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════
+          TARIFAS AGENCIAS USD
+      ════════════════════════════════════════════ */}
+      {tab === 'tarifas' && (
+        <div className="px-4 pt-4">
+
+          {/* TRM Banner */}
+          <div className="rounded-2xl p-4 mb-4" style={{ background: '#0c1a0c', border: '1px solid rgba(250,204,21,0.3)' }}>
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest mb-0.5" style={{ color: '#facc15' }}>
+                  TRM — Tasa de Cambio
+                </p>
+                <p className="text-[10px]" style={{ color: '#64748b' }}>
+                  Actualiza manualmente según la TRM del día
+                </p>
+              </div>
+              <DollarSign size={20} style={{ color: '#facc15', flexShrink: 0 }} />
+            </div>
+
+            {trmEditing ? (
+              <div className="flex gap-2 mt-2">
+                <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: '#020617', border: '1px solid rgba(250,204,21,0.4)' }}>
+                  <span className="text-xs font-bold" style={{ color: '#facc15' }}>COP $</span>
+                  <input
+                    type="number"
+                    value={trmInput}
+                    onChange={e => setTrmInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && saveTrmValue()}
+                    className="flex-1 bg-transparent text-sm font-black outline-none"
+                    style={{ color: '#facc15' }}
+                    autoFocus
+                  />
+                  <span className="text-[10px]" style={{ color: '#475569' }}>/ USD</span>
+                </div>
+                <button onClick={saveTrmValue}
+                  className="px-4 py-2 rounded-xl text-xs font-black"
+                  style={{ background: 'rgba(250,204,21,0.2)', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)' }}>
+                  Guardar
+                </button>
+                <button onClick={() => setTrmEditing(false)}
+                  className="px-3 py-2 rounded-xl text-xs"
+                  style={{ background: 'transparent', color: '#475569', border: '1px solid #1e293b' }}>
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between mt-2">
+                <div>
+                  <span className="text-2xl font-black" style={{ color: '#facc15' }}>
+                    ${trm.toLocaleString('es-CO')}
+                  </span>
+                  <span className="text-xs ml-2" style={{ color: '#475569' }}>COP por USD</span>
+                </div>
+                <button onClick={() => { setTrmInput(String(trm)); setTrmEditing(true); }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold"
+                  style={{ background: 'rgba(250,204,21,0.1)', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)' }}>
+                  <Edit3 size={12} /> Editar TRM
+                </button>
+              </div>
+            )}
+
+            {/* Fórmula explicada */}
+            <div className="mt-3 p-3 rounded-xl flex items-start gap-2" style={{ background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.15)' }}>
+              <Info size={12} style={{ color: '#facc15', flexShrink: 0, marginTop: 2 }} />
+              <p className="text-[10px] leading-relaxed" style={{ color: '#94a3b8' }}>
+                <span style={{ color: '#facc15' }}>Fórmula:</span> Precio COP + 10% colchón cambiario ÷ TRM = <span style={{ color: '#4ade80' }}>Precio USD Agencia</span>. El 10% cubre volatilidad del dólar y costos de pasarela.
+              </p>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="flex gap-2 mb-4">
+            <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: '#0f172a', border: '1px solid #1e293b' }}>
+              <Search size={14} style={{ color: '#475569' }} />
+              <input value={tarifasSearch} onChange={e => setTarifasSearch(e.target.value)}
+                placeholder="Buscar servicio..."
+                className="flex-1 bg-transparent text-sm outline-none" style={{ color: '#e2e8f0' }} />
+            </div>
+            <button onClick={fetchServices} className="p-2.5 rounded-xl" style={{ background: '#0f172a', border: '1px solid #1e293b', color: '#64748b' }}>
+              <RefreshCw size={15} />
+            </button>
+          </div>
+
+          {svcLoading && (
+            <div className="flex items-center justify-center py-16 gap-3">
+              <Loader2 size={24} className="animate-spin" style={{ color: '#facc15' }} />
+              <span className="text-sm" style={{ color: '#64748b' }}>Cargando catálogo...</span>
+            </div>
+          )}
+
+          {!svcLoading && !svcError && (
+            <>
+              {/* Column headers */}
+              <div className="grid gap-2 mb-2 px-1" style={{ gridTemplateColumns: '1fr 90px 90px 80px' }}>
+                <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: '#475569' }}>Servicio</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-right" style={{ color: '#475569' }}>COP base</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-right" style={{ color: '#fbbf24' }}>+10% COP</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-right" style={{ color: '#4ade80' }}>USD</span>
+              </div>
+
+              <div className="space-y-2">
+                {filteredTarifas.map(s => {
+                  const cfg = catOf(s);
+                  const precioCOP = s.price || 0;
+                  const precioAgenciaCOP = calcAgenciaCOP(precioCOP);
+                  const precioUSD = calcAgenciaUSD(precioCOP, trm);
+                  return (
+                    <div key={s.id} className="rounded-xl overflow-hidden" style={{ background: '#0f172a', border: '1px solid #1e293b' }}>
+                      <div className="grid items-center gap-2 px-3 py-3" style={{ gridTemplateColumns: '1fr 90px 90px 80px' }}>
+                        {/* Nombre */}
+                        <div className="min-w-0">
+                          <p className="font-bold text-xs text-white truncate leading-tight">{s.title || s.name}</p>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-0.5 inline-block"
+                            style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
+                        </div>
+                        {/* COP base */}
+                        <div className="text-right">
+                          <p className="text-xs font-bold" style={{ color: '#94a3b8' }}>
+                            {precioCOP > 0 ? `$${precioCOP.toLocaleString('es-CO')}` : <span style={{ color: '#475569' }}>—</span>}
+                          </p>
+                        </div>
+                        {/* COP + 10% */}
+                        <div className="text-right">
+                          <p className="text-xs font-black" style={{ color: '#fbbf24' }}>
+                            {precioCOP > 0 ? `$${precioAgenciaCOP.toLocaleString('es-CO')}` : <span style={{ color: '#475569' }}>—</span>}
+                          </p>
+                        </div>
+                        {/* USD */}
+                        <div className="text-right">
+                          <p className="text-sm font-black" style={{ color: '#4ade80' }}>
+                            {precioCOP > 0 && trm > 0
+                              ? `$${precioUSD.toFixed(2)}`
+                              : <span style={{ color: '#475569' }}>—</span>}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {filteredTarifas.length === 0 && !svcLoading && (
+                  <div className="text-center py-12">
+                    <DollarSign size={36} className="mx-auto mb-3 opacity-20" style={{ color: '#facc15' }} />
+                    <p className="text-sm" style={{ color: '#475569' }}>Sin servicios con ese filtro</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Summary footer */}
+              {filteredTarifas.length > 0 && (
+                <div className="mt-4 p-3 rounded-xl" style={{ background: '#0a0f1e', border: '1px solid #1e293b' }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp size={13} style={{ color: '#4ade80' }} />
+                    <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#475569' }}>
+                      Resumen — {filteredTarifas.length} servicios
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {(() => {
+                      const conPrecio = filteredTarifas.filter(s => (s.price || 0) > 0);
+                      const promCOP = conPrecio.length > 0
+                        ? conPrecio.reduce((acc, s) => acc + calcAgenciaCOP(s.price || 0), 0) / conPrecio.length
+                        : 0;
+                      const promUSD = trm > 0 ? promCOP / trm : 0;
+                      const minUSD  = conPrecio.length > 0 ? Math.min(...conPrecio.map(s => calcAgenciaUSD(s.price || 0, trm))) : 0;
+                      const maxUSD  = conPrecio.length > 0 ? Math.max(...conPrecio.map(s => calcAgenciaUSD(s.price || 0, trm))) : 0;
+                      return (
+                        <>
+                          <div>
+                            <p className="text-[9px] uppercase font-bold mb-0.5" style={{ color: '#475569' }}>Promedio USD</p>
+                            <p className="text-sm font-black" style={{ color: '#4ade80' }}>${promUSD.toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] uppercase font-bold mb-0.5" style={{ color: '#475569' }}>Mínimo USD</p>
+                            <p className="text-sm font-black" style={{ color: '#60a5fa' }}>${minUSD.toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] uppercase font-bold mb-0.5" style={{ color: '#475569' }}>Máximo USD</p>
+                            <p className="text-sm font-black" style={{ color: '#f472b6' }}>${maxUSD.toFixed(2)}</p>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
