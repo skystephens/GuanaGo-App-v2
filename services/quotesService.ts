@@ -559,22 +559,14 @@ function mapRecordToCotizacionItem(record: any): CotizacionItem {
 function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string, any> {
   const fields: Record<string, any> = {};
   
-  // Campos escriturables del item
-  if (item.fecha !== undefined) fields['Fecha Inicio'] = item.fecha;
-  if (item.fechaFin !== undefined) fields['Fecha Fin'] = item.fechaFin;
-  if (item.subtotal !== undefined) fields['Precio Subtotal'] = item.subtotal;
-  if (item.precioUnitario !== undefined && item.precioUnitario > 0) fields['Precio Unitario'] = item.precioUnitario;
-  if (item.precioEditado !== undefined && item.precioEditado > 0) fields['Precio Editado'] = item.precioEditado;
-  if (item.adultos !== undefined && item.adultos > 0) fields['Adultos 18 - 99 años'] = item.adultos;
-  if (item.ninos !== undefined && item.ninos > 0) fields['Niños 4 - 17 años'] = item.ninos;
-  if (item.bebes !== undefined && item.bebes > 0) fields['Bebes 0 - 3 años'] = item.bebes;
-
-  // Los campos linked record tienen restricciones de escritura vía API en esta tabla.
-  // Se guardan como referencia de texto en Notas internas (mismo patrón que GuiaSAI_Business).
+  // DEBUG: enviar solo Notas internas para identificar qué campo causa el 422
   const notasRef = [
     item.cotizacionId   ? `Cotización ID: ${item.cotizacionId}` : '',
     item.servicioId     ? `Servicio ID: ${item.servicioId}` : '',
     item.servicioNombre ? `Servicio: ${item.servicioNombre}` : '',
+    item.fecha          ? `Fecha: ${item.fecha}` : '',
+    item.subtotal       ? `Subtotal: ${item.subtotal}` : '',
+    item.adultos && item.adultos > 0 ? `Adultos: ${item.adultos}` : '',
   ].filter(Boolean).join('\n');
   if (notasRef) fields['Notas internas'] = notasRef;
   
