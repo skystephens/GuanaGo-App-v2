@@ -195,23 +195,26 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     let subtotal = 0;
     let fechaFin: string | undefined = undefined;
     
-    const isHotel = (service.category || (service as any).tipo) === 'hotel';
-    
+    const category = service.category || (service as any).tipo || '';
+    const isHotel = category === 'hotel';
+    const isTaxi  = category === 'taxi';
+
     if (isHotel) {
-      // Para hoteles: calcular número de noches
+      // Hoteles: precio fijo por noche (no por pax)
       const startDate = new Date(selectedCotizacion.fechaInicio);
-      const endDate = new Date(selectedCotizacion.fechaFin);
-      // Las noches son desde check-in hasta check-out (no incluye la noche de check-out)
+      const endDate   = new Date(selectedCotizacion.fechaFin);
       const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      // El precio del hotel NO se multiplica por pax (ya incluye el número de huéspedes)
       subtotal = precio * Math.max(1, nights);
       fechaFin = selectedCotizacion.fechaFin;
-      
       console.log(`🏨 Hotel: ${nights} noches × $${precio} = $${subtotal}`);
+    } else if (isTaxi) {
+      // Taxis/Traslados: precio fijo por vehículo/trayecto (igual que GuiaSAI_Business)
+      subtotal = precio;
+      console.log(`🚕 Taxi: precio fijo por trayecto = $${subtotal}`);
     } else {
-      // Para tours y otros servicios: multiplicar por personas
+      // Tours y paquetes: precio por persona
       subtotal = precio * payingPeople;
-      console.log(`🎫 ${service.category || 'Servicio'}: ${payingPeople} pax × $${precio} = $${subtotal}`);
+      console.log(`🎫 ${category || 'Tour'}: ${payingPeople} pax × $${precio} = $${subtotal}`);
     }
 
     const newItem: Omit<CotizacionItem, 'id'> = {
