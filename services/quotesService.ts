@@ -560,17 +560,13 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
   const fields: Record<string, any> = {};
   
   // Campos que PUEDEN editarse manualmente
+  // Campos propios del item (no copiar campos de la cotizacion padre)
   if (item.fecha !== undefined) fields['Fecha Inicio'] = item.fecha;
   if (item.fechaFin !== undefined) fields['Fecha Fin'] = item.fechaFin;
-  // Solo enviar campos numéricos cuando tienen valor real (>0) para evitar 422
-  if (item.adultos !== undefined && item.adultos > 0) fields['Adultos 18 - 99 años'] = item.adultos;
-  if (item.ninos !== undefined && item.ninos > 0) fields['Niños 4 - 17 años'] = item.ninos;
-  if (item.bebes !== undefined && item.bebes > 0) fields['Bebes 0 - 3 años'] = item.bebes;
-  if (item.precioEditado !== undefined && item.precioEditado > 0) fields['Precio Editado'] = item.precioEditado;
   if (item.subtotal !== undefined) fields['Precio Subtotal'] = item.subtotal;
-  // Status no se envía al crear — Airtable lo maneja como campo calculado/default
-  // Solo se actualiza explícitamente en operaciones de actualización
+  if (item.precioEditado !== undefined && item.precioEditado > 0) fields['Precio Editado'] = item.precioEditado;
   if (item.incluyeHuespedes !== undefined) fields['Incluye Huespedes'] = item.incluyeHuespedes;
+  // Adultos/Niños/Bebés pertenecen a CotizacionesGG (padre), no a cotizaciones_Items
   
   // SOLO los dos campos de vínculo necesarios (al crear)
   if (item.cotizacionId !== undefined && item.cotizacionId && item.cotizacionId.trim()) {
