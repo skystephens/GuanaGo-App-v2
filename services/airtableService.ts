@@ -730,25 +730,32 @@ async function fetchTable<T = any>(
       });
     }
 
-    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(tableName)}?${params.toString()}`;
-    
     console.log(`📡 Fetching from Airtable: ${tableName}`);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: getHeaders()
-    });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('❌ Airtable API Error:', response.status, errorData);
-      throw new Error(`Airtable Error: ${response.status}`);
-    }
+    // Airtable devuelve máx. 100 registros por página — paginamos hasta traer todos
+    const allRecords: AirtableRecord<T>[] = [];
+    let offset: string | undefined;
 
-    const data: AirtableResponse<T> = await response.json();
-    console.log(`✅ Fetched ${data.records.length} records from ${tableName}`);
-    
-    return data.records;
+    do {
+      const pageParams = new URLSearchParams(params);
+      if (offset) pageParams.append('offset', offset);
+
+      const url = `${AIRTABLE_API_URL}/${encodeURIComponent(tableName)}?${pageParams.toString()}`;
+      const response = await fetch(url, { method: 'GET', headers: getHeaders() });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Airtable API Error:', response.status, errorData);
+        throw new Error(`Airtable Error: ${response.status}`);
+      }
+
+      const data: AirtableResponse<T> & { offset?: string } = await response.json();
+      allRecords.push(...data.records);
+      offset = data.offset; // undefined cuando ya no hay más páginas
+    } while (offset);
+
+    console.log(`✅ Fetched ${allRecords.length} records from ${tableName}`);
+    return allRecords;
   } catch (error) {
     console.error(`❌ Error fetching ${tableName}:`, error);
     throw error;
