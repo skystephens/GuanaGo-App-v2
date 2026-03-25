@@ -559,16 +559,19 @@ function mapRecordToCotizacionItem(record: any): CotizacionItem {
 function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string, any> {
   const fields: Record<string, any> = {};
   
-  // DEBUG: enviar solo Notas internas para identificar qué campo causa el 422
-  const notasRef = [
-    item.cotizacionId   ? `Cotización ID: ${item.cotizacionId}` : '',
-    item.servicioId     ? `Servicio ID: ${item.servicioId}` : '',
-    item.servicioNombre ? `Servicio: ${item.servicioNombre}` : '',
-    item.fecha          ? `Fecha: ${item.fecha}` : '',
-    item.subtotal       ? `Subtotal: ${item.subtotal}` : '',
-    item.adultos && item.adultos > 0 ? `Adultos: ${item.adultos}` : '',
-  ].filter(Boolean).join('\n');
-  if (notasRef) fields['Notas internas'] = notasRef;
+  // cotizaciones_Items solo tiene 4 campos escriturables:
+  // - Nombre (texto)
+  // - Precio Subtotal (número)
+  // - ID CotizacionGG (linked record → CotizacionesGG)
+  // - Servicio (linked record → ServiciosTuristicos_SAI)
+  // Todo lo demás (Fecha, Adultos, Niños, etc.) son lookups del registro padre.
+
+  if (item.servicioNombre || item.fecha) {
+    fields['Nombre'] = [item.servicioNombre, item.fecha].filter(Boolean).join(' — ');
+  }
+  if (item.subtotal !== undefined) fields['Precio Subtotal'] = item.subtotal;
+  if (item.cotizacionId?.trim()) fields['ID CotizacionGG'] = [item.cotizacionId];
+  if (item.servicioId?.trim())   fields['Servicio']         = [item.servicioId];
   
   return fields;
 }
