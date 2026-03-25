@@ -568,12 +568,12 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
   if (item.incluyeHuespedes !== undefined) fields['Incluye Huespedes'] = item.incluyeHuespedes;
   // Adultos/Niños/Bebés pertenecen a CotizacionesGG (padre), no a cotizaciones_Items
   
-  // SOLO los dos campos de vínculo necesarios (al crear)
+  // Campos de vínculo — nombres reales de la tabla cotizaciones_Items en Airtable
   if (item.cotizacionId !== undefined && item.cotizacionId && item.cotizacionId.trim()) {
-    fields['CotizacionesGG'] = [item.cotizacionId];
+    fields['ID CotizacionGG'] = [item.cotizacionId];
   }
   if (item.servicioId !== undefined && item.servicioId && item.servicioId.trim()) {
-    fields['ServiciosTuristicos_SAI'] = [item.servicioId];
+    fields['Servicio'] = [item.servicioId];
   }
   
   return fields;
