@@ -82,10 +82,16 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     setLoading(false);
   };
 
-  const loadServices = async () => {
+  const loadServices = async (forceRefresh = false) => {
     // Usa caché local (localStorage, TTL 48h) — evita llamar Airtable en cada apertura
-    const data = await cachedApi.getServices();
+    // Pasa forceRefresh: true cuando se agrega un servicio nuevo en Airtable
+    const data = await cachedApi.getServices(forceRefresh ? { forceRefresh: true } : undefined);
     setServices(data as unknown as Tour[]);
+  };
+
+  const refreshServices = async () => {
+    setServices([]);
+    await loadServices(true);
   };
 
   const handleCreateCotizacion = async () => {
@@ -977,16 +983,28 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 
                 {/* Búsqueda */}
                 <div className="mb-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      value={searchService}
-                      onChange={(e) => setSearchService(e.target.value)}
-                      placeholder="Buscar servicios..."
-                      className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
-                    />
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={searchService}
+                        onChange={(e) => setSearchService(e.target.value)}
+                        placeholder="Buscar servicios..."
+                        className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    <button
+                      onClick={refreshServices}
+                      title="Actualizar catálogo desde Airtable"
+                      className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-emerald-500 hover:text-emerald-400 transition-colors"
+                    >
+                      <Loader2 className={`w-5 h-5 ${services.length === 0 ? 'animate-spin text-emerald-400' : ''}`} />
+                    </button>
                   </div>
+                  <p className="text-xs text-gray-600 mt-1 px-1">
+                    {services.length} servicios · Caché 48h · Usa ↺ si agregaste uno nuevo en Airtable
+                  </p>
                 </div>
 
                 {/* Filtros */}
