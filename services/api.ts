@@ -1,6 +1,7 @@
 
 import { TAXI_ZONES, POPULAR_TOURS, HOTEL_LIST, POPULAR_PACKAGES, PARTNER_CLIENTS } from '../constants';
 import { Tour, Hotel, TaxiZone, Reservation, Package, Campaign, Message, Restaurant, GuanaLocation, GroupQuoteConfig, Client } from '../types';
+import { getServices } from './airtableService';
 
 // Webhooks de Make.com - DESACTIVADOS (usar backend directo para ahorrar escenarios gratuitos)
 // Solo usamos backend/Airtable directo ahora
@@ -525,47 +526,21 @@ export const api = {
   services: {
     listPublic: async (): Promise<Tour[]> => {
       try {
-        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ 
-            action: 'LIST_SERVICES_REAL', 
-            table: 'ServiciosTuristicos_SAI',
-            category: 'public' 
-          })
-        });
-        const data = await safeJson(response);
-        if (data && Array.isArray(data)) {
-          // Transformar datos de Airtable al formato Tour
-          return data.map(transformAirtableService).filter(s => s.active);
-        }
+        // Directo a Airtable — mismo método que AdminOperaciones (Make webhook desactivado)
+        const services = await getServices();
+        const publicServices = services.filter((s: any) => s.active !== false);
+        if (publicServices.length > 0) return publicServices as unknown as Tour[];
         return [...POPULAR_TOURS, ...HOTEL_LIST, ...POPULAR_PACKAGES] as Tour[];
       } catch (e) {
-        console.error('Error fetching services:', e);
+        console.error('Error fetching public services:', e);
         return [...POPULAR_TOURS, ...HOTEL_LIST, ...POPULAR_PACKAGES] as Tour[];
       }
     },
     listAll: async (): Promise<Tour[]> => {
       try {
-        const response = await fetch(MAKE_WEBHOOK_SERVICES, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ 
-            action: 'LIST_SERVICES', 
-            table: 'ServiciosTuristicos_SAI',
-            category: 'all' 
-          })
-        });
-        const data = await safeJson(response);
-        if (data && Array.isArray(data)) {
-          return data.map(transformAirtableService);
-        }
+        // Directo a Airtable — mismo método que AdminOperaciones (Make webhook desactivado)
+        const services = await getServices();
+        if (services.length > 0) return services as unknown as Tour[];
         return [...POPULAR_TOURS, ...HOTEL_LIST, ...POPULAR_PACKAGES] as Tour[];
       } catch (e) {
         console.error('Error fetching all services:', e);

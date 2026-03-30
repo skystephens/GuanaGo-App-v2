@@ -4,11 +4,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Database, 
-  RefreshCw, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Database,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
   Clock,
   Trash2,
   Download,
@@ -27,11 +27,13 @@ import {
   DollarSign,
   Calendar,
   Star,
-  ShoppingBag
+  ShoppingBag,
+  ArrowLeft
 } from 'lucide-react';
 import { airtableService } from '../../services/airtableService';
 import { clearAllCache } from '../../services/cachedApi';
 import AdminPinLogin from '../AdminPinLogin';
+import { AppRoute } from '../../types';
 
 interface TableStatus {
   name: string;
@@ -43,7 +45,12 @@ interface TableStatus {
   error?: string;
 }
 
-const AdminBackend: React.FC = () => {
+interface AdminBackendProps {
+  onBack?: () => void;
+  onNavigate?: (route: AppRoute) => void;
+}
+
+const AdminBackend: React.FC<AdminBackendProps> = ({ onBack, onNavigate }) => {
   // TODOS los hooks PRIMERO, antes de cualquier return condicional
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [adminUser, setAdminUser] = useState<any>(null);
@@ -257,6 +264,15 @@ const AdminBackend: React.FC = () => {
       {/* Header */}
       <header className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 pt-14 pb-8">
         <div className="flex items-center gap-3 mb-2">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors mr-1"
+              aria-label="Volver"
+            >
+              <ArrowLeft size={18} />
+            </button>
+          )}
           <Database size={28} />
           <h1 className="text-2xl font-black">Panel de Datos</h1>
         </div>
