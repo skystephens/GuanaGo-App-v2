@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Filter, MapPin, Star, Wifi, Droplets, Calendar, Users, Search, ChevronDown, X } from 'lucide-react';
 import { hotelCacheService } from '../services/hotelCacheService';
 import { Tour, AppRoute } from '../types';
-import ServiceBookingCard from '../components/ServiceBookingCard';
+import ServiceCatalogCard from '../components/ServiceCatalogCard';
 
 interface HotelListProps {
   onBack: () => void;
@@ -312,23 +312,25 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
 
         {/* Loading state */}
         {loading ? (
-          <div className="grid grid-cols-1 gap-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-2xl h-56 animate-pulse border border-gray-100"></div>
+          <div className="grid grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="bg-white rounded-3xl h-64 animate-pulse border border-gray-100"></div>
             ))}
           </div>
         ) : filteredAccommodations.length > 0 ? (
-          <div className="space-y-6">
-            <p className="text-sm text-gray-600 font-medium">
+          <div>
+            <p className="text-sm text-gray-600 font-medium mb-4">
               {filteredAccommodations.length} alojamiento{filteredAccommodations.length !== 1 ? 's' : ''} disponible{filteredAccommodations.length !== 1 ? 's' : ''}
             </p>
-            {filteredAccommodations.map(hotel => (
-              <ServiceBookingCard
-                key={hotel.id}
-                service={hotel}
-                onViewDetails={() => onNavigate(AppRoute.HOTEL_DETAIL, hotel)}
-              />
-            ))}
+            <div className="grid grid-cols-2 gap-4">
+              {filteredAccommodations.map(hotel => (
+                <ServiceCatalogCard
+                  key={hotel.id}
+                  service={hotel}
+                  onViewDetails={() => onNavigate(AppRoute.HOTEL_DETAIL, hotel)}
+                />
+              ))}
+            </div>
           </div>
         ) : (
           <div className="text-center py-20">

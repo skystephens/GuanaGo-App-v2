@@ -1,8 +1,10 @@
-
-import React from 'react';
-import { ArrowLeft, Filter, Star, Check } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ArrowLeft, Package, RefreshCw } from 'lucide-react';
+import { api } from '../services/api';
+import { AppRoute, Tour } from '../types';
 import { POPULAR_PACKAGES } from '../constants';
-import { AppRoute } from '../types';
+import ServiceCatalogCard from '../components/ServiceCatalogCard';
+import { getFromCache, saveToCache } from '../services/cacheService';
 
 interface PackageListProps {
   onBack: () => void;
@@ -10,78 +12,105 @@ interface PackageListProps {
 }
 
 const PackageList: React.FC<PackageListProps> = ({ onBack, onNavigate }) => {
+  const [packages, setPackages] = useState<Tour[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [syncing, setSyncing]   = useState(false);
+
+  useEffect(() => { fetchPackages(); }, []);
+
+  const fetchPackages = async (force = false) => {
+    // 1. Caché primero
+    if (!force) {
+      const cached = getFromCache<Tour[]>('services_turisticos');
+      const pkgs = cached?.filter(s => s.category === 'package' && s.active !== false) || [];
+      if (pkgs.length > 0) {
+        setPackages(pkgs);
+        setLoading(false);
+        refreshBackground();
+        return;
+      }
+    }
+
+    // 2. Sin caché: cargar desde API
+    setLoading(true);
+    try {
+      const all = await api.services.listPublic();
+      const pkgs = all.filter(s => s.category === 'package' && s.active !== false);
+      // Si Airtable no tiene paquetes aún, usar los hardcoded como fallback
+      setPackages(pkgs.length > 0 ? pkgs : (POPULAR_PACKAGES as unknown as Tour[]));
+      if (all.length > 0) saveToCache('services_turisticos', all);
+    } catch {
+      setPackages(POPULAR_PACKAGES as unknown as Tour[]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshBackground = async () => {
+    setSyncing(true);
+    try {
+      const all = await api.services.listPublic();
+      const pkgs = all.filter(s => s.category === 'package' && s.active !== false);
+      if (pkgs.length > 0) {
+        setPackages(pkgs);
+        saveToCache('services_turisticos', all);
+      }
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen pb-24">
-       {/* Header */}
-       <div className="sticky top-0 bg-white/95 backdrop-blur-md z-40 px-6 py-4 flex items-center justify-between shadow-sm">
-         <div className="flex items-center gap-4">
-            <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
-                <ArrowLeft size={20} className="text-gray-800" />
-            </button>
-            <h1 className="text-lg font-bold text-gray-900">Paquetes Turísticos</h1>
-         </div>
-         <button className="p-2 text-gray-500 hover:text-green-600">
-            <Filter size={20} />
-         </button>
-       </div>
+      {/* Header */}
+      <div className="sticky top-0 bg-white/95 backdrop-blur-md z-40 px-6 py-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+            <ArrowLeft size={20} className="text-gray-800" />
+          </button>
+          <h1 className="text-lg font-bold text-gray-900">Paquetes Turísticos</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400">{packages.length} disponibles</span>
+          <button
+            onClick={() => fetchPackages(true)}
+            disabled={syncing || loading}
+            className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-40"
+            title="Sincronizar"
+          >
+            <RefreshCw size={16} className={`text-gray-500 ${syncing ? 'animate-spin text-emerald-500' : ''}`} />
+          </button>
+        </div>
+      </div>
 
-       <div className="p-6">
-          <p className="text-sm text-gray-500 mb-6">Encuentra la combinación perfecta de alojamiento y actividades para tu viaje.</p>
+      <div className="px-4 py-6">
+        <p className="text-sm text-gray-500 mb-6 px-1">
+          Encuentra la combinación perfecta de alojamiento y actividades para tu viaje.
+        </p>
 
-          <div className="grid grid-cols-1 gap-6">
-             {POPULAR_PACKAGES.map(pkg => (
-                <div 
-                  key={pkg.id} 
-                  onClick={() => onNavigate(AppRoute.PACKAGE_DETAIL, pkg)}
-                  className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
-                >
-                   <div className="relative h-56 overflow-hidden">
-                      <img src={pkg.image} alt={pkg.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                      <div className="absolute bottom-4 left-4 text-white">
-                         <h3 className="text-xl font-bold leading-tight mb-1">{pkg.title}</h3>
-                         <p className="text-xs text-gray-300 opacity-90">{pkg.duration}</p>
-                      </div>
-                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1">
-                         <Star size={12} className="text-yellow-400 fill-current" />
-                         <span className="text-xs font-bold text-gray-900">{pkg.rating}</span>
-                      </div>
-                   </div>
-                   
-                   <div className="p-4">
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">{pkg.description}</p>
-                      
-                      <div className="space-y-2 mb-4">
-                         <div className="flex items-center gap-2 text-xs text-gray-600">
-                            <Check size={14} className="text-green-500" />
-                            <span>Hotel: <span className="font-semibold">{pkg.hotelName}</span></span>
-                         </div>
-                         <div className="flex items-center gap-2 text-xs text-gray-600">
-                            <Check size={14} className="text-green-500" />
-                            <span>{pkg.includedTours.length} Actividades incluidas</span>
-                         </div>
-                         {pkg.transferIncluded && (
-                            <div className="flex items-center gap-2 text-xs text-gray-600">
-                               <Check size={14} className="text-green-500" />
-                               <span>Traslado Aeropuerto-Hotel-Aeropuerto</span>
-                            </div>
-                         )}
-                      </div>
-
-                      <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-                         <div>
-                            <span className="text-xs text-gray-400 block">Precio Total</span>
-                            <span className="text-xl font-bold text-green-600">${pkg.price}</span>
-                         </div>
-                         <button className="bg-green-600 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-green-200 transition-colors">
-                            Ver Paquete
-                         </button>
-                      </div>
-                   </div>
-                </div>
-             ))}
+        {loading ? (
+          <div className="grid grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="bg-white rounded-3xl h-64 animate-pulse border border-gray-100" />
+            ))}
           </div>
-       </div>
+        ) : packages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+            <Package size={48} className="mb-3 opacity-20" />
+            <p className="text-sm font-bold">No hay paquetes disponibles</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            {packages.map(pkg => (
+              <ServiceCatalogCard
+                key={pkg.id}
+                service={pkg}
+                onViewDetails={() => onNavigate(AppRoute.PACKAGE_DETAIL, pkg)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
