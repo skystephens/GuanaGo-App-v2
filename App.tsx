@@ -65,6 +65,7 @@ import AdminProcedimientosRAG from './pages/admin/AdminProcedimientosRAG';
 import AdminMapaMental from './pages/admin/AdminMapaMental';
 import AdminOperaciones from './pages/admin/AdminOperaciones';
 import AdminCerebro from './pages/admin/AdminCerebro';
+import AdminControlPanel from './pages/admin/AdminControlPanel';
 
 // Artista Portal
 import ArtistaPortal from './pages/ArtistaPortal';
@@ -139,7 +140,7 @@ const App: React.FC = () => {
     switch (currentRoute) {
       case AppRoute.HOME: return <Home onNavigate={navigateTo} />;
       case AppRoute.UNIFIED_PANEL: return <UnifiedPanel userRole={userRole} onNavigate={navigateTo} onBack={goBack} isAuthenticated={isAuthenticated} onLogout={handleLogout} />;
-      case AppRoute.DYNAMIC_ITINERARY: return <Planner onNavigate={navigateTo} initialCategory={detailData?.category} />;
+      case AppRoute.DYNAMIC_ITINERARY: return <Planner onNavigate={navigateTo} onBack={goBack} initialCategory={detailData?.category} />;
       case AppRoute.MY_ITINERARY: return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.PROFILE: return (
         <AccountDashboard
@@ -214,6 +215,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_MAPA_MENTAL: return <AdminMapaMental onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_OPERACIONES: return <AdminOperaciones onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_CEREBRO: return <AdminCerebro onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_CONTROL_PANEL: return <AdminControlPanel onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };
