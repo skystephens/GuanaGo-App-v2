@@ -1,15 +1,22 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Trash2, Power, Loader2, Package, Target, Plus, X, Save, Edit3, Tag, Trophy, Image as ImageIcon, Upload, ChevronDown, Calendar, Sparkles, Megaphone, CheckCircle2 } from 'lucide-react';
+import { Search, Trash2, Power, Loader2, Package, Target, Plus, X, Save, Edit3, Tag, Trophy, Image as ImageIcon, Upload, ChevronDown, Calendar, Sparkles, Megaphone, CheckCircle2, ArrowLeft, RefreshCw } from 'lucide-react';
 import { api } from '../../services/api';
-import { Tour, Campaign } from '../../types';
+import { Tour, Campaign, AppRoute } from '../../types';
+import { getFromCache, saveToCache } from '../../services/cacheService';
 
-const AdminServices: React.FC = () => {
+interface AdminServicesProps {
+  onBack?: () => void;
+  onNavigate?: (route: AppRoute) => void;
+}
+
+const AdminServices: React.FC<AdminServicesProps> = ({ onBack, onNavigate }) => {
   const [activeTab, setActiveTab] = useState<'services' | 'campaigns'>('services');
-  
+
   // Services State
   const [services, setServices] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Service Edit State
@@ -28,18 +35,49 @@ const AdminServices: React.FC = () => {
   });
 
   useEffect(() => {
-     fetchData();
+    fetchData();
   }, []);
 
-  const fetchData = async () => {
-     setLoading(true);
-     const [servicesData, campaignsData] = await Promise.all([
-        api.services.listAll(),
-        api.campaigns.list()
-     ]);
-     setServices(servicesData || []);
-     setCampaigns(campaignsData || []);
-     setLoading(false);
+  const fetchData = async (forceRefresh = false) => {
+    // 1. Intentar cargar desde caché primero (instantáneo)
+    if (!forceRefresh) {
+      const cached = getFromCache<Tour[]>('services_turisticos');
+      if (cached && cached.length > 0) {
+        setServices(cached);
+        setLoading(false);
+        // Refrescar en background sin bloquear la UI
+        refreshInBackground();
+        const campaignsData = await api.campaigns.list();
+        setCampaigns(campaignsData || []);
+        return;
+      }
+    }
+
+    // 2. Sin caché o forzando refresh: cargar desde Airtable
+    setLoading(true);
+    const [servicesData, campaignsData] = await Promise.all([
+      api.services.listAll(),
+      api.campaigns.list()
+    ]);
+    const svcs = servicesData || [];
+    setServices(svcs);
+    setCampaigns(campaignsData || []);
+    // Guardar en caché para próximas visitas (válido 48h según cacheService)
+    if (svcs.length > 0) saveToCache('services_turisticos', svcs);
+    setLoading(false);
+  };
+
+  const refreshInBackground = async () => {
+    setSyncing(true);
+    try {
+      const fresh = await api.services.listAll();
+      if (fresh && fresh.length > 0) {
+        setServices(fresh);
+        saveToCache('services_turisticos', fresh);
+      }
+    } finally {
+      setSyncing(false);
+    }
   };
 
   // --- SERVICE LOGIC ---
@@ -143,18 +181,36 @@ const AdminServices: React.FC = () => {
     <div className="bg-gray-900 min-h-screen text-white pb-24 font-sans relative">
        <header className="px-6 pt-12 pb-4 bg-gray-900 sticky top-0 z-10 border-b border-gray-800/50">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors shrink-0"
+                aria-label="Volver"
+              >
+                <ArrowLeft size={18} />
+              </button>
+            )}
+            <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 shrink-0">
                <Megaphone size={24} />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
                <h1 className="text-xl font-black">Centro de Gestión</h1>
                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Marketing e Inventario SAI</p>
             </div>
+            <button
+              onClick={() => fetchData(true)}
+              disabled={syncing || loading}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors shrink-0 disabled:opacity-40"
+              aria-label="Sincronizar"
+              title="Forzar sync con Airtable"
+            >
+              <RefreshCw size={16} className={syncing ? 'animate-spin text-emerald-400' : ''} />
+            </button>
           </div>
           
           {/* Tabs con mejor diseño visual */}
           <div className="flex bg-gray-800/50 rounded-[20px] p-1.5 mb-6 border border-gray-700/50">
-             <button 
+             <button
                 onClick={() => setActiveTab('services')}
                 className={`flex-1 py-3 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all duration-300 ${
                    activeTab === 'services' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/40' : 'text-gray-500 hover:text-gray-300'
@@ -162,6 +218,11 @@ const AdminServices: React.FC = () => {
              >
                 <Package size={16} />
                 PRODUCTOS
+                {services.length > 0 && (
+                  <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'services' ? 'bg-white/20' : 'bg-gray-700'}`}>
+                    {services.length}
+                  </span>
+                )}
              </button>
              <button 
                 onClick={() => setActiveTab('campaigns')}

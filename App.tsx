@@ -197,7 +197,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_RESERVATIONS: return <AdminReservations onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_STRUCTURE: return <AdminStructureMap onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_FINANCE: return <AdminFinance />;
-      case AppRoute.ADMIN_SERVICES: return <AdminServices />;
+      case AppRoute.ADMIN_SERVICES: return <AdminServices onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_BACKEND: return <AdminBackend onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.GROUP_QUOTE: return <GroupQuote />;
       case AppRoute.RIMM_CLUSTER: return <RimmCluster onBack={goBack} onNavigate={navigateTo} />;
