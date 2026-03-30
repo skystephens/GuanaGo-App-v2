@@ -6,17 +6,31 @@
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
+      # ── Backend (server.js) ──────────────────────────────
       - key: AIRTABLE_API_KEY
         sync: false
       - key: AIRTABLE_BASE_ID
         value: appiReH55Qhrbv4Lk
       - key: AIRTABLE_TABLE_NAME
         value: Directorio_Mapa
-      - key: VITE_MAPBOX_API_KEY
-        sync: false
       - key: GEMINI_API_KEY
         sync: false
-      - key: VITE_GEMINI_API_KEY
+      - key: GROQ_API_KEY
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
         sync: false
       - key: NODE_ENV
         value: production
+      # ── Frontend VITE (baked at build time) ──────────────
+      - key: VITE_AIRTABLE_API_KEY
+        sync: false
+      - key: VITE_AIRTABLE_BASE_ID
+        value: appiReH55Qhrbv4Lk
+      - key: VITE_API_URL
+        value: https://www.guanago.travel
+      - key: VITE_MAPBOX_API_KEY
+        sync: false
+      - key: VITE_GEMINI_API_KEY
+        sync: false
+      - key: VITE_GROQ_API_KEY
+        sync: false
