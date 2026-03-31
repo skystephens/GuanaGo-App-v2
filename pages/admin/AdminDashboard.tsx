@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList, Clock, FileText, TowerControl, LayoutGrid, Brain, Route, Map } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Activity, Calendar, Package as PackageIcon, ChevronRight, Server, Music, Palette, Handshake, ClipboardList, Clock, FileText, TowerControl, LayoutGrid, Brain, Route, Map, BarChart3 } from 'lucide-react';
 import { ADMIN_STATS, POPULAR_TOURS } from '../../constants';
 import { AppRoute } from '../../types';
 import { api } from '../../services/api';
@@ -235,6 +235,19 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                   <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Cerebro & Sistema</span>
                   <span className="h-px flex-1 bg-indigo-800/50" />
                </div>
+               {/* ── Panel de Control Unificado ── */}
+               <button
+                  onClick={() => onNavigate(AppRoute.ADMIN_CONTROL_PANEL)}
+                  className="w-full bg-gradient-to-r from-emerald-950 via-teal-950 to-emerald-950 p-4 rounded-xl border border-emerald-600 hover:border-emerald-400 flex items-center gap-3 transition-colors relative overflow-hidden"
+               >
+                  <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                  <BarChart3 size={22} className="text-emerald-400 flex-shrink-0" />
+                  <div className="text-left flex-1">
+                     <span className="text-sm font-black text-emerald-300 block">Panel de Control</span>
+                     <span className="text-xs text-emerald-700">Métricas · Kanban · Mapa Mental · Sistema</span>
+                  </div>
+                  <ChevronRight size={16} className="text-emerald-600" />
+               </button>
                <button
                   onClick={() => onNavigate(AppRoute.ADMIN_CEREBRO)}
                   className="w-full bg-gradient-to-r from-indigo-950 via-violet-950 to-indigo-950 p-4 rounded-xl border border-indigo-600 hover:border-indigo-400 flex items-center gap-3 transition-colors"
