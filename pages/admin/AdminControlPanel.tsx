@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  ArrowLeft, Map, LayoutKanban, Activity, BarChart3,
+  ArrowLeft, Map, Kanban, Activity, BarChart3,
   RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock,
   Zap, Database, Server, Shield, Wifi, WifiOff,
   TrendingUp, Users, Package, BedDouble, Car, Compass,
@@ -116,7 +116,7 @@ const KanbanTab: React.FC<{ onNavigateTorre?: () => void }> = ({ onNavigateTorre
   if (totalTareas === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-gray-600 gap-4">
-        <LayoutKanban size={48} className="opacity-20" />
+        <Kanban size={48} className="opacity-20" />
         <p className="text-sm font-bold">No hay tareas todavía</p>
         <p className="text-xs text-gray-500 text-center px-8">
           Agrega tareas desde la Torre de Control y aparecerán aquí organizadas por estado.
@@ -523,7 +523,7 @@ const MetricasTab: React.FC = () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
   { key: 'mapa',     label: 'Mapa',    icon: <Map size={14} />           },
-  { key: 'kanban',   label: 'Kanban',  icon: <LayoutKanban size={14} />  },
+  { key: 'kanban',   label: 'Kanban',  icon: <Kanban size={14} />  },
   { key: 'sistema',  label: 'Sistema', icon: <Activity size={14} />      },
   { key: 'metricas', label: 'Métricas',icon: <BarChart3 size={14} />     },
 ];
