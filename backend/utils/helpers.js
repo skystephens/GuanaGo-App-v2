@@ -7,6 +7,10 @@ export * from './logs.js';
  * Utilidad para hacer requests a Make.com
  */
 export const makeRequest = async (webhookUrl, data, actionID) => {
+  // Silently skip calls to unconfigured or placeholder webhooks
+  if (!webhookUrl || webhookUrl.includes('YOUR_')) {
+    return { status: 'skipped', message: 'Webhook not configured' };
+  }
   try {
     console.log(`📡 Enviando a Make.com [${actionID}]:`, webhookUrl);
     
