@@ -302,6 +302,7 @@ export enum AppRoute {
   MUSIC_EVENT_DETAIL = 'MUSIC_EVENT_DETAIL',
   ARTIST_DETAIL = 'ARTIST_DETAIL',
   ARTISTA_PORTAL = 'ARTISTA_PORTAL',
+  TOUR_PRIVADO = 'TOUR_PRIVADO',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';

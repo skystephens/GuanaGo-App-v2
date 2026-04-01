@@ -70,6 +70,9 @@ import AdminControlPanel from './pages/admin/AdminControlPanel';
 // Artista Portal
 import ArtistaPortal from './pages/ArtistaPortal';
 
+// Tour Privado B2C
+import TourPrivado from './pages/TourPrivado';
+
 // Unified Panel
 import UnifiedPanel from './components/UnifiedPanel';
 import UserProfileButton from './components/UserProfileButton';
@@ -216,6 +219,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_OPERACIONES: return <AdminOperaciones onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_CEREBRO: return <AdminCerebro onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_CONTROL_PANEL: return <AdminControlPanel onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.TOUR_PRIVADO: return <TourPrivado onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };
