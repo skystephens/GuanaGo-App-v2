@@ -66,6 +66,7 @@ import AdminMapaMental from './pages/admin/AdminMapaMental';
 import AdminOperaciones from './pages/admin/AdminOperaciones';
 import AdminCerebro from './pages/admin/AdminCerebro';
 import AdminControlPanel from './pages/admin/AdminControlPanel';
+import AdminSkyPanel from './pages/admin/AdminSkyPanel';
 
 // Artista Portal
 import ArtistaPortal from './pages/ArtistaPortal';
@@ -220,6 +221,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_CEREBRO: return <AdminCerebro onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_CONTROL_PANEL: return <AdminControlPanel onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.TOUR_PRIVADO: return <TourPrivado onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_SKY_PANEL: return <AdminSkyPanel onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };

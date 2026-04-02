@@ -258,6 +258,19 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                      <span className="text-xs text-indigo-700">Notas · Oportunidades · Trazabilidad · Contexto Claude</span>
                   </div>
                </button>
+               {/* ── SkyPanel Pro ── */}
+               <button
+                  onClick={() => onNavigate(AppRoute.ADMIN_SKY_PANEL)}
+                  className="w-full bg-gradient-to-r from-slate-900 via-cyan-950 to-slate-900 p-4 rounded-xl border border-cyan-500 hover:border-cyan-300 flex items-center gap-3 transition-colors relative overflow-hidden"
+               >
+                  <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-cyan-300 rounded-full animate-pulse" />
+                  <span className="text-lg">🌴</span>
+                  <div className="text-left flex-1">
+                     <span className="text-sm font-black text-cyan-200 block">SkyPanel Pro</span>
+                     <span className="text-xs text-cyan-700">Torre de Control · Todos los proyectos · Airtable live</span>
+                  </div>
+                  <ChevronRight size={16} className="text-cyan-500" />
+               </button>
                <button
                   onClick={() => onNavigate(AppRoute.ADMIN_TORRE_CONTROL)}
                   className="w-full bg-gradient-to-r from-cyan-900/60 via-blue-900/60 to-cyan-900/60 p-3 rounded-xl border border-cyan-700 hover:border-cyan-500 flex items-center gap-3 relative overflow-hidden transition-colors"
