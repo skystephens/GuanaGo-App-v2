@@ -5,6 +5,7 @@ import { AppRoute, Tour } from '../types';
 import { GUANA_LOGO } from '../constants';
 import CaribbeanNightSection from '../components/CaribbeanNightSection';
 import CocoArtSection from '../components/CocoArtSection';
+import RutaRaizalSection from '../components/RutaRaizalSection';
 // GuanaPointsSection ocultado temporalmente
 
 interface HomeProps {
@@ -170,6 +171,9 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
 
         {/* Coco Art Section */}
         <CocoArtSection onNavigate={onNavigate} />
+
+        {/* Ruta Raizal Section */}
+        <RutaRaizalSection onNavigate={onNavigate} />
 
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
