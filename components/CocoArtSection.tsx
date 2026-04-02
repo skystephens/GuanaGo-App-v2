@@ -3,6 +3,7 @@ import { Leaf, Heart, Package, Images, Star, ChevronRight, Crown, Play, X, Palmt
 import { AppRoute, Tour } from '../types';
 import { api } from '../services/api';
 import { getFromCache } from '../services/cacheService';
+import { getPrecioB2C } from '../services/pricing';
 
 interface CocoArtSectionProps {
   onNavigate: (route: AppRoute, data?: any) => void;
@@ -127,7 +128,7 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {paquetes.map(pkg => {
-              const precioB2C = pkg.price > 0 ? Math.ceil(pkg.price * 1.15) : 0;
+              const precioB2C = getPrecioB2C(pkg);
               const isVip = pkg.title?.toLowerCase().includes('vip');
               return (
                 <div

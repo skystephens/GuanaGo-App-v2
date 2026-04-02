@@ -8,6 +8,7 @@ import { api } from '../services/api';
 import { cachedApi } from '../services/cachedApi';
 import { AppRoute, Tour } from '../types';
 import { getFromCache } from '../services/cacheService';
+import { getPrecioB2C } from '../services/pricing';
 
 interface MusicEvent {
   id: string;
@@ -101,7 +102,7 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
           id: s.id,
           title: s.title,
           description: s.description || '',
-          price: s.price > 0 ? Math.ceil(s.price * 1.15) : 0,
+          price: getPrecioB2C(s),
           image: s.image || '',
           includes: includesArr,
           category: 'caribbean_night',

@@ -3,6 +3,7 @@ import { MapPin, Calendar, ChevronRight, Loader2, Compass, Sun, Anchor } from 'l
 import { AppRoute, Tour } from '../types';
 import { api } from '../services/api';
 import { getFromCache } from '../services/cacheService';
+import { getPrecioB2C, getUnidad } from '../services/pricing';
 
 interface RutaRaizalSectionProps {
   onNavigate: (route: AppRoute, data?: any) => void;
@@ -55,9 +56,7 @@ const RutaRaizalSection: React.FC<RutaRaizalSectionProps> = ({ onNavigate }) => 
     ? ((tourActual as any).gallery || (tourActual as any).images || [tourActual.image]).filter(Boolean)
     : [];
 
-  const precioB2C = tourActual && tourActual.price > 0
-    ? Math.ceil(tourActual.price * 1.15)
-    : 0;
+  const precioB2C = tourActual ? getPrecioB2C(tourActual) : 0;
 
   return (
     <section
@@ -198,7 +197,9 @@ const RutaRaizalSection: React.FC<RutaRaizalSectionProps> = ({ onNavigate }) => 
                       <span className="text-2xl font-black" style={{ color: R_GOLD }}>
                         ${precioB2C.toLocaleString()}
                       </span>
-                      <span className="text-xs ml-1.5" style={{ color: 'rgba(255,235,210,0.5)' }}>COP / persona</span>
+                      <span className="text-xs ml-1.5" style={{ color: 'rgba(255,235,210,0.5)' }}>
+                        {tourActual?.moneda || 'COP'} {getUnidad(tourActual?.category || 'tour')}
+                      </span>
                     </>
                   ) : (
                     <span className="text-sm" style={{ color: 'rgba(255,235,210,0.5)' }}>Consultar precio</span>

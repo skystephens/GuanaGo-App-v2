@@ -3,6 +3,7 @@ import { Music, ExternalLink, Loader2, Ticket, Sparkles, MapPin, ChevronRight, C
 import { api } from '../services/api';
 import { AppRoute, Tour } from '../types';
 import { getFromCache } from '../services/cacheService';
+import { getPrecioB2C } from '../services/pricing';
 
 interface MusicEvent {
   id: string;
@@ -132,7 +133,7 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
           </div>
           <div className="flex flex-col gap-3">
             {paquetes.map((pkg) => {
-              const precioB2C = pkg.price > 0 ? Math.ceil(pkg.price * 1.15) : 0;
+              const precioB2C = getPrecioB2C(pkg);
               const hasTransporte = pkg.title?.toLowerCase().includes('transporte');
               const hasDegustacion = pkg.title?.toLowerCase().includes('degustaci');
               return (

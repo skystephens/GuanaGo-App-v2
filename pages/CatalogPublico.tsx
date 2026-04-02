@@ -7,9 +7,7 @@ import { api } from '../services/api';
 import { AppRoute, Tour } from '../types';
 import { getFromCache, saveToCache } from '../services/cacheService';
 import { GUANA_LOGO } from '../constants';
-
-// ── Constantes de canal ──────────────────────────────────────────
-const MARKUP_DIRECTO = 0.15; // +15% tarifa cliente directo (incluye concierge + logística)
+import { getPrecioB2C, getUnidad } from '../services/pricing';
 
 interface CatalogPublicoProps {
   onNavigate: (route: AppRoute, data?: any) => void;
@@ -37,7 +35,7 @@ const FALLBACK_IMG: Record<string, string> = {
   taxi:    'https://images.unsplash.com/photo-1549924231-f129b911e442?w=600&q=80',
 };
 
-// ── Helpers ──────────────────────────────────────────────────────
+// ── Helpers ─────────────────────────────────────────────────────
 function capturarPromotor(): string | null {
   // Leer ?ref= de la URL y persistir en sessionStorage
   const params = new URLSearchParams(window.location.search);
@@ -49,9 +47,6 @@ function capturarPromotor(): string | null {
   return sessionStorage.getItem('promotor_ref');
 }
 
-function precioDirecto(precio: number): number {
-  return Math.ceil(precio * (1 + MARKUP_DIRECTO));
-}
 
 // ── Componente principal ─────────────────────────────────────────
 const CatalogPublico: React.FC<CatalogPublicoProps> = ({ onNavigate, onBack }) => {
@@ -220,7 +215,7 @@ const CatalogPublico: React.FC<CatalogPublicoProps> = ({ onNavigate, onBack }) =
             {filtered.map(service => {
               const cat = service.category || 'tour';
               const img = service.image || FALLBACK_IMG[cat] || FALLBACK_IMG.tour;
-              const precioFinal = precioDirecto(service.price || 0);
+              const precioFinal = getPrecioB2C(service);
               const badge = BADGE_COLOR[cat] || 'bg-gray-500';
               const catLabel = CATEGORIAS.find(c => c.id === cat)?.label || 'Servicio';
 
@@ -270,7 +265,7 @@ const CatalogPublico: React.FC<CatalogPublicoProps> = ({ onNavigate, onBack }) =
                               ${precioFinal.toLocaleString()}
                             </span>
                             <span className="text-[10px] text-gray-400 ml-1">
-                              USD {cat === 'hotel' ? '/ noche' : '/ persona'}
+                              {service.moneda || 'COP'} {getUnidad(cat)}
                             </span>
                           </>
                         ) : (

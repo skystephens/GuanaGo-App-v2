@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MapPin, Anchor, Bed, Package as PackageIcon, Car, RefreshCw, Globe } from 'lucide-react';
+import { getPrecioB2C, getUnidad } from '../services/pricing';
 import { cachedApi } from '../services/cachedApi';
 import { AppRoute, Tour } from '../types';
 import { GUANA_LOGO } from '../constants';
@@ -241,11 +242,17 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                      <h4 className="font-bold text-gray-800 text-xs md:text-sm leading-tight line-clamp-2 mb-2">{item.title}</h4>
                      <div className="mt-auto flex items-center justify-between">
                         <div>
-                          <span className="text-emerald-600 font-black text-sm md:text-base">
-                            ${item.price > 0 ? Math.ceil(item.price * 1.15).toLocaleString() : '—'}
-                          </span>
-                          {item.price > 0 && (
-                            <span className="block text-[9px] text-gray-400">USD / {item.category === 'hotel' ? 'noche' : 'persona'}</span>
+                          {getPrecioB2C(item) > 0 ? (
+                            <>
+                              <span className="text-emerald-600 font-black text-sm md:text-base">
+                                ${getPrecioB2C(item).toLocaleString()}
+                              </span>
+                              <span className="block text-[9px] text-gray-400">
+                                {item.moneda || 'COP'} {getUnidad(item.category)}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-emerald-600 font-black text-sm md:text-base">—</span>
                           )}
                         </div>
                         <span className="hidden md:inline text-xs text-gray-400">Ver más →</span>

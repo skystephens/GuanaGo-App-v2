@@ -879,32 +879,48 @@ export async function getServices(category?: string) {
     else if (tipoServicio.includes('traslado') || tipoServicio.includes('taxi')) category = 'taxi';
     else if (tipoServicio.includes('paquete')) category = 'package';
     
-    // Precio: usar "Precio" o "Precio Costo"
-    const precio = parseFloat(
-      String(f['Precio'] || f['Precio actualizado'] || f['Precio Costo'] || '0')
-        .replace(/[^0-9.]/g, '')
-    ) || 0;
-    
+    // Helper para parsear campos de precio (acepta número, string con puntos/comas, vacío)
+    const parsePrecio = (val: any): number =>
+      parseFloat(String(val ?? '0').replace(/[^0-9.]/g, '')) || 0;
+
+    // Tarifa base
+    const precio = parsePrecio(
+      f['Precio'] || f['Precio actualizado'] || f['Precio Costo'] || 0
+    );
+
+    // Precios por canal — leídos directo de Airtable, fallback 0 (el frontend calcula si no hay)
+    const precioB2C      = parsePrecio(f['Precio_B2C']      || f['Precio B2C']      || f['PrecioB2C']      || 0);
+    const precioPromotor = parsePrecio(f['Precio_Promotor']  || f['Precio Promotor'] || f['PrecioPromotor'] || 0);
+    const precioOTA      = parsePrecio(f['Precio_OTA']       || f['Precio OTA']      || f['Precio Neto']   || f['PrecioOTA'] || 0);
+    const precioAliado   = parsePrecio(f['Precio_Aliado']    || f['Precio Aliado']   || f['PrecioAliado']  || 0);
+
     return {
       id: record.id,
       // Nombre del servicio
       title: f['Servicio'] || f['Nombre alternativo'] || f['Nombre'] || '',
       name: f['Servicio'] || f['Nombre alternativo'] || f['Nombre'] || '',
       nombre: f['Servicio'] || f['Nombre alternativo'] || f['Nombre'] || '',
-      
+
       // Categoría
       category: category,
       categoria: category,
       type: f['Tipo de Servicio'] || 'Tour',
       tipo: f['Tipo de Servicio'] || 'Tour',
-      
+
       // Descripción
       description: f['Descripcion'] || f['Itinerario'] || '',
       descripcion: f['Descripcion'] || f['Itinerario'] || '',
-      
-      // Precio
+
+      // Tarifa base
       price: precio,
       precio: precio,
+
+      // Precios por canal (0 = no configurado en Airtable → el frontend usa fallback)
+      precioB2C:      precioB2C      > 0 ? precioB2C      : undefined,
+      precioPromotor: precioPromotor > 0 ? precioPromotor : undefined,
+      precioOTA:      precioOTA      > 0 ? precioOTA      : undefined,
+      precioAliado:   precioAliado   > 0 ? precioAliado   : undefined,
+      moneda:         (f['Moneda Precios'] || f['Moneda'] || 'COP') as 'COP' | 'USD',
       
       // Ubicación (isla: San Andres o Providencia)
       location: f['Ubicacion'] || 'San Andrés',

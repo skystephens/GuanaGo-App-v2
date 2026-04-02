@@ -21,20 +21,33 @@ export interface Tour {
   title: string;
   rating: number;
   reviews: number;
-  price: number; 
+  /** Tarifa base — campo Precio en ServiciosTuristicos_SAI */
+  price: number;
   image: string;
-  gallery?: string[]; 
+  gallery?: string[];
   category: 'tour' | 'hotel' | 'taxi' | 'package' | 'handicraft';
   description?: string;
   duration?: string;
-  ownerId?: string; 
+  ownerId?: string;
   active: boolean;
   isRaizal?: boolean;
   raizalHistory?: string;
   latitude?: number;
   longitude?: number;
-  requiresApproval?: boolean; // 🆕 Si el servicio requiere confirmación de socio
-  latLon?: string; // 🆕 Ubicación GPS en formato "lat,lon" (ej: "12.5849,-81.7338")
+  requiresApproval?: boolean;
+  latLon?: string;
+
+  // ── Precios por canal (campo Precio_<Canal> en Airtable) ──────────────
+  /** B2C cliente directo — campo Precio_B2C · incluye concierge + logística */
+  precioB2C?: number;
+  /** Canal promotor — campo Precio_Promotor · incluye comisión del referidor */
+  precioPromotor?: number;
+  /** Canal OTA / agencia — campo Precio_OTA · tarifa neta sin markup */
+  precioOTA?: number;
+  /** Canal aliado local — campo Precio_Aliado · tarifa con comisión mensual */
+  precioAliado?: number;
+  /** Moneda de los precios: 'COP' | 'USD' */
+  moneda?: 'COP' | 'USD';
 }
 
 export interface ItineraryDay {
