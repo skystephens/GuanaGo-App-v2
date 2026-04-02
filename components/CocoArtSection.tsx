@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Palette, Heart, Package, Ticket, Images, Star, ChevronRight, Crown } from 'lucide-react';
+import { Palette, Heart, Package, Images, Star, ChevronRight, Crown, Play, X } from 'lucide-react';
 import { AppRoute, Tour } from '../types';
 import PhotoCarousel from './PhotoCarousel';
 import { api } from '../services/api';
@@ -9,8 +9,12 @@ interface CocoArtSectionProps {
   onNavigate: (route: AppRoute, data?: any) => void;
 }
 
+const YOUTUBE_ID = 'rFQ9sV08KRI';
+const YOUTUBE_THUMB = `https://img.youtube.com/vi/${YOUTUBE_ID}/hqdefault.jpg`;
+
 const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
   const [activeImg, setActiveImg] = useState<number | null>(null);
+  const [playVideo, setPlayVideo] = useState(false);
   const [paquetes, setPaquetes] = useState<Tour[]>([]);
 
   const carouselImages = [
@@ -71,22 +75,11 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
               El maestro («Breda Sky») rescata la herencia de San Andrés transformando la palma de coco en arte auténtico. Desde venta de piezas artesanales hasta experiencias interactivas, cada creación es un homenaje a nuestras raíces Kriol.
             </p>
             
-            <div className="space-y-2 mb-6">
+            <div className="space-y-2">
               <p className="text-amber-200 text-xs font-bold uppercase">✓ Piezas únicas y personalizadas</p>
               <p className="text-amber-200 text-xs font-bold uppercase">✓ Ambientación para eventos especiales</p>
               <p className="text-amber-200 text-xs font-bold uppercase">✓ Experiencias educativas e inmersivas</p>
             </div>
-
-            <button
-              onClick={() => paquetes.length > 0
-                ? onNavigate(AppRoute.TOUR_DETAIL, paquetes[0])
-                : onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'tour', searchTerm: 'Coco Art' })
-              }
-              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition-colors w-fit"
-            >
-              <Ticket size={14} />
-              Reservar Experiencia
-            </button>
           </div>
 
           {/* Photo Carousel */}
@@ -187,7 +180,7 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
         </div>
       )}
 
-      {/* Galería Coco Art */}
+      {/* Galería + Video Coco Art */}
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-3">
           <Images size={15} className="text-orange-300" />
@@ -197,56 +190,64 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
           </span>
         </div>
 
-        {/* Primera imagen grande + columna de 2 + columna de 2 */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-          {/* Imagen destacada */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
+          {/* Foto grande — ocupa 2 columnas en la primera fila */}
           <div
-            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer relative group"
-            style={{ width: 200, height: 220, border: '1px solid rgba(255,255,255,0.15)' }}
+            className="col-span-2 md:col-span-1 rounded-2xl overflow-hidden cursor-pointer relative group"
+            style={{ height: 180, border: '1px solid rgba(255,255,255,0.15)' }}
             onClick={() => setActiveImg(activeImg === 0 ? null : 0)}
           >
-            <img src={carouselImages[0]} alt="Coco Art" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <img
+              src={carouselImages[0]}
+              alt="Coco Art"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(120,53,15,0.7) 0%, transparent 50%)' }} />
             <div className="absolute bottom-3 left-3">
               <p className="text-white text-xs font-bold">Coco Art</p>
-              <p className="text-amber-200 text-[10px]">San Andrés Isla</p>
+              <p className="text-amber-200 text-[10px]">San Andrés Isla 🥥</p>
             </div>
           </div>
 
-          {/* Columnas de 2 fotos apiladas */}
-          {[[1, 2], [3, 4]].map((pair, ci) => (
-            <div key={ci} className="flex-shrink-0 flex flex-col gap-2" style={{ width: 130 }}>
-              {pair.map((idx) => carouselImages[idx] && (
-                <div
-                  key={idx}
-                  className="rounded-xl overflow-hidden cursor-pointer relative group"
-                  style={{ height: 104, border: '1px solid rgba(255,255,255,0.1)' }}
-                  onClick={() => setActiveImg(activeImg === idx ? null : idx)}
-                >
-                  <img src={carouselImages[idx]} alt={`Coco Art ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(120,53,15,0.6) 0%, transparent 55%)' }} />
-                  {activeImg === idx && (
-                    <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
-                      <span className="text-white text-xs font-bold px-2 py-1 rounded-lg" style={{ background: 'rgba(249,115,22,0.7)' }}>✓</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
+          {/* Fotos 2–5 en grid normal */}
+          {carouselImages.slice(1).map((src, i) => {
+            const idx = i + 1;
+            return (
+              <div
+                key={idx}
+                className="rounded-xl overflow-hidden cursor-pointer relative group"
+                style={{ height: 86, border: '1px solid rgba(255,255,255,0.1)' }}
+                onClick={() => setActiveImg(activeImg === idx ? null : idx)}
+              >
+                <img
+                  src={src}
+                  alt={`Coco Art ${idx + 1}`}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(120,53,15,0.5) 0%, transparent 60%)' }} />
+                {activeImg === idx && (
+                  <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
+                    <span className="text-white text-xs font-bold px-2 py-1 rounded-lg" style={{ background: 'rgba(249,115,22,0.7)' }}>✓</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        {/* Lightbox mini al seleccionar */}
+        {/* Lightbox mini al seleccionar foto */}
         {activeImg !== null && carouselImages[activeImg] && (
-          <div className="mt-3 rounded-2xl overflow-hidden relative" style={{ border: '1px solid rgba(251,146,60,0.3)' }}>
-            <img src={carouselImages[activeImg]} alt={`Coco Art ${activeImg + 1}`} className="w-full object-cover" style={{ maxHeight: 280 }} />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(120,53,15,0.75) 0%, transparent 60%)' }} />
+          <div className="mb-3 rounded-2xl overflow-hidden relative" style={{ border: '1px solid rgba(251,146,60,0.3)' }}>
+            <img src={carouselImages[activeImg]} alt={`Coco Art ${activeImg + 1}`} className="w-full object-cover" style={{ maxHeight: 260 }} />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(120,53,15,0.75) 0%, transparent 60%)' }} />
             <button
               onClick={() => setActiveImg(null)}
-              className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+              className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center text-white"
               style={{ background: 'rgba(0,0,0,0.55)' }}
             >
-              ✕
+              <X size={14} />
             </button>
             <div className="absolute bottom-3 left-4">
               <p className="text-white font-bold text-sm">Coco Art · Experiencia Cultural</p>
@@ -254,6 +255,56 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
             </div>
           </div>
         )}
+
+        {/* ── Video YouTube ── */}
+        <div className="rounded-2xl overflow-hidden relative" style={{ border: '1px solid rgba(251,146,60,0.3)' }}>
+          {playVideo ? (
+            <div className="relative" style={{ paddingBottom: '56.25%' /* 16:9 */ }}>
+              <iframe
+                className="absolute inset-0 w-full h-full"
+                src={`https://www.youtube.com/embed/${YOUTUBE_ID}?autoplay=1&rel=0`}
+                title="Coco Art — Experiencia Cultural San Andrés"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+              <button
+                onClick={() => setPlayVideo(false)}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center text-white z-10"
+                style={{ background: 'rgba(0,0,0,0.6)' }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <div
+              className="relative cursor-pointer group"
+              style={{ height: 200 }}
+              onClick={() => setPlayVideo(true)}
+            >
+              <img
+                src={YOUTUBE_THUMB}
+                alt="Ver video Coco Art"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              {/* Overlay oscuro */}
+              <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)' }} />
+              {/* Botón play centrado */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-200"
+                  style={{ background: 'rgba(255,0,0,0.9)' }}
+                >
+                  <Play size={28} fill="white" className="text-white ml-1" />
+                </div>
+              </div>
+              {/* Label */}
+              <div className="absolute bottom-4 left-4 right-4">
+                <p className="text-white font-black text-sm drop-shadow">Ver experiencia Coco Art</p>
+                <p className="text-amber-200 text-xs mt-0.5 drop-shadow">YouTube · San Andrés Isla</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
