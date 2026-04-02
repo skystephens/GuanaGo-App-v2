@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Palette, Heart, Package, Ticket, Images } from 'lucide-react';
-import { AppRoute } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Palette, Heart, Package, Ticket, Images, Star, ChevronRight, Crown } from 'lucide-react';
+import { AppRoute, Tour } from '../types';
 import PhotoCarousel from './PhotoCarousel';
+import { api } from '../services/api';
+import { getFromCache } from '../services/cacheService';
 
 interface CocoArtSectionProps {
   onNavigate: (route: AppRoute, data?: any) => void;
@@ -9,6 +11,7 @@ interface CocoArtSectionProps {
 
 const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
   const [activeImg, setActiveImg] = useState<number | null>(null);
+  const [paquetes, setPaquetes] = useState<Tour[]>([]);
 
   const carouselImages = [
     'https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.21.27_c6ff3afa-980x735.jpg',
@@ -18,26 +21,21 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
     'https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.25.14_8d9f5c2e-980x735.jpg'
   ];
 
-  const offerings = [
-    {
-      icon: <Package size={20} />,
-      title: 'Piezas Artesanales',
-      description: 'Desde centros Sombreros, canastos hasta figuras únicas',
-      price: 'Desde $50,000'
-    },
-    {
-      icon: <Palette size={20} />,
-      title: 'Kriol Vibe',
-      description: 'Alquiler de ambientación decorativa',
-      price: '$100.000'
-    },
-    {
-      icon: <Heart size={20} />,
-      title: 'Coco Art Live',
-      description: 'Experiencia inmersiva y participativa que incluye relato historico',
-      price: 'Desde $195,000'
+  useEffect(() => {
+    loadPaquetes();
+  }, []);
+
+  const loadPaquetes = async () => {
+    let all: Tour[] = getFromCache<Tour[]>('services_turisticos') || [];
+    if (all.length === 0) {
+      all = await api.services.listPublic();
     }
-  ];
+    const cocoItems = all.filter(s =>
+      s.title?.toLowerCase().includes('cocoart') ||
+      s.title?.toLowerCase().includes('coco art')
+    );
+    setPaquetes(cocoItems);
+  };
 
   return (
     <section className="px-6 py-8 bg-gradient-to-br from-amber-700 via-amber-800 to-orange-900 rounded-3xl mx-4 my-6 shadow-xl overflow-hidden relative">
@@ -80,7 +78,10 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
             </div>
 
             <button
-              onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'tour', searchTerm: 'Coco Art' })}
+              onClick={() => paquetes.length > 0
+                ? onNavigate(AppRoute.TOUR_DETAIL, paquetes[0])
+                : onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'tour', searchTerm: 'Coco Art' })
+              }
               className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition-colors w-fit"
             >
               <Ticket size={14} />
@@ -95,22 +96,96 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* Offerings Grid */}
-      <div className="relative z-10 grid md:grid-cols-3 gap-4 mb-6">
-        {offerings.map((offering, idx) => (
-          <div
-            key={idx}
-            className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 hover:bg-white/15 transition-all cursor-pointer group"
-          >
-            <div className="text-orange-300 mb-3 group-hover:scale-110 transition-transform">
-              {offering.icon}
+      {/* Paquetes desde Airtable (CocoART BASIC / VIP) */}
+      {paquetes.length > 0 && (
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {paquetes.map((pkg) => {
+            const precioB2C = pkg.price > 0 ? Math.ceil(pkg.price * 1.15) : 0;
+            const isVip = pkg.title?.toLowerCase().includes('vip');
+            return (
+              <div
+                key={pkg.id}
+                onClick={() => onNavigate(AppRoute.TOUR_DETAIL, pkg)}
+                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden hover:bg-white/15 transition-all cursor-pointer group active:scale-[0.98]"
+              >
+                {/* Imagen del paquete si existe */}
+                {pkg.image && (
+                  <div className="relative h-36 overflow-hidden">
+                    <img src={pkg.image} alt={pkg.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-400" />
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(120,53,15,0.85) 0%, transparent 50%)' }} />
+                    {isVip && (
+                      <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black"
+                        style={{ background: 'rgba(251,191,36,0.9)', color: '#78350f' }}>
+                        <Crown size={10} /> VIP
+                      </div>
+                    )}
+                    <div className="absolute bottom-3 left-3">
+                      <span className="text-white font-black text-sm">{pkg.title}</span>
+                    </div>
+                  </div>
+                )}
+                <div className="p-4">
+                  {!pkg.image && (
+                    <div className="flex items-center gap-2 mb-2">
+                      {isVip ? <Crown size={18} className="text-amber-300" /> : <Star size={18} className="text-orange-300" />}
+                      <h4 className="font-black text-white text-sm">{pkg.title}</h4>
+                      {isVip && (
+                        <span className="ml-auto text-[9px] font-black px-2 py-0.5 rounded-full"
+                          style={{ background: 'rgba(251,191,36,0.3)', color: '#fbbf24' }}>VIP</span>
+                      )}
+                    </div>
+                  )}
+                  {pkg.description && (
+                    <p className="text-amber-100/70 text-xs leading-relaxed mb-3 line-clamp-3">{pkg.description}</p>
+                  )}
+                  {/* Bullets de lo que incluye — parsear de descripción o mostrar genéricos */}
+                  <div className="space-y-1 mb-4">
+                    <p className="text-amber-200 text-[10px] font-bold uppercase">✓ Experiencia artesanal guiada</p>
+                    <p className="text-amber-200 text-[10px] font-bold uppercase">✓ Historia Kriol del coco</p>
+                    {isVip && <p className="text-amber-200 text-[10px] font-bold uppercase">✓ Degustación + materiales premium</p>}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      {precioB2C > 0 ? (
+                        <>
+                          <span className="text-orange-300 font-black text-lg">${precioB2C.toLocaleString()}</span>
+                          <span className="text-amber-100/50 text-[10px] ml-1">COP / persona</span>
+                        </>
+                      ) : (
+                        <span className="text-amber-100/50 text-xs">Consultar precio</span>
+                      )}
+                    </div>
+                    <button
+                      className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-xl transition-all"
+                      style={{ background: 'rgba(249,115,22,0.3)', color: '#fdba74' }}
+                    >
+                      Saber más <ChevronRight size={12} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Offerings estáticos (fallback si no hay data de Airtable) */}
+      {paquetes.length === 0 && (
+        <div className="relative z-10 grid md:grid-cols-3 gap-4 mb-6">
+          {[
+            { icon: <Package size={20} />, title: 'Piezas Artesanales', description: 'Desde centros, sombreros, canastos hasta figuras únicas', price: 'Desde $50,000' },
+            { icon: <Palette size={20} />, title: 'Kriol Vibe', description: 'Alquiler de ambientación decorativa', price: '$100.000' },
+            { icon: <Heart size={20} />, title: 'Coco Art Live', description: 'Experiencia inmersiva y participativa con relato histórico', price: 'Desde $195,000' }
+          ].map((item, idx) => (
+            <div key={idx} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 hover:bg-white/15 transition-all group">
+              <div className="text-orange-300 mb-3 group-hover:scale-110 transition-transform">{item.icon}</div>
+              <h4 className="font-bold text-white text-sm mb-1">{item.title}</h4>
+              <p className="text-amber-100/60 text-xs mb-3 leading-tight">{item.description}</p>
+              <p className="text-orange-300 font-black text-xs">{item.price}</p>
             </div>
-            <h4 className="font-bold text-white text-sm mb-1">{offering.title}</h4>
-            <p className="text-amber-100/60 text-xs mb-3 leading-tight">{offering.description}</p>
-            <p className="text-orange-300 font-black text-xs">{offering.price}</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Galería Coco Art */}
       <div className="relative z-10">

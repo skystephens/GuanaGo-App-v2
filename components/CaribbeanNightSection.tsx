@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Music, Calendar, ExternalLink, Loader2, AlertCircle, Ticket, Sparkles, Clock, MapPin } from 'lucide-react';
+import { Music, Calendar, ExternalLink, Loader2, AlertCircle, Ticket, Sparkles, Clock, MapPin, ChevronRight, Car, UtensilsCrossed } from 'lucide-react';
 import { api } from '../services/api';
-import { AppRoute } from '../types';
+import { AppRoute, Tour } from '../types';
+import { getFromCache } from '../services/cacheService';
 
 interface MusicEvent {
   id: string;
@@ -26,9 +27,11 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
   const [events, setEvents] = useState<MusicEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [paquetes, setPaquetes] = useState<Tour[]>([]);
 
   useEffect(() => {
     fetchAll();
+    loadPaquetes();
   }, []);
 
   const fetchAll = async () => {
@@ -43,6 +46,19 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadPaquetes = async () => {
+    // Intentar caché primero, luego API
+    let all: Tour[] = getFromCache<Tour[]>('services_turisticos') || [];
+    if (all.length === 0) {
+      all = await api.services.listPublic();
+    }
+    const caribbeanPaquetes = all.filter(s =>
+      s.title?.toLowerCase().includes('caribbean night') ||
+      s.title?.toLowerCase().includes('caribbean')
+    );
+    setPaquetes(caribbeanPaquetes);
   };
 
   const handleReservation = (event: MusicEvent) => {
@@ -272,6 +288,88 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── PAQUETES CARIBBEAN NIGHT (desde ServiciosTuristicos_SAI) ── */}
+      {paquetes.length > 0 && (
+        <div className="px-5 pb-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Ticket size={15} style={{ color: '#fb923c' }} />
+            <h3 className="font-bold text-sm uppercase tracking-wider text-white">Elige tu paquete</h3>
+          </div>
+          <div className="flex flex-col gap-3">
+            {paquetes.map((pkg) => {
+              const precioB2C = pkg.price > 0 ? Math.ceil(pkg.price * 1.15) : 0;
+              const hasTransporte = pkg.title?.toLowerCase().includes('transporte');
+              const hasDegustacion = pkg.title?.toLowerCase().includes('degustaci');
+              return (
+                <div
+                  key={pkg.id}
+                  className="rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-all"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
+                  onClick={() => onNavigate(AppRoute.TOUR_DETAIL, pkg)}
+                >
+                  <div className="flex gap-0">
+                    {/* Imagen pequeña */}
+                    {pkg.image && (
+                      <div className="w-24 h-24 flex-shrink-0 overflow-hidden">
+                        <img src={pkg.image} alt={pkg.title} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    {/* Contenido */}
+                    <div className="flex-1 p-3 flex flex-col justify-between">
+                      <div>
+                        <h4 className="text-white font-black text-sm leading-tight mb-1">{pkg.title}</h4>
+                        {/* Tags de lo que incluye */}
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold"
+                            style={{ background: 'rgba(249,115,22,0.25)', color: '#fb923c' }}>
+                            <Ticket size={9} /> Cover
+                          </span>
+                          {hasTransporte && (
+                            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold"
+                              style={{ background: 'rgba(34,211,238,0.2)', color: '#22d3ee' }}>
+                              <Car size={9} /> Transporte
+                            </span>
+                          )}
+                          {hasDegustacion && (
+                            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold"
+                              style={{ background: 'rgba(74,222,128,0.2)', color: '#4ade80' }}>
+                              <UtensilsCrossed size={9} /> Degustación
+                            </span>
+                          )}
+                        </div>
+                        {pkg.description && (
+                          <p className="text-[11px] leading-relaxed line-clamp-2"
+                            style={{ color: 'rgba(165,243,252,0.65)' }}>
+                            {pkg.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <div>
+                          {precioB2C > 0 ? (
+                            <>
+                              <span className="text-base font-black" style={{ color: '#fb923c' }}>
+                                ${precioB2C.toLocaleString()}
+                              </span>
+                              <span className="text-[10px] ml-1" style={{ color: 'rgba(255,255,255,0.4)' }}>COP / persona</span>
+                            </>
+                          ) : (
+                            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Consultar precio</span>
+                          )}
+                        </div>
+                        <span className="flex items-center gap-1 text-xs font-bold" style={{ color: '#22d3ee' }}>
+                          Saber más <ChevronRight size={13} />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
