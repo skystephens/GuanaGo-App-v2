@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapPin, Anchor, Bed, Package as PackageIcon, Car, RefreshCw } from 'lucide-react';
+import { MapPin, Anchor, Bed, Package as PackageIcon, Car, RefreshCw, Globe } from 'lucide-react';
 import { cachedApi } from '../services/cachedApi';
 import { AppRoute, Tour } from '../types';
 import { GUANA_LOGO } from '../constants';
@@ -146,6 +146,23 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           </div>
         </div>
 
+        {/* Catálogo Público — acceso directo cliente B2C */}
+        <div className="mb-6">
+          <button
+            onClick={() => onNavigate(AppRoute.CATALOG_PUBLICO)}
+            className="w-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white rounded-2xl p-4 md:p-5 flex items-center gap-4 shadow-md hover:shadow-lg hover:scale-[1.01] transition-all active:scale-95 text-left"
+          >
+            <div className="bg-white/20 rounded-xl p-2 shrink-0">
+              <Globe size={22} />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-black text-sm md:text-base">Catálogo Completo de Experiencias</h4>
+              <p className="text-xs opacity-80 mt-0.5">Tours · Alojamiento · Paquetes · Traslados</p>
+            </div>
+            <span className="text-white/70 text-xs font-bold shrink-0">Ver todo →</span>
+          </button>
+        </div>
+
         {/* GUANA Points oculto temporalmente */}
 
         {/* RIMM Caribbean Night Section */}
@@ -156,7 +173,10 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
 
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
-             <h3 className="text-lg font-black text-gray-800">Recomendados para ti</h3>
+             <div>
+               <h3 className="text-lg font-black text-gray-800">Recomendados para ti</h3>
+               <p className="text-[10px] text-gray-400 mt-0.5">Precio incluye concierge + coordinación logística</p>
+             </div>
              <div className="flex items-center gap-2">
                <span className={`text-xs px-2 py-1 rounded-full ${
                  dataSource === 'api' ? 'bg-green-100 text-green-700' :
@@ -216,7 +236,14 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                   <div className="p-4 md:p-5 flex flex-col flex-1">
                      <h4 className="font-bold text-gray-800 text-xs md:text-sm leading-tight line-clamp-2 mb-2">{item.title}</h4>
                      <div className="mt-auto flex items-center justify-between">
-                        <span className="text-emerald-600 font-black text-sm md:text-base">${item.price.toLocaleString()}</span>
+                        <div>
+                          <span className="text-emerald-600 font-black text-sm md:text-base">
+                            ${item.price > 0 ? Math.ceil(item.price * 1.15).toLocaleString() : '—'}
+                          </span>
+                          {item.price > 0 && (
+                            <span className="block text-[9px] text-gray-400">USD / {item.category === 'hotel' ? 'noche' : 'persona'}</span>
+                          )}
+                        </div>
                         <span className="hidden md:inline text-xs text-gray-400">Ver más →</span>
                      </div>
                   </div>

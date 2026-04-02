@@ -304,6 +304,7 @@ export enum AppRoute {
   ARTISTA_PORTAL = 'ARTISTA_PORTAL',
   TOUR_PRIVADO = 'TOUR_PRIVADO',
   ADMIN_SKY_PANEL = 'ADMIN_SKY_PANEL',
+  CATALOG_PUBLICO = 'CATALOG_PUBLICO',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';

@@ -74,6 +74,9 @@ import ArtistaPortal from './pages/ArtistaPortal';
 // Tour Privado B2C
 import TourPrivado from './pages/TourPrivado';
 
+// Catálogo Público B2C (cliente directo / promotores)
+import CatalogPublico from './pages/CatalogPublico';
+
 // Unified Panel
 import UnifiedPanel from './components/UnifiedPanel';
 import UserProfileButton from './components/UserProfileButton';
@@ -222,6 +225,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_CONTROL_PANEL: return <AdminControlPanel onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.TOUR_PRIVADO: return <TourPrivado onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_SKY_PANEL: return <AdminSkyPanel onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.CATALOG_PUBLICO: return <CatalogPublico onNavigate={navigateTo} onBack={goBack} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };
