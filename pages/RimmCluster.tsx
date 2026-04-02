@@ -6,7 +6,8 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { cachedApi } from '../services/cachedApi';
-import { AppRoute } from '../types';
+import { AppRoute, Tour } from '../types';
+import { getFromCache } from '../services/cacheService';
 
 interface MusicEvent {
   id: string;
@@ -71,19 +72,53 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
     setLoading(true);
     setError(null);
     try {
-      // Cargar todos los datos en paralelo
-      // 🔥 Artistas ahora viene de Airtable directo (Rimm_musicos)
-      const [eventsData, artistsData, packagesData, galleryData] = await Promise.all([
+      // Artistas desde Rimm_musicos (en construcción)
+      const [eventsData, artistsData] = await Promise.all([
         api.musicEvents.list(),
-        cachedApi.getArtists(), // ← Airtable directo!
-        api.rimmPackages.list(),
-        api.rimmGallery.list()
+        cachedApi.getArtists(),
       ]);
-      
       setEvents(eventsData || []);
       setArtists(artistsData || []);
-      setPackages(packagesData || []);
-      setGallery(galleryData || []);
+
+      // Paquetes y galería: directo de ServiciosTuristicos_SAI
+      let allServices: Tour[] = getFromCache<Tour[]>('services_turisticos') || [];
+      if (allServices.length === 0) {
+        allServices = await api.services.listPublic();
+      }
+
+      const caribbeanServices = allServices.filter(s =>
+        s.title?.toLowerCase().includes('caribbean night') ||
+        s.title?.toLowerCase().includes('caribbean')
+      );
+
+      // Paquetes: mapear los servicios al formato RimmPackage
+      const pkgs: RimmPackage[] = caribbeanServices.map(s => {
+        const includesArr: string[] = [];
+        if (s.title?.toLowerCase().includes('transporte')) includesArr.push('Transporte');
+        if (s.title?.toLowerCase().includes('degustaci')) includesArr.push('Degustación');
+        includesArr.unshift('Cover entrada');
+        return {
+          id: s.id,
+          title: s.title,
+          description: s.description || '',
+          price: s.price > 0 ? Math.ceil(s.price * 1.15) : 0,
+          image: s.image || '',
+          includes: includesArr,
+          category: 'caribbean_night',
+          active: true,
+        };
+      });
+      setPackages(pkgs);
+
+      // Galería: todas las imágenes (gallery) de los servicios Caribbean Night
+      const galleryImages: string[] = [];
+      caribbeanServices.forEach(s => {
+        const imgs: string[] = (s as any).gallery || (s as any).images || [];
+        imgs.forEach(url => { if (url && !galleryImages.includes(url)) galleryImages.push(url); });
+        if (s.image && !galleryImages.includes(s.image)) galleryImages.unshift(s.image);
+      });
+      setGallery(galleryImages);
+
     } catch (err) {
       console.error('Error fetching RIMM data:', err);
       setError('No pudimos cargar los datos. Intenta de nuevo.');
@@ -93,7 +128,8 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
   };
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    // Agregar T12:00:00 para evitar desfase UTC→local (Colombia UTC-5 correría al día anterior)
+    const date = new Date(dateStr.includes('T') ? dateStr : dateStr + 'T12:00:00');
     return {
       day: date.getDate(),
       month: date.toLocaleDateString('es-CO', { month: 'short' }).toUpperCase(),
@@ -349,14 +385,16 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
             {packages.map(pkg => (
               <div 
                 key={pkg.id}
-                onClick={() => onNavigate(AppRoute.CHECKOUT, { 
-                  type: 'rimm_package', 
+                onClick={() => onNavigate(AppRoute.TOUR_DETAIL, {
                   id: pkg.id,
                   title: pkg.title,
                   price: pkg.price,
                   image: pkg.image,
                   description: pkg.description,
-                  includes: pkg.includes
+                  category: 'tour',
+                  active: true,
+                  rating: 4.8,
+                  reviews: 0,
                 })}
                 className="bg-gradient-to-r from-cyan-900/50 to-orange-900/30 backdrop-blur-sm border border-cyan-700/50 rounded-2xl overflow-hidden cursor-pointer hover:border-cyan-500 transition-all active:scale-[0.98]"
               >

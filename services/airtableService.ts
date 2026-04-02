@@ -815,6 +815,7 @@ export async function getServices(category?: string) {
     // 🔧 Campo correcto encontrado: "Imagenurl" (en Airtable es un attachment)
     const candidates = [
       f['Imagenurl'], f['ImagenUrl'], f['imagenurl'], f['imagenUrl'], // Campo real de Airtable
+      f['imagenwp'], f['ImagenWP'], f['imagenWP'], f['ImagenWp'],     // Campo WordPress URL
       f['Imagen'], f['Imagen Principal'], f['Imagen_Principal'], f['Image'], f['Images'],
       f['Foto'], f['Fotos'], f['Galeria'], f['Galería'], f['Gallery'],
       f['imagen'], f['imagen principal'], f['foto'], f['fotos'], // minúsculas
