@@ -26,6 +26,7 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
   const [paquetes, setPaquetes]     = useState<Tour[]>([]);
   const [gallery, setGallery]       = useState<string[]>([]);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
+  const [heroIdx, setHeroIdx]       = useState(0);
 
   const GALLERY_PREVIEW = 5;
 
@@ -38,6 +39,13 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
     window.addEventListener('guanago:cache-updated', onCacheUpdated);
     return () => window.removeEventListener('guanago:cache-updated', onCacheUpdated);
   }, []);
+
+  // Carrusel automático — avanza cada 3 segundos
+  useEffect(() => {
+    if (gallery.length < 2) return;
+    const t = setInterval(() => setHeroIdx(i => (i + 1) % gallery.length), 3000);
+    return () => clearInterval(t);
+  }, [gallery.length]);
 
   const loadPaquetes = async () => {
     let all: Tour[] = getFromCache<Tour[]>('services_turisticos') || [];
@@ -98,44 +106,58 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
         </p>
       </div>
 
-      {/* ── DESCRIPCIÓN + IMAGEN ── */}
+      {/* ── DESCRIPCIÓN + CARRUSEL ── */}
       <div
-        className="relative z-10 mx-6 mb-5 rounded-2xl overflow-hidden"
-        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+        className="relative z-10 mx-6 mb-5 rounded-2xl overflow-hidden flex gap-0"
+        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', minHeight: 148 }}
       >
-        {/* Imagen pequeña arriba */}
-        {displayImages[0] && (
-          <div className="h-36 overflow-hidden">
-            <img
-              src={displayImages[0]}
-              alt="Coco Art"
-              className="w-full h-full object-cover"
-              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, transparent 40%, rgba(10,31,15,0.9) 100%)' }} />
-          </div>
-        )}
-        {/* Texto debajo */}
-        <div className="p-4">
-          <h3 className="text-base font-black text-white mb-1.5 leading-snug">
+        {/* Texto izquierda */}
+        <div className="flex-1 p-4 flex flex-col justify-center min-w-0">
+          <h3 className="text-sm font-black text-white mb-1.5 leading-snug">
             Transformar historias en experiencias
           </h3>
-          <p className="text-xs leading-relaxed mb-3" style={{ color: 'rgba(200,230,200,0.75)' }}>
-            El maestro rescata la herencia de San Andrés transformando la palma de coco en arte auténtico. Cada pieza es un homenaje a las raíces Kriol de la isla.
+          <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'rgba(200,230,200,0.75)' }}>
+            El maestro rescata la herencia Kriol de San Andrés convirtiendo la palma de coco en arte auténtico.
           </p>
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <div className="space-y-1">
             {[
-              'Piezas únicas y personalizadas',
-              'Ambientación para eventos especiales',
-              'Experiencias educativas e inmersivas',
+              'Piezas únicas personalizadas',
+              'Eventos y ambientación',
+              'Experiencias educativas',
             ].map(item => (
-              <p key={item} className="text-[11px] font-bold flex items-center gap-1.5"
+              <p key={item} className="text-[10px] font-bold flex items-center gap-1.5"
                 style={{ color: PALM_ACCENT }}>
                 <span style={{ color: PALM_GOLD }}>✓</span> {item}
               </p>
             ))}
           </div>
         </div>
+
+        {/* Imagen derecha — cuadrada, carrusel automático */}
+        {displayImages.length > 0 && (
+          <div className="relative flex-shrink-0 overflow-hidden rounded-r-2xl" style={{ width: 140, height: 148 }}>
+            {displayImages.map((src, i) => (
+              <img
+                key={i}
+                src={src}
+                alt={`Coco Art ${i + 1}`}
+                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+                style={{ opacity: i === heroIdx ? 1 : 0 }}
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            ))}
+            {/* Puntos indicadores */}
+            {displayImages.length > 1 && (
+              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+                {displayImages.map((_, i) => (
+                  <div key={i} onClick={() => setHeroIdx(i)}
+                    className="w-1 h-1 rounded-full cursor-pointer transition-all"
+                    style={{ background: i === heroIdx ? PALM_GOLD : 'rgba(255,255,255,0.4)' }} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── PAQUETES AIRTABLE (CocoART BASIC / VIP) ── */}
