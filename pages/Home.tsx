@@ -216,7 +216,10 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 pb-4">
-              {services.length > 0 ? services.slice(0, 4).map((item) => (
+              {services.length > 0 ? (services.filter(s => s.destacado).length > 0
+                ? services.filter(s => s.destacado)
+                : services.slice(0, 4)
+              ).map((item) => (
                 <div 
                   key={`${item.id}-${dataSource}-${item.image || 'no-img'}`}
                   className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col cursor-pointer border border-gray-100 hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95 group" 

@@ -39,7 +39,7 @@ interface CacheMetadata {
 }
 
 const CACHE_PREFIX = 'guanago_cache_';
-const CACHE_VERSION = '2.1.0'; // Fuerza re-fetch: precioB2C ahora mapea 'Precio actualizado'
+const CACHE_VERSION = '2.2.0'; // Fuerza re-fetch: campo Destacado mapeado en ServiciosTuristicos_SAI
 const METADATA_KEY = 'guanago_cache_metadata';
 
 // Tiempo máximo antes de considerar datos "viejos" (en ms)

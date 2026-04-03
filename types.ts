@@ -30,6 +30,7 @@ export interface Tour {
   duration?: string;
   ownerId?: string;
   active: boolean;
+  destacado?: boolean;
   isRaizal?: boolean;
   raizalHistory?: string;
   latitude?: number;

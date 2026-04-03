@@ -979,6 +979,7 @@ export async function getServices(category?: string) {
       // Estado
       active: f['Publicado'] === true,
       disponible: f['Publicado'] === true,
+      destacado: f['Destacado'] === true,
       
       // Rating (default alto para tours nuevos)
       rating: parseFloat(f['Rating'] || '4.5') || 4.5,
