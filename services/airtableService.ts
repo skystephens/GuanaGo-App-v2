@@ -898,7 +898,8 @@ export async function getServices(category?: string) {
     );
 
     // Precios por canal — leídos directo de Airtable, fallback 0 (el frontend calcula si no hay)
-    const precioB2C      = parsePrecio(f['Precio_B2C']      || f['Precio B2C']      || f['PrecioB2C']      || 0);
+    // 'Precio actualizado' es la tarifa pública B2C final — usarla directamente sin markup
+    const precioB2C      = parsePrecio(f['Precio_B2C'] || f['Precio B2C'] || f['PrecioB2C'] || f['Precio actualizado'] || f['Precio_Actualizado'] || 0);
     const precioPromotor = parsePrecio(f['Precio_Promotor']  || f['Precio Promotor'] || f['PrecioPromotor'] || 0);
     const precioOTA      = parsePrecio(f['Precio_OTA']       || f['Precio OTA']      || f['Precio Neto']   || f['PrecioOTA'] || 0);
     const precioAliado   = parsePrecio(f['Precio_Aliado']    || f['Precio Aliado']   || f['PrecioAliado']  || 0);

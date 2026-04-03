@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, ChevronRight, Loader2, Compass, Sun, Anchor } from 'lucide-react';
+import { MapPin, Calendar, ChevronRight, Loader2, Compass, Sun, Anchor, Bed, Car } from 'lucide-react';
 import { AppRoute, Tour } from '../types';
 import { api } from '../services/api';
 import { getFromCache } from '../services/cacheService';
@@ -122,44 +122,43 @@ const RutaRaizalSection: React.FC<RutaRaizalSectionProps> = ({ onNavigate }) => 
 
       {!loading && tourActual && (
         <>
-          {/* ── IMAGEN PRINCIPAL / GALERÍA ── */}
+          {/* ── GALERÍA ── */}
           <div className="relative z-10 px-6 mb-4">
             {imgs.length > 0 ? (
-              <div className="rounded-2xl overflow-hidden" style={{ height: 210, border: '1px solid rgba(255,255,255,0.1)' }}>
-                <img
-                  src={imgs[0]}
-                  alt={tourActual.title}
-                  className="w-full h-full object-cover"
-                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                />
-                <div className="absolute inset-6 top-auto bottom-6 pointer-events-none">
-                  {/* Badge días */}
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full w-fit mb-2"
-                    style={{ background: R_RED, boxShadow: `0 4px 12px ${R_RED}80` }}>
-                    <Sun size={12} className="text-white" />
-                    <span className="text-white text-xs font-black">{activeTab} Días · {activeTab === '4' ? '3 Noches' : '4 Noches'}</span>
+              <>
+                {/* Imagen principal */}
+                <div className="rounded-2xl overflow-hidden relative mb-2"
+                  style={{ height: 200, border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <img src={imgs[0]} alt={tourActual.title}
+                    className="w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  <div className="absolute bottom-3 left-3">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full w-fit"
+                      style={{ background: R_RED, boxShadow: `0 4px 12px ${R_RED}80` }}>
+                      <Sun size={12} className="text-white" />
+                      <span className="text-white text-xs font-black">{activeTab} Días · {activeTab === '4' ? '3 Noches' : '4 Noches'}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+
+                {/* Grid de miniaturas más grandes */}
+                {imgs.length > 1 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {imgs.slice(1, 4).map((src, i) => (
+                      <div key={i} className="rounded-xl overflow-hidden aspect-square"
+                        style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <img src={src} alt={`Tour ${i + 2}`}
+                          className="w-full h-full object-cover"
+                          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
-              /* Placeholder si no hay imagen */
               <div className="rounded-2xl flex items-center justify-center"
                 style={{ height: 160, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <MapPin size={40} style={{ color: R_RED + '60' }} />
-              </div>
-            )}
-
-            {/* Miniaturas galería */}
-            {imgs.length > 1 && (
-              <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar pb-1">
-                {imgs.slice(1, 6).map((src, i) => (
-                  <div key={i} className="flex-shrink-0 rounded-xl overflow-hidden"
-                    style={{ width: 72, height: 54, border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <img src={src} alt={`Tour ${i + 2}`}
-                      className="w-full h-full object-cover"
-                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  </div>
-                ))}
               </div>
             )}
           </div>
@@ -191,10 +190,26 @@ const RutaRaizalSection: React.FC<RutaRaizalSectionProps> = ({ onNavigate }) => 
               </div>
 
               {tourActual.description && (
-                <p className="text-sm leading-relaxed mb-4 line-clamp-4" style={{ color: R_CREAM }}>
+                <p className="text-sm leading-relaxed mb-3 line-clamp-4" style={{ color: R_CREAM }}>
                   {tourActual.description}
                 </p>
               )}
+
+              {/* Qué incluye */}
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {[
+                  { icon: <Bed size={14} />,    label: 'Alojamiento',  sub: 'Posadas Raizales' },
+                  { icon: <Car size={14} />,    label: 'Traslados',    sub: 'Aeropuerto + isla' },
+                  { icon: <Anchor size={14} />, label: 'Tours',        sub: 'Cultura Raizal' },
+                ].map(({ icon, label, sub }) => (
+                  <div key={label} className="rounded-xl p-2.5 text-center"
+                    style={{ background: `${R_RED}18`, border: `1px solid ${R_RED}30` }}>
+                    <div className="flex justify-center mb-1" style={{ color: R_GOLD }}>{icon}</div>
+                    <p className="text-white text-[10px] font-black leading-none">{label}</p>
+                    <p className="text-[9px] mt-0.5" style={{ color: R_CREAM + 'aa' }}>{sub}</p>
+                  </div>
+                ))}
+              </div>
 
               {/* Precio + CTA */}
               <div className="flex items-center justify-between pt-3"
