@@ -812,14 +812,14 @@ export async function getServices(category?: string) {
   
   // Helpers para imágenes provenientes de distintos campos posibles
   const extractImageUrls = (f: any): string[] => {
-    // 🔧 Campo correcto encontrado: "Imagenurl" (en Airtable es un attachment)
+    // ⚡ Prioridad: ImagenWP (URLs WordPress permanentes, no expiran) > Airtable attachments
     const candidates = [
-      f['Imagenurl'], f['ImagenUrl'], f['imagenurl'], f['imagenUrl'], // Campo real de Airtable
-      f['imagenwp'], f['ImagenWP'], f['imagenWP'], f['ImagenWp'],     // Campo WordPress URL
+      f['ImagenWP'], f['imagenwp'], f['imagenWP'], f['ImagenWp'], f['Imagen_WP'], // WordPress URLs — PRIMERO
+      f['Imagenurl'], f['ImagenUrl'], f['imagenurl'], f['imagenUrl'], // Airtable attachment (URLs firmadas, expiran ~1h)
       f['Imagen'], f['Imagen Principal'], f['Imagen_Principal'], f['Image'], f['Images'],
       f['Foto'], f['Fotos'], f['Galeria'], f['Galería'], f['Gallery'],
-      f['imagen'], f['imagen principal'], f['foto'], f['fotos'], // minúsculas
-      f['Attachments'], f['Attachment'], f['Media'], f['media'], // campos comunes de Airtable
+      f['imagen'], f['imagen principal'], f['foto'], f['fotos'],
+      f['Attachments'], f['Attachment'], f['Media'], f['media'],
       f['Pictures'], f['pictures'], f['Photo'], f['photo'], f['Photos'], f['photos']
     ];
     const urls: string[] = [];
@@ -853,9 +853,18 @@ export async function getServices(category?: string) {
   };
 
   const extractPrimaryImage = (f: any): string => {
+    // ⚡ ImagenWP primero: URLs de WordPress son permanentes (no expiran como Airtable signed URLs)
+    const wpUrl = f['ImagenWP'] || f['imagenwp'] || f['imagenWP'] || f['ImagenWp'] || f['Imagen_WP'];
+    if (wpUrl && typeof wpUrl === 'string' && wpUrl.startsWith('http')) return wpUrl;
+    // Si es array (por si el campo tiene múltiples URLs)
+    if (Array.isArray(wpUrl) && wpUrl[0]) {
+      const u = typeof wpUrl[0] === 'string' ? wpUrl[0] : wpUrl[0]?.url;
+      if (u) return u;
+    }
+
     const all = extractImageUrls(f);
     if (all.length > 0) return all[0];
-    
+
     // Fallbacks por categoría
     const tipoServicio = (f['Tipo de Servicio'] || '').toLowerCase();
     if (tipoServicio.includes('alojamiento') || tipoServicio.includes('hotel')) {
