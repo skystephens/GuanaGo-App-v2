@@ -946,10 +946,10 @@ export async function getServices(category?: string) {
       images: extractImageUrls(f),
       gallery: extractImageUrls(f),
       
-      // Horarios de operación
-      schedule: f['Horarios de Operacion'] || f['Horarios de Operación'] || '',
-      horario: f['Horarios de Operacion'] || f['Horarios de Operación'] || '',
-      operatingHours: f['Horarios de Operacion'] || f['Horarios de Operación'] || '',
+      // Horarios de operación (campo real en Airtable: 'Horarios')
+      schedule: f['Horarios'] || f['Horarios de Operacion'] || f['Horarios de Operación'] || '',
+      horario: f['Horarios'] || f['Horarios de Operacion'] || f['Horarios de Operación'] || '',
+      operatingHours: f['Horarios'] || f['Horarios de Operacion'] || f['Horarios de Operación'] || '',
       
       // Duración del tour
       duration: f['Duracion'] || f['Duración'] || '',
