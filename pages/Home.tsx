@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapPin, Anchor, Bed, Package as PackageIcon, Car, RefreshCw, Globe } from 'lucide-react';
+import { MapPin, Anchor, Bed, Package as PackageIcon, Car, Globe } from 'lucide-react';
 import { getPrecioB2C, getUnidad } from '../services/pricing';
 import { cachedApi } from '../services/cachedApi';
 import { AppRoute, Tour } from '../types';
@@ -16,8 +16,6 @@ interface HomeProps {
 const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   const [services, setServices] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [dataSource, setDataSource] = useState<'cache' | 'api' | 'fallback'>('cache');
 
   useEffect(() => {
     fetchData();
@@ -37,7 +35,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
       const data = await cachedApi.getServices();
       // Solo mostramos los servicios que están activos
       setServices(data?.filter(s => s.active) || []);
-      setDataSource('cache');
     } catch (error) {
       console.error("Error al cargar servicios", error);
       setServices([]);
@@ -46,17 +43,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
     }
   };
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      const data = await cachedApi.getServices({ forceRefresh: true });
-      setServices(data?.filter(s => s.active) || []);
-      setDataSource('api');
-    } catch (error) {
-      console.error("Error al refrescar", error);
-    }
-    setIsRefreshing(false);
-  };
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -189,23 +175,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                <h3 className="text-lg font-black text-gray-800">Recomendados para ti</h3>
                <p className="text-[10px] text-gray-400 mt-0.5">Precio incluye concierge + coordinación logística</p>
              </div>
-             <div className="flex items-center gap-2">
-               <span className={`text-xs px-2 py-1 rounded-full ${
-                 dataSource === 'api' ? 'bg-green-100 text-green-700' :
-                 dataSource === 'cache' ? 'bg-blue-100 text-blue-700' :
-                 'bg-yellow-100 text-yellow-700'
-               }`}>
-                 {dataSource === 'api' ? '🌐' : dataSource === 'cache' ? '💾' : '📦'}
-               </span>
-               <button
-                 onClick={handleRefresh}
-                 disabled={isRefreshing}
-                 className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
-                 title="Actualizar servicios"
-               >
-                 <RefreshCw size={16} className={`text-gray-600 ${isRefreshing ? 'animate-spin' : ''}`} />
-               </button>
-             </div>
           </div>
           
           {loading ? (
@@ -221,7 +190,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                 : services.slice(0, 4)
               ).map((item) => (
                 <div 
-                  key={`${item.id}-${dataSource}-${item.image || 'no-img'}`}
+                  key={`${item.id}-${item.image || 'no-img'}`}
                   className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col cursor-pointer border border-gray-100 hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95 group" 
                   onClick={() => {
                      if (item.category === 'hotel') onNavigate(AppRoute.HOTEL_DETAIL, item);
