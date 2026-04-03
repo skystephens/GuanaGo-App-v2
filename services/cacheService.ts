@@ -39,7 +39,7 @@ interface CacheMetadata {
 }
 
 const CACHE_PREFIX = 'guanago_cache_';
-const CACHE_VERSION = '2.3.0'; // Fuerza re-fetch: campo Horarios mapeado correctamente
+const CACHE_VERSION = '2.4.0'; // Fuerza re-fetch: ImagenWP con múltiples URLs separadas por coma
 const METADATA_KEY = 'guanago_cache_metadata';
 
 // Tiempo máximo antes de considerar datos "viejos" (en ms)

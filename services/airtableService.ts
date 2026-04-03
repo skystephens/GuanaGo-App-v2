@@ -832,8 +832,10 @@ export async function getServices(category?: string) {
           const u = item?.url || item?.thumbnails?.large?.url || (typeof item === 'string' ? item : null);
           if (u && !urls.includes(u)) urls.push(u);
         });
-      } else if (typeof c === 'string' && !urls.includes(c)) {
-        urls.push(c);
+      } else if (typeof c === 'string') {
+        // ImagenWP puede tener múltiples URLs separadas por coma
+        const parts = c.split(',').map((s: string) => s.trim()).filter((s: string) => s.startsWith('http'));
+        parts.forEach((u: string) => { if (!urls.includes(u)) urls.push(u); });
       }
     });
     
@@ -854,11 +856,14 @@ export async function getServices(category?: string) {
 
   const extractPrimaryImage = (f: any): string => {
     // ⚡ ImagenWP primero: URLs de WordPress son permanentes (no expiran como Airtable signed URLs)
-    const wpUrl = f['ImagenWP'] || f['imagenwp'] || f['imagenWP'] || f['ImagenWp'] || f['Imagen_WP'];
-    if (wpUrl && typeof wpUrl === 'string' && wpUrl.startsWith('http')) return wpUrl;
-    // Si es array (por si el campo tiene múltiples URLs)
-    if (Array.isArray(wpUrl) && wpUrl[0]) {
-      const u = typeof wpUrl[0] === 'string' ? wpUrl[0] : wpUrl[0]?.url;
+    const wpRaw = f['ImagenWP'] || f['imagenwp'] || f['imagenWP'] || f['ImagenWp'] || f['Imagen_WP'];
+    if (wpRaw && typeof wpRaw === 'string') {
+      // El campo puede tener múltiples URLs separadas por coma — tomamos la primera válida
+      const firstWp = wpRaw.split(',').map((s: string) => s.trim()).find((s: string) => s.startsWith('http'));
+      if (firstWp) return firstWp;
+    }
+    if (Array.isArray(wpRaw) && wpRaw[0]) {
+      const u = typeof wpRaw[0] === 'string' ? wpRaw[0] : wpRaw[0]?.url;
       if (u) return u;
     }
 
