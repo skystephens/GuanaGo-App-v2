@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Leaf, Heart, Package, Images, Star, ChevronRight, Crown, Play, X, Palmtree } from 'lucide-react';
+import { Leaf, Heart, Package, Images, Star, ChevronRight, Crown, Play, X } from 'lucide-react';
 import { AppRoute, Tour } from '../types';
 import { api } from '../services/api';
 import { getFromCache } from '../services/cacheService';
@@ -24,14 +24,7 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
   const [activeImg, setActiveImg]   = useState<number | null>(null);
   const [playVideo, setPlayVideo]   = useState(false);
   const [paquetes, setPaquetes]     = useState<Tour[]>([]);
-
-  const carouselImages = [
-    'https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.21.27_c6ff3afa-980x735.jpg',
-    'https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.23.13_2e2e3c6f-980x735.jpg',
-    'https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.22.06_4aa64cc6-980x735.jpg',
-    'https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.24.07_6b8c4f3a-980x735.jpg',
-    'https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.25.14_8d9f5c2e-980x735.jpg',
-  ];
+  const [gallery, setGallery]       = useState<string[]>([]);
 
   useEffect(() => {
     loadPaquetes();
@@ -46,11 +39,24 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
   const loadPaquetes = async () => {
     let all: Tour[] = getFromCache<Tour[]>('services_turisticos') || [];
     if (all.length === 0) all = await api.services.listPublic();
-    setPaquetes(all.filter(s =>
+    const coco = all.filter(s =>
       s.title?.toLowerCase().includes('cocoart') ||
       s.title?.toLowerCase().includes('coco art')
-    ));
+    );
+    setPaquetes(coco);
+
+    // Recoger todas las imágenes de los servicios CocoART (ImagenWP tiene prioridad via airtableService)
+    const imgs: string[] = [];
+    coco.forEach(s => {
+      const srcs: string[] = (s as any).gallery || (s as any).images || [];
+      srcs.forEach(u => { if (u && !imgs.includes(u)) imgs.push(u); });
+      if (s.image && !imgs.includes(s.image)) imgs.unshift(s.image);
+    });
+    if (imgs.length > 0) setGallery(imgs);
   };
+
+  // Imágenes a mostrar: Airtable (ImagenWP) primero, fallback vacío (onError las oculta)
+  const displayImages = gallery.length > 0 ? gallery : [];
 
   return (
     <section
@@ -117,12 +123,14 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
           </div>
           {/* Imagen hero */}
           <div className="h-44 md:h-auto overflow-hidden">
-            <img
-              src={carouselImages[0]}
-              alt="Coco Art"
-              className="w-full h-full object-cover"
-              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
+            {displayImages[0] && (
+              <img
+                src={displayImages[0]}
+                alt="Coco Art"
+                className="w-full h-full object-cover"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -221,55 +229,59 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
         <div className="flex items-center gap-2 mb-3">
           <Images size={14} style={{ color: PALM_ACCENT }} />
           <h3 className="text-sm font-bold uppercase tracking-wider text-white">Galería Coco Art</h3>
-          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
-            style={{ background: 'rgba(76,175,80,0.2)', color: PALM_ACCENT }}>
-            {carouselImages.length} fotos
-          </span>
+          {displayImages.length > 0 && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
+              style={{ background: 'rgba(76,175,80,0.2)', color: PALM_ACCENT }}>
+              {displayImages.length} fotos
+            </span>
+          )}
         </div>
 
-        {/* Grid de fotos */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
-          <div
-            className="col-span-2 md:col-span-1 rounded-2xl overflow-hidden cursor-pointer relative group"
-            style={{ height: 172, border: '1px solid rgba(255,255,255,0.12)' }}
-            onClick={() => setActiveImg(activeImg === 0 ? null : 0)}
-          >
-            <img src={carouselImages[0]} alt="Coco Art"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.75) 0%, transparent 55%)' }} />
-            <div className="absolute bottom-3 left-3">
-              <p className="text-white text-xs font-bold">Coco Art</p>
-              <p className="text-xs" style={{ color: 'rgba(200,230,200,0.7)' }}>San Andrés Isla 🥥</p>
-            </div>
-          </div>
-          {carouselImages.slice(1).map((src, i) => {
-            const idx = i + 1;
-            return (
-              <div key={idx}
-                className="rounded-xl overflow-hidden cursor-pointer relative group"
-                style={{ height: 82, border: '1px solid rgba(255,255,255,0.1)' }}
-                onClick={() => setActiveImg(activeImg === idx ? null : idx)}
-              >
-                <img src={src} alt={`Coco Art ${idx + 1}`}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.55) 0%, transparent 60%)' }} />
-                {activeImg === idx && (
-                  <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.45)' }}>
-                    <span className="text-white text-xs font-bold px-2 py-0.5 rounded" style={{ background: PALM_LIGHT }}>✓</span>
-                  </div>
-                )}
+        {/* Grid de fotos desde Airtable (ImagenWP) */}
+        {displayImages.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
+            <div
+              className="col-span-2 md:col-span-1 rounded-2xl overflow-hidden cursor-pointer relative group"
+              style={{ height: 172, border: '1px solid rgba(255,255,255,0.12)' }}
+              onClick={() => setActiveImg(activeImg === 0 ? null : 0)}
+            >
+              <img src={displayImages[0]} alt="Coco Art"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.75) 0%, transparent 55%)' }} />
+              <div className="absolute bottom-3 left-3">
+                <p className="text-white text-xs font-bold">Coco Art</p>
+                <p className="text-xs" style={{ color: 'rgba(200,230,200,0.7)' }}>San Andrés Isla 🥥</p>
               </div>
-            );
-          })}
-        </div>
+            </div>
+            {displayImages.slice(1).map((src, i) => {
+              const idx = i + 1;
+              return (
+                <div key={idx}
+                  className="rounded-xl overflow-hidden cursor-pointer relative group"
+                  style={{ height: 82, border: '1px solid rgba(255,255,255,0.1)' }}
+                  onClick={() => setActiveImg(activeImg === idx ? null : idx)}
+                >
+                  <img src={src} alt={`Coco Art ${idx + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.55) 0%, transparent 60%)' }} />
+                  {activeImg === idx && (
+                    <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.45)' }}>
+                      <span className="text-white text-xs font-bold px-2 py-0.5 rounded" style={{ background: PALM_LIGHT }}>✓</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Lightbox */}
-        {activeImg !== null && carouselImages[activeImg] && (
+        {activeImg !== null && displayImages[activeImg] && (
           <div className="mb-3 rounded-2xl overflow-hidden relative"
             style={{ border: `1px solid ${PALM_LIGHT}50` }}>
-            <img src={carouselImages[activeImg]} alt="Coco Art"
+            <img src={displayImages[activeImg]} alt="Coco Art"
               className="w-full object-cover" style={{ maxHeight: 260 }} />
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.8) 0%, transparent 55%)' }} />
             <button onClick={() => setActiveImg(null)}
