@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Music, Calendar, MapPin, Users, Clock, ArrowLeft, 
-  Sparkles, ExternalLink, Ticket, Loader2, AlertCircle,
-  ChevronRight, Star, Headphones, Image, ChevronLeft
+import {
+  Music, Calendar, MapPin, Clock, ArrowLeft,
+  Sparkles, ExternalLink, Loader2, AlertCircle,
+  ChevronRight, Headphones, Image, ChevronLeft
 } from 'lucide-react';
 import { api } from '../services/api';
 import { cachedApi } from '../services/cachedApi';
 import { AppRoute, Tour } from '../types';
 import { getFromCache } from '../services/cacheService';
-import { getPrecioB2C } from '../services/pricing';
 
 interface MusicEvent {
   id: string;
@@ -39,17 +38,6 @@ interface Artist {
   isActive: boolean;
 }
 
-interface RimmPackage {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  image: string;
-  includes: string[];
-  category: string;
-  active: boolean;
-}
-
 interface RimmClusterProps {
   onBack: () => void;
   onNavigate: (route: AppRoute, data?: any) => void;
@@ -58,12 +46,12 @@ interface RimmClusterProps {
 const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
   const [events, setEvents] = useState<MusicEvent[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [packages, setPackages] = useState<RimmPackage[]>([]);
   const [gallery, setGallery] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'artists' | 'packages' | 'gallery'>('upcoming');
+  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'artists' | 'gallery'>('upcoming');
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const [calendarDate, setCalendarDate] = useState(() => new Date());
 
   useEffect(() => {
     fetchAllData();
@@ -81,7 +69,7 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
       setEvents(eventsData || []);
       setArtists(artistsData || []);
 
-      // Paquetes y galería: directo de ServiciosTuristicos_SAI
+      // Galería: directo de ServiciosTuristicos_SAI
       let allServices: Tour[] = getFromCache<Tour[]>('services_turisticos') || [];
       if (allServices.length === 0) {
         allServices = await api.services.listPublic();
@@ -92,26 +80,6 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
         s.title?.toLowerCase().includes('caribbean')
       );
 
-      // Paquetes: mapear los servicios al formato RimmPackage
-      const pkgs: RimmPackage[] = caribbeanServices.map(s => {
-        const includesArr: string[] = [];
-        if (s.title?.toLowerCase().includes('transporte')) includesArr.push('Transporte');
-        if (s.title?.toLowerCase().includes('degustaci')) includesArr.push('Degustación');
-        includesArr.unshift('Cover entrada');
-        return {
-          id: s.id,
-          title: s.title,
-          description: s.description || '',
-          price: getPrecioB2C(s),
-          image: s.image || '',
-          includes: includesArr,
-          category: 'caribbean_night',
-          active: true,
-        };
-      });
-      setPackages(pkgs);
-
-      // Galería: todas las imágenes (gallery) de los servicios Caribbean Night
       const galleryImages: string[] = [];
       caribbeanServices.forEach(s => {
         const imgs: string[] = (s as any).gallery || (s as any).images || [];
@@ -126,16 +94,6 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatDate = (dateStr: string) => {
-    // Agregar T12:00:00 para evitar desfase UTC→local (Colombia UTC-5 correría al día anterior)
-    const date = new Date(dateStr.includes('T') ? dateStr : dateStr + 'T12:00:00');
-    return {
-      day: date.getDate(),
-      month: date.toLocaleDateString('es-CO', { month: 'short' }).toUpperCase(),
-      full: date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })
-    };
   };
 
   return (
@@ -188,9 +146,8 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
       <div className="px-4 -mt-2 relative z-20">
         <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl p-1 flex overflow-x-auto no-scrollbar">
           {[
-            { id: 'upcoming', label: 'Próximos', icon: Calendar },
+            { id: 'upcoming', label: 'Calendario', icon: Calendar },
             { id: 'artists', label: 'Artistas', icon: Headphones },
-            { id: 'packages', label: 'Paquetes', icon: Ticket },
             { id: 'gallery', label: 'Galería', icon: Image }
           ].map(tab => (
             <button
@@ -235,79 +192,113 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
           </div>
         )}
 
-        {/* Upcoming Events Tab */}
-        {!loading && !error && selectedTab === 'upcoming' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-white font-bold text-lg">Próximos Eventos</h2>
-                <p className="text-gray-400 text-xs flex items-center gap-1 mt-1">
-                  <Clock size={12} />
-                  Todos los jueves 9:30 PM
-                </p>
-              </div>
-              <span className="text-cyan-400 text-sm">{events.length} eventos</span>
-            </div>
+        {/* Calendar Tab */}
+        {!loading && !error && selectedTab === 'upcoming' && (() => {
+          const today = new Date();
+          const year = calendarDate.getFullYear();
+          const month = calendarDate.getMonth();
+          const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          const monthName = calendarDate.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
 
-            {events.length === 0 ? (
-              <div className="text-center py-12">
-                <Calendar size={48} className="text-gray-600 mx-auto mb-3" />
-                <p className="text-gray-400">No hay eventos programados</p>
-              </div>
-            ) : (
-              events.map(event => {
-                const date = formatDate(event.date);
-                return (
-                  <div 
-                    key={event.id}
-                    onClick={() => onNavigate(AppRoute.MUSIC_EVENT_DETAIL, event)}
-                    className="bg-gray-800/60 backdrop-blur-sm border border-gray-700 rounded-2xl overflow-hidden flex cursor-pointer hover:border-cyan-600 transition-all active:scale-[0.98]"
-                  >
-                    {/* Date Column */}
-                    <div className="w-20 bg-gradient-to-b from-orange-500 to-orange-600 flex flex-col items-center justify-center py-4">
-                      <span className="text-white/70 text-[10px] font-bold uppercase">JUE</span>
-                      <span className="text-white text-2xl font-black">{date.day}</span>
-                      <span className="text-white/80 text-xs font-bold">{date.month}</span>
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="flex-1 p-4">
-                      <h3 className="text-white font-bold text-sm mb-1 line-clamp-1">
-                        {event.eventName}
-                      </h3>
-                      <p className="text-cyan-300 text-xs mb-2 flex items-center gap-1">
-                        <Music size={12} />
-                        {event.artistName}
-                      </p>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 text-gray-400 text-xs">
-                          <span className="flex items-center gap-1">
-                            <Clock size={12} />
-                            {event.time || '9:30 PM'}
-                          </span>
-                          {event.availableSpots !== undefined && (
-                            <span className="flex items-center gap-1">
-                              <Users size={12} />
-                              {event.availableSpots} cupos
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-orange-400 font-bold text-sm">
-                          ${event.price.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
+          const cells: (number | null)[] = [
+            ...Array(firstDay).fill(null),
+            ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+          ];
+          // pad to full weeks
+          while (cells.length % 7 !== 0) cells.push(null);
 
-                    <div className="flex items-center px-3">
-                      <ChevronRight size={20} className="text-gray-500" />
-                    </div>
+          const isThursday = (day: number) => new Date(year, month, day).getDay() === 4;
+          const isToday = (day: number) =>
+            day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+          const isPast = (day: number) => new Date(year, month, day) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+          return (
+            <div>
+              {/* Month navigation */}
+              <div className="flex items-center justify-between mb-5">
+                <button
+                  onClick={() => setCalendarDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))}
+                  className="w-9 h-9 bg-gray-800 rounded-xl flex items-center justify-center active:scale-95 transition-all"
+                >
+                  <ChevronLeft size={18} className="text-gray-300" />
+                </button>
+                <div className="text-center">
+                  <p className="text-white font-bold capitalize">{monthName}</p>
+                  <p className="text-orange-400 text-xs font-medium flex items-center justify-center gap-1 mt-0.5">
+                    <Clock size={11} />
+                    Todos los jueves · 9:30 PM
+                  </p>
+                </div>
+                <button
+                  onClick={() => setCalendarDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))}
+                  className="w-9 h-9 bg-gray-800 rounded-xl flex items-center justify-center active:scale-95 transition-all"
+                >
+                  <ChevronRight size={18} className="text-gray-300" />
+                </button>
+              </div>
+
+              {/* Day headers */}
+              <div className="grid grid-cols-7 mb-2">
+                {['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'].map((d, i) => (
+                  <div key={d} className={`text-center text-[11px] font-bold pb-2 ${i === 4 ? 'text-orange-400' : 'text-gray-500'}`}>
+                    {d}
                   </div>
-                );
-              })
-            )}
-          </div>
-        )}
+                ))}
+              </div>
+
+              {/* Calendar grid */}
+              <div className="grid grid-cols-7 gap-y-1">
+                {cells.map((day, i) => {
+                  if (!day) return <div key={`e-${i}`} />;
+                  const thu = isThursday(day);
+                  const tod = isToday(day);
+                  const past = isPast(day);
+                  return (
+                    <div key={day} className="flex flex-col items-center py-1">
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all
+                          ${thu && !past ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : ''}
+                          ${thu && past ? 'bg-orange-900/40 text-orange-500/60' : ''}
+                          ${tod && !thu ? 'ring-2 ring-cyan-400 text-white' : ''}
+                          ${!thu && !tod ? 'text-gray-500' : ''}
+                        `}
+                      >
+                        {day}
+                      </div>
+                      {thu && !past && (
+                        <div className="w-1 h-1 rounded-full bg-orange-400 mt-0.5" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center justify-center gap-5 mt-5 pt-4 border-t border-gray-800">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-lg bg-orange-500" />
+                  <span className="text-gray-400 text-xs">Caribbean Night</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-lg ring-2 ring-cyan-400" />
+                  <span className="text-gray-400 text-xs">Hoy</span>
+                </div>
+              </div>
+
+              {/* Info card */}
+              <div className="mt-5 bg-gray-800/60 border border-orange-500/20 rounded-2xl p-4 flex items-start gap-3">
+                <Music size={18} className="text-orange-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-white text-sm font-bold">Evento fijo semanal</p>
+                  <p className="text-gray-400 text-xs mt-0.5">
+                    Caribbean Night se realiza <span className="text-orange-300 font-medium">todos los jueves del año</span> a las 9:30 PM. Los artistas rotan cada semana.
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Artists Tab - Conectado a Airtable */}
         {!loading && !error && selectedTab === 'artists' && (
@@ -370,77 +361,6 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
               <div className="text-center py-12">
                 <Headphones size={48} className="text-gray-600 mx-auto mb-3" />
                 <p className="text-gray-400">No hay artistas disponibles</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Packages Tab - Conectado a ServiciosTuristicos_SAI */}
-        {!loading && !error && selectedTab === 'packages' && (
-          <div className="space-y-4">
-            <div className="mb-4">
-              <h2 className="text-white font-bold text-lg">Paquetes Especiales</h2>
-              <p className="text-gray-400 text-xs mt-1">Combos exclusivos Caribbean Night</p>
-            </div>
-            
-            {packages.map(pkg => (
-              <div 
-                key={pkg.id}
-                onClick={() => onNavigate(AppRoute.TOUR_DETAIL, {
-                  id: pkg.id,
-                  title: pkg.title,
-                  price: pkg.price,
-                  image: pkg.image,
-                  description: pkg.description,
-                  category: 'tour',
-                  active: true,
-                  rating: 4.8,
-                  reviews: 0,
-                })}
-                className="bg-gradient-to-r from-cyan-900/50 to-orange-900/30 backdrop-blur-sm border border-cyan-700/50 rounded-2xl overflow-hidden cursor-pointer hover:border-cyan-500 transition-all active:scale-[0.98]"
-              >
-                {/* Package Image */}
-                <div className="h-32 relative">
-                  <img 
-                    src={pkg.image}
-                    alt={pkg.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                  <div className="absolute bottom-3 left-4 right-4">
-                    <h3 className="text-white font-bold text-base">{pkg.title}</h3>
-                    <p className="text-gray-300 text-xs mt-0.5">{pkg.description}</p>
-                  </div>
-                  <div className="absolute top-3 right-3 bg-orange-500 text-white px-2 py-1 rounded-lg">
-                    <span className="font-black text-sm">${pkg.price.toLocaleString()}</span>
-                  </div>
-                </div>
-                
-                <div className="p-4">
-                  <p className="text-gray-400 text-xs mb-2 font-medium">Incluye:</p>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {pkg.includes.map((item, i) => (
-                      <span 
-                        key={i}
-                        className="bg-cyan-600/30 text-cyan-200 px-2 py-1 rounded-lg text-xs"
-                      >
-                        ✓ {item}
-                      </span>
-                    ))}
-                  </div>
-
-                  <button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
-                    <Ticket size={16} />
-                    Reservar Paquete
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {packages.length === 0 && (
-              <div className="text-center py-12">
-                <Ticket size={48} className="text-gray-600 mx-auto mb-3" />
-                <p className="text-gray-400">No hay paquetes disponibles</p>
               </div>
             )}
           </div>
