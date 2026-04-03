@@ -1,56 +1,37 @@
 /**
  * pricing.ts — Utilidad centralizada de precios GuanaGO
  *
- * Lee los campos de precio por canal desde ServiciosTuristicos_SAI.
- * Si el campo no está configurado en Airtable, aplica el fallback
- * calculado sobre la tarifa_base (campo Precio).
+ * Los precios vienen 100% de Airtable (ServiciosTuristicos_SAI).
+ * No se calcula ni suma ningún porcentaje en el frontend.
+ * Si el campo no está configurado en Airtable → devuelve 0 → se muestra "Consultar precio".
  *
  * Campos en Airtable:
- *   Precio         → tarifa_base (siempre requerido)
- *   Precio_B2C     → cliente directo (+15% concierge + logística)
- *   Precio_Promotor→ canal promotor (+8% comisión incluida)
- *   Precio_OTA     → agencia/OTA (tarifa neta, sin markup)
- *   Precio_Aliado  → aliado local (-20%, comisión mensual)
- *
- * Uso:
- *   import { getPrecioB2C, getPrecioPromotor } from '../services/pricing';
- *   const precio = getPrecioB2C(service);
+ *   Precio actualizado → precioB2C  (tarifa pública / cliente directo)
+ *   Precio_Promotor    → precioPromotor
+ *   Precio_OTA         → precioOTA
+ *   Precio_Aliado      → precioAliado
  */
 
 import { Tour } from '../types';
 
-// Markups de fallback (solo se usan si el campo no está en Airtable)
-const FALLBACK_MARKUP_B2C       = 0.15;   // +15%
-const FALLBACK_MARKUP_PROMOTOR  = 0.08;   // +8%
-const FALLBACK_MARKUP_OTA       = 0.00;   // tarifa neta = sin markup
-const FALLBACK_MARKUP_ALIADO    = -0.20;  // -20%
-
-/** Precio para canal B2C cliente directo */
+/** Precio público para cliente directo B2C */
 export function getPrecioB2C(service: Tour): number {
-  if (service.precioB2C && service.precioB2C > 0) return service.precioB2C;
-  if (!service.price || service.price <= 0) return 0;
-  return Math.ceil(service.price * (1 + FALLBACK_MARKUP_B2C));
+  return service.precioB2C && service.precioB2C > 0 ? service.precioB2C : 0;
 }
 
-/** Precio para canal promotor (comisión incluida en el precio al cliente) */
+/** Precio canal promotor */
 export function getPrecioPromotor(service: Tour): number {
-  if (service.precioPromotor && service.precioPromotor > 0) return service.precioPromotor;
-  if (!service.price || service.price <= 0) return 0;
-  return Math.ceil(service.price * (1 + FALLBACK_MARKUP_PROMOTOR));
+  return service.precioPromotor && service.precioPromotor > 0 ? service.precioPromotor : 0;
 }
 
-/** Precio para canal OTA / agencia (tarifa neta) */
+/** Precio canal OTA / agencia */
 export function getPrecioOTA(service: Tour): number {
-  if (service.precioOTA && service.precioOTA > 0) return service.precioOTA;
-  if (!service.price || service.price <= 0) return 0;
-  return Math.ceil(service.price * (1 + FALLBACK_MARKUP_OTA));
+  return service.precioOTA && service.precioOTA > 0 ? service.precioOTA : 0;
 }
 
-/** Precio para canal aliado local */
+/** Precio canal aliado local */
 export function getPrecioAliado(service: Tour): number {
-  if (service.precioAliado && service.precioAliado > 0) return service.precioAliado;
-  if (!service.price || service.price <= 0) return 0;
-  return Math.ceil(service.price * (1 + FALLBACK_MARKUP_ALIADO));
+  return service.precioAliado && service.precioAliado > 0 ? service.precioAliado : 0;
 }
 
 /** Formatea un precio con separadores de miles */
