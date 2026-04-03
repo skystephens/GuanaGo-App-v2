@@ -116,7 +116,7 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
             </div>
           </div>
 
-          <p className="text-sm leading-relaxed mt-3" style={{ color: 'rgba(165,243,252,0.65)' }}>
+          <p className="text-sm leading-relaxed mt-3 text-justify" style={{ color: 'rgba(165,243,252,0.65)' }}>
             La noche más auténtica de la isla. Música Kriol en vivo, artistas Raizales y una experiencia cultural única cada semana.
           </p>
 
@@ -177,7 +177,7 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
                           )}
                         </div>
                         {pkg.description && (
-                          <p className="text-[11px] leading-relaxed line-clamp-2"
+                          <p className="text-[11px] leading-relaxed line-clamp-2 text-justify"
                             style={{ color: 'rgba(165,243,252,0.65)' }}>
                             {pkg.description}
                           </p>

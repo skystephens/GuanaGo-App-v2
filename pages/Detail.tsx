@@ -165,13 +165,11 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
   const nextImage = () => setActiveImageIndex((prev) => (prev + 1) % gallery.length);
   const prevImage = () => setActiveImageIndex((prev) => (prev - 1 + gallery.length) % gallery.length);
 
-  // Usar horarios de Airtable si existen, sino usar defaults
+  // Horarios solo desde Airtable — sin inventar defaults
   const parseTimeSlots = (schedule: string): string[] => {
-    if (!schedule) return ['08:00 AM', '10:00 AM', '02:00 PM', '04:00 PM'];
-    // Intentar parsear horarios del formato "8:00 AM - 5:00 PM" o similar
+    if (!schedule) return [];
     const matches = schedule.match(/\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)?/g);
-    if (matches && matches.length > 0) return matches;
-    return ['08:00 AM', '10:00 AM', '02:00 PM', '04:00 PM'];
+    return matches && matches.length > 0 ? matches : [];
   };
 
   // 🆕 Mostrar un error si no hay datos
@@ -311,10 +309,11 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                     <>
                        <div>
                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block px-1">Fecha de entrada (Check-in 3:00 PM)</label>
-                          <input 
-                             type="date" 
+                          <input
+                             type="date"
                              value={checkIn}
                              onChange={(e) => setCheckIn(e.target.value)}
+                             min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
                              className="w-full bg-gray-50 border-2 border-transparent rounded-2xl px-5 py-4 text-sm font-bold outline-none transition-all focus:border-emerald-500 focus:bg-white shadow-inner text-gray-900"
                              style={{ colorScheme: 'light' }}
                           />
@@ -352,10 +351,11 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                  ) : (
                     <div>
                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block px-1">Fecha</label>
-                       <input 
-                          type="date" 
+                       <input
+                          type="date"
                           value={selectedDate}
                           onChange={handleDateChange}
+                          min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
                           className={`w-full bg-gray-50 border-2 rounded-2xl px-5 py-4 text-sm font-bold outline-none transition-all ${isUnavailable ? 'border-red-100 bg-red-50 text-red-600' : 'border-transparent focus:border-emerald-500 focus:bg-white shadow-inner text-gray-900'}`}
                           style={{ colorScheme: 'light' }}
                        />
@@ -383,14 +383,14 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                     </div>
                  )}
 
-                 {!isHotel && (
+                 {!isHotel && timeSlots.length > 0 && (
                     <div>
                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block px-1">Horarios Disponibles</label>
                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                           {timeSlots.map(time => (
-                             <button 
-                                key={time} 
-                                onClick={() => setSelectedTime(time)} 
+                             <button
+                                key={time}
+                                onClick={() => setSelectedTime(time)}
                                 className={`px-6 py-4 rounded-2xl text-xs font-black border-2 transition-all shrink-0 ${selectedTime === time ? 'bg-emerald-600 text-white border-emerald-600 shadow-xl shadow-emerald-100' : 'bg-gray-50 text-gray-600 border-transparent hover:bg-white hover:border-gray-200'}`}
                              >
                                 {time}
@@ -536,7 +536,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                </div>
              )}
              
-             <p className="text-gray-500 leading-relaxed text-sm font-medium mb-6">{data.description}</p>
+             <p className="text-gray-500 leading-relaxed text-sm font-medium mb-6 text-justify">{data.description}</p>
              
              {/* 🆕 Mapa de Ubicación Aproximada - Solo para hoteles */}
              {isHotel && safeData.latLon && (

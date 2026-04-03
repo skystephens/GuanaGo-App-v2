@@ -190,7 +190,7 @@ const RutaRaizalSection: React.FC<RutaRaizalSectionProps> = ({ onNavigate }) => 
               </div>
 
               {tourActual.description && (
-                <p className="text-sm leading-relaxed mb-3 line-clamp-4" style={{ color: R_CREAM }}>
+                <p className="text-sm leading-relaxed mb-3 line-clamp-4 text-justify" style={{ color: R_CREAM }}>
                   {tourActual.description}
                 </p>
               )}

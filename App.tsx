@@ -83,6 +83,7 @@ import UserProfileButton from './components/UserProfileButton';
 
 import Navigation from './components/Navigation';
 import GuanaChatbot from './components/GuanaChatbot';
+import CartFloatingBar from './components/CartFloatingBar';
 import DirectoryMapbox from './components/DirectoryMapbox';
 import { AppRoute, UserRole } from './types';
 import { useAuth } from './context/AuthContext';
@@ -265,7 +266,10 @@ const App: React.FC = () => {
         <Navigation currentRoute={currentRoute} onNavigate={navigateTo} role={userRole} isAuthenticated={isAuthenticated} onLogout={handleLogout} />
 
         {['tourist', 'Turista', 'Local'].includes(userRole) && (
-          <GuanaChatbot />
+          <>
+            <CartFloatingBar onNavigate={navigateTo} isAuthenticated={isAuthenticated} />
+            <GuanaChatbot />
+          </>
         )}
       </div>
     </div>

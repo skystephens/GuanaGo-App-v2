@@ -116,7 +116,7 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
           <h3 className="text-sm font-black text-white mb-1.5 leading-snug">
             Transformar historias en experiencias
           </h3>
-          <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'rgba(200,230,200,0.75)' }}>
+          <p className="text-[11px] leading-relaxed mb-3 text-justify" style={{ color: 'rgba(200,230,200,0.75)' }}>
             El maestro rescata la herencia Kriol de San Andrés convirtiendo la palma de coco en arte auténtico.
           </p>
           <div className="space-y-1">
