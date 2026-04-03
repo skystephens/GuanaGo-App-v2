@@ -98,43 +98,42 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
         </p>
       </div>
 
-      {/* ── DESCRIPCIÓN + CAROUSEL ── */}
+      {/* ── DESCRIPCIÓN + IMAGEN ── */}
       <div
         className="relative z-10 mx-6 mb-5 rounded-2xl overflow-hidden"
         style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
       >
-        <div className="grid md:grid-cols-2">
-          {/* Texto */}
-          <div className="p-5 flex flex-col justify-center">
-            <h3 className="text-base font-black text-white mb-2 leading-snug">
-              Transformar historias en experiencias
-            </h3>
-            <p className="text-sm leading-relaxed mb-4" style={{ color: 'rgba(200,230,200,0.75)' }}>
-              El maestro rescata la herencia de San Andrés transformando la palma de coco en arte auténtico. Cada pieza es un homenaje a las raíces Kriol de la isla.
-            </p>
-            <div className="space-y-1.5">
-              {[
-                'Piezas únicas y personalizadas',
-                'Ambientación para eventos especiales',
-                'Experiencias educativas e inmersivas',
-              ].map(item => (
-                <p key={item} className="text-xs font-bold uppercase flex items-center gap-2"
-                  style={{ color: PALM_ACCENT }}>
-                  <span style={{ color: PALM_GOLD }}>✓</span> {item}
-                </p>
-              ))}
-            </div>
+        {/* Imagen pequeña arriba */}
+        {displayImages[0] && (
+          <div className="h-36 overflow-hidden">
+            <img
+              src={displayImages[0]}
+              alt="Coco Art"
+              className="w-full h-full object-cover"
+              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, transparent 40%, rgba(10,31,15,0.9) 100%)' }} />
           </div>
-          {/* Imagen hero */}
-          <div className="h-44 md:h-auto overflow-hidden">
-            {displayImages[0] && (
-              <img
-                src={displayImages[0]}
-                alt="Coco Art"
-                className="w-full h-full object-cover"
-                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-              />
-            )}
+        )}
+        {/* Texto debajo */}
+        <div className="p-4">
+          <h3 className="text-base font-black text-white mb-1.5 leading-snug">
+            Transformar historias en experiencias
+          </h3>
+          <p className="text-xs leading-relaxed mb-3" style={{ color: 'rgba(200,230,200,0.75)' }}>
+            El maestro rescata la herencia de San Andrés transformando la palma de coco en arte auténtico. Cada pieza es un homenaje a las raíces Kriol de la isla.
+          </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            {[
+              'Piezas únicas y personalizadas',
+              'Ambientación para eventos especiales',
+              'Experiencias educativas e inmersivas',
+            ].map(item => (
+              <p key={item} className="text-[11px] font-bold flex items-center gap-1.5"
+                style={{ color: PALM_ACCENT }}>
+                <span style={{ color: PALM_GOLD }}>✓</span> {item}
+              </p>
+            ))}
           </div>
         </div>
       </div>
@@ -241,41 +240,27 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
           )}
         </div>
 
-        {/* Grid de fotos desde Airtable (ImagenWP) — máx 5 visibles */}
+        {/* Grid de fotos — cuadradas, máx 5 visibles */}
         {displayImages.length > 0 && (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
-              <div
-                className="col-span-2 md:col-span-1 rounded-2xl overflow-hidden cursor-pointer relative group"
-                style={{ height: 172, border: '1px solid rgba(255,255,255,0.12)' }}
-                onClick={() => setActiveImg(activeImg === 0 ? null : 0)}
-              >
-                <img src={visibleImages[0]} alt="Coco Art"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.75) 0%, transparent 55%)' }} />
-                <div className="absolute bottom-3 left-3">
-                  <p className="text-white text-xs font-bold">Coco Art</p>
-                  <p className="text-xs" style={{ color: 'rgba(200,230,200,0.7)' }}>San Andrés Isla 🥥</p>
-                </div>
-              </div>
-              {visibleImages.slice(1).map((src, i) => {
-                const idx = i + 1;
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              {visibleImages.map((src, idx) => {
                 const isLast = !showAllPhotos && hasMore && idx === GALLERY_PREVIEW - 1;
                 return (
                   <div key={idx}
-                    className="rounded-xl overflow-hidden cursor-pointer relative group"
-                    style={{ height: 82, border: '1px solid rgba(255,255,255,0.1)' }}
+                    className="aspect-square rounded-xl overflow-hidden cursor-pointer relative group"
+                    style={{ border: '1px solid rgba(255,255,255,0.1)' }}
                     onClick={() => isLast ? setShowAllPhotos(true) : setActiveImg(activeImg === idx ? null : idx)}
                   >
                     <img src={src} alt={`Coco Art ${idx + 1}`}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                    <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.55) 0%, transparent 60%)' }} />
+                    <div className="absolute inset-0 pointer-events-none"
+                      style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.5) 0%, transparent 60%)' }} />
                     {isLast && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center"
-                        style={{ background: 'rgba(10,31,15,0.75)' }}>
-                        <span className="text-white font-black text-lg">+{displayImages.length - GALLERY_PREVIEW + 1}</span>
+                        style={{ background: 'rgba(10,31,15,0.78)' }}>
+                        <span className="text-white font-black text-xl">+{displayImages.length - GALLERY_PREVIEW + 1}</span>
                         <span className="text-xs font-bold mt-0.5" style={{ color: PALM_ACCENT }}>Ver más</span>
                       </div>
                     )}
