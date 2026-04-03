@@ -21,6 +21,13 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
 
   useEffect(() => {
     fetchData();
+    // Re-renderizar cuando el background fetch traiga URLs frescas de Airtable
+    const onCacheUpdated = (e: Event) => {
+      const key = (e as CustomEvent).detail?.key;
+      if (key === 'services_turisticos') fetchData();
+    };
+    window.addEventListener('guanago:cache-updated', onCacheUpdated);
+    return () => window.removeEventListener('guanago:cache-updated', onCacheUpdated);
   }, []);
 
   const fetchData = async () => {

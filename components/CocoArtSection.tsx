@@ -33,7 +33,15 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
     'https://guiasanandresislas.com/wp-content/uploads/2025/08/Imagen-de-WhatsApp-2025-08-18-a-las-20.25.14_8d9f5c2e-980x735.jpg',
   ];
 
-  useEffect(() => { loadPaquetes(); }, []);
+  useEffect(() => {
+    loadPaquetes();
+    const onCacheUpdated = (e: Event) => {
+      const key = (e as CustomEvent).detail?.key;
+      if (key === 'services_turisticos') loadPaquetes();
+    };
+    window.addEventListener('guanago:cache-updated', onCacheUpdated);
+    return () => window.removeEventListener('guanago:cache-updated', onCacheUpdated);
+  }, []);
 
   const loadPaquetes = async () => {
     let all: Tour[] = getFromCache<Tour[]>('services_turisticos') || [];

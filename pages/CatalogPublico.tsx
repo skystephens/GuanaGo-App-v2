@@ -61,6 +61,12 @@ const CatalogPublico: React.FC<CatalogPublicoProps> = ({ onNavigate, onBack }) =
   useEffect(() => {
     setPromotorRef(capturarPromotor());
     fetchServices();
+    const onCacheUpdated = (e: Event) => {
+      const key = (e as CustomEvent).detail?.key;
+      if (key === 'services_turisticos') fetchServices();
+    };
+    window.addEventListener('guanago:cache-updated', onCacheUpdated);
+    return () => window.removeEventListener('guanago:cache-updated', onCacheUpdated);
   }, []);
 
   const fetchServices = async (force = false) => {

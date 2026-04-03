@@ -28,7 +28,15 @@ const RutaRaizalSection: React.FC<RutaRaizalSectionProps> = ({ onNavigate }) => 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'4' | '5'>('4');
 
-  useEffect(() => { loadTours(); }, []);
+  useEffect(() => {
+    loadTours();
+    const onCacheUpdated = (e: Event) => {
+      const key = (e as CustomEvent).detail?.key;
+      if (key === 'services_turisticos') loadTours();
+    };
+    window.addEventListener('guanago:cache-updated', onCacheUpdated);
+    return () => window.removeEventListener('guanago:cache-updated', onCacheUpdated);
+  }, []);
 
   const loadTours = async () => {
     setLoading(true);

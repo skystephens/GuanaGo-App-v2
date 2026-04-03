@@ -43,15 +43,16 @@ const CACHE_VERSION = '2.0.0';
 const METADATA_KEY = 'guanago_cache_metadata';
 
 // Tiempo máximo antes de considerar datos "viejos" (en ms)
+// ⚠️ Airtable signed URLs (attachments) expiran en ~1 hora — TTL debe ser < 60 min
 const MAX_AGE: Record<CacheKey, number> = {
-  services_turisticos: 1000 * 60 * 60 * 48, // 48 horas — servicios cambian poco, se refresca manualmente
-  directory_map: 1000 * 60 * 60 * 24,       // 24 horas
-  artistas_rimm: 1000 * 60 * 60 * 12,       // 12 horas
-  taxi_zones: 1000 * 60 * 60 * 24 * 7,      // 7 días (cambian poco)
-  user_profile: 1000 * 60 * 30,             // 30 minutos
-  reservations: 1000 * 60 * 5,              // 5 minutos (cambian frecuente)
-  caribbean_events: 1000 * 60 * 60 * 4,     // 4 horas
-  rimm_packages: 1000 * 60 * 60 * 8         // 8 horas
+  services_turisticos: 1000 * 60 * 55,        // 55 min — bajo la expiración de URLs de Airtable (~1h)
+  directory_map: 1000 * 60 * 55,              // 55 min — mismo motivo (fotos de puntos)
+  artistas_rimm: 1000 * 60 * 55,              // 55 min
+  taxi_zones: 1000 * 60 * 60 * 24 * 7,       // 7 días (sin imágenes, no cambia)
+  user_profile: 1000 * 60 * 30,              // 30 minutos
+  reservations: 1000 * 60 * 5,               // 5 minutos (cambian frecuente)
+  caribbean_events: 1000 * 60 * 55,           // 55 min
+  rimm_packages: 1000 * 60 * 55              // 55 min
 };
 
 // =========================================================
@@ -399,6 +400,10 @@ export function saveToCache<T>(key: CacheKey, data: T, source: 'api' | 'fallback
     localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(entry));
     updateMetadata(key);
     console.log(`💾 Cache guardado: ${key} (${Array.isArray(data) ? data.length + ' items' : 'object'}) [${source}]`);
+    // Notificar a componentes que hay data nueva disponible (solo si viene de API real)
+    if (source === 'api') {
+      window.dispatchEvent(new CustomEvent('guanago:cache-updated', { detail: { key } }));
+    }
   } catch (error) {
     console.warn(`⚠️ Error guardando cache ${key}:`, error);
     // Si localStorage está lleno, limpiar datos viejos

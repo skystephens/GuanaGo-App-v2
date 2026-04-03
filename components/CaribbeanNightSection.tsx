@@ -32,6 +32,12 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
   useEffect(() => {
     fetchAll();
     loadPaquetes();
+    const onCacheUpdated = (e: Event) => {
+      const key = (e as CustomEvent).detail?.key;
+      if (key === 'services_turisticos') loadPaquetes();
+    };
+    window.addEventListener('guanago:cache-updated', onCacheUpdated);
+    return () => window.removeEventListener('guanago:cache-updated', onCacheUpdated);
   }, []);
 
   const fetchAll = async () => {
