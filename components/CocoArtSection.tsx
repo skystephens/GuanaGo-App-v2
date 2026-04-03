@@ -25,6 +25,9 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
   const [playVideo, setPlayVideo]   = useState(false);
   const [paquetes, setPaquetes]     = useState<Tour[]>([]);
   const [gallery, setGallery]       = useState<string[]>([]);
+  const [showAllPhotos, setShowAllPhotos] = useState(false);
+
+  const GALLERY_PREVIEW = 5;
 
   useEffect(() => {
     loadPaquetes();
@@ -55,8 +58,9 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
     if (imgs.length > 0) setGallery(imgs);
   };
 
-  // Imágenes a mostrar: Airtable (ImagenWP) primero, fallback vacío (onError las oculta)
-  const displayImages = gallery.length > 0 ? gallery : [];
+  const displayImages = gallery;
+  const visibleImages = showAllPhotos ? displayImages : displayImages.slice(0, GALLERY_PREVIEW);
+  const hasMore = displayImages.length > GALLERY_PREVIEW;
 
   return (
     <section
@@ -237,51 +241,65 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
           )}
         </div>
 
-        {/* Grid de fotos desde Airtable (ImagenWP) */}
+        {/* Grid de fotos desde Airtable (ImagenWP) — máx 5 visibles */}
         {displayImages.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
-            <div
-              className="col-span-2 md:col-span-1 rounded-2xl overflow-hidden cursor-pointer relative group"
-              style={{ height: 172, border: '1px solid rgba(255,255,255,0.12)' }}
-              onClick={() => setActiveImg(activeImg === 0 ? null : 0)}
-            >
-              <img src={displayImages[0]} alt="Coco Art"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-              <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.75) 0%, transparent 55%)' }} />
-              <div className="absolute bottom-3 left-3">
-                <p className="text-white text-xs font-bold">Coco Art</p>
-                <p className="text-xs" style={{ color: 'rgba(200,230,200,0.7)' }}>San Andrés Isla 🥥</p>
-              </div>
-            </div>
-            {displayImages.slice(1).map((src, i) => {
-              const idx = i + 1;
-              return (
-                <div key={idx}
-                  className="rounded-xl overflow-hidden cursor-pointer relative group"
-                  style={{ height: 82, border: '1px solid rgba(255,255,255,0.1)' }}
-                  onClick={() => setActiveImg(activeImg === idx ? null : idx)}
-                >
-                  <img src={src} alt={`Coco Art ${idx + 1}`}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.55) 0%, transparent 60%)' }} />
-                  {activeImg === idx && (
-                    <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.45)' }}>
-                      <span className="text-white text-xs font-bold px-2 py-0.5 rounded" style={{ background: PALM_LIGHT }}>✓</span>
-                    </div>
-                  )}
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
+              <div
+                className="col-span-2 md:col-span-1 rounded-2xl overflow-hidden cursor-pointer relative group"
+                style={{ height: 172, border: '1px solid rgba(255,255,255,0.12)' }}
+                onClick={() => setActiveImg(activeImg === 0 ? null : 0)}
+              >
+                <img src={visibleImages[0]} alt="Coco Art"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.75) 0%, transparent 55%)' }} />
+                <div className="absolute bottom-3 left-3">
+                  <p className="text-white text-xs font-bold">Coco Art</p>
+                  <p className="text-xs" style={{ color: 'rgba(200,230,200,0.7)' }}>San Andrés Isla 🥥</p>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+              {visibleImages.slice(1).map((src, i) => {
+                const idx = i + 1;
+                const isLast = !showAllPhotos && hasMore && idx === GALLERY_PREVIEW - 1;
+                return (
+                  <div key={idx}
+                    className="rounded-xl overflow-hidden cursor-pointer relative group"
+                    style={{ height: 82, border: '1px solid rgba(255,255,255,0.1)' }}
+                    onClick={() => isLast ? setShowAllPhotos(true) : setActiveImg(activeImg === idx ? null : idx)}
+                  >
+                    <img src={src} alt={`Coco Art ${idx + 1}`}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.55) 0%, transparent 60%)' }} />
+                    {isLast && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center"
+                        style={{ background: 'rgba(10,31,15,0.75)' }}>
+                        <span className="text-white font-black text-lg">+{displayImages.length - GALLERY_PREVIEW + 1}</span>
+                        <span className="text-xs font-bold mt-0.5" style={{ color: PALM_ACCENT }}>Ver más</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {showAllPhotos && (
+              <button
+                onClick={() => setShowAllPhotos(false)}
+                className="w-full text-xs font-bold py-2 mb-2 rounded-xl transition-all"
+                style={{ color: PALM_ACCENT, background: 'rgba(76,175,80,0.1)', border: '1px solid rgba(76,175,80,0.2)' }}
+              >
+                Ver menos ↑
+              </button>
+            )}
+          </>
         )}
 
         {/* Lightbox */}
-        {activeImg !== null && displayImages[activeImg] && (
+        {activeImg !== null && visibleImages[activeImg] && (
           <div className="mb-3 rounded-2xl overflow-hidden relative"
             style={{ border: `1px solid ${PALM_LIGHT}50` }}>
-            <img src={displayImages[activeImg]} alt="Coco Art"
+            <img src={visibleImages[activeImg]} alt="Coco Art"
               className="w-full object-cover" style={{ maxHeight: 260 }} />
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.8) 0%, transparent 55%)' }} />
             <button onClick={() => setActiveImg(null)}
