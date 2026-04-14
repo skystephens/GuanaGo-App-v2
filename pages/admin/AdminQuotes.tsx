@@ -275,6 +275,9 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [inlineCantidadId, setInlineCantidadId] = useState<string | null>(null);
   const [inlineCantidadValue, setInlineCantidadValue] = useState('');
   const inlineCantidadSavingRef = useRef(false);
+  const [inlineTotalId, setInlineTotalId] = useState<string | null>(null);
+  const [inlineTotalValue, setInlineTotalValue] = useState('');
+  const inlineTotalSavingRef = useRef(false);
 
   // Modo agregar item: catálogo o ítem libre
   const [addItemMode, setAddItemMode] = useState<'catalog' | 'free'>('catalog');
@@ -714,6 +717,37 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     }
     setInlineCantidadId(null);
     inlineCantidadSavingRef.current = false;
+  };
+
+  const handleSaveInlineTotal = async (itemId: string) => {
+    if (inlineTotalSavingRef.current) return;
+    inlineTotalSavingRef.current = true;
+    if (!selectedCotizacion) { inlineTotalSavingRef.current = false; return; }
+    const newTotal = parseFloat(inlineTotalValue.replace(/\./g, '').replace(',', '.'));
+    if (isNaN(newTotal) || newTotal < 0) { setInlineTotalId(null); inlineTotalSavingRef.current = false; return; }
+    const itemIndex = items.findIndex(i => i.id === itemId);
+    if (itemIndex === -1) { inlineTotalSavingRef.current = false; return; }
+    const currentItem = items[itemIndex];
+    // Back-calculate valorUnitario from the new total
+    const divisor = (currentItem.personas || 1) * (currentItem.cantidad || 1);
+    const newValorUnitario = divisor > 0 ? newTotal / divisor : newTotal;
+    const updatedItem: CotizacionItem = {
+      ...currentItem,
+      valorUnitario: newValorUnitario,
+      precioUnitario: newValorUnitario,
+      subtotal: newTotal,
+    };
+    const saved = await updateCotizacionItem(itemId, updatedItem);
+    if (saved) {
+      const updatedItems = [...items];
+      updatedItems[itemIndex] = updatedItem;
+      setItems(updatedItems);
+      const newQuoteTotal = updatedItems.reduce((sum, i) => sum + i.subtotal, 0);
+      await updateCotizacion(selectedCotizacion.id, { precioTotal: newQuoteTotal });
+      setSelectedCotizacion(prev => prev ? { ...prev, precioTotal: newQuoteTotal } : prev);
+    }
+    setInlineTotalId(null);
+    inlineTotalSavingRef.current = false;
   };
 
   const handleSendQuote = async () => {
@@ -1316,11 +1350,26 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                 )}
                               </div>
 
-                              {/* Total */}
+                              {/* Total — inline editable directo */}
                               <div className="w-28 text-right">
-                                <span className="font-bold text-green-400 font-mono text-sm">
-                                  ${item.subtotal.toLocaleString('es-CO')}
-                                </span>
+                                {inlineTotalId === item.id ? (
+                                  <input
+                                    type="number" autoFocus value={inlineTotalValue}
+                                    onChange={e => setInlineTotalValue(e.target.value)}
+                                    onBlur={() => handleSaveInlineTotal(item.id)}
+                                    onKeyDown={e => { if (e.key === 'Enter') handleSaveInlineTotal(item.id); if (e.key === 'Escape') setInlineTotalId(null); }}
+                                    className="w-full px-2 py-1 bg-gray-800 border border-green-500 rounded text-green-300 text-sm font-bold text-right focus:outline-none"
+                                  />
+                                ) : (
+                                  <button
+                                    onClick={() => { setInlineTotalId(item.id); setInlineTotalValue(String(item.subtotal)); }}
+                                    title="Clic para editar total directamente"
+                                    className="font-bold text-green-400 font-mono text-sm hover:text-yellow-300 transition-colors group w-full text-right"
+                                  >
+                                    ${item.subtotal.toLocaleString('es-CO')}
+                                    <span className="text-[9px] text-gray-700 group-hover:text-yellow-500 ml-1">✏</span>
+                                  </button>
+                                )}
                               </div>
 
                               {/* Acciones */}
