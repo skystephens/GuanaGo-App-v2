@@ -1,128 +1,110 @@
+import Anthropic from '@anthropic-ai/sdk';
 import { makeRequest, registrarLogTrazabilidad } from '../utils/helpers.js';
 import { config } from '../config.js';
 
-// Groq AI para cotizaciones inteligentes
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+// Cache de catálogo para no llamar Airtable en cada request
+let _catalogCache = '';
+let _catalogTs = 0;
+
+async function loadCatalog() {
+  if (_catalogCache && Date.now() - _catalogTs < 5 * 60 * 1000) return _catalogCache;
+  try {
+    const { apiKey, baseId } = config.airtable;
+    if (!apiKey || !baseId) return '';
+    const url = `https://api.airtable.com/v0/${baseId}/ServiciosTuristicos_SAI?maxRecords=20&fields[]=Nombre&fields[]=Precio&fields[]=Tipo`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return '';
+    const data = await res.json();
+    _catalogCache = (data.records || [])
+      .map(r => `- ${r.fields?.Nombre || '?'} (${r.fields?.Tipo || 'Servicio'}): $${(r.fields?.Precio || 0).toLocaleString('es-CO')} COP`)
+      .join('\n');
+    _catalogTs = Date.now();
+  } catch { /* silencioso */ }
+  return _catalogCache;
+}
+
+// System prompt estático — se cachea en Claude (ephemeral, 5 min TTL)
+const SYSTEM_STATIC = `Eres Guana Go 🌴, el anfitrión oficial de turismo de San Andrés Isla, Colombia.
+
+REGLAS:
+1. NO se puede reservar para hoy. Si preguntan por hoy, sugiere mañana.
+2. Caribbean Night SOLO los VIERNES.
+3. Precios en COP. Tono caribeño, emojis, conciso (máx 200 palabras).
+4. Agrega 20% de margen operativo al precio neto del catálogo.
+
+CÁLCULO GRUPOS:
+- Taxi estándar (1–4 pax): desde $13,000 COP
+- Van/Microbús (5+ pax): desde $26,000 COP
+- Habitaciones: 2 personas por habitación (redondea arriba)
+
+FLUJO: pregunta personas → fechas → sugiere → calcula con desglose.`;
 
 /**
- * Cotizador inteligente con Groq AI
- * Recibe el mensaje del usuario y genera una cotización personalizada
+ * Cotizador inteligente con Claude (Haiku — rápido y preciso)
  */
 export const cotizar = async (req, res, next) => {
   try {
     const { mensaje, historial = [], usuario_id } = req.body;
-    
+
     if (!mensaje) {
-      return res.status(400).json({
-        success: false,
-        error: 'El mensaje es requerido'
-      });
+      return res.status(400).json({ success: false, error: 'El mensaje es requerido' });
+    }
+    if (!config.anthropicApiKey) {
+      return res.status(500).json({ success: false, error: 'ANTHROPIC_API_KEY no configurada' });
     }
 
-    if (!config.groqApiKey) {
-      return res.status(500).json({
-        success: false,
-        error: 'GROQ_API_KEY no configurada en el servidor'
-      });
-    }
-
-    // Obtener servicios actuales para contexto
-    let serviciosContext = '';
-    try {
-      const servicesResponse = await fetch(config.makeWebhooks.services, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'LIST_SERVICES_REAL', table: 'ServiciosTuristicos_SAI' })
-      });
-      const servicios = await servicesResponse.json();
-      if (Array.isArray(servicios)) {
-        serviciosContext = servicios.slice(0, 20).map(s => 
-          `- ${s.fields?.Nombre || s.Nombre || s.title}: $${s.fields?.Precio || s.Precio || s.price} COP`
-        ).join('\n');
-      }
-    } catch (e) {
-      console.log('⚠️ No se pudieron cargar servicios de Airtable');
-    }
-
-    const fechaHoy = new Date().toLocaleDateString('es-CO', { 
-      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
+    const catalogo = await loadCatalog();
+    const fecha = new Date().toLocaleDateString('es-CO', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     });
 
-    // Construir historial de conversación
-    const mensajesHistorial = historial.map(m => ({
-      role: m.role === 'user' ? 'user' : 'assistant',
-      content: m.content
-    }));
+    const anthropic = new Anthropic({ apiKey: config.anthropicApiKey });
 
-    const systemPrompt = `Eres Guana Go, el anfitrión oficial de turismo de San Andrés Isla, Colombia. 🌴
+    const messages = [
+      ...historial.slice(-8).map(m => ({
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: m.content,
+      })),
+      { role: 'user', content: mensaje },
+    ];
 
-FECHA ACTUAL: ${fechaHoy}
-
-REGLAS IMPORTANTES:
-1. NO se puede reservar para el mismo día (hoy). Si preguntan por hoy, sugiere mañana.
-2. La Noche Blanca (Caribbean Night) SOLO opera los VIERNES.
-3. Siempre muestra precios en COP (pesos colombianos).
-4. Sé amigable, usa emojis y mantén un tono caribeño.
-
-SERVICIOS DISPONIBLES:
-${serviciosContext || 'Consulta nuestro catálogo en la app para ver opciones actualizadas.'}
-
-CÁLCULO DE GRUPOS:
-- Taxi estándar (1-4 personas): Desde $13,000 COP
-- Van/Microbús (5+ personas): Desde $26,000 COP
-- Habitaciones: Se calculan 2 personas por habitación
-
-Cuando te pidan cotizar:
-1. Pregunta cuántas personas (adultos, niños, infantes)
-2. Pregunta las fechas del viaje
-3. Ofrece opciones de tours y alojamiento
-4. Calcula el total con desglose claro
-5. Agrega 20% de margen operativo al precio neto
-
-Responde de forma concisa y amigable.`;
-
-    // Llamar a Groq AI
-    const groqResponse = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.groqApiKey}`
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...mensajesHistorial,
-          { role: 'user', content: mensaje }
-        ],
-        temperature: 0.7,
-        max_tokens: 1024
-      })
+    const claudeRes = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 600,
+      system: [
+        {
+          type: 'text',
+          text: SYSTEM_STATIC,
+          cache_control: { type: 'ephemeral' },  // prompt base cacheado
+        },
+        {
+          type: 'text',
+          text: `FECHA: ${fecha}\n\nCATÁLOGO ACTUAL (Airtable):\n${catalogo || 'Ver catálogo en la app.'}`,
+        },
+      ],
+      messages,
     });
 
-    if (!groqResponse.ok) {
-      const errorData = await groqResponse.text();
-      console.error('❌ Error Groq:', errorData);
-      throw new Error(`Groq API error: ${groqResponse.status}`);
-    }
-
-    const groqData = await groqResponse.json();
-    const respuesta = groqData.choices?.[0]?.message?.content || 
-      '¡Hola! Soy Guana Go. Parece que tuve un problema procesando tu solicitud. ¿Puedes intentar de nuevo?';
+    const respuesta = claudeRes.content[0]?.text
+      || '¡Hola! 🌴 Soy Guana Go. ¿En qué puedo ayudarte?';
 
     res.json({
       success: true,
       response: respuesta,
-      model: 'llama-3.3-70b-versatile',
-      timestamp: new Date().toISOString()
+      model: 'claude-haiku-4-5-20251001',
+      usage: claudeRes.usage,
+      timestamp: new Date().toISOString(),
     });
 
   } catch (error) {
-    console.error('❌ Error en cotizador:', error);
+    console.error('❌ Error en cotizador Claude:', error);
     res.status(500).json({
       success: false,
       error: error.message,
-      response: '¡Hola! Soy Guana Go. Estoy experimentando problemas técnicos. Por favor intenta de nuevo en unos momentos. 🌴'
+      response: '¡Hola! 🌴 Soy Guana Go. Tengo un problema técnico. Intenta de nuevo en un momento.',
     });
   }
 };

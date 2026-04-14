@@ -174,48 +174,63 @@ app.use((req, res, next) => {
   }
 });
 
-// ==================== AI ASSISTANT (Groq proxy) ====================
+// ==================== AI ASSISTANT (Claude proxy) ====================
 app.post('/api/ai/chat', async (req, res) => {
+  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   const GROQ_API_KEY = process.env.GROQ_API_KEY;
-  if (!GROQ_API_KEY) {
-    return res.status(503).json({ error: 'GROQ_API_KEY no configurada en .env' });
-  }
 
-  const { messages, systemPrompt } = req.body;
+  const { messages, systemPrompt, model: requestedModel } = req.body;
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'Se requiere array de messages' });
   }
 
-  try {
-    const body = {
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: systemPrompt || 'Eres un asistente de proyecto.' },
-        ...messages,
-      ],
-      temperature: 0.7,
-      max_tokens: 1024,
-    };
+  // Preferir Claude, fallback a Groq si no hay key
+  if (ANTHROPIC_API_KEY) {
+    try {
+      const { default: Anthropic } = await import('@anthropic-ai/sdk');
+      const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
+      const response = await anthropic.messages.create({
+        model: requestedModel || 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        system: systemPrompt || 'Eres un asistente de GuanaGO para San Andrés Isla.',
+        messages: messages.filter(m => m.role === 'user' || m.role === 'assistant'),
+      });
+
+      return res.json({
+        reply: response.content[0]?.text || '',
+        model: response.model,
+        usage: response.usage,
+      });
+    } catch (err) {
+      console.error('❌ Claude chat error:', err.message);
+      // si falla Claude, intenta con Groq
+    }
+  }
+
+  // Fallback: Groq
+  if (!GROQ_API_KEY) {
+    return res.status(503).json({ error: 'No hay ANTHROPIC_API_KEY ni GROQ_API_KEY en .env' });
+  }
+  try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+      headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompt || 'Eres un asistente de proyecto.' },
+          ...messages,
+        ],
+        temperature: 0.7,
+        max_tokens: 1024,
+      }),
     });
-
-    if (!response.ok) {
-      const err = await response.text();
-      return res.status(response.status).json({ error: err });
-    }
-
     const data = await response.json();
-    res.json({ reply: data.choices[0].message.content });
+    res.json({ reply: data.choices?.[0]?.message?.content || '', model: 'llama-3.3-70b (fallback)' });
   } catch (err) {
-    console.error('AI chat error:', err);
-    res.status(500).json({ error: 'Error al contactar Groq API' });
+    console.error('AI chat fallback error:', err);
+    res.status(500).json({ error: 'Error al contactar el servicio de IA' });
   }
 });
 

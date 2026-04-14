@@ -5,8 +5,11 @@ export const config = {
   port: process.env.PORT || 5000,
   nodeEnv: process.env.NODE_ENV || 'development',
   
-  // Groq AI (para cotizador inteligente)
+  // Groq AI (legacy - se mantiene como fallback)
   groqApiKey: process.env.GROQ_API_KEY,
+
+  // Claude / Anthropic (motor principal de IA)
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY,
   
   // Airtable (para catálogo de servicios)
   airtable: {
