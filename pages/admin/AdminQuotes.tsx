@@ -259,9 +259,13 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
   
-  // Estados para edición de items
+  // Estados para edición completa de items (fecha, pax)
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingItemData, setEditingItemData] = useState<Partial<CotizacionItem>>({});
+
+  // Estado para edición inline de precio (solo precio, sin abrir todo el editor)
+  const [inlinePriceId, setInlinePriceId] = useState<string | null>(null);
+  const [inlinePriceValue, setInlinePriceValue] = useState<string>('');
   
   // Form states
   const [formData, setFormData] = useState({
@@ -572,6 +576,48 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const handleCancelEditItem = () => {
     setEditingItemId(null);
     setEditingItemData({});
+  };
+
+  /** Guarda solo el precio editado inline, recalcula subtotal y persiste */
+  const handleSaveInlinePrice = async (itemId: string) => {
+    if (!selectedCotizacion) return;
+    const newPrice = parseFloat(inlinePriceValue);
+    if (isNaN(newPrice) || newPrice < 0) { setInlinePriceId(null); return; }
+
+    const itemIndex = items.findIndex(i => i.id === itemId);
+    if (itemIndex === -1) return;
+    const currentItem = items[itemIndex];
+
+    // Recalcular subtotal con el nuevo precio
+    let newSubtotal: number;
+    if (currentItem.servicioTipo === 'hotel') {
+      const start = new Date(currentItem.fecha);
+      const end   = new Date(currentItem.fechaFin || currentItem.fecha);
+      const nights = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000));
+      newSubtotal = newPrice * nights;
+    } else if (currentItem.servicioTipo === 'taxi') {
+      newSubtotal = newPrice;
+    } else {
+      const payingPeople = (currentItem.adultos || 0) + (currentItem.ninos || 0);
+      newSubtotal = newPrice * Math.max(1, payingPeople);
+    }
+
+    const updatedItem: CotizacionItem = {
+      ...currentItem,
+      precioEditado: newPrice,
+      subtotal: newSubtotal,
+    };
+
+    const saved = await updateCotizacionItem(itemId, updatedItem);
+    if (saved) {
+      const updatedItems = [...items];
+      updatedItems[itemIndex] = updatedItem;
+      setItems(updatedItems);
+      const newTotal = updatedItems.reduce((sum, i) => sum + i.subtotal, 0);
+      await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
+      setSelectedCotizacion(prev => prev ? { ...prev, precioTotal: newTotal } : prev);
+    }
+    setInlinePriceId(null);
   };
 
   const handleSendQuote = async () => {
@@ -1142,23 +1188,23 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                           </div>
                         ) : (
                           // MODO VISUALIZACIÓN
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1 cursor-pointer" onClick={() => handleStartEditItem(item)}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              {/* Nombre + tipo */}
                               <div className="flex items-center gap-2 mb-2">
                                 <h4 className="font-semibold">{item.servicioNombre}</h4>
-                                <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded text-xs uppercase">
+                                <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded text-xs uppercase flex-shrink-0">
                                   {item.servicioTipo}
                                 </span>
                               </div>
-                              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
+
+                              {/* Fecha + pax */}
+                              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-2">
                                 <div className="flex items-center gap-1">
                                   <Calendar className="w-4 h-4" />
                                   {new Date(item.fecha).toLocaleDateString()}
                                   {item.servicioTipo === 'hotel' && item.fechaFin && (
-                                    <>
-                                      {' - '}
-                                      {new Date(item.fechaFin).toLocaleDateString()}
-                                    </>
+                                    <> — {new Date(item.fechaFin).toLocaleDateString()}</>
                                   )}
                                 </div>
                                 {item.horarioInicio && item.horarioFin && (
@@ -1171,23 +1217,58 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                   <Users className="w-4 h-4" />
                                   {item.adultos + item.ninos + item.bebes} pax
                                 </div>
-                                <div className="flex items-center gap-1 font-semibold text-green-400">
-                                  <DollarSign className="w-4 h-4" />
-                                  ${item.subtotal.toLocaleString('es-CO')}
-                                  {item.precioEditado && item.precioEditado !== item.precioUnitario && (
-                                    <span className="ml-1 text-[10px] bg-yellow-900/40 text-yellow-400 px-1.5 py-0.5 rounded font-bold">
-                                      PRECIO MOD.
+                              </div>
+
+                              {/* Precio inline editable */}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {inlinePriceId === item.id ? (
+                                  /* ── INPUT INLINE ── */
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">Precio/u $</span>
+                                    <input
+                                      type="number"
+                                      autoFocus
+                                      value={inlinePriceValue}
+                                      onChange={e => setInlinePriceValue(e.target.value)}
+                                      onBlur={() => handleSaveInlinePrice(item.id)}
+                                      onKeyDown={e => {
+                                        if (e.key === 'Enter') handleSaveInlinePrice(item.id);
+                                        if (e.key === 'Escape') setInlinePriceId(null);
+                                      }}
+                                      className="w-36 px-2 py-1 bg-gray-800 border border-yellow-500 rounded text-white text-sm font-bold focus:outline-none"
+                                    />
+                                    <span className="text-[10px] text-gray-600">Enter para guardar · Esc para cancelar</span>
+                                  </div>
+                                ) : (
+                                  /* ── PRECIO CLICKEABLE ── */
+                                  <button
+                                    onClick={() => {
+                                      setInlinePriceId(item.id);
+                                      setInlinePriceValue(String(item.precioEditado ?? item.precioUnitario));
+                                    }}
+                                    title="Clic para editar precio"
+                                    className="flex items-center gap-1.5 group"
+                                  >
+                                    <DollarSign className="w-4 h-4 text-green-500" />
+                                    <span className="font-bold text-green-400 group-hover:text-yellow-300 transition-colors">
+                                      ${item.subtotal.toLocaleString('es-CO')}
                                     </span>
-                                  )}
-                                </div>
-                                {item.precioEditado && item.precioEditado !== item.precioUnitario && (
+                                    <span className="text-[10px] text-gray-600 group-hover:text-yellow-500 transition-colors">✏️</span>
+                                  </button>
+                                )}
+
+                                {/* Badge precio modificado */}
+                                {item.precioEditado && item.precioEditado !== item.precioUnitario && inlinePriceId !== item.id && (
                                   <div className="flex items-center gap-1 text-xs text-gray-600">
-                                    <span>Original:</span>
                                     <span className="line-through">${item.precioUnitario.toLocaleString('es-CO')}</span>
-                                    <span className="text-yellow-600">→ ${item.precioEditado.toLocaleString('es-CO')}/u</span>
+                                    <span className="text-yellow-600 font-bold">
+                                      → ${item.precioEditado.toLocaleString('es-CO')}/u
+                                    </span>
+                                    <span className="bg-yellow-900/40 text-yellow-400 px-1 py-0.5 rounded text-[9px] font-bold">MOD</span>
                                   </div>
                                 )}
                               </div>
+
                               {item.conflictos && item.conflictos.length > 0 && (
                                 <div className="mt-2 text-sm text-orange-400 flex items-start gap-2">
                                   <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -1195,19 +1276,21 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                 </div>
                               )}
                             </div>
-                            <div className="flex gap-1.5 flex-shrink-0">
+
+                            {/* Botones acción */}
+                            <div className="flex gap-1 flex-shrink-0 pt-0.5">
                               <button
-                                onClick={(e) => { e.stopPropagation(); handleStartEditItem(item); }}
-                                title="Editar precio / fecha / pax"
-                                className="p-2 text-yellow-500 hover:text-yellow-400 hover:bg-yellow-950/30 rounded-lg transition-colors"
+                                onClick={() => handleStartEditItem(item)}
+                                title="Editar fecha y pax"
+                                className="p-2 text-gray-500 hover:text-blue-400 hover:bg-blue-950/20 rounded-lg transition-colors"
                               >
-                                <DollarSign className="w-4 h-4" />
+                                <Calendar className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteItem(item.id)}
-                                className="p-2 text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded-lg transition-colors"
+                                className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-950/20 rounded-lg transition-colors"
                               >
-                                <Trash2 className="w-5 h-5" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
                           </div>
