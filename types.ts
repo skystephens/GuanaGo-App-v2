@@ -422,22 +422,28 @@ export interface Cotizacion {
 export interface CotizacionItem {
   id: string;
   cotizacionId: string;               // Link a CotizacionesGG
-  servicioId: string;                 // Link a ServiciosTuristicos_SAI
-  servicioNombre: string;             // Nombre del servicio
-  servicioTipo: 'tour' | 'hotel' | 'taxi' | 'package';  // Tipo
+  servicioId?: string;                // Link a ServiciosTuristicos_SAI (vacío en ítems personalizados)
+  servicioNombre: string;             // Nombre del servicio / ítem libre
+  servicioTipo: 'tour' | 'hotel' | 'taxi' | 'package' | 'tiquete' | 'seguro' | 'transfer' | 'otro';
   fecha: string;                      // ISO date (fecha inicio)
-  fechaFin?: string;                  // ISO date (fecha fin para alojamientos - nuevo)
+  fechaFin?: string;                  // ISO date (fecha fin para alojamientos)
   horarioInicio?: string;             // HH:MM
   horarioFin?: string;                // HH:MM
-  adultos: number;                    // Editable
-  ninos: number;                      // Editable
-  bebes: number;                      // Editable
-  precioUnitario: number;             // Precio original (referencia)
-  precioEditado?: number;             // Precio editado manualmente (nuevo)
-  subtotal: number;                   // precio × personas (o precio fijo para hotel)
+  adultos: number;
+  ninos: number;
+  bebes: number;
+  // ── Modelo de precio Excel: subtotal = valorUnitario × personas × cantidad ──
+  valorUnitario: number;              // Precio por persona por noche/unidad
+  personas: number;                   // #personas para este ítem específico
+  cantidad: number;                   // #noches, #viajes, o cantidad de unidades
+  // ── Compatibilidad hacia atrás ──
+  precioUnitario: number;             // Alias de valorUnitario (referencia catálogo)
+  precioEditado?: number;             // Precio editado manualmente (legacy)
+  subtotal: number;                   // valorUnitario × personas × cantidad
+  esPersonalizado: boolean;           // true = ítem libre (tiquete, seguro, etc.)
   status: QuoteItemStatus;
-  conflictos?: string[];              // Lista de conflictos detectados
-  incluyeHuespedes?: number;          // Para alojamientos: número de huéspedes que incluye el precio
+  conflictos?: string[];
+  incluyeHuespedes?: number;
 }
 
 export const QUOTE_STATUS_CONFIG = {

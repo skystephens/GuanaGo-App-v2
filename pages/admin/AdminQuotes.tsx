@@ -267,7 +267,21 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [inlinePriceId, setInlinePriceId] = useState<string | null>(null);
   const [inlinePriceValue, setInlinePriceValue] = useState<string>('');
   const inlinePriceSavingRef = useRef(false); // evita doble-trigger Enter+blur
-  
+
+  // Inline edit personas / cantidad
+  const [inlinePersonasId, setInlinePersonasId] = useState<string | null>(null);
+  const [inlinePersonasValue, setInlinePersonasValue] = useState('');
+  const inlinePersonasSavingRef = useRef(false);
+  const [inlineCantidadId, setInlineCantidadId] = useState<string | null>(null);
+  const [inlineCantidadValue, setInlineCantidadValue] = useState('');
+  const inlineCantidadSavingRef = useRef(false);
+
+  // Modo agregar item: catálogo o ítem libre
+  const [addItemMode, setAddItemMode] = useState<'catalog' | 'free'>('catalog');
+  const [freeItemForm, setFreeItemForm] = useState<{
+    nombre: string; tipo: CotizacionItem['servicioTipo']; valorUnitario: string; personas: string; cantidad: string;
+  }>({ nombre: '', tipo: 'tour', valorUnitario: '', personas: '2', cantidad: '1' });
+
   // Form states
   const [formData, setFormData] = useState({
     nombre: '',
@@ -416,51 +430,49 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       }
     }
 
-    const totalPersonas = formData.adultos + formData.ninos + formData.bebes;
-    // Solo adultos y niños pagan; bebés no pagan
     const payingPeople = formData.adultos + formData.ninos;
-    const precio = service.price || (service as any).precio || 0;
-    
-    // LÓGICA ESPECIAL PARA ALOJAMIENTOS
-    let subtotal = 0;
-    let fechaFin: string | undefined = undefined;
-    
+    const valorUnitario = service.price || (service as any).precio || 0;
+
+    // Modelo Excel: subtotal = valorUnitario × personas × cantidad
     const category = service.category || (service as any).tipo || '';
     const isHotel = category === 'hotel';
     const isTaxi  = category === 'taxi';
 
+    let personas = payingPeople || 1;
+    let cantidad = 1;
+    let fechaFin: string | undefined = undefined;
+
     if (isHotel) {
-      // Hoteles: precio fijo por noche (no por pax)
       const startDate = new Date(selectedCotizacion.fechaInicio);
       const endDate   = new Date(selectedCotizacion.fechaFin);
-      const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      subtotal = precio * Math.max(1, nights);
+      cantidad = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
       fechaFin = selectedCotizacion.fechaFin;
-      console.log(`🏨 Hotel: ${nights} noches × $${precio} = $${subtotal}`);
     } else if (isTaxi) {
-      // Taxis/Traslados: precio fijo por vehículo/trayecto (igual que GuiaSAI_Business)
-      subtotal = precio;
-      console.log(`🚕 Taxi: precio fijo por trayecto = $${subtotal}`);
-    } else {
-      // Tours y paquetes: precio por persona
-      subtotal = precio * payingPeople;
-      console.log(`🎫 ${category || 'Tour'}: ${payingPeople} pax × $${precio} = $${subtotal}`);
+      personas = 1;
+      cantidad = 1;
     }
+
+    const subtotal = valorUnitario * personas * cantidad;
+    console.log(`💰 ${category || 'Tour'}: $${valorUnitario} × ${personas}pax × ${cantidad}u = $${subtotal}`);
 
     const newItem: Omit<CotizacionItem, 'id'> = {
       cotizacionId: selectedCotizacion.id,
       servicioId: service.id,
       servicioNombre: service.title || (service as any).nombre,
-      servicioTipo: (service.category || (service as any).tipo) as 'tour' | 'hotel' | 'taxi' | 'package',
+      servicioTipo: (service.category || (service as any).tipo) as CotizacionItem['servicioTipo'],
       fecha: selectedCotizacion.fechaInicio,
-      fechaFin: fechaFin,
+      fechaFin,
       horarioInicio,
       horarioFin,
       adultos: formData.adultos,
       ninos: formData.ninos,
       bebes: formData.bebes,
-      precioUnitario: precio,
+      valorUnitario,
+      personas,
+      cantidad,
+      precioUnitario: valorUnitario,
       subtotal,
+      esPersonalizado: false,
       status: validation.valid ? 'disponible' : 'conflicto',
       conflictos: validation.conflicts
     };
@@ -514,6 +526,49 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     }
   };
 
+  const handleAddFreeItem = async () => {
+    if (!selectedCotizacion) return;
+    const nombre = freeItemForm.nombre.trim();
+    const valorUnitario = parseFloat(freeItemForm.valorUnitario);
+    const personas = parseInt(freeItemForm.personas) || 1;
+    const cantidad = parseInt(freeItemForm.cantidad) || 1;
+
+    if (!nombre) { alert('Escribe el nombre del ítem'); return; }
+    if (isNaN(valorUnitario) || valorUnitario <= 0) { alert('Ingresa un valor unitario válido'); return; }
+
+    const subtotal = valorUnitario * personas * cantidad;
+
+    const newItem: Omit<CotizacionItem, 'id'> = {
+      cotizacionId: selectedCotizacion.id,
+      servicioNombre: nombre,
+      servicioTipo: freeItemForm.tipo,
+      fecha: selectedCotizacion.fechaInicio,
+      adultos: 0,
+      ninos: 0,
+      bebes: 0,
+      valorUnitario,
+      personas,
+      cantidad,
+      precioUnitario: valorUnitario,
+      subtotal,
+      esPersonalizado: true,
+      status: 'disponible',
+      conflictos: []
+    };
+
+    const created = await addCotizacionItem(newItem);
+    if (created) {
+      const updatedItems = [...items, created];
+      setItems(updatedItems);
+      const newTotal = updatedItems.reduce((sum, i) => sum + i.subtotal, 0);
+      await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
+      setSelectedCotizacion(prev => prev ? { ...prev, precioTotal: newTotal } : prev);
+      setFreeItemForm({ nombre: '', tipo: 'tour', valorUnitario: '', personas: String(formData.adultos + formData.ninos || 2), cantidad: '1' });
+    } else {
+      alert('❌ Error al agregar el ítem');
+    }
+  };
+
   const handleStartEditItem = (item: CotizacionItem) => {
     setEditingItemId(item.id);
     setEditingItemData({
@@ -529,29 +584,21 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     if (itemIndex === -1) return;
 
     const currentItem = items[itemIndex];
-    
-    // Calcular nuevo subtotal basado en cambios
-    let newSubtotal = currentItem.subtotal;
-    
-    if (currentItem.servicioTipo === 'hotel') {
-      // Para hoteles: el precio se aplica una sola vez (no se multiplica por pax)
-      const startDate = new Date(editingItemData.fecha || currentItem.fecha);
-      const endDate = new Date(editingItemData.fechaFin || currentItem.fechaFin || currentItem.fecha);
-      const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      const price = editingItemData.precioEditado || editingItemData.precioUnitario || currentItem.precioUnitario;
-      newSubtotal = price * Math.max(1, nights);
-    } else {
-      // Para tours y otros: precio × personas
-      const payingPeople = (editingItemData.adultos || currentItem.adultos) + (editingItemData.ninos || currentItem.ninos);
-      const price = editingItemData.precioEditado || editingItemData.precioUnitario || currentItem.precioUnitario;
-      newSubtotal = price * payingPeople;
-    }
+
+    // Modelo Excel: subtotal = valorUnitario × personas × cantidad
+    const valUnit  = editingItemData.valorUnitario  ?? currentItem.valorUnitario  ?? currentItem.precioUnitario;
+    const personas = editingItemData.personas        ?? currentItem.personas        ?? 1;
+    const cantidad = editingItemData.cantidad        ?? currentItem.cantidad        ?? 1;
+    const newSubtotal = valUnit * personas * cantidad;
 
     const updatedItem: CotizacionItem = {
       ...currentItem,
       ...editingItemData,
-      precioUnitario: editingItemData.precioEditado ? currentItem.precioUnitario : editingItemData.precioUnitario || currentItem.precioUnitario,
-      precioEditado: editingItemData.precioEditado,
+      valorUnitario: valUnit,
+      personas,
+      cantidad,
+      precioUnitario: valUnit,
+      precioEditado: undefined,
       subtotal: newSubtotal
     };
 
@@ -597,22 +644,13 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     if (itemIndex === -1) { inlinePriceSavingRef.current = false; return; }
     const currentItem = items[itemIndex];
 
-    // Recalcular subtotal con el nuevo precio
-    let newSubtotal: number;
-    if (currentItem.servicioTipo === 'hotel') {
-      const start = new Date(currentItem.fecha);
-      const end   = new Date(currentItem.fechaFin || currentItem.fecha);
-      const nights = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000));
-      newSubtotal = newPrice * nights;
-    } else if (currentItem.servicioTipo === 'taxi') {
-      newSubtotal = newPrice;
-    } else {
-      const payingPeople = (currentItem.adultos || 0) + (currentItem.ninos || 0);
-      newSubtotal = newPrice * Math.max(1, payingPeople);
-    }
+    // Modelo Excel: subtotal = valorUnitario × personas × cantidad
+    const newSubtotal = newPrice * (currentItem.personas || 1) * (currentItem.cantidad || 1);
 
     const updatedItem: CotizacionItem = {
       ...currentItem,
+      valorUnitario: newPrice,
+      precioUnitario: newPrice,
       precioEditado: newPrice,
       subtotal: newSubtotal,
     };
@@ -628,6 +666,54 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     }
     setInlinePriceId(null);
     inlinePriceSavingRef.current = false;
+  };
+
+  const handleSaveInlinePersonas = async (itemId: string) => {
+    if (inlinePersonasSavingRef.current) return;
+    inlinePersonasSavingRef.current = true;
+    if (!selectedCotizacion) { inlinePersonasSavingRef.current = false; return; }
+    const newPersonas = parseInt(inlinePersonasValue);
+    if (isNaN(newPersonas) || newPersonas < 1) { setInlinePersonasId(null); inlinePersonasSavingRef.current = false; return; }
+    const itemIndex = items.findIndex(i => i.id === itemId);
+    if (itemIndex === -1) { inlinePersonasSavingRef.current = false; return; }
+    const currentItem = items[itemIndex];
+    const newSubtotal = currentItem.valorUnitario * newPersonas * currentItem.cantidad;
+    const updatedItem: CotizacionItem = { ...currentItem, personas: newPersonas, subtotal: newSubtotal };
+    const saved = await updateCotizacionItem(itemId, updatedItem);
+    if (saved) {
+      const updatedItems = [...items];
+      updatedItems[itemIndex] = updatedItem;
+      setItems(updatedItems);
+      const newTotal = updatedItems.reduce((sum, i) => sum + i.subtotal, 0);
+      await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
+      setSelectedCotizacion(prev => prev ? { ...prev, precioTotal: newTotal } : prev);
+    }
+    setInlinePersonasId(null);
+    inlinePersonasSavingRef.current = false;
+  };
+
+  const handleSaveInlineCantidad = async (itemId: string) => {
+    if (inlineCantidadSavingRef.current) return;
+    inlineCantidadSavingRef.current = true;
+    if (!selectedCotizacion) { inlineCantidadSavingRef.current = false; return; }
+    const newCantidad = parseInt(inlineCantidadValue);
+    if (isNaN(newCantidad) || newCantidad < 1) { setInlineCantidadId(null); inlineCantidadSavingRef.current = false; return; }
+    const itemIndex = items.findIndex(i => i.id === itemId);
+    if (itemIndex === -1) { inlineCantidadSavingRef.current = false; return; }
+    const currentItem = items[itemIndex];
+    const newSubtotal = currentItem.valorUnitario * currentItem.personas * newCantidad;
+    const updatedItem: CotizacionItem = { ...currentItem, cantidad: newCantidad, subtotal: newSubtotal };
+    const saved = await updateCotizacionItem(itemId, updatedItem);
+    if (saved) {
+      const updatedItems = [...items];
+      updatedItems[itemIndex] = updatedItem;
+      setItems(updatedItems);
+      const newTotal = updatedItems.reduce((sum, i) => sum + i.subtotal, 0);
+      await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
+      setSelectedCotizacion(prev => prev ? { ...prev, precioTotal: newTotal } : prev);
+    }
+    setInlineCantidadId(null);
+    inlineCantidadSavingRef.current = false;
   };
 
   const handleSendQuote = async () => {
@@ -1063,7 +1149,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 </div>
               </div>
 
-              {/* Items de la cotización */}
+              {/* Items de la cotización — tabla estilo Excel */}
               <div className="bg-gray-900 p-6 rounded-xl">
                 <h3 className="text-xl font-semibold mb-4">Servicios Incluidos ({items.length})</h3>
                 {items.length === 0 ? (
@@ -1073,240 +1159,196 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                     <p className="text-sm">Agrega servicios desde el panel derecho</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {items.map(item => (
-                      <div
-                        key={item.id}
-                        className={`p-4 rounded-lg border ${
-                          item.status === 'conflicto' ? 'border-orange-600 bg-orange-950/20' : 'border-gray-800 bg-gray-950'
-                        }`}
-                      >
-                        {editingItemId === item.id ? (
-                          // MODO EDICIÓN
-                          <div className="space-y-4">
-                            <div>
-                              <label className="block text-xs font-semibold text-gray-400 mb-2">Fecha Inicio</label>
-                              <input
-                                type="date"
-                                value={editingItemData.fecha || ''}
-                                onChange={(e) => setEditingItemData({ ...editingItemData, fecha: e.target.value })}
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
-                              />
-                            </div>
-                            
-                            {item.servicioTipo === 'hotel' && (
-                              <div>
-                                <label className="block text-xs font-semibold text-gray-400 mb-2">Fecha Fin</label>
-                                <input
-                                  type="date"
-                                  value={editingItemData.fechaFin || item.fechaFin || ''}
-                                  onChange={(e) => setEditingItemData({ ...editingItemData, fechaFin: e.target.value })}
-                                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
-                                />
-                              </div>
-                            )}
+                  <div className="overflow-x-auto">
+                    {/* Encabezado tabla */}
+                    <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-x-3 items-center px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-800 mb-1">
+                      <span>Nombre</span>
+                      <span className="text-right w-28">Valor Unit.</span>
+                      <span className="text-right w-14">#Pax</span>
+                      <span className="text-right w-16">#Cant</span>
+                      <span className="text-right w-28">Total</span>
+                      <span className="w-16"></span>
+                    </div>
 
-                            <div className="grid grid-cols-3 gap-2">
-                              <div>
-                                <label className="block text-xs font-semibold text-gray-400 mb-1">Adultos</label>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={editingItemData.adultos || 0}
-                                  onChange={(e) => setEditingItemData({ ...editingItemData, adultos: parseInt(e.target.value) || 0 })}
-                                  className="w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs font-semibold text-gray-400 mb-1">Niños</label>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={editingItemData.ninos || 0}
-                                  onChange={(e) => setEditingItemData({ ...editingItemData, ninos: parseInt(e.target.value) || 0 })}
-                                  className="w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs font-semibold text-gray-400 mb-1">Bebés</label>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={editingItemData.bebes || 0}
-                                  onChange={(e) => setEditingItemData({ ...editingItemData, bebes: parseInt(e.target.value) || 0 })}
-                                  className="w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
-                                />
-                              </div>
-                            </div>
-
-                            <div>
-                              <label className="block text-xs font-semibold text-gray-400 mb-1">
-                                Precio unitario
-                                {item.precioUnitario !== (editingItemData.precioEditado ?? item.precioUnitario) && (
-                                  <span className="ml-2 text-gray-600 line-through font-normal">
-                                    ${item.precioUnitario.toLocaleString('es-CO')}
-                                  </span>
+                    <div className="space-y-1">
+                      {items.map(item => (
+                        <div
+                          key={item.id}
+                          className={`rounded-lg border ${
+                            item.status === 'conflicto' ? 'border-orange-700/50 bg-orange-950/10' : 'border-transparent hover:border-gray-800'
+                          }`}
+                        >
+                          {editingItemId === item.id ? (
+                            // ── MODO EDICIÓN (formulario completo) ──
+                            <div className="p-4 bg-gray-800 rounded-lg space-y-3">
+                              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">{item.servicioNombre}</p>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-[10px] text-gray-500 mb-1">Fecha</label>
+                                  <input type="date" value={editingItemData.fecha || ''} onChange={e => setEditingItemData({ ...editingItemData, fecha: e.target.value })} className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm" />
+                                </div>
+                                {item.servicioTipo === 'hotel' && (
+                                  <div>
+                                    <label className="block text-[10px] text-gray-500 mb-1">Fecha Fin</label>
+                                    <input type="date" value={editingItemData.fechaFin || item.fechaFin || ''} onChange={e => setEditingItemData({ ...editingItemData, fechaFin: e.target.value })} className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm" />
+                                  </div>
                                 )}
-                              </label>
-                              <input
-                                type="number"
-                                value={editingItemData.precioEditado ?? editingItemData.precioUnitario ?? item.precioUnitario}
-                                onChange={(e) => setEditingItemData({ ...editingItemData, precioEditado: parseFloat(e.target.value) || 0 })}
-                                className="w-full px-3 py-2 bg-gray-800 border border-yellow-600/50 rounded text-white text-sm focus:border-yellow-500 focus:outline-none"
-                              />
-                              {/* Descuentos rápidos */}
-                              <div className="flex gap-1.5 mt-1.5 flex-wrap">
-                                <span className="text-[10px] text-gray-600 self-center">Descuento:</span>
-                                {[5, 10, 15, 20, 25].map(pct => (
-                                  <button
-                                    key={pct}
-                                    type="button"
-                                    onClick={() => {
-                                      const base = item.precioUnitario;
-                                      const withDiscount = Math.round(base * (1 - pct / 100));
-                                      setEditingItemData({ ...editingItemData, precioEditado: withDiscount });
-                                    }}
-                                    className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-900/30 border border-yellow-700/40 text-yellow-400 hover:bg-yellow-800/40 transition-colors"
-                                  >
-                                    -{pct}%
-                                  </button>
-                                ))}
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingItemData({ ...editingItemData, precioEditado: item.precioUnitario })}
-                                  className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-800 border border-gray-700 text-gray-500 hover:text-gray-300 transition-colors"
-                                >
-                                  Reset
-                                </button>
+                              </div>
+                              <div className="grid grid-cols-3 gap-3">
+                                <div>
+                                  <label className="block text-[10px] text-gray-500 mb-1">Valor Unit. $</label>
+                                  <input type="number" min="0" value={editingItemData.valorUnitario ?? item.valorUnitario} onChange={e => setEditingItemData({ ...editingItemData, valorUnitario: parseFloat(e.target.value) || 0 })} className="w-full px-2 py-1.5 bg-gray-700 border border-yellow-600/50 rounded text-white text-sm focus:border-yellow-500 focus:outline-none" />
+                                  <div className="flex gap-1 mt-1 flex-wrap">
+                                    {[5, 10, 15, 20].map(pct => (
+                                      <button key={pct} type="button" onClick={() => setEditingItemData({ ...editingItemData, valorUnitario: Math.round(item.valorUnitario * (1 - pct / 100)) })} className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-yellow-900/30 border border-yellow-700/40 text-yellow-400 hover:bg-yellow-800/40">-{pct}%</button>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] text-gray-500 mb-1">#Personas</label>
+                                  <input type="number" min="1" value={editingItemData.personas ?? item.personas} onChange={e => setEditingItemData({ ...editingItemData, personas: parseInt(e.target.value) || 1 })} className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm" />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] text-gray-500 mb-1">#Cant / Noches</label>
+                                  <input type="number" min="1" value={editingItemData.cantidad ?? item.cantidad} onChange={e => setEditingItemData({ ...editingItemData, cantidad: parseInt(e.target.value) || 1 })} className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm" />
+                                </div>
+                              </div>
+                              {/* Preview del nuevo total */}
+                              <div className="text-right text-sm text-gray-400">
+                                Nuevo total:{' '}
+                                <span className="font-bold text-white">
+                                  ${((editingItemData.valorUnitario ?? item.valorUnitario) * (editingItemData.personas ?? item.personas) * (editingItemData.cantidad ?? item.cantidad)).toLocaleString('es-CO')}
+                                </span>
+                              </div>
+                              <div className="flex gap-2">
+                                <button onClick={() => handleSaveEditItem(item.id)} className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-white text-sm font-semibold transition-colors">Guardar</button>
+                                <button onClick={handleCancelEditItem} className="flex-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm font-semibold transition-colors">Cancelar</button>
                               </div>
                             </div>
+                          ) : (
+                            // ── MODO VISUALIZACIÓN (fila tabla Excel) ──
+                            <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-x-3 items-center px-3 py-2.5">
+                              {/* Nombre */}
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-medium text-sm truncate">{item.servicioNombre}</span>
+                                  {item.esPersonalizado && (
+                                    <span className="px-1.5 py-0.5 bg-purple-900/40 text-purple-400 rounded text-[9px] font-bold flex-shrink-0">LIBRE</span>
+                                  )}
+                                  {item.status === 'conflicto' && (
+                                    <AlertCircle className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-[10px] text-gray-600 uppercase">{item.servicioTipo}</span>
+                                  {item.fecha && (
+                                    <span className="text-[10px] text-gray-600">
+                                      {new Date(item.fecha).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+                                      {item.fechaFin && ` — ${new Date(item.fechaFin).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}`}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
 
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleSaveEditItem(item.id)}
-                                className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-white text-sm font-semibold transition-colors"
-                              >
-                                Guardar
-                              </button>
-                              <button
-                                onClick={handleCancelEditItem}
-                                className="flex-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm font-semibold transition-colors"
-                              >
-                                Cancelar
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          // MODO VISUALIZACIÓN
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              {/* Nombre + tipo */}
-                              <div className="flex items-center gap-2 mb-2">
-                                <h4 className="font-semibold">{item.servicioNombre}</h4>
-                                <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded text-xs uppercase flex-shrink-0">
-                                  {item.servicioTipo}
+                              {/* Valor Unitario — inline editable */}
+                              <div className="w-28 text-right">
+                                {inlinePriceId === item.id ? (
+                                  <input
+                                    type="number" autoFocus value={inlinePriceValue}
+                                    onChange={e => setInlinePriceValue(e.target.value)}
+                                    onBlur={() => handleSaveInlinePrice(item.id)}
+                                    onKeyDown={e => { if (e.key === 'Enter') handleSaveInlinePrice(item.id); if (e.key === 'Escape') setInlinePriceId(null); }}
+                                    className="w-full px-2 py-1 bg-gray-800 border border-yellow-500 rounded text-white text-sm font-bold text-right focus:outline-none"
+                                  />
+                                ) : (
+                                  <button
+                                    onClick={() => { setInlinePriceId(item.id); setInlinePriceValue(String(item.valorUnitario || 0)); }}
+                                    title="Clic para editar valor unitario"
+                                    className="text-sm text-gray-300 hover:text-yellow-300 transition-colors font-mono group"
+                                  >
+                                    ${(item.valorUnitario || 0).toLocaleString('es-CO')}
+                                    <span className="text-[9px] text-gray-700 group-hover:text-yellow-500 ml-1">✏</span>
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* #Personas — inline editable */}
+                              <div className="w-14 text-right">
+                                {inlinePersonasId === item.id ? (
+                                  <input
+                                    type="number" autoFocus min="1" value={inlinePersonasValue}
+                                    onChange={e => setInlinePersonasValue(e.target.value)}
+                                    onBlur={() => handleSaveInlinePersonas(item.id)}
+                                    onKeyDown={e => { if (e.key === 'Enter') handleSaveInlinePersonas(item.id); if (e.key === 'Escape') setInlinePersonasId(null); }}
+                                    className="w-full px-1 py-1 bg-gray-800 border border-blue-500 rounded text-white text-sm font-bold text-center focus:outline-none"
+                                  />
+                                ) : (
+                                  <button
+                                    onClick={() => { setInlinePersonasId(item.id); setInlinePersonasValue(String(item.personas || 1)); }}
+                                    title="Clic para editar personas"
+                                    className="text-sm text-gray-300 hover:text-blue-300 transition-colors group w-full text-right"
+                                  >
+                                    {item.personas || 1}
+                                    <span className="text-[9px] text-gray-700 group-hover:text-blue-500 ml-1">✏</span>
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* #Cantidad — inline editable */}
+                              <div className="w-16 text-right">
+                                {inlineCantidadId === item.id ? (
+                                  <input
+                                    type="number" autoFocus min="1" value={inlineCantidadValue}
+                                    onChange={e => setInlineCantidadValue(e.target.value)}
+                                    onBlur={() => handleSaveInlineCantidad(item.id)}
+                                    onKeyDown={e => { if (e.key === 'Enter') handleSaveInlineCantidad(item.id); if (e.key === 'Escape') setInlineCantidadId(null); }}
+                                    className="w-full px-1 py-1 bg-gray-800 border border-emerald-500 rounded text-white text-sm font-bold text-center focus:outline-none"
+                                  />
+                                ) : (
+                                  <button
+                                    onClick={() => { setInlineCantidadId(item.id); setInlineCantidadValue(String(item.cantidad || 1)); }}
+                                    title="Clic para editar cantidad/noches"
+                                    className="text-sm text-gray-300 hover:text-emerald-300 transition-colors group w-full text-right"
+                                  >
+                                    {item.cantidad || 1}
+                                    <span className="text-[9px] text-gray-700 group-hover:text-emerald-500 ml-1">✏</span>
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Total */}
+                              <div className="w-28 text-right">
+                                <span className="font-bold text-green-400 font-mono text-sm">
+                                  ${item.subtotal.toLocaleString('es-CO')}
                                 </span>
                               </div>
 
-                              {/* Fecha + pax */}
-                              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-2">
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="w-4 h-4" />
-                                  {new Date(item.fecha).toLocaleDateString()}
-                                  {item.servicioTipo === 'hotel' && item.fechaFin && (
-                                    <> — {new Date(item.fechaFin).toLocaleDateString()}</>
-                                  )}
-                                </div>
-                                {item.horarioInicio && item.horarioFin && (
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="w-4 h-4" />
-                                    {item.horarioInicio} - {item.horarioFin}
-                                  </div>
-                                )}
-                                <div className="flex items-center gap-1">
-                                  <Users className="w-4 h-4" />
-                                  {item.adultos + item.ninos + item.bebes} pax
-                                </div>
+                              {/* Acciones */}
+                              <div className="w-16 flex items-center justify-end gap-0.5">
+                                <button onClick={() => handleStartEditItem(item)} title="Editar" className="p-1.5 text-gray-600 hover:text-blue-400 rounded transition-colors">
+                                  <Calendar className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => handleDeleteItem(item.id)} title="Eliminar" className="p-1.5 text-gray-600 hover:text-red-400 rounded transition-colors">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </div>
-
-                              {/* Precio inline editable */}
-                              <div className="flex items-center gap-2 flex-wrap">
-                                {inlinePriceId === item.id ? (
-                                  /* ── INPUT INLINE ── */
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-500">Precio/u $</span>
-                                    <input
-                                      type="number"
-                                      autoFocus
-                                      value={inlinePriceValue}
-                                      onChange={e => setInlinePriceValue(e.target.value)}
-                                      onBlur={() => handleSaveInlinePrice(item.id)}
-                                      onKeyDown={e => {
-                                        if (e.key === 'Enter') handleSaveInlinePrice(item.id);
-                                        if (e.key === 'Escape') setInlinePriceId(null);
-                                      }}
-                                      className="w-36 px-2 py-1 bg-gray-800 border border-yellow-500 rounded text-white text-sm font-bold focus:outline-none"
-                                    />
-                                    <span className="text-[10px] text-gray-600">Enter para guardar · Esc para cancelar</span>
-                                  </div>
-                                ) : (
-                                  /* ── PRECIO CLICKEABLE ── */
-                                  <button
-                                    onClick={() => {
-                                      setInlinePriceId(item.id);
-                                      setInlinePriceValue(String(item.precioEditado ?? item.precioUnitario));
-                                    }}
-                                    title="Clic para editar precio"
-                                    className="flex items-center gap-1.5 group"
-                                  >
-                                    <DollarSign className="w-4 h-4 text-green-500" />
-                                    <span className="font-bold text-green-400 group-hover:text-yellow-300 transition-colors">
-                                      ${item.subtotal.toLocaleString('es-CO')}
-                                    </span>
-                                    <span className="text-[10px] text-gray-600 group-hover:text-yellow-500 transition-colors">✏️</span>
-                                  </button>
-                                )}
-
-                                {/* Badge precio modificado */}
-                                {item.precioEditado && item.precioEditado !== item.precioUnitario && inlinePriceId !== item.id && (
-                                  <div className="flex items-center gap-1 text-xs text-gray-600">
-                                    <span className="line-through">${item.precioUnitario.toLocaleString('es-CO')}</span>
-                                    <span className="text-yellow-600 font-bold">
-                                      → ${item.precioEditado.toLocaleString('es-CO')}/u
-                                    </span>
-                                    <span className="bg-yellow-900/40 text-yellow-400 px-1 py-0.5 rounded text-[9px] font-bold">MOD</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {item.conflictos && item.conflictos.length > 0 && (
-                                <div className="mt-2 text-sm text-orange-400 flex items-start gap-2">
-                                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                  <span>{item.conflictos[0]}</span>
-                                </div>
-                              )}
                             </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
 
-                            {/* Botones acción */}
-                            <div className="flex gap-1 flex-shrink-0 pt-0.5">
-                              <button
-                                onClick={() => handleStartEditItem(item)}
-                                title="Editar fecha y pax"
-                                className="p-2 text-gray-500 hover:text-blue-400 hover:bg-blue-950/20 rounded-lg transition-colors"
-                              >
-                                <Calendar className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteItem(item.id)}
-                                className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-950/20 rounded-lg transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                    {/* Fila total */}
+                    <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-x-3 items-center px-3 py-2 border-t border-gray-700 mt-2">
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">Total</span>
+                      <span className="w-28"></span>
+                      <span className="w-14"></span>
+                      <span className="w-16"></span>
+                      <span className="w-28 text-right font-bold text-white font-mono">
+                        ${items.reduce((s, i) => s + i.subtotal, 0).toLocaleString('es-CO')}
+                      </span>
+                      <span className="w-16"></span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1374,86 +1416,191 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 </div>
               </div>
 
-              {/* Buscador de servicios */}
+              {/* Panel agregar items */}
               <div className="bg-gray-900 p-6 rounded-xl">
-                <h3 className="text-xl font-semibold mb-4">Agregar Servicios</h3>
-                
-                {/* Búsqueda */}
-                <div className="mb-4">
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <h3 className="text-xl font-semibold mb-4">Agregar Item</h3>
+
+                {/* Tabs Catálogo / Ítem Libre */}
+                <div className="flex gap-1 mb-4 bg-gray-800 p-1 rounded-lg">
+                  <button
+                    onClick={() => setAddItemMode('catalog')}
+                    className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${
+                      addItemMode === 'catalog' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Catálogo
+                  </button>
+                  <button
+                    onClick={() => setAddItemMode('free')}
+                    className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${
+                      addItemMode === 'free' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Ítem Libre
+                  </button>
+                </div>
+
+                {addItemMode === 'catalog' ? (
+                  <>
+                    {/* Búsqueda */}
+                    <div className="mb-4">
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="text"
+                            value={searchService}
+                            onChange={(e) => setSearchService(e.target.value)}
+                            placeholder="Buscar servicios..."
+                            className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                        <button
+                          onClick={refreshServices}
+                          title="Actualizar catálogo desde Airtable"
+                          className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-emerald-500 hover:text-emerald-400 transition-colors"
+                        >
+                          <Loader2 className={`w-5 h-5 ${services.length === 0 ? 'animate-spin text-emerald-400' : ''}`} />
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-600 mt-1 px-1">
+                        {services.length} servicios · Caché 48h · Usa ↺ si agregaste uno nuevo en Airtable
+                      </p>
+                    </div>
+
+                    {/* Filtros */}
+                    <div className="flex gap-2 mb-4 flex-wrap">
+                      {(['all', 'tour', 'hotel', 'taxi'] as const).map(type => {
+                        const labels: Record<string, string> = { 'all': 'Todos', 'tour': 'Tour', 'hotel': 'Alojam.', 'taxi': 'Taxi' };
+                        return (
+                          <button
+                            key={type}
+                            onClick={() => setFilterType(type)}
+                            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                              filterType === type ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                            }`}
+                          >
+                            {labels[type]}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Lista de servicios */}
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {filteredServices.map(service => (
+                        <div
+                          key={service.id}
+                          onClick={() => handleAddService(service)}
+                          className="p-3 bg-gray-800 hover:bg-gray-700 rounded-lg cursor-pointer transition-colors"
+                        >
+                          <div className="font-medium text-sm">{service.title || service.nombre}</div>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-xs text-gray-500">
+                              {service.tipoAlojamiento || service.category || service.tipo || 'Servicio'}
+                            </span>
+                            <span className="text-sm font-semibold text-green-400">
+                              ${(service.price || service.precio || 0).toLocaleString('es-CO')} /u
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                      {filteredServices.length === 0 && (
+                        <div className="text-center py-8 text-gray-500 text-sm">No se encontraron servicios</div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  /* ── ÍTEM LIBRE ── */
+                  <div className="space-y-4">
+                    <p className="text-xs text-gray-500">
+                      Agrega tiquetes, seguros, traslados o cualquier ítem no listado en el catálogo.
+                    </p>
+
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Nombre del ítem *</label>
                       <input
                         type="text"
-                        value={searchService}
-                        onChange={(e) => setSearchService(e.target.value)}
-                        placeholder="Buscar servicios..."
-                        className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
+                        value={freeItemForm.nombre}
+                        onChange={e => setFreeItemForm({ ...freeItemForm, nombre: e.target.value })}
+                        placeholder="Ej: Tiquete aéreo BOG–ADZ ida y vuelta"
+                        className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-purple-500 focus:outline-none"
                       />
                     </div>
-                    <button
-                      onClick={refreshServices}
-                      title="Actualizar catálogo desde Airtable"
-                      className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-emerald-500 hover:text-emerald-400 transition-colors"
-                    >
-                      <Loader2 className={`w-5 h-5 ${services.length === 0 ? 'animate-spin text-emerald-400' : ''}`} />
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-600 mt-1 px-1">
-                    {services.length} servicios · Caché 48h · Usa ↺ si agregaste uno nuevo en Airtable
-                  </p>
-                </div>
 
-                {/* Filtros */}
-                <div className="flex gap-2 mb-4">
-                  {(['all', 'tour', 'hotel', 'taxi'] as const).map(type => {
-                    const labels: Record<string, string> = {
-                      'all': 'Todos',
-                      'tour': 'Tour',
-                      'hotel': 'Alojamiento',
-                      'taxi': 'Taxi'
-                    };
-                    return (
-                    <button
-                      key={type}
-                      onClick={() => setFilterType(type)}
-                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                        filterType === type
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                      }`}
-                    >
-                      {labels[type]}
-                    </button>
-                    );
-                  })}
-                </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Tipo</label>
+                      <select
+                        value={freeItemForm.tipo}
+                        onChange={e => setFreeItemForm({ ...freeItemForm, tipo: e.target.value as CotizacionItem['servicioTipo'] })}
+                        className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-purple-500 focus:outline-none"
+                      >
+                        <option value="tiquete">Tiquete aéreo</option>
+                        <option value="seguro">Seguro de viaje</option>
+                        <option value="transfer">Transfer / Traslado</option>
+                        <option value="tour">Tour</option>
+                        <option value="hotel">Alojamiento</option>
+                        <option value="taxi">Taxi</option>
+                        <option value="package">Paquete</option>
+                        <option value="otro">Otro</option>
+                      </select>
+                    </div>
 
-                {/* Lista de servicios */}
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {filteredServices.map(service => (
-                    <div
-                      key={service.id}
-                      onClick={() => handleAddService(service)}
-                      className="p-3 bg-gray-800 hover:bg-gray-750 rounded-lg cursor-pointer transition-colors"
-                    >
-                      <div className="font-medium text-sm">{service.title || service.nombre}</div>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-xs text-gray-400">
-                          {service.tipoAlojamiento || service.category || service.tipo || 'Servicio'}
-                        </span>
-                        <span className="text-sm font-semibold text-green-400">
-                          ${(service.price || service.precio || 0).toLocaleString('es-CO')}
-                        </span>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Valor Unit. $</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={freeItemForm.valorUnitario}
+                          onChange={e => setFreeItemForm({ ...freeItemForm, valorUnitario: e.target.value })}
+                          placeholder="0"
+                          className="w-full px-2 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1.5 font-semibold">#Personas</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={freeItemForm.personas}
+                          onChange={e => setFreeItemForm({ ...freeItemForm, personas: e.target.value })}
+                          className="w-full px-2 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1.5 font-semibold">#Cant</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={freeItemForm.cantidad}
+                          onChange={e => setFreeItemForm({ ...freeItemForm, cantidad: e.target.value })}
+                          className="w-full px-2 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-purple-500 focus:outline-none"
+                        />
                       </div>
                     </div>
-                  ))}
-                  {filteredServices.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      No se encontraron servicios
-                    </div>
-                  )}
-                </div>
+
+                    {/* Preview del total */}
+                    {freeItemForm.valorUnitario && parseFloat(freeItemForm.valorUnitario) > 0 && (
+                      <div className="flex justify-between items-center py-2 px-3 bg-gray-800 rounded-lg text-sm">
+                        <span className="text-gray-400">
+                          ${parseFloat(freeItemForm.valorUnitario || '0').toLocaleString('es-CO')} × {freeItemForm.personas || 1} × {freeItemForm.cantidad || 1}
+                        </span>
+                        <span className="font-bold text-green-400">
+                          = ${(parseFloat(freeItemForm.valorUnitario || '0') * parseInt(freeItemForm.personas || '1') * parseInt(freeItemForm.cantidad || '1')).toLocaleString('es-CO')}
+                        </span>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={handleAddFreeItem}
+                      className="w-full py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Agregar Ítem Libre
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

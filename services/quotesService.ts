@@ -221,67 +221,83 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
     
     // Filtrar en memoria por cotizacionId
     for (const record of data.records) {
-      // Verificar si este item está vinculado a la cotizacion
       const linkedIds = record.fields['ID CotizacionGG'] || [];
-      if (!linkedIds.includes(cotizacionId)) {
-        continue; // Este item no pertenece a esta cotización
+      if (!linkedIds.includes(cotizacionId)) continue;
+
+      const f = record.fields;
+      const esPersonalizado = f['Es Personalizado'] === true;
+
+      // Si ya tiene Valor Unitario guardado, usarlo directo (modelo nuevo)
+      const valorGuardado    = parseFloat(f['Valor Unitario'] || '0') || 0;
+      const personasGuardado = parseInt(f['Personas'] || '0') || 0;
+      const cantidadGuardado = parseInt(f['Cantidad'] || '1') || 1;
+      const subtotalGuardado = parseFloat(f['Precio Subtotal'] || '0') || 0;
+
+      if (valorGuardado > 0 || esPersonalizado) {
+        // ── MODELO NUEVO: datos completos guardados en el ítem ──
+        const subtotal = subtotalGuardado || valorGuardado * personasGuardado * cantidadGuardado;
+        items.push({
+          id: record.id,
+          cotizacionId,
+          servicioId: f.Servicio?.[0] || undefined,
+          servicioNombre: f.Nombre || '',
+          servicioTipo: (f['Tipo Item'] || 'otro') as CotizacionItem['servicioTipo'],
+          fecha: '',
+          adultos: 0, ninos: 0, bebes: 0,
+          valorUnitario: valorGuardado,
+          personas: personasGuardado,
+          cantidad: cantidadGuardado,
+          precioUnitario: valorGuardado,
+          subtotal,
+          esPersonalizado,
+          status: 'disponible',
+          conflictos: []
+        });
+        continue;
       }
-      
-      const servicioId = record.fields.Servicio?.[0];
-      
-      if (servicioId) {
-        // Obtener la cotización para extraer datos del lookup
-        const cotizacionResponse = await fetch(
-          `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES)}/${cotizacionId}`,
-          { headers: getHeaders() }
-        );
-        
-        let fecha = '';
-        let adultos = 0;
-        let ninos = 0;
-        let bebes = 0;
-        
-        if (cotizacionResponse.ok) {
-          const cotizacionData = await cotizacionResponse.json();
-          const cot = cotizacionData.fields;
-          fecha = cot['Fecha Inicio'] || '';
-          adultos = parseInt(cot['Adultos 18 - 99 años'] || '0') || 0;
-          ninos = parseInt(cot['Niños 4 - 17 años'] || '0') || 0;
-          bebes = parseInt(cot['Bebes 0 - 3 años'] || '0') || 0;
-        }
-        
-        // Obtener el servicio de ServiciosTuristicos_SAI
-        const servicioUrl = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.SERVICIOS)}/${servicioId}`;
-        const servicioResponse = await fetch(servicioUrl, { headers: getHeaders() });
-        
-        if (servicioResponse.ok) {
-          const servicioData = await servicioResponse.json();
-          const s = servicioData.fields;
-          
-          // Calcular el subtotal: precio del servicio * (adultos + ninos)
-          const precioServicio = parseFloat(s['Precio actualizado'] || '0') || 0;
-          const subtotal = precioServicio * (adultos + ninos);
-          
-          // Crear el item con los datos
-          items.push({
-            id: record.id,
-            cotizacionId: cotizacionId,
-            servicioId: servicioId,
-            servicioNombre: s.Servicio || s.nombre || '',
-            servicioTipo: (s.category || s.Categoria || 'tour') as 'tour' | 'hotel' | 'taxi' | 'package',
-            fecha: fecha,
-            horarioInicio: s['Horario Inicio'] || s.horarioInicio || '',
-            horarioFin: s['Horario Fin'] || s.horarioFin || '',
-            adultos: adultos,
-            ninos: ninos,
-            bebes: bebes,
-            precioUnitario: precioServicio,
-            subtotal: subtotal,
-            status: (record.fields.Status || 'Disponible') as QuoteItemStatus,
-            conflictos: []
-          });
-        }
+
+      // ── MODELO LEGACY: ítem vinculado al catálogo sin precio propio ──
+      const servicioId = f.Servicio?.[0];
+      if (!servicioId) continue;
+
+      const servicioUrl = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.SERVICIOS)}/${servicioId}`;
+      const servicioResponse = await fetch(servicioUrl, { headers: getHeaders() });
+      if (!servicioResponse.ok) continue;
+
+      const s = (await servicioResponse.json()).fields;
+      const precioServicio = parseFloat(s['Precio actualizado'] || '0') || 0;
+
+      // Para el modelo legacy, personas = adultos+ninos de la cotización (default), cantidad = 1
+      const cotRes = await fetch(
+        `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES)}/${cotizacionId}`,
+        { headers: getHeaders() }
+      );
+      let adultos = 0, ninos = 0;
+      if (cotRes.ok) {
+        const cot = (await cotRes.json()).fields;
+        adultos = parseInt(cot['Adultos 18 - 99 años'] || '0') || 0;
+        ninos   = parseInt(cot['Niños 4 - 17 años'] || '0') || 0;
       }
+      const personas = Math.max(1, adultos + ninos);
+      const subtotal = precioServicio * personas;
+
+      items.push({
+        id: record.id,
+        cotizacionId,
+        servicioId,
+        servicioNombre: s.Servicio || s.nombre || '',
+        servicioTipo: (s.category || s.Categoria || 'tour') as CotizacionItem['servicioTipo'],
+        fecha: '',
+        adultos, ninos, bebes: 0,
+        valorUnitario: precioServicio,
+        personas,
+        cantidad: 1,
+        precioUnitario: precioServicio,
+        subtotal,
+        esPersonalizado: false,
+        status: 'disponible',
+        conflictos: []
+      });
     }
     
     console.log(`✅ Cargados ${items.length} items para cotización ${cotizacionId}`);
@@ -532,49 +548,57 @@ function mapCotizacionToFields(cotizacion: Partial<Cotizacion>): Record<string, 
 
 function mapRecordToCotizacionItem(record: any): CotizacionItem {
   const f = record.fields;
-  
-  // Obtener datos del servicio vinculado (populated por Airtable)
   const servicioData = f.ServiciosTuristicos_SAI_Data || f.Servicio_Data || {};
-  
+
+  const valorUnitario = parseFloat(f['Valor Unitario'] || f['Precio Unitario'] || '0') || 0;
+  const personas      = parseInt(f['Personas'] || '0') || 0;
+  const cantidad      = parseInt(f['Cantidad'] || '1') || 1;
+  const subtotal      = parseFloat(f['Precio Subtotal'] || '0') || (valorUnitario * personas * cantidad);
+
   return {
     id: record.id,
     cotizacionId: f.CotizacionesGG?.[0] || '',
-    servicioId: f.ServiciosTuristicos_SAI?.[0] || f.Servicio?.[0] || '',
-    servicioNombre: servicioData.Servicio || servicioData.nombre || '',
-    servicioTipo: (servicioData.category || servicioData.Categoria || 'tour') as 'tour' | 'hotel' | 'taxi' | 'package',
+    servicioId: f.ServiciosTuristicos_SAI?.[0] || f.Servicio?.[0] || undefined,
+    servicioNombre: f.Nombre || servicioData.Servicio || servicioData.nombre || '',
+    servicioTipo: (f['Tipo Item'] || servicioData.category || servicioData.Categoria || 'tour') as CotizacionItem['servicioTipo'],
     fecha: f['Fecha Inicio'] || '',
     fechaFin: f['Fecha Fin'] || '',
-    horarioInicio: servicioData['Horario Inicio'] || servicioData.horarioInicio || '',
-    horarioFin: servicioData['Horario Fin'] || servicioData.horarioFin || '',
+    horarioInicio: servicioData['Horario Inicio'] || '',
+    horarioFin: servicioData['Horario Fin'] || '',
     adultos: parseInt(f['Adultos 18 - 99 años'] || '0') || 0,
     ninos: parseInt(f['Niños 4 - 17 años'] || '0') || 0,
     bebes: parseInt(f['Bebes 0 - 3 años'] || '0') || 0,
-    precioUnitario: parseFloat(f['Precio Unitario'] || '0') || 0,
-    precioEditado: parseFloat(f['Precio Editado'] || '0') || undefined,
-    subtotal: parseFloat(f['Precio Subtotal'] || '0') || 0,
-    status: (f.Status || 'Disponible') as QuoteItemStatus,
-    incluyeHuespedes: parseInt(f['Incluye Huespedes'] || '0') || undefined,
+    valorUnitario,
+    personas,
+    cantidad,
+    precioUnitario: valorUnitario,
+    precioEditado: undefined,
+    subtotal,
+    esPersonalizado: f['Es Personalizado'] === true,
+    status: 'disponible' as QuoteItemStatus,
     conflictos: []
   };
 }
 
 function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string, any> {
   const fields: Record<string, any> = {};
-  
-  // cotizaciones_Items solo tiene 4 campos escriturables:
-  // - Nombre (texto)
-  // - Precio Subtotal (número)
-  // - ID CotizacionGG (linked record → CotizacionesGG)
-  // - Servicio (linked record → ServiciosTuristicos_SAI)
-  // Todo lo demás (Fecha, Adultos, Niños, etc.) son lookups del registro padre.
 
-  if (item.servicioNombre || item.fecha) {
-    fields['Nombre'] = [item.servicioNombre, item.fecha].filter(Boolean).join(' — ');
-  }
-  if (item.subtotal !== undefined) fields['Precio Subtotal'] = item.subtotal;
+  // Nombre del ítem
+  if (item.servicioNombre) fields['Nombre'] = item.servicioNombre;
+
+  // Modelo de precio: Valor Unitario × Personas × Cantidad
+  if (item.valorUnitario !== undefined) fields['Valor Unitario'] = item.valorUnitario;
+  if (item.personas      !== undefined) fields['Personas']       = item.personas;
+  if (item.cantidad      !== undefined) fields['Cantidad']       = item.cantidad;
+  if (item.subtotal      !== undefined) fields['Precio Subtotal'] = item.subtotal;
+
+  // Ítem libre (no vinculado al catálogo)
+  if (item.esPersonalizado !== undefined) fields['Es Personalizado'] = item.esPersonalizado;
+
+  // Links (solo si existen)
   if (item.cotizacionId?.trim()) fields['ID CotizacionGG'] = [item.cotizacionId];
   if (item.servicioId?.trim())   fields['Servicio']         = [item.servicioId];
-  
+
   return fields;
 }
 
