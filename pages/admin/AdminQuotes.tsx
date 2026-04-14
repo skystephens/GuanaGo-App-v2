@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ArrowLeft, Plus, Send, Trash2, Calendar, Users, DollarSign, Clock,
   CheckCircle2, AlertCircle, FileText, Search, Filter, User, Mail, Phone,
-  Download, Eye, Loader2
+  Download, Eye, Loader2, Bot, ChevronDown, ChevronUp, Sparkles,
 } from 'lucide-react';
 import { AppRoute, Cotizacion, CotizacionItem, Tour, QuoteStatus, QUOTE_STATUS_CONFIG } from '../../types';
 import {
@@ -19,6 +19,231 @@ import {
 } from '../../services/quotesService';
 import { cachedApi } from '../../services/cachedApi';
 import { downloadQuotePDF, previewQuote } from '../../services/pdfService';
+
+// ─── Backend URL ──────────────────────────────────────────────────────────────
+const API_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  ? 'http://localhost:5000'
+  : '';
+
+// ─── Agente Cotizador ─────────────────────────────────────────────────────────
+
+interface AgentMsg { role: 'user' | 'assistant'; content: string; }
+
+interface ParsedQuoteAction {
+  nombre?: string;
+  email?: string;
+  telefono?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  adultos?: number;
+  ninos?: number;
+  bebes?: number;
+  notasInternas?: string;
+}
+
+/**
+ * Intenta extraer datos estructurados del mensaje del agente.
+ * El agente puede responder con un bloque JSON así:
+ * ACTION:create_quote:{"nombre":"...","fechaInicio":"...","adultos":2}
+ */
+function parseAgentAction(text: string): ParsedQuoteAction | null {
+  try {
+    const match = text.match(/ACTION:create_quote:(\{[^}]+\})/);
+    if (match) return JSON.parse(match[1]) as ParsedQuoteAction;
+  } catch { /* ignored */ }
+  return null;
+}
+
+const QUICK_ACTIONS = [
+  { label: 'Resumen cotizaciones', icon: '📊', prompt: 'Dame un resumen rápido del estado de las cotizaciones activas.' },
+  { label: 'Nueva cotización', icon: '✏️', prompt: 'Quiero crear una nueva cotización. Pregúntame los datos necesarios.' },
+  { label: 'Recomendaciones', icon: '💡', prompt: 'Tengo un grupo de 4 adultos para 5 días en San Andrés. ¿Qué servicios me recomiendas incluir en la cotización?' },
+  { label: 'Precio estimado', icon: '💰', prompt: '¿Cuál sería el precio estimado para un paquete de 5 días para 2 adultos incluyendo hotel, tours acuáticos y traslado?' },
+];
+
+interface AgenteCotizadorProps {
+  cotizaciones: Cotizacion[];
+  services: Tour[];
+  onPreFillForm: (data: ParsedQuoteAction) => void;
+  onSwitchToCreate: () => void;
+}
+
+function AgenteCotizador({ cotizaciones, services, onPreFillForm, onSwitchToCreate }: AgenteCotizadorProps) {
+  const [msgs, setMsgs]       = useState<AgentMsg[]>([]);
+  const [input, setInput]     = useState('');
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen]       = useState(false);
+  const [convId]              = useState(() => `cot-${Date.now()}`);
+  const bottomRef             = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [msgs, loading]);
+
+  const buildContext = useCallback(() => {
+    const total   = cotizaciones.length;
+    const borrador = cotizaciones.filter(c => c.estado === 'Draft').length;
+    const enviadas = cotizaciones.filter(c => c.estado === 'Sent').length;
+    const recientes = cotizaciones.slice(0, 3).map(c =>
+      `${c.nombre} · ${c.adultos + (c.ninos || 0)} pax · $${(c.precioTotal || 0).toLocaleString('es-CO')}`
+    ).join('; ');
+    const catalogo = services.slice(0, 10).map(s =>
+      `${s.title} (${s.category}) $${(s.price || 0).toLocaleString('es-CO')}`
+    ).join(', ');
+    return `\n\n[CONTEXTO COTIZACIONES]\nTotal: ${total} | Borrador: ${borrador} | Enviadas: ${enviadas}\nRecientes: ${recientes || 'ninguna'}\nCatálogo (primeros 10): ${catalogo || 'cargando…'}\n\nSi el usuario pide crear una cotización con datos concretos (nombre, fechas, pax), PRIMERO responde de forma amigable, LUEGO agrega en la última línea: ACTION:create_quote:{"nombre":"X","fechaInicio":"YYYY-MM-DD","adultos":N}`;
+  }, [cotizaciones, services]);
+
+  const send = useCallback(async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || loading) return;
+
+    const userMsg: AgentMsg = { role: 'user', content: trimmed };
+    setMsgs(prev => [...prev, userMsg]);
+    setInput('');
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_URL}/api/agent/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: trimmed + buildContext(),
+          mode: 'admin',
+          conversation_id: convId,
+          history: msgs.slice(-6),
+        }),
+      });
+      const data = await res.json();
+      const reply: string = data.reply || '…';
+
+      // Parsear posible acción de creación de cotización
+      const action = parseAgentAction(reply);
+      const cleanReply = reply.replace(/ACTION:create_quote:\{[^}]+\}/g, '').trim();
+
+      setMsgs(prev => [...prev, { role: 'assistant', content: cleanReply }]);
+
+      if (action && Object.keys(action).length > 0) {
+        onPreFillForm(action);
+        setTimeout(() => onSwitchToCreate(), 600);
+      }
+    } catch {
+      setMsgs(prev => [...prev, { role: 'assistant', content: '⚠️ Error al contactar al agente.' }]);
+    } finally {
+      setLoading(false);
+    }
+  }, [msgs, loading, convId, buildContext, onPreFillForm, onSwitchToCreate]);
+
+  return (
+    <div className="bg-gradient-to-br from-blue-950/50 via-gray-900 to-gray-900 rounded-2xl border border-blue-800/40 overflow-hidden mb-6">
+      {/* Toggle header */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/5 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-blue-600/20 flex items-center justify-center">
+            <Bot size={16} className="text-blue-400" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-bold text-white flex items-center gap-2">
+              Asistente de Cotizaciones
+              <span className="text-[10px] bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-full font-bold">Claude</span>
+            </p>
+            <p className="text-[11px] text-gray-500">
+              {open ? 'Haz clic para minimizar' : 'Crea cotizaciones por voz · Analiza precios · Recomienda servicios'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {msgs.length > 0 && !open && (
+            <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-bold">{msgs.length}</span>
+          )}
+          {open
+            ? <ChevronUp size={15} className="text-gray-600" />
+            : <ChevronDown size={15} className="text-gray-600" />}
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-blue-900/30">
+          {/* Quick actions */}
+          {msgs.length === 0 && (
+            <div className="px-4 pt-4 pb-2 space-y-2">
+              <p className="text-[10px] text-gray-600 uppercase font-bold tracking-widest">Acciones rápidas</p>
+              <div className="grid grid-cols-2 gap-2">
+                {QUICK_ACTIONS.map(a => (
+                  <button
+                    key={a.label}
+                    onClick={() => send(a.prompt)}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-bold bg-blue-900/30 border border-blue-800/40 text-blue-300 hover:bg-blue-800/40 transition-colors disabled:opacity-50 text-left"
+                  >
+                    <span className="text-base">{a.icon}</span>
+                    <span>{a.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Mensajes */}
+          {msgs.length > 0 && (
+            <div className="px-4 pt-4 max-h-56 overflow-y-auto space-y-3">
+              {msgs.map((m, i) => (
+                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  {m.role === 'assistant' && (
+                    <div className="w-6 h-6 rounded-lg bg-blue-600/20 flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
+                      <Sparkles size={11} className="text-blue-400" />
+                    </div>
+                  )}
+                  <div className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-[12px] leading-relaxed whitespace-pre-wrap ${
+                    m.role === 'user'
+                      ? 'bg-blue-600 text-white rounded-br-sm'
+                      : 'bg-gray-800 text-gray-200 border border-gray-700 rounded-bl-sm'
+                  }`}>
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div className="flex justify-start items-center gap-2 pl-8">
+                  <div className="bg-gray-800 border border-gray-700 px-3.5 py-2.5 rounded-2xl rounded-bl-sm flex items-center gap-2">
+                    <Loader2 size={12} className="text-blue-400 animate-spin" />
+                    <span className="text-[11px] text-gray-500">Preparando cotización…</span>
+                  </div>
+                </div>
+              )}
+              <div ref={bottomRef} />
+            </div>
+          )}
+
+          {/* Input */}
+          <div className="flex gap-2 p-4">
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send(input)}
+              placeholder='Ej: "Cotización para María, 4 adultos, 20 al 25 de mayo…"'
+              disabled={loading}
+              className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-600 disabled:opacity-50"
+            />
+            <button
+              onClick={() => send(input)}
+              disabled={loading || !input.trim()}
+              className="w-10 h-10 rounded-xl bg-blue-600 hover:bg-blue-500 flex items-center justify-center disabled:opacity-40 transition-colors flex-shrink-0"
+            >
+              {loading
+                ? <Loader2 size={14} className="animate-spin text-white" />
+                : <Send size={14} className="text-white" />}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface AdminQuotesProps {
   onBack: () => void;
@@ -393,6 +618,22 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     return matchesSearch && matchesType;
   });
 
+  // Callbacks para el agente
+  const handlePreFillForm = useCallback((data: ParsedQuoteAction) => {
+    setFormData(prev => ({
+      ...prev,
+      nombre:        data.nombre       ?? prev.nombre,
+      email:         data.email        ?? prev.email,
+      telefono:      data.telefono     ?? prev.telefono,
+      fechaInicio:   data.fechaInicio  ?? prev.fechaInicio,
+      fechaFin:      data.fechaFin     ?? prev.fechaFin,
+      adultos:       data.adultos      ?? prev.adultos,
+      ninos:         data.ninos        ?? prev.ninos,
+      bebes:         data.bebes        ?? prev.bebes,
+      notasInternas: data.notasInternas ?? prev.notasInternas,
+    }));
+  }, []);
+
   // =========================================================
   // VISTA: LISTA DE COTIZACIONES
   // =========================================================
@@ -401,7 +642,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       <div className="min-h-screen bg-gray-950 text-white p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <button onClick={onBack} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
                 <ArrowLeft className="w-6 h-6" />
@@ -419,6 +660,14 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
               Nueva Cotización
             </button>
           </div>
+
+          {/* Agente IA */}
+          <AgenteCotizador
+            cotizaciones={cotizaciones}
+            services={services}
+            onPreFillForm={handlePreFillForm}
+            onSwitchToCreate={() => setView('create')}
+          />
 
           {/* Lista de cotizaciones */}
           <div className="grid gap-4">
