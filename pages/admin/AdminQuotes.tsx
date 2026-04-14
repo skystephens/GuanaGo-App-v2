@@ -320,13 +320,13 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   };
 
   const handleCreateCotizacion = async () => {
-    if (!formData.nombre || !formData.fechaInicio || !formData.fechaFin) {
-      alert('Completa todos los campos obligatorios');
+    if (!formData.fechaInicio || !formData.fechaFin) {
+      alert('Completa las fechas de viaje');
       return;
     }
 
     const newCotizacion: Omit<Cotizacion, 'id'> = {
-      nombre: formData.nombre,
+      nombre: formData.nombre.trim() || `Cotización ${new Date().toLocaleDateString('es-CO')}`,
       email: formData.email,
       telefono: formData.telefono,
       fechaInicio: formData.fechaInicio,
@@ -766,14 +766,14 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Nombre *
+                    Nombre <span className="text-gray-600 font-normal">(opcional)</span>
                   </label>
                   <input
                     type="text"
                     value={formData.nombre}
                     onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
-                    placeholder="John Doe"
+                    placeholder="Sin nombre — se asignará automáticamente"
                   />
                 </div>
                 <div>
@@ -1084,13 +1084,45 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                             </div>
 
                             <div>
-                              <label className="block text-xs font-semibold text-gray-400 mb-2">Precio (Editar si aplica descuento)</label>
+                              <label className="block text-xs font-semibold text-gray-400 mb-1">
+                                Precio unitario
+                                {item.precioUnitario !== (editingItemData.precioEditado ?? item.precioUnitario) && (
+                                  <span className="ml-2 text-gray-600 line-through font-normal">
+                                    ${item.precioUnitario.toLocaleString('es-CO')}
+                                  </span>
+                                )}
+                              </label>
                               <input
                                 type="number"
-                                value={editingItemData.precioEditado || editingItemData.precioUnitario || 0}
+                                value={editingItemData.precioEditado ?? editingItemData.precioUnitario ?? item.precioUnitario}
                                 onChange={(e) => setEditingItemData({ ...editingItemData, precioEditado: parseFloat(e.target.value) || 0 })}
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                className="w-full px-3 py-2 bg-gray-800 border border-yellow-600/50 rounded text-white text-sm focus:border-yellow-500 focus:outline-none"
                               />
+                              {/* Descuentos rápidos */}
+                              <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                                <span className="text-[10px] text-gray-600 self-center">Descuento:</span>
+                                {[5, 10, 15, 20, 25].map(pct => (
+                                  <button
+                                    key={pct}
+                                    type="button"
+                                    onClick={() => {
+                                      const base = item.precioUnitario;
+                                      const withDiscount = Math.round(base * (1 - pct / 100));
+                                      setEditingItemData({ ...editingItemData, precioEditado: withDiscount });
+                                    }}
+                                    className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-900/30 border border-yellow-700/40 text-yellow-400 hover:bg-yellow-800/40 transition-colors"
+                                  >
+                                    -{pct}%
+                                  </button>
+                                ))}
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingItemData({ ...editingItemData, precioEditado: item.precioUnitario })}
+                                  className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-800 border border-gray-700 text-gray-500 hover:text-gray-300 transition-colors"
+                                >
+                                  Reset
+                                </button>
+                              </div>
                             </div>
 
                             <div className="flex gap-2">
@@ -1142,7 +1174,19 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                 <div className="flex items-center gap-1 font-semibold text-green-400">
                                   <DollarSign className="w-4 h-4" />
                                   ${item.subtotal.toLocaleString('es-CO')}
+                                  {item.precioEditado && item.precioEditado !== item.precioUnitario && (
+                                    <span className="ml-1 text-[10px] bg-yellow-900/40 text-yellow-400 px-1.5 py-0.5 rounded font-bold">
+                                      PRECIO MOD.
+                                    </span>
+                                  )}
                                 </div>
+                                {item.precioEditado && item.precioEditado !== item.precioUnitario && (
+                                  <div className="flex items-center gap-1 text-xs text-gray-600">
+                                    <span>Original:</span>
+                                    <span className="line-through">${item.precioUnitario.toLocaleString('es-CO')}</span>
+                                    <span className="text-yellow-600">→ ${item.precioEditado.toLocaleString('es-CO')}/u</span>
+                                  </div>
+                                )}
                               </div>
                               {item.conflictos && item.conflictos.length > 0 && (
                                 <div className="mt-2 text-sm text-orange-400 flex items-start gap-2">
@@ -1150,14 +1194,22 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                   <span>{item.conflictos[0]}</span>
                                 </div>
                               )}
-                              <div className="mt-2 text-xs text-gray-500">Haz clic para editar fecha, pax o precio</div>
                             </div>
-                            <button
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="p-2 text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded-lg transition-colors flex-shrink-0"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
+                            <div className="flex gap-1.5 flex-shrink-0">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleStartEditItem(item); }}
+                                title="Editar precio / fecha / pax"
+                                className="p-2 text-yellow-500 hover:text-yellow-400 hover:bg-yellow-950/30 rounded-lg transition-colors"
+                              >
+                                <DollarSign className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="p-2 text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded-lg transition-colors"
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
