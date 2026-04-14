@@ -266,6 +266,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   // Estado para edición inline de precio (solo precio, sin abrir todo el editor)
   const [inlinePriceId, setInlinePriceId] = useState<string | null>(null);
   const [inlinePriceValue, setInlinePriceValue] = useState<string>('');
+  const inlinePriceSavingRef = useRef(false); // evita doble-trigger Enter+blur
   
   // Form states
   const [formData, setFormData] = useState({
@@ -580,12 +581,20 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
   /** Guarda solo el precio editado inline, recalcula subtotal y persiste */
   const handleSaveInlinePrice = async (itemId: string) => {
-    if (!selectedCotizacion) return;
+    // Guard: evita doble-disparo cuando Enter y onBlur se ejecutan juntos
+    if (inlinePriceSavingRef.current) return;
+    inlinePriceSavingRef.current = true;
+
+    if (!selectedCotizacion) { inlinePriceSavingRef.current = false; return; }
     const newPrice = parseFloat(inlinePriceValue);
-    if (isNaN(newPrice) || newPrice < 0) { setInlinePriceId(null); return; }
+    if (isNaN(newPrice) || newPrice < 0) {
+      setInlinePriceId(null);
+      inlinePriceSavingRef.current = false;
+      return;
+    }
 
     const itemIndex = items.findIndex(i => i.id === itemId);
-    if (itemIndex === -1) return;
+    if (itemIndex === -1) { inlinePriceSavingRef.current = false; return; }
     const currentItem = items[itemIndex];
 
     // Recalcular subtotal con el nuevo precio
@@ -613,11 +622,12 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       const updatedItems = [...items];
       updatedItems[itemIndex] = updatedItem;
       setItems(updatedItems);
-      const newTotal = updatedItems.reduce((sum, i) => sum + i.subtotal, 0);
+      const newTotal = updatedItems.reduce((sum, i) => sum + (i.subtotal || 0), 0);
       await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
       setSelectedCotizacion(prev => prev ? { ...prev, precioTotal: newTotal } : prev);
     }
     setInlinePriceId(null);
+    inlinePriceSavingRef.current = false;
   };
 
   const handleSendQuote = async () => {

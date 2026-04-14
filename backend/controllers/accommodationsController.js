@@ -51,6 +51,19 @@ export const listAll = async (req, res, next) => {
   }
 };
 
+export const getPendingCount = async (req, res, next) => {
+  try {
+    const records = await listAccommodationSubmissions({});
+    const pending = (records || []).filter(r => {
+      const estado = (r.estado || r.Estado || '').toLowerCase();
+      return estado === 'pendiente' || estado === 'pending' || estado === '';
+    });
+    res.json({ success: true, total: pending.length });
+  } catch (error) {
+    res.json({ success: true, total: 0 }); // silencioso — es solo un badge
+  }
+};
+
 export const updateSubmission = async (req, res, next) => {
   try {
     const { id } = req.params;

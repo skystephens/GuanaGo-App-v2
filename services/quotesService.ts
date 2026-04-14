@@ -410,7 +410,9 @@ export async function updateCotizacion(
     });
 
     if (!response.ok) {
-      throw new Error(`Error ${response.status}`);
+      const errorBody = await response.json().catch(() => ({}));
+      console.error('❌ Airtable 422 body:', JSON.stringify(errorBody));
+      throw new Error(`Error ${response.status}: ${JSON.stringify(errorBody)}`);
     }
 
     const data = await response.json();
@@ -521,8 +523,8 @@ function mapCotizacionToFields(cotizacion: Partial<Cotizacion>): Record<string, 
   if (cotizacion.ninos !== undefined) fields['Niños 4 - 17 años'] = cotizacion.ninos;
   if (cotizacion.bebes !== undefined) fields['Bebes 0 - 3 años'] = cotizacion.bebes;
   if (cotizacion.estado !== undefined) fields.Estado = cotizacion.estado;
-  if (cotizacion.precioTotal !== undefined) fields['Precio total'] = cotizacion.precioTotal;
-  if (cotizacion.descuento !== undefined) fields.Descuento = cotizacion.descuento;
+  if (cotizacion.precioTotal !== undefined && !isNaN(cotizacion.precioTotal as number)) fields['Precio total'] = cotizacion.precioTotal;
+  // Nota: no existe campo "Descuento" en Airtable — el descuento se aplica en el cálculo del precioTotal
   if (cotizacion.notasInternas !== undefined && cotizacion.notasInternas) fields['Notas internas'] = cotizacion.notasInternas;
   
   return fields;

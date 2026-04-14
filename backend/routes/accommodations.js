@@ -4,6 +4,9 @@ import { authenticateToken, authorizeRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Conteo rápido de solicitudes pendientes (sin auth — solo cuenta)
+router.get('/pending-count', accommodationsController.getPendingCount);
+
 // Crear solicitud de alojamiento (no requiere auth estricta)
 router.post('/submissions', accommodationsController.createSubmission);
 

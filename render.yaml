@@ -17,6 +17,8 @@
         sync: false
       - key: GROQ_API_KEY
         sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
       - key: FIREBASE_SERVICE_ACCOUNT_JSON
         sync: false
       - key: NODE_ENV

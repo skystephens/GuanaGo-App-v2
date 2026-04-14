@@ -260,10 +260,10 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   // Cargar aprobaciones pendientes
   const loadApprovals = useCallback(async () => {
     try {
-      const res = await fetch('/api/accommodations?status=pending&pageSize=1');
+      const res = await fetch('/api/accommodations/pending-count');
       if (res.ok) {
         const data = await res.json();
-        setPendingApprovals(data?.total ?? data?.records?.length ?? 0);
+        setPendingApprovals(data?.total ?? 0);
       }
     } catch { setPendingApprovals(null); }
   }, []);
