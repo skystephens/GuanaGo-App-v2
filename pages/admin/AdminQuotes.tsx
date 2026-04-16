@@ -801,10 +801,20 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     previewQuote(selectedCotizacion, items, [...services, ...alojamientos]);
   };
 
-  const filteredServices = services.filter(service => {
+  // Normaliza alojamientos al mismo shape que Tour para el catálogo
+  const alojamientosAsTour = alojamientos.map((a: any) => ({
+    ...a,
+    title: a.title || a.nombre || a.name || '',
+    category: 'hotel' as const,
+    active: true,
+  }));
+
+  const allCatalogItems = [...services, ...alojamientosAsTour];
+
+  const filteredServices = allCatalogItems.filter(service => {
     const matchesSearch = service.title?.toLowerCase().includes(searchService.toLowerCase()) ||
-                         service.nombre?.toLowerCase().includes(searchService.toLowerCase());
-    const matchesType = filterType === 'all' || service.category === filterType || service.tipo === filterType;
+                         (service as any).nombre?.toLowerCase().includes(searchService.toLowerCase());
+    const matchesType = filterType === 'all' || service.category === filterType || (service as any).tipo === filterType;
     return matchesSearch && matchesType;
   });
 

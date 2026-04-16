@@ -43,9 +43,19 @@ export function generateQuoteHTML(
     otro:     'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
   };
 
-  /** Busca imágenes y descripción desde el catálogo; aplica fallback por categoría */
+  /** Busca imágenes y descripción desde el catálogo; fallback por nombre, luego por categoría */
   const getServiceMeta = (item: CotizacionItem) => {
-    const svc = services?.find(s => s.id === item.servicioId);
+    // 1. Lookup por ID (caso normal: servicio del catálogo)
+    let svc = services?.find(s => s.id === item.servicioId);
+
+    // 2. Fallback por nombre normalizado (para ítems libres o IDs de tabla antigua)
+    if (!svc && item.servicioNombre && services?.length) {
+      const needle = item.servicioNombre.toLowerCase().trim();
+      svc = services.find(s =>
+        (s.title || (s as any).nombre || '').toLowerCase().trim() === needle
+      );
+    }
+
     const rawImages: string[] = (svc as any)?.gallery || (svc as any)?.images || (svc?.image ? [svc.image] : []);
     const fallback = categoryFallback[item.servicioTipo] || categoryFallback['tour'];
     const images = rawImages.length > 0 ? rawImages.slice(0, 4) : [fallback];
