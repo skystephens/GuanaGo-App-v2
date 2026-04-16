@@ -911,6 +911,7 @@ export function AdminCotizacionBuilder() {
   const [saving, setSaving] = useState(false)
   const [savedId, setSavedId] = useState('')
   const [error, setError] = useState('')
+  const [shareCopied, setShareCopied] = useState(false)
 
   const cotizacionId = useRef(`QT-${Date.now()}`)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -1033,6 +1034,47 @@ export function AdminCotizacionBuilder() {
     catalogTab === 'traslados' ? 'Traslado' :
     'Paquete'
 
+  // Genera la URL pública de cotización compartida con toda la data encodificada
+  const buildShareUrl = () => {
+    const payload = {
+      cliente,
+      fechaInicio,
+      fechaFin,
+      adultos,
+      ninos,
+      bebes,
+      items: items.map(i => ({
+        id: i.id,
+        tipo: i.tipo,
+        nombre: i.nombre,
+        precio: i.precio,
+        cantidad: i.cantidad,
+        subtotal: i.subtotal,
+        fecha: i.fecha,
+        imageUrl: i.imageUrl || '',
+        imageUrls: i.imageUrls || [],
+        descripcion: i.descripcion || '',
+        ubicacion: i.ubicacion || '',
+        capacidad: i.capacidad || 0,
+        duracion: i.duracion || '',
+        incluye: i.incluye || [],
+        extra: i.extra || {},
+      })),
+      notas,
+      cotizacionId: savedId || cotizacionId.current,
+    }
+    const encoded = encodeURIComponent(btoa(JSON.stringify(payload)))
+    const base = window.location.origin + (import.meta.env.BASE_URL || '/agencias/')
+    return `${base}cotizacion-compartida?data=${encoded}&wa=573153836043&agente=GuiaSAI`
+  }
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(buildShareUrl()).then(() => {
+      setShareCopied(true)
+      setTimeout(() => setShareCopied(false), 2500)
+    })
+  }
+
   if (vista === 'preview') {
     return (
       <div>
@@ -1045,6 +1087,15 @@ export function AdminCotizacionBuilder() {
             <button onClick={() => setVista('builder')} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: `1px solid ${BORDER_COLOR}`, background: 'transparent', color: '#3B82F6', cursor: 'pointer', fontSize: '0.82rem' }}>
               ← Editar
             </button>
+            {/* Compartir con cliente — página pública con fotos y detalle de cada servicio */}
+            <button onClick={handleShare}
+              style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', background: shareCopied ? '#22c55e' : '#1e3a5f', color: '#fff', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700 }}>
+              {shareCopied ? '✓ Link copiado!' : '🔗 Compartir con cliente'}
+            </button>
+            <a href={buildShareUrl()} target="_blank" rel="noopener noreferrer"
+              style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', background: '#475569', color: '#fff', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+              👁 Ver como cliente
+            </a>
             <button onClick={handleImprimir} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', background: TEAL, color: '#fff', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700 }}>
               🖨️ Imprimir
             </button>

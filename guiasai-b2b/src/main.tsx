@@ -9,6 +9,7 @@ import { SuperAdminPanel } from './pages/SuperAdminPanel.tsx'
 import { VouchersListPage } from './pages/VouchersListPage.tsx'
 import { VoucherDetailPage } from './pages/VoucherDetailPage.tsx'
 import PropuestaAlojamientosPage from './pages/PropuestaAlojamientosPage.tsx'
+import CotizacionCompartidaPage from './pages/CotizacionCompartidaPage.tsx'
 import './styles/guiasai-theme.css'
 
 const HelmetWrapper = HelmetProvider as any
@@ -27,6 +28,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/vouchers/:id" element={<VoucherDetailPage />} />
           {/* Propuesta de alojamientos — pública, para compartir con clientes */}
           <Route path="/propuesta" element={<PropuestaAlojamientosPage />} />
+          {/* Cotización compartida — pública, todos los servicios con fotos */}
+          <Route path="/cotizacion-compartida" element={<CotizacionCompartidaPage />} />
         </Routes>
       </BrowserRouter>
     </HelmetWrapper>

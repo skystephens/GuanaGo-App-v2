@@ -539,7 +539,13 @@ export const SuperAdminPanel = () => {
 
   const fmtDate = (val: any): string => {
     if (!val) return '?'
-    try { return new Date(val).toLocaleDateString('es-CO') } catch { return String(val) }
+    try {
+      // Airtable date fields return "YYYY-MM-DD" (no time). Parsing them as UTC
+      // midnight shifts the date back one day in UTC-5 timezone. Adding T12:00:00
+      // forces local-noon interpretation so the date displays correctly.
+      const s = typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val) ? val + 'T12:00:00' : val
+      return new Date(s).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    } catch { return String(val) }
   }
 
   const fmtPrice = (val: any): string =>

@@ -69,8 +69,11 @@ function normalizeToArray(value: any): string[] {
   return []
 }
 
-// Nombres de campo de imagen que se buscan en orden de prioridad
+// Nombres de campo de imagen que se buscan en orden de prioridad.
+// ImagenWP es una URL estática de WordPress (nunca expira) — va primero.
+// Imagenurl son adjuntos de Airtable (expiran ~2h) — van como fallback.
 const IMAGE_FIELD_NAMES = [
+  'ImagenWP',  // URL estática WordPress — preferida, no expira
   'Imagenurl', 'ImagenURL', 'imagenurl', 'imageUrl',
   'Imagen', 'Imagenes', 'imagen', 'imagenes',
   'Fotos', 'Foto', 'fotos', 'foto',
@@ -81,7 +84,7 @@ const IMAGE_FIELD_NAMES = [
 /**
  * Extrae las URLs de imágenes de los campos de un registro de Airtable.
  * Intenta múltiples nombres de campo para ser compatible con distintas tablas.
- * Los adjuntos de Airtable pueden ser objetos { url, filename } o strings directos.
+ * Prioriza ImagenWP (URL estática WP) sobre adjuntos Airtable (expiran).
  */
 function extractImages(fields: Record<string, any>): string[] {
   for (const fieldName of IMAGE_FIELD_NAMES) {
@@ -90,7 +93,7 @@ function extractImages(fields: Record<string, any>): string[] {
 
     if (Array.isArray(value) && value.length > 0) {
       const urls = value
-        .map((img: any) => (typeof img === 'string' ? img : img?.url || ''))
+        .map((img: any) => (typeof img === 'string' ? img : img?.url || img?.thumbnails?.large?.url || ''))
         .filter((url: string) => url.startsWith('http'))
       if (urls.length > 0) return urls
     }
@@ -98,13 +101,6 @@ function extractImages(fields: Record<string, any>): string[] {
     if (typeof value === 'string' && value.startsWith('http')) {
       return [value]
     }
-  }
-
-  // Debug: si no se encontraron imágenes, loguear los campos disponibles (solo primera vez)
-  if (!(extractImages as any)._logged) {
-    ;(extractImages as any)._logged = true
-    const fieldKeys = Object.keys(fields)
-    console.warn('⚠️ [Airtable] No se encontraron imágenes. Campos disponibles en el registro:', fieldKeys)
   }
 
   return []
