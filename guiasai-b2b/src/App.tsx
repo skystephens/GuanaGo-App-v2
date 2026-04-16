@@ -612,7 +612,7 @@ function App() {
       transportType: transport.tipo || 'Transporte',
       origin: transport.originCustom || origin || 'Por definir',
       destination: transport.destinationCustom || destination || 'Por definir',
-      date: new Date(date),
+      date: (() => { const [y, m, d] = date.split('-').map(Number); return new Date(y, m - 1, d) })(),
       time: '12:00',
       vehicleType: transport.nombre,
       quantity: vehicles,

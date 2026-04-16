@@ -16,6 +16,16 @@ function toISO(d: Date | string) {
   return date.toISOString().split('T')[0]
 }
 
+/** Converts any date value to a local Date object without UTC-midnight offset. */
+function safeLocalDate(d: any): Date {
+  if (d instanceof Date) return d
+  if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    const [y, m, day] = d.split('-').map(Number)
+    return new Date(y, m - 1, day)
+  }
+  return new Date(d)
+}
+
 export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
   quotation,
   clientContact,
@@ -61,16 +71,16 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
     const timestamps: number[] = []
     
     quotation.accommodations.forEach(acc => {
-      if (acc.checkIn) timestamps.push(new Date(acc.checkIn).getTime())
-      if (acc.checkOut) timestamps.push(new Date(acc.checkOut).getTime())
+      if (acc.checkIn) timestamps.push(safeLocalDate(acc.checkIn).getTime())
+      if (acc.checkOut) timestamps.push(safeLocalDate(acc.checkOut).getTime())
     })
-    
+
     quotation.tours.forEach(tour => {
-      if (tour.date) timestamps.push(new Date(tour.date).getTime())
+      if (tour.date) timestamps.push(safeLocalDate(tour.date).getTime())
     })
-    
+
     quotation.transports.forEach(trans => {
-      if (trans.date) timestamps.push(new Date(trans.date).getTime())
+      if (trans.date) timestamps.push(safeLocalDate(trans.date).getTime())
     })
 
     if (timestamps.length === 0) {
@@ -154,8 +164,8 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
                     {acc.capacidad > 0 && (
                       <p><strong>Capacidad máxima:</strong> {acc.capacidad} persona(s)</p>
                     )}
-                    <p><strong>Check-in:</strong> {acc.checkIn.toLocaleDateString('es-CO')}</p>
-                    <p><strong>Check-out:</strong> {acc.checkOut.toLocaleDateString('es-CO')}</p>
+                    <p><strong>Check-in:</strong> {safeLocalDate(acc.checkIn).toLocaleDateString('es-CO')}</p>
+                    <p><strong>Check-out:</strong> {safeLocalDate(acc.checkOut).toLocaleDateString('es-CO')}</p>
                     <p><strong>Noches:</strong> {acc.nights}</p>
                     <p><strong>Cantidad:</strong> {acc.quantity} habitación(es)</p>
                     <p><strong>Precio por noche:</strong> ${acc.pricePerNight.toLocaleString('es-CO')} COP</p>
@@ -250,7 +260,7 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
                     </span>
                   </div>
                   <div style={styles.itemDetails}>
-                    <p><strong>Fecha:</strong> {tour.date.toLocaleDateString('es-CO')}</p>
+                    <p><strong>Fecha:</strong> {safeLocalDate(tour.date).toLocaleDateString('es-CO')}</p>
                     {tour.schedule && (
                       <p><strong>🕐 Horario:</strong> {tour.schedule}</p>
                     )}
@@ -286,7 +296,7 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
                   <div style={styles.itemDetails}>
                     <p><strong>Origen:</strong> {transport.origin}</p>
                     <p><strong>Destino:</strong> {transport.destination}</p>
-                    <p><strong>Fecha:</strong> {transport.date.toLocaleDateString('es-CO')}</p>
+                    <p><strong>Fecha:</strong> {safeLocalDate(transport.date).toLocaleDateString('es-CO')}</p>
                     <p><strong>Hora:</strong> {transport.time}</p>
                     <p><strong>Tipo de vehículo:</strong> {transport.vehicleType}</p>
                     <p><strong>Cantidad:</strong> {transport.quantity} vehículo(s)</p>

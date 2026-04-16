@@ -59,7 +59,7 @@ export const useQuotationStore = create<QuotationState>((set, get) => ({
       tourId: tour.id,
       tourName: tour.nombre,
       description: tour.descripcion,
-      date: new Date(date),
+      date: (() => { const [y, m, d] = date.split('-').map(Number); return new Date(y, m - 1, d) })(),
       duration: tour.duracion || 'N/D',
       quantity: people,
       pricePerPerson,
