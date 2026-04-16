@@ -13,8 +13,8 @@ export const ExpandableText: React.FC<ExpandableTextProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   
-  // Calcular si el texto es muy largo (aproximadamente 150 caracteres por 4 líneas)
-  const isLongText = text && text.length > 150
+  // Calcular si el texto es muy largo (aproximadamente 40 caracteres por línea)
+  const isLongText = text && text.length > (maxLines * 40)
   
   return (
     <div style={{ marginBottom: '0.5rem' }}>

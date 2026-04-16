@@ -1,21 +1,89 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Quotation } from '@/types/quotation'
 import { FileText, X, Download } from 'lucide-react'
+import { ItineraryView } from './ItineraryView'
+import ReservationTimeline from './ReservationTimeline'
 
 interface QuotationPreviewProps {
   quotation: Quotation
   clientContact: { name: string; phone: string; email: string } | null
   onClose: () => void
+  onSave?: () => Promise<void>
+}
+
+function toISO(d: Date | string) {
+  const date = d instanceof Date ? d : new Date(d)
+  return date.toISOString().split('T')[0]
 }
 
 export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
   quotation,
   clientContact,
   onClose,
+  onSave,
 }) => {
-  const handlePrint = () => {
+  const [copied, setCopied] = useState(false)
+
+  // Construye la URL de propuesta usando fechas/pax del primer alojamiento
+  const buildPropuestaUrl = () => {
+    const base = window.location.origin + (import.meta.env.BASE_URL || '/') + 'propuesta'
+    const acc = quotation.accommodations[0]
+    const params = new URLSearchParams()
+    if (acc) {
+      params.set('llegada', toISO(acc.checkIn))
+      params.set('salida', toISO(acc.checkOut))
+      const adultos = acc.adultos > 0 ? acc.adultos : (quotation.accommodations.reduce((s, a) => s + (a.adultos || 0), 0) || 2)
+      const ninos = quotation.accommodations.reduce((s, a) => s + (a.ninos || 0), 0)
+      params.set('adultos', String(adultos))
+      params.set('ninos', String(ninos))
+    }
+    params.set('wa', '573153836043')
+    params.set('agente', 'GuiaSAI')
+    return `${base}?${params.toString()}`
+  }
+
+  const handleCopyPropuesta = () => {
+    navigator.clipboard.writeText(buildPropuestaUrl()).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    })
+  }
+
+  const handlePrint = async () => {
+    if (onSave) {
+      await onSave()
+    }
     window.print()
   }
+
+  // Calcular rango de fechas para el itinerario
+  const getDateRange = () => {
+    const timestamps: number[] = []
+    
+    quotation.accommodations.forEach(acc => {
+      if (acc.checkIn) timestamps.push(new Date(acc.checkIn).getTime())
+      if (acc.checkOut) timestamps.push(new Date(acc.checkOut).getTime())
+    })
+    
+    quotation.tours.forEach(tour => {
+      if (tour.date) timestamps.push(new Date(tour.date).getTime())
+    })
+    
+    quotation.transports.forEach(trans => {
+      if (trans.date) timestamps.push(new Date(trans.date).getTime())
+    })
+
+    if (timestamps.length === 0) {
+      return { start: new Date(), end: new Date() }
+    }
+
+    return {
+      start: new Date(Math.min(...timestamps)),
+      end: new Date(Math.max(...timestamps))
+    }
+  }
+
+  const { start, end } = getDateRange()
 
   return (
     <div style={styles.overlay} onClick={onClose}>
@@ -82,7 +150,10 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
                     </span>
                   </div>
                   <div style={styles.itemDetails}>
-                    <p><strong>Tipo de habitación:</strong> {acc.roomType}</p>
+                    <p><strong>Categoría:</strong> {acc.categoria || acc.roomType}</p>
+                    {acc.capacidad > 0 && (
+                      <p><strong>Capacidad máxima:</strong> {acc.capacidad} persona(s)</p>
+                    )}
                     <p><strong>Check-in:</strong> {acc.checkIn.toLocaleDateString('es-CO')}</p>
                     <p><strong>Check-out:</strong> {acc.checkOut.toLocaleDateString('es-CO')}</p>
                     <p><strong>Noches:</strong> {acc.nights}</p>
@@ -94,6 +165,75 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
                   )}
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* 🔗 Enlace propuesta para cliente */}
+          {quotation.accommodations.length > 0 && (
+            <div style={{
+              margin: '0 0 24px 0', padding: '16px 20px',
+              background: 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)',
+              borderRadius: '10px', border: '1px solid #FED7AA',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#c2410c', marginBottom: '3px' }}>
+                    📸 Enviar opciones de alojamiento al cliente
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#92400e' }}>
+                    Página con fotos, amenidades y precios — el cliente puede decir "Me interesa" por WhatsApp
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                  <button
+                    onClick={handleCopyPropuesta}
+                    style={{
+                      padding: '8px 16px', background: copied ? '#16a34a' : '#FF6600',
+                      color: '#fff', border: 'none', borderRadius: '6px',
+                      fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer',
+                      transition: 'background 0.2s',
+                    }}
+                  >
+                    {copied ? '✓ Copiado!' : '📋 Copiar link'}
+                  </button>
+                  <a
+                    href={buildPropuestaUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '8px 16px', background: '#2FA9B8',
+                      color: '#fff', borderRadius: '6px',
+                      fontWeight: 700, fontSize: '0.8rem', textDecoration: 'none',
+                      display: 'inline-flex', alignItems: 'center',
+                    }}
+                  >
+                    👁 Ver
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Calendario visual de alojamientos */}
+          {quotation.accommodations.length > 0 && (
+            <div style={styles.section}>
+              <h3 style={styles.sectionTitle}>📅 Calendario de Alojamientos</h3>
+              <ReservationTimeline
+                reservations={quotation.accommodations.map((acc, index) => {
+                  const colors: Array<'green' | 'yellow' | 'pink' | 'blue'> = ['green', 'blue', 'yellow', 'pink']
+                  return {
+                    id: acc.id,
+                    propertyName: acc.hotelName,
+                    checkIn: acc.checkIn instanceof Date ? acc.checkIn : new Date(acc.checkIn),
+                    checkOut: acc.checkOut instanceof Date ? acc.checkOut : new Date(acc.checkOut),
+                    nights: acc.nights,
+                    guests: (acc.adultos || (acc as any).adults || 0) + (acc.ninos || (acc as any).children || 0),
+                    pricePerNight: acc.pricePerNight,
+                    totalPrice: acc.total,
+                    color: colors[index % colors.length],
+                  }
+                })}
+              />
             </div>
           )}
 
@@ -159,6 +299,19 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
               ))}
             </div>
           )}
+
+          {/* 🆕 SECCIÓN DE ITINERARIO INTEGRADA */}
+          <div style={styles.section}>
+            <hr style={styles.divider} />
+            <ItineraryView 
+              startDate={start}
+              endDate={end}
+              accommodations={quotation.accommodations}
+              tours={quotation.tours}
+              transports={quotation.transports}
+              embedded={true}
+            />
+          </div>
 
           {/* Total */}
           <div style={styles.totalSection}>

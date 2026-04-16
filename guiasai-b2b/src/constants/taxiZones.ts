@@ -53,6 +53,44 @@ export const TAXI_ZONES: TaxiZone[] = [
   }
 ];
 
+// ── Persistencia de tarifas en localStorage ───────────────
+
+const TARIFFS_KEY = 'guiasai_taxi_tariffs'
+
+/**
+ * Devuelve las zonas con las tarifas actuales (localStorage tiene prioridad).
+ */
+export function getTaxiTariffs(): TaxiZone[] {
+  try {
+    const raw = localStorage.getItem(TARIFFS_KEY)
+    if (!raw) return TAXI_ZONES
+    const overrides: Record<string, { priceSmall: number; priceLarge: number }> = JSON.parse(raw)
+    return TAXI_ZONES.map(z => ({
+      ...z,
+      ...(overrides[z.id] || {}),
+    }))
+  } catch {
+    return TAXI_ZONES
+  }
+}
+
+/**
+ * Guarda las tarifas editadas en localStorage.
+ */
+export function saveTaxiTariffs(zones: TaxiZone[]): void {
+  const overrides: Record<string, { priceSmall: number; priceLarge: number }> = {}
+  zones.forEach(z => {
+    overrides[z.id] = { priceSmall: z.priceSmall, priceLarge: z.priceLarge }
+  })
+  try {
+    localStorage.setItem(TARIFFS_KEY, JSON.stringify(overrides))
+  } catch {
+    // localStorage lleno — ignorar
+  }
+}
+
+// ──────────────────────────────────────────────────────────
+
 /**
  * Calcula el precio de un traslado basado en pasajeros y zona
  * @param zoneId ID de la zona de destino

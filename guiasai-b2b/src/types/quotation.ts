@@ -47,7 +47,9 @@ export interface AccommodationItem {
   id: string
   hotelId: string
   hotelName: string
-  roomType: 'simple' | 'doble' | 'triple' | 'suite'
+  roomType: string
+  categoria: string    // Categoria del inmueble (desde Airtable)
+  capacidad: number    // Capacidad máxima del inmueble
   checkIn: Date
   checkOut: Date
   nights: number

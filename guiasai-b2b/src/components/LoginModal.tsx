@@ -266,4 +266,39 @@ const styles = {
     color: 'white',
     transition: 'background-color 0.2s ease',
   },
+  inputGroup: {
+    marginBottom: '16px',
+  },
+  error: {
+    backgroundColor: '#fee',
+    color: '#c33',
+    padding: '12px',
+    borderRadius: '6px',
+    marginBottom: '16px',
+    fontSize: '0.9rem',
+    border: '1px solid #fcc',
+  },
+  actions: {
+    display: 'flex',
+    gap: '12px',
+    marginTop: '24px',
+  },
+  button: {
+    flex: 1,
+    padding: '12px 16px',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontFamily: "'Poppins', sans-serif",
+    fontWeight: 600,
+    transition: 'background-color 0.2s ease',
+  },
+  secondaryButton: {
+    backgroundColor: '#f5f5f5',
+    color: 'var(--guiasai-text-dark)',
+  },
+  primaryButton: {
+    backgroundColor: 'var(--guiasai-primary)',
+    color: 'white',
+  },
 }

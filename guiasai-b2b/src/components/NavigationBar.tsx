@@ -1,281 +1,186 @@
-import React, { useState, CSSProperties } from 'react'
-import { Menu, User, LogOut } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
 import '../styles/guiasai-theme.css'
 
 interface NavigationBarProps {
-  activeTab: 'accommodations' | 'tours' | 'transports'
-  onTabChange: (tab: 'accommodations' | 'tours' | 'transports') => void
+  activeSectionId: string
   userInitials?: string
   userName?: string
   onProfileClick: () => void
   onLogout: () => void
   onLoginClick?: () => void
+  onRegisterClick?: () => void
   isAuthenticated?: boolean
+  quotationCount?: number
+  onQuotationClick?: () => void
+  panelLabel?: string // 🆕 Prop para personalizar el texto del botón
+}
+
+const scrollToSection = (id: string) => {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
 }
 
 export const NavigationBar: React.FC<NavigationBarProps> = ({
-  activeTab,
-  onTabChange,
-  userInitials = 'AG',
-  userName = 'Mi Agencia',
+  activeSectionId,
   onProfileClick,
   onLogout,
   onLoginClick,
   isAuthenticated = false,
+  quotationCount = 0,
+  onQuotationClick,
+  panelLabel = "Mi Panel"
 }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
-    <nav style={styles.navbar}>
-      <div style={styles.container}>
-        {/* Logo */}
-        <div style={styles.logo}>
-          <img src="https://guiasanandresislas.com/wp-content/uploads/2025/02/Logo-GuiaSAI-avisoa.png" alt="GuiaSAI" style={styles.logoImg} />
+    <header className={`premium-header ${isScrolled ? 'scrolled' : ''}`}>
+      <div className="header-container">
+        <div className="brand-section">
+          <a href="#" className="logo-premium" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>
+            <div className="logo-icon">
+              <img src={`${(import.meta as any).env.BASE_URL}LOGO_GUIASAI.png`} alt="GuiaSAI Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+            </div>
+            <div className="logo-text">
+              <span className="logo-title">GuiaSAI</span>
+              <span className="logo-subtitle">Business Hub</span>
+            </div>
+          </a>
         </div>
 
-        {/* Desktop Menu */}
-        <div style={styles.menuDesktop}>
-          <button
-            onClick={() => onTabChange('accommodations')}
-            style={{
-              ...styles.navLink,
-              ...(activeTab === 'accommodations' ? styles.navLinkActive : {}),
-            } as CSSProperties}
+        <nav className="nav-premium">
+          <a
+            href="#alojamientos"
+            className={`nav-link-premium ${activeSectionId === 'alojamientos' ? 'active' : ''}`}
+            onClick={(e) => {
+              e.preventDefault()
+              scrollToSection('alojamientos')
+            }}
           >
-            🏨 Alojamientos
-          </button>
-          <button
-            onClick={() => onTabChange('tours')}
-            style={{
-              ...styles.navLink,
-              ...(activeTab === 'tours' ? styles.navLinkActive : {}),
-            } as CSSProperties}
+            <span>Alojamientos</span>
+          </a>
+          <a
+            href="#tours"
+            className={`nav-link-premium ${activeSectionId === 'tours' ? 'active' : ''}`}
+            onClick={(e) => {
+              e.preventDefault()
+              scrollToSection('tours')
+            }}
           >
-            🎫 Tours
-          </button>
-          <button
-            onClick={() => onTabChange('transports')}
-            style={{
-              ...styles.navLink,
-              ...(activeTab === 'transports' ? styles.navLinkActive : {}),
-            } as CSSProperties}
+            <span>Tours</span>
+          </a>
+          <a
+            href="#paquetes"
+            className={`nav-link-premium ${activeSectionId === 'paquetes' ? 'active' : ''}`}
+            onClick={(e) => {
+              e.preventDefault()
+              scrollToSection('paquetes')
+            }}
           >
-            🚕 Traslados
-          </button>
-        </div>
+            <span>Paquetes</span>
+          </a>
+          <a
+            href="#cotizacion"
+            className={`nav-link-premium ${activeSectionId === 'cotizacion' ? 'active' : ''}`}
+            onClick={(e) => {
+              e.preventDefault()
+              scrollToSection('cotizacion')
+            }}
+          >
+            <span>Cotizacion</span>
+          </a>
+        </nav>
 
-        {/* User Profile */}
-        <div style={styles.userSection}>
+        <div className="header-actions">
+          <div className="quote-indicator" onClick={onQuotationClick} style={{ cursor: 'pointer' }}>
+            <span>Mi Cotizacion</span>
+            {quotationCount > 0 && (
+              <div className="quote-badge">{quotationCount}</div>
+            )}
+          </div>
+
           {isAuthenticated ? (
-            <>
-              <button style={styles.profileButton} onClick={onProfileClick}>
-                <div style={styles.profileAvatar}>{userInitials}</div>
-                <div style={styles.profileInfo}>
-                  <small style={styles.profileLabel}>Bienvenido</small>
-                  <span style={styles.profileName}>{userName}</span>
-                </div>
-                <User size={18} />
-              </button>
-
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div
+                className="user-avatar"
+                onClick={onProfileClick}
+                style={{
+                  width: 'auto',
+                  padding: '0 1.25rem',
+                  borderRadius: '2rem',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                }}
+              >
+                {panelLabel}
+              </div>
               <button
-                style={styles.logoutButton}
                 onClick={onLogout}
                 title="Cerrar sesión"
+                style={{
+                  padding: '0.45rem 1rem',
+                  borderRadius: '2rem',
+                  border: '2px solid #e2e8f0',
+                  backgroundColor: 'transparent',
+                  color: '#64748b',
+                  fontWeight: 600,
+                  fontSize: '0.82rem',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget
+                  el.style.borderColor = '#ef4444'
+                  el.style.color = '#ef4444'
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget
+                  el.style.borderColor = '#e2e8f0'
+                  el.style.color = '#64748b'
+                }}
               >
-                <LogOut size={18} />
+                Salir
               </button>
-            </>
+            </div>
           ) : (
             <button
-              style={styles.loginButton}
               onClick={onLoginClick}
+              style={{
+                padding: '0.5rem 1.25rem',
+                borderRadius: '2rem',
+                border: '2px solid #FF6600',
+                backgroundColor: 'transparent',
+                color: '#FF6600',
+                fontWeight: 'bold',
+                fontSize: '0.88rem',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget
+                el.style.backgroundColor = '#FF6600'
+                el.style.color = 'white'
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget
+                el.style.backgroundColor = 'transparent'
+                el.style.color = '#FF6600'
+              }}
             >
               Iniciar Sesión
             </button>
           )}
         </div>
-
-        {/* Mobile Menu Toggle */}
-        <button
-          style={styles.mobileMenuToggle}
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          <Menu size={24} />
-        </button>
       </div>
-
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div style={styles.mobileMenu}>
-          <button
-            onClick={() => {
-              onTabChange('accommodations')
-              setMobileMenuOpen(false)
-            }}
-            style={styles.mobileMenuItem}
-          >
-            🏨 Alojamientos
-          </button>
-          <button
-            onClick={() => {
-              onTabChange('tours')
-              setMobileMenuOpen(false)
-            }}
-            style={styles.mobileMenuItem}
-          >
-            🎫 Tours
-          </button>
-          <button
-            onClick={() => {
-              onTabChange('transports')
-              setMobileMenuOpen(false)
-            }}
-            style={styles.mobileMenuItem}
-          >
-            🚕 Traslados
-          </button>
-        </div>
-      )}
-    </nav>
+    </header>
   )
 }
-
-const styles: { [key: string]: CSSProperties } = {
-  navbar: {
-    backgroundColor: 'var(--guiasai-bg-white)',
-    boxShadow: 'var(--shadow-md)',
-    position: 'sticky',
-    top: 0,
-    zIndex: 1000,
-  },
-  container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: 'var(--spacing-md)',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  logo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-sm)',
-    cursor: 'pointer',
-  },
-  logoImg: {
-    height: '40px',
-    width: 'auto',
-  },
-  menuDesktop: {
-    display: 'flex',
-    gap: 'var(--spacing-lg)',
-    alignItems: 'center',
-  },
-  navLink: {
-    backgroundColor: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '1rem',
-    fontFamily: "'Poppins', sans-serif",
-    fontWeight: 600,
-    color: 'var(--guiasai-text-dark)',
-    padding: 'var(--spacing-sm) var(--spacing-md)',
-    borderRadius: '6px',
-    transition: 'all 0.2s ease',
-  },
-  navLinkActive: {
-    color: 'var(--guiasai-primary)',
-    backgroundColor: 'rgba(255, 102, 0, 0.1)',
-    borderBottom: '3px solid var(--guiasai-primary)',
-  },
-  userSection: {
-    display: 'flex',
-    gap: 'var(--spacing-md)',
-    alignItems: 'center',
-  },
-  profileButton: {
-    backgroundColor: 'transparent',
-    border: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-sm)',
-    cursor: 'pointer',
-    padding: 'var(--spacing-sm)',
-    borderRadius: '6px',
-    transition: 'background-color 0.2s ease',
-  },
-  profileAvatar: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    backgroundColor: 'var(--guiasai-primary)',
-    color: 'white',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontFamily: "'Poppins', sans-serif",
-    fontWeight: 700,
-    fontSize: '0.9rem',
-  },
-  profileInfo: {
-    textAlign: 'left',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  profileLabel: {
-    color: 'var(--guiasai-text-light)',
-    fontSize: '0.75rem',
-  },
-  profileName: {
-    fontFamily: "'Poppins', sans-serif",
-    fontWeight: 600,
-    color: 'var(--guiasai-text-dark)',
-    fontSize: '0.9rem',
-  },
-  logoutButton: {
-    backgroundColor: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    color: 'var(--guiasai-text-dark)',
-    padding: 'var(--spacing-sm)',
-    borderRadius: '6px',
-    transition: 'all 0.2s ease',
-  },
-  mobileMenuToggle: {
-    display: 'none',
-    backgroundColor: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    color: 'var(--guiasai-primary)',
-  },
-  mobileMenu: {
-    display: 'none',
-    flexDirection: 'column',
-    backgroundColor: 'var(--guiasai-bg-light)',
-    padding: 'var(--spacing-md)',
-    borderTop: '1px solid var(--guiasai-border)',
-  },
-  mobileMenuItem: {
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderBottom: '1px solid var(--guiasai-border)',
-    cursor: 'pointer',
-    padding: 'var(--spacing-md)',
-    textAlign: 'left',
-    color: 'var(--guiasai-text-dark)',
-    fontWeight: 600,
-  },
-  loginButton: {
-    backgroundColor: 'var(--guiasai-primary)',
-    border: 'none',
-    cursor: 'pointer',
-    color: 'white',
-    padding: 'var(--spacing-sm) var(--spacing-lg)',
-    borderRadius: '6px',
-    fontFamily: "'Poppins', sans-serif",
-    fontWeight: 600,
-    fontSize: '0.95rem',
-    transition: 'all 0.2s ease',
-  },
-}
-

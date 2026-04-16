@@ -1,13 +1,12 @@
 import React from 'react'
 import { Quotation } from '@/types/quotation'
-import { FileText, Calendar } from 'lucide-react'
+import { FileText } from 'lucide-react'
 
 interface QuotationSummaryProps {
   quotation: Quotation | null
   onConfirmClick: () => void
   onClearClick: () => void
   onPreviewClick: () => void
-  onItineraryClick?: () => void
   disabled?: boolean
 }
 
@@ -16,7 +15,6 @@ export const QuotationSummary: React.FC<QuotationSummaryProps> = ({
   onConfirmClick,
   onClearClick,
   onPreviewClick,
-  onItineraryClick,
   disabled = false,
 }) => {
   if (!quotation) {
@@ -66,16 +64,6 @@ export const QuotationSummary: React.FC<QuotationSummaryProps> = ({
           >
             Limpiar
           </button>
-          {onItineraryClick && (
-            <button
-              onClick={onItineraryClick}
-              style={styles.itineraryButton}
-              disabled={!isReadyForConfirmation}
-            >
-              <Calendar size={16} />
-              <span>Itinerario</span>
-            </button>
-          )}
           <button
             onClick={onPreviewClick}
             style={styles.previewButton}

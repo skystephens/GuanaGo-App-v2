@@ -1,0 +1,985 @@
+/* ============================================
+   ServiceMicrosite.css
+   Mobile-first responsive design for service detail pages
+   ============================================ */
+
+/* Loading & Error States */
+.microsite-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1rem;
+  font-family: 'Poppins', sans-serif;
+  color: #666;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f0f0f0;
+  border-top-color: #FF6600;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.microsite-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1rem;
+  font-family: 'Poppins', sans-serif;
+  text-align: center;
+  padding: 2rem;
+}
+
+.microsite-error h2 {
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.microsite-error p {
+  color: #666;
+}
+
+.btn-back {
+  background: #FF6600;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-back:hover {
+  background: #e55b00;
+}
+
+/* ============================================
+   Wrapper
+   ============================================ */
+.microsite-wrapper {
+  font-family: 'Poppins', 'Inter', sans-serif;
+  background: #f8f9fa;
+  min-height: 100vh;
+  color: #333;
+}
+
+/* ============================================
+   Header
+   ============================================ */
+.microsite-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #1a1a2e;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.btn-back-nav {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.btn-back-nav:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brand-text {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #FF6600;
+}
+
+.brand-badge {
+  font-size: 0.65rem;
+  background: rgba(255, 102, 0, 0.2);
+  color: #FF6600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================
+   Hero / Gallery
+   ============================================ */
+.microsite-hero {
+  background: white;
+  margin-bottom: 1rem;
+}
+
+.hero-gallery {
+  position: relative;
+}
+
+.gallery-main {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  overflow: hidden;
+  background: #e0e0e0;
+}
+
+.gallery-main-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  line-height: 1;
+}
+
+.gallery-nav:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.gallery-prev { left: 12px; }
+.gallery-next { right: 12px; }
+
+.gallery-counter {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+.gallery-thumbs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+}
+
+.thumb {
+  min-width: 64px;
+  width: 64px;
+  height: 48px;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s, transform 0.2s;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.thumb:hover {
+  transform: scale(1.05);
+}
+
+.thumb-active {
+  border-color: #FF6600;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+/* Hero Info */
+.hero-info {
+  padding: 1rem 1rem 1.5rem;
+}
+
+.hero-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.badge-featured {
+  background: linear-gradient(135deg, #FF6600, #FFB627);
+  color: white;
+}
+
+.badge-category {
+  background: #e8f4f8;
+  color: #0077b6;
+}
+
+.badge-authentic {
+  background: #2D6A4F;
+  color: white;
+}
+
+.microsite-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 0.5rem;
+  line-height: 1.3;
+}
+
+.operator-info {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0 0 0.25rem;
+}
+
+.location-info {
+  font-size: 0.85rem;
+  color: #888;
+  margin: 0;
+}
+
+/* ============================================
+   Content Layout
+   ============================================ */
+.microsite-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0 1rem 2rem;
+}
+
+.content-main {
+  flex: 1;
+}
+
+/* Sections */
+.content-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.content-section h2 {
+  font-size: 1.2rem;
+  color: #1a1a2e;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #FF6600;
+  display: inline-block;
+}
+
+.description-text p {
+  color: #555;
+  line-height: 1.7;
+  margin: 0 0 0.75rem;
+}
+
+/* Que incluye */
+.includes-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.includes-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: #444;
+  line-height: 1.5;
+}
+
+.include-icon {
+  color: #06FFA5;
+  font-weight: bold;
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Itinerario */
+.itinerary-text p {
+  color: #555;
+  line-height: 1.7;
+  margin: 0 0 0.5rem;
+  padding-left: 1rem;
+  border-left: 3px solid #FF6600;
+}
+
+/* Logistica */
+.logistics-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.logistics-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.logistics-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.logistics-item strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #333;
+  margin-bottom: 0.15rem;
+}
+
+.logistics-item p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* Politicas */
+.policies-text {
+  background: #fff8f0;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #FFB627;
+}
+
+.policies-text p {
+  color: #555;
+  line-height: 1.6;
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Garantia */
+.guarantee-section {
+  background: linear-gradient(135deg, #1a1a2e, #2d2d5e) !important;
+  color: white;
+}
+
+.guarantee-card {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.guarantee-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.guarantee-card h3 {
+  color: #FF6600;
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.guarantee-card p {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+/* ============================================
+   Booking Widget (Sidebar)
+   ============================================ */
+.content-sidebar {
+  width: 100%;
+}
+
+.booking-widget {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border: 2px solid #FF6600;
+}
+
+.booking-price {
+  text-align: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.price-amount {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #FF6600;
+}
+
+.price-unit {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.booking-field {
+  margin-bottom: 1rem;
+}
+
+.booking-field label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.schedule-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.schedule-chip {
+  background: #f0f0f0;
+  color: #333;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.schedule-chip:hover {
+  border-color: #FF6600;
+  background: #fff8f0;
+}
+
+.schedule-chip-active {
+  background: #FF6600 !important;
+  color: white !important;
+  border-color: #FF6600;
+  font-weight: 700;
+}
+
+.schedule-confirmation {
+  font-size: 0.75rem;
+  color: #10b981;
+  margin: 0.5rem 0 0 0;
+  font-weight: bold;
+}
+
+/* Selector de pasajeros */
+.passenger-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.passenger-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid #bfdbfe;
+  background: #f0f9ff;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.passenger-btn:hover {
+  background: #dbeafe;
+}
+
+.passenger-count {
+  font-size: 1.2rem;
+  font-weight: 700;
+  min-width: 40px;
+  text-align: center;
+}
+
+/* Input de fecha */
+.booking-date-input {
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 0.9rem;
+  font-family: 'Poppins', sans-serif;
+  box-sizing: border-box;
+}
+
+/* Boton deshabilitado */
+.btn-reserve-disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn-reserve-disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Mensaje de exito */
+.booking-success {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  padding: 0.75rem;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.btn-go-quotation {
+  display: block;
+  margin: 0.5rem auto 0;
+  background: none;
+  border: none;
+  color: #FF6600;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.85rem;
+  padding: 0;
+}
+
+.btn-reserve {
+  width: 100%;
+  background: linear-gradient(135deg, #FF6600, #FF8C42);
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-reserve:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255, 102, 0, 0.4);
+}
+
+.booking-note {
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+  margin: 0 0 1rem;
+  line-height: 1.4;
+}
+
+.operator-contact {
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+}
+
+.operator-contact h4 {
+  font-size: 0.85rem;
+  color: #333;
+  margin: 0 0 0.5rem;
+}
+
+.operator-contact p {
+  font-size: 0.8rem;
+  color: #666;
+  margin: 0 0 0.25rem;
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.microsite-footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  background: #1a1a2e;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+}
+
+/* ============================================
+   Gallery Modal
+   ============================================ */
+.gallery-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.gallery-modal {
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.gallery-modal-close {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.gallery-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.gallery-modal-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.gallery-modal-img:hover {
+  transform: scale(1.03);
+}
+
+/* ============================================
+   TABLET (768px+)
+   ============================================ */
+@media (min-width: 768px) {
+  .microsite-header {
+    padding: 0.75rem 2rem;
+  }
+
+  .gallery-main {
+    height: 400px;
+  }
+
+  .hero-info {
+    padding: 1.5rem 2rem;
+  }
+
+  .microsite-title {
+    font-size: 2rem;
+  }
+
+  .microsite-content {
+    padding: 0 2rem 2rem;
+  }
+
+  .logistics-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .includes-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ============================================
+   DESKTOP (1024px+)
+   ============================================ */
+@media (min-width: 1024px) {
+  .microsite-header {
+    padding: 0.75rem 3rem;
+  }
+
+  .gallery-main {
+    height: 480px;
+  }
+
+  .hero-info {
+    padding: 1.5rem 3rem;
+  }
+
+  .microsite-content {
+    flex-direction: row;
+    padding: 0 3rem 3rem;
+    gap: 2rem;
+  }
+
+  .content-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .content-sidebar {
+    width: 360px;
+    flex-shrink: 0;
+  }
+
+  /* Sticky booking widget on desktop */
+  .booking-widget {
+    position: sticky;
+    top: 80px;
+  }
+
+  .content-section {
+    padding: 2rem;
+  }
+}
+
+/* ============================================
+   LARGE DESKTOP (1920px+)
+   ============================================ */
+@media (min-width: 1440px) {
+  .microsite-content {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .microsite-hero {
+    max-width: 1400px;
+    margin: 0 auto 1rem;
+  }
+
+  .gallery-main {
+    height: 560px;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .microsite-title {
+    font-size: 2.25rem;
+  }
+}
+
+/* ============================================
+   FeaturedCard Component
+   ============================================ */
+.featured-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+}
+
+.featured-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.featured-card-image {
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  position: relative;
+}
+
+.featured-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.featured-card:hover .featured-card-image img {
+  transform: scale(1.05);
+}
+
+.featured-card-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #2D6A4F;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.featured-card-body {
+  padding: 1.25rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.featured-card-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 0.5rem;
+  line-height: 1.3;
+}
+
+.featured-card-desc {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0 0 1rem;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.featured-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.featured-card-price {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #FF6600;
+}
+
+.featured-card-price span {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #888;
+}
+
+.btn-view-details {
+  background: linear-gradient(135deg, #FF6600, #FF8C42);
+  color: white;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.btn-view-details:hover {
+  transform: scale(1.05);
+}
+
+/* Featured Services Section on Homepage */
+.featured-services-homepage {
+  padding: 3rem 1rem;
+  background: linear-gradient(180deg, #f8f9fa, #fff);
+}
+
+.featured-services-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.featured-services-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 0.5rem;
+}
+
+.featured-services-header p {
+  color: #666;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.featured-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .featured-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .featured-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .featured-services-homepage {
+    padding: 4rem 2rem;
+  }
+
+  .featured-services-header h2 {
+    font-size: 2rem;
+  }
+}

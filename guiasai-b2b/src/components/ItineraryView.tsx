@@ -1,5 +1,6 @@
 import React from 'react'
 import { Calendar, Clock, MapPin, Users } from 'lucide-react'
+import { ExpandableText } from './ExpandableText'
 
 interface ItineraryDay {
   date: Date
@@ -26,6 +27,7 @@ interface ItineraryViewProps {
   accommodations: any[]
   tours: any[]
   transports: any[]
+  embedded?: boolean
 }
 
 // Normalizar fecha a string YYYY-MM-DD en zona local (sin conversión UTC)
@@ -67,7 +69,8 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
   endDate,
   accommodations,
   tours,
-  transports
+  transports,
+  embedded = false
 }) => {
   
   // Generar días del itinerario
@@ -146,10 +149,31 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
       tours.forEach((tour) => {
         const tourDate = normalizeDateToString(tour.date)
         if (tourDate === dateStr) {
+          // Usar el horario seleccionado, o extraer del dia de operacion, o usar horario de inicio
+          let horarioTour = tour.schedule || ''
+          
+          // Si no hay horario seleccionado, intentar extraer del diasOperacion
+          if (!horarioTour && tour.diasOperacion) {
+            const match = tour.diasOperacion.match(/\d{1,2}:\d{2}/)
+            if (match) {
+              horarioTour = match[0]
+            }
+          }
+          
+          // Si aún no hay horario, usar horarioInicio
+          if (!horarioTour && tour.horarioInicio) {
+            horarioTour = tour.horarioInicio
+          }
+          
+          // Fallback a 09:00
+          if (!horarioTour) {
+            horarioTour = '09:00'
+          }
+          
           dayItems.push({
             id: tour.id,
             type: 'tour',
-            time: tour.schedule || '09:00',
+            time: horarioTour,
             title: `🎫 ${tour.tourName}`,
             description: tour.description,
             duration: tour.duration,
@@ -206,7 +230,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
   }
   
   return (
-    <div style={styles.container}>
+    <div style={embedded ? styles.embeddedContainer : styles.container}>
       <div style={styles.header}>
         <h2 style={styles.title}>📅 Itinerario del Viaje</h2>
         <p style={styles.subtitle}>
@@ -260,7 +284,11 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                       <h4 style={styles.itemTitle}>{item.title}</h4>
                       
                       {item.description && (
-                        <p style={styles.itemDescription}>{item.description}</p>
+                        <ExpandableText 
+                          text={item.description} 
+                          maxLines={2} 
+                          style={styles.itemDescription} 
+                        />
                       )}
                       
                       <div style={styles.itemMeta}>
@@ -316,6 +344,11 @@ const styles = {
     borderRadius: '12px',
     padding: '1.5rem',
     boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+  },
+  embeddedContainer: {
+    backgroundColor: 'transparent',
+    padding: '1rem 0',
+    marginTop: '1rem',
   },
   header: {
     marginBottom: '2rem',

@@ -5,12 +5,16 @@ interface ContactInfoModalProps {
   onSubmit: (data: { name: string; phone: string; email: string }) => void
   onClose: () => void
   submitLabel?: string
+  title?: string
+  description?: string
 }
 
 export const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
   onSubmit,
   onClose,
   submitLabel = 'Descargar Cotización',
+  title = 'Información de Contacto',
+  description = 'Por favor, ingresa tu información de contacto para descargar la cotización.',
 }) => {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -46,7 +50,7 @@ export const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div style={styles.header}>
-          <h2 style={styles.title}>Información de Contacto</h2>
+          <h2 style={styles.title}>{title}</h2>
           <button onClick={onClose} style={styles.closeButton}>
             <X size={20} />
           </button>
@@ -54,7 +58,7 @@ export const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <p style={styles.description}>
-            Por favor, ingresa tu información de contacto para descargar la cotización.
+            {description}
           </p>
 
           <div style={styles.formGroup}>

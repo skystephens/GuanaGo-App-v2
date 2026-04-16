@@ -11,8 +11,7 @@ interface TaxiZonesMapProps {
 export const TaxiZonesMap: React.FC<TaxiZonesMapProps> = ({ 
   onZoneSelect, 
   selectedZone,
-  hasLuggage = false,
-  onLuggageChange
+  hasLuggage = false
 }) => {
   return (
     <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>

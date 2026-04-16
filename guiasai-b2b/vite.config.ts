@@ -15,7 +15,7 @@ export default defineConfig({
     open: true,
   },
   build: {
-    outDir: 'dist',
+    outDir: '../dist/agencias',
     sourcemap: false,
     minify: 'terser',
   },

@@ -142,8 +142,62 @@ app.use('/api/storage', storageRoutes);
 
 console.log('✅ Rutas API configuradas');
 
+// ==================== GUIASAI B2B ====================
+const agenciasDistPath = path.join(__dirname, 'dist', 'agencias');
+
+// Proxy de Airtable para GuiaSAI-B2B (reemplaza proxy.php de WordPress)
+// El frontend llama: /agencias/api/proxy.php?path=/v0/BASE/TABLE?...
+app.all('/agencias/api/proxy.php', async (req, res) => {
+  const airtablePath = req.query.path;
+  if (!airtablePath) {
+    return res.status(400).json({ error: 'Missing path parameter' });
+  }
+
+  const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+  if (!AIRTABLE_API_KEY) {
+    return res.status(503).json({ error: 'AIRTABLE_API_KEY not configured on server' });
+  }
+
+  try {
+    const targetUrl = `https://api.airtable.com${airtablePath}`;
+    const fetchOptions = {
+      method: req.method,
+      headers: {
+        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    };
+
+    // Pasar body en PATCH/POST
+    if (req.method === 'POST' || req.method === 'PATCH' || req.method === 'PUT') {
+      fetchOptions.body = JSON.stringify(req.body);
+    }
+
+    const airtableRes = await fetch(targetUrl, fetchOptions);
+    const data = await airtableRes.json();
+    res.status(airtableRes.status).json(data);
+  } catch (err) {
+    console.error('❌ GuiaSAI Airtable proxy error:', err.message);
+    res.status(500).json({ error: 'Proxy error', details: err.message });
+  }
+});
+
+// Archivos estáticos de GuiaSAI-B2B
+app.use('/agencias', express.static(agenciasDistPath, { maxAge: '1h', etag: false }));
+
+// SPA fallback para GuiaSAI-B2B
+app.use('/agencias', (req, res) => {
+  const indexPath = path.join(agenciasDistPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('GuiaSAI B2B not built. Run: cd guiasai-b2b && npm run build');
+  }
+});
+
 // ==================== SPA FALLBACK ====================
-// Servir index.html para cualquier ruta no API
+// Servir index.html para cualquier ruta no API (GuanaGO)
 app.use((req, res, next) => {
   // No aplicar fallback a rutas de API
   if (req.path.startsWith('/api/')) {
@@ -152,7 +206,7 @@ app.use((req, res, next) => {
 
   const indexPath = path.join(distPath, 'index.html');
   console.log(`📄 Sirviendo SPA: ${req.path} -> index.html`);
-  
+
   if (fs.existsSync(indexPath)) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.sendFile(indexPath);

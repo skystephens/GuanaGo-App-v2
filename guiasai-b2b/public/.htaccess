@@ -1,0 +1,14 @@
+# GuiaSAI B2B - SPA Routing
+# Este archivo permite que React Router maneje las rutas internas
+# sin que WordPress o Apache las intercepten.
+
+Options -MultiViews
+RewriteEngine On
+
+# Si el archivo o directorio existe, servirlo directamente
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Todas las demás rutas van a index.html (React Router las maneja)
+RewriteRule ^ index.html [L]

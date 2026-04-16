@@ -1,0 +1,416 @@
+/* ReservationTimeline.css */
+
+.reservation-timeline {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   HEADER - Selector de mes
+   ============================================ */
+
+.timeline-header {
+  margin-bottom: 1.5rem;
+}
+
+.month-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.month-nav {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #495057;
+  padding: 0.5rem;
+  transition: color 0.2s;
+}
+
+.month-nav:hover {
+  color: #00B4D8;
+}
+
+.month-display {
+  display: flex;
+  gap: 1rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.month-display span.active {
+  color: #00B4D8;
+}
+
+/* ============================================
+   CONTENT - Grid layout
+   ============================================ */
+
+.timeline-content {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+
+/* ============================================
+   PROPERTIES COLUMN
+   ============================================ */
+
+.properties-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.property-row {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.property-info h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #212529;
+  margin: 0 0 0.5rem 0;
+}
+
+.property-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.guests {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.occupancy-dots {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.occupancy-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dee2e6;
+}
+
+.occupancy-dots .dot.yellow {
+  background: #ffd43b;
+}
+
+.occupancy-dots .dot.green {
+  background: #51cf66;
+}
+
+/* ============================================
+   TIMELINE GRID
+   ============================================ */
+
+.timeline-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.days-header {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0.5rem;
+}
+
+.day-header {
+  min-width: 60px;
+  text-align: center;
+  padding: 0.5rem 0.25rem;
+  background: #f8f9fa;
+  border-right: 1px solid white;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.day-header:last-child {
+  border-right: none;
+}
+
+.weekday {
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-transform: uppercase;
+}
+
+.day-number {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #212529;
+}
+
+/* ============================================
+   TIMELINE ROWS - Barras de reservas
+   ============================================ */
+
+.timeline-row {
+  height: 80px;
+  position: relative;
+}
+
+.timeline-bars {
+  display: flex;
+  gap: 0;
+  height: 100%;
+}
+
+.timeline-cell {
+  min-width: 60px;
+  height: 100%;
+  position: relative;
+  border-right: 1px solid #e9ecef;
+}
+
+.timeline-cell:last-child {
+  border-right: none;
+}
+
+.timeline-cell.empty {
+  background: transparent;
+}
+
+.timeline-cell.occupied {
+  background: transparent;
+}
+
+/* ============================================
+   BARRAS - Estilos visuales
+   ============================================ */
+
+.bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Barra diagonal de inicio (Check-in 3pm) */
+.bar.diagonal-start {
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 40%,
+    var(--bar-color) 40%,
+    var(--bar-color) 100%
+  );
+  position: relative;
+}
+
+.bar.diagonal-start::after {
+  content: attr(data-time);
+  position: absolute;
+  bottom: 0.25rem;
+  right: 0.25rem;
+  font-size: 0.625rem;
+  color: rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+}
+
+/* Barra completa (Noche completa) */
+.bar.full-day {
+  background: var(--bar-color);
+}
+
+/* Barra diagonal de fin (Check-out 12pm) */
+.bar.diagonal-end {
+  background: linear-gradient(
+    135deg,
+    var(--bar-color) 0%,
+    var(--bar-color) 60%,
+    transparent 60%,
+    transparent 100%
+  );
+  position: relative;
+}
+
+.bar.diagonal-end::after {
+  content: attr(data-time);
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  font-size: 0.625rem;
+  color: rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+}
+
+/* Dots pattern (textura de puntos) */
+.dots {
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.3) 1px,
+    transparent 1px
+  );
+  background-size: 8px 8px;
+}
+
+/* ============================================
+   COLORES POR PROPIEDAD
+   ============================================ */
+
+.timeline-cell.green {
+  --bar-color: #51cf66;
+}
+
+.timeline-cell.yellow {
+  --bar-color: #ffd43b;
+}
+
+.timeline-cell.pink {
+  --bar-color: #ff8fab;
+}
+
+.timeline-cell.blue {
+  --bar-color: #74c0fc;
+}
+
+/* ============================================
+   LEYENDA
+   ============================================ */
+
+.timeline-legend {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #495057;
+}
+
+.legend-shape {
+  width: 40px;
+  height: 20px;
+  border-radius: 4px;
+  position: relative;
+}
+
+.legend-shape.diagonal-start {
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 40%,
+    #51cf66 40%,
+    #51cf66 100%
+  );
+}
+
+.legend-shape.full-day {
+  background: #51cf66;
+}
+
+.legend-shape.diagonal-end {
+  background: linear-gradient(
+    135deg,
+    #51cf66 0%,
+    #51cf66 60%,
+    transparent 60%,
+    transparent 100%
+  );
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .timeline-content {
+    grid-template-columns: 140px 1fr;
+  }
+
+  .property-info h4 {
+    font-size: 0.75rem;
+  }
+
+  .day-header {
+    min-width: 50px;
+  }
+
+  .timeline-cell {
+    min-width: 50px;
+  }
+
+  .timeline-legend {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+/* ============================================
+   HOVER EFFECTS
+   ============================================ */
+
+.timeline-cell.occupied:hover .bar {
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.property-row:hover {
+  background: #e9ecef;
+  cursor: pointer;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+.bar {
+  transition: opacity 0.2s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.timeline-row {
+  animation: slideIn 0.3s ease forwards;
+}
+
+.timeline-row:nth-child(1) { animation-delay: 0.05s; }
+.timeline-row:nth-child(2) { animation-delay: 0.1s; }
+.timeline-row:nth-child(3) { animation-delay: 0.15s; }
+.timeline-row:nth-child(4) { animation-delay: 0.2s; }

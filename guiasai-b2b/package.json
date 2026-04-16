@@ -10,24 +10,30 @@
     "copy-to-wordpress": "xcopy dist ..\\..\\wordpress-theme\\guiasai-agencias /E /I /Y",
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "export-tariffs": "node scripts/export-tariffs.js",
+    "refresh-servicios": "node scripts/refresh-servicios.js"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "axios": "^1.6.5",
-    "zustand": "^4.4.1",
+    "date-fns": "^2.30.0",
+    "firebase": "^12.9.0",
     "lucide-react": "^0.263.1",
-    "date-fns": "^2.30.0"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-helmet-async": "^2.0.5",
+    "react-router-dom": "^7.13.0",
+    "zustand": "^4.4.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.2.1",
-    "typescript": "^5.3.3",
-    "vite": "^6.4.1",
-    "tailwindcss": "^3.3.6",
+    "autoprefixer": "^10.4.16",
     "postcss": "^8.4.32",
-    "autoprefixer": "^10.4.16"
+    "tailwindcss": "^3.3.6",
+    "terser": "^5.46.0",
+    "typescript": "^5.3.3",
+    "vite": "^6.4.1"
   }
 }
