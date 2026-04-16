@@ -31,11 +31,28 @@ export function generateQuoteHTML(
 ): string {
   const totalPersonas = cotizacion.adultos + cotizacion.ninos + cotizacion.bebes;
 
-  /** Busca imagen y descripción desde el catálogo de servicios en memoria */
+  /** Fallback de imagen por categoría cuando Airtable no tiene foto */
+  const categoryFallback: Record<string, string> = {
+    hotel:    'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800',
+    tour:     'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
+    taxi:     'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=800',
+    transfer: 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=800',
+    package:  'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800',
+    tiquete:  'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800',
+    seguro:   'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800',
+    otro:     'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
+  };
+
+  /** Busca imágenes y descripción desde el catálogo; aplica fallback por categoría */
   const getServiceMeta = (item: CotizacionItem) => {
-    if (!services) return { image: '', description: '' };
-    const svc = services.find(s => s.id === item.servicioId);
-    return { image: svc?.image || '', description: svc?.description || '' };
+    const svc = services?.find(s => s.id === item.servicioId);
+    const rawImages: string[] = (svc as any)?.gallery || (svc as any)?.images || (svc?.image ? [svc.image] : []);
+    const fallback = categoryFallback[item.servicioTipo] || categoryFallback['tour'];
+    const images = rawImages.length > 0 ? rawImages.slice(0, 4) : [fallback];
+    return {
+      images,
+      description: svc?.description || (svc as any)?.descripcion || '',
+    };
   };
   
   return `
@@ -94,41 +111,105 @@ export function generateQuoteHTML(
         <h3 style="color: #334155; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">Servicios Incluidos</h3>
         
         ${items.map((item, index) => {
-          const { image, description } = getServiceMeta(item);
+          const { images, description } = getServiceMeta(item);
           const fechaDisplay = safeDate(item.fecha)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? 'Por confirmar';
           const fechaFinDisplay = item.fechaFin ? safeDate(item.fechaFin)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? '' : '';
           const itemPax = (item.personas || (item.adultos + item.ninos + item.bebes)) || totalPersonas;
+          const cardId = `svc-${index}`;
+          const modalId = `modal-${index}`;
+
+          // Grid de fotos pequeñas (hasta 4)
+          const photoGrid = images.map((url, i) => `
+            <div style="width: calc(25% - 3px); aspect-ratio: 1/1; overflow: hidden; border-radius: 6px; cursor: pointer; flex-shrink: 0;"
+                 onclick="openModal('${modalId}', ${i})">
+              <img src="${url}" style="width:100%; height:100%; object-fit:cover; display:block; transition:opacity .2s;"
+                   onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"
+                   onerror="this.parentElement.style.display='none'" loading="lazy">
+            </div>
+          `).join('');
+
+          // Lightbox con todas las fotos
+          const lightboxThumbs = images.map((url, i) => `
+            <img src="${url}" id="${modalId}-thumb-${i}"
+                 style="width:60px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.6;border:2px solid transparent;"
+                 onclick="setModalImg('${modalId}',${i})"
+                 onerror="this.style.display='none'">
+          `).join('');
+
           return `
-          <div style="background: white; border: 2px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 14px;">
-            ${image ? `<img src="${image}" alt="${item.servicioNombre}" style="width: 100%; height: 160px; object-fit: cover; display: block;" onerror="this.style.display='none'">` : ''}
-            <div style="padding: 16px;">
-              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                <div style="flex: 1;">
-                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <span style="background: #0ea5e9; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0;">
-                      ${index + 1}
-                    </span>
-                    <h4 style="margin: 0; color: #1e293b; font-size: 16px; font-weight: 600;">${item.servicioNombre}</h4>
+          <!-- ── Tarjeta servicio ${index + 1} ── -->
+          <div style="background:white;border:2px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+
+            <!-- Grid fotos -->
+            <div style="display:flex;gap:4px;padding:10px 10px 0;">
+              ${photoGrid}
+            </div>
+
+            <!-- Info principal -->
+            <div style="padding:14px 16px 16px;">
+              <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;">
+                <div style="flex:1;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <span style="background:#0ea5e9;color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${index + 1}</span>
+                    <h4 style="margin:0;color:#1e293b;font-size:15px;font-weight:700;">${item.servicioNombre}</h4>
                   </div>
-                  <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; color: #64748b;">
+                  <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:#64748b;">
                     <span>📅 ${fechaDisplay}${fechaFinDisplay ? ` → ${fechaFinDisplay}` : ''}</span>
-                    ${item.horarioInicio && item.horarioFin ? `<span>🕐 ${item.horarioInicio} - ${item.horarioFin}</span>` : ''}
+                    ${item.horarioInicio && item.horarioFin ? `<span>🕐 ${item.horarioInicio}–${item.horarioFin}</span>` : ''}
                     <span>👥 ${itemPax} persona${itemPax !== 1 ? 's' : ''}</span>
-                    <span style="text-transform: uppercase; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
-                      ${item.servicioTipo}
-                    </span>
+                    <span style="text-transform:uppercase;background:#f1f5f9;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;">${item.servicioTipo}</span>
                   </div>
                 </div>
-                <div style="text-align: right; flex-shrink: 0; margin-left: 16px;">
-                  <div style="color: #10b981; font-size: 18px; font-weight: 700;">
-                    $${item.subtotal.toLocaleString('es-CO')}
-                  </div>
-                  <div style="color: #94a3b8; font-size: 11px;">
-                    $${item.valorUnitario.toLocaleString('es-CO')} × ${item.personas || itemPax}${item.cantidad > 1 ? ` × ${item.cantidad}u` : ''}
-                  </div>
+                <div style="text-align:right;flex-shrink:0;margin-left:16px;">
+                  <div style="color:#10b981;font-size:17px;font-weight:700;">$${item.subtotal.toLocaleString('es-CO')}</div>
+                  <div style="color:#94a3b8;font-size:11px;">$${item.valorUnitario.toLocaleString('es-CO')} × ${item.personas || itemPax}${item.cantidad > 1 ? ` × ${item.cantidad}u` : ''}</div>
                 </div>
               </div>
-              ${description ? `<p style="margin: 8px 0 0 0; font-size: 13px; color: #64748b; line-height: 1.5;">${description}</p>` : ''}
+
+              ${description ? `
+              <!-- Descripción truncada -->
+              <div id="${cardId}-short" style="font-size:13px;color:#64748b;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">
+                ${description}
+              </div>
+              <button onclick="openModal('${modalId}', 0)"
+                style="margin-top:6px;background:none;border:none;color:#0ea5e9;font-size:12px;font-weight:600;cursor:pointer;padding:0;">
+                Ver más info e imágenes ▼
+              </button>` : ''}
+            </div>
+          </div>
+
+          <!-- ── Lightbox / Modal ── -->
+          <div id="${modalId}" onclick="if(event.target===this)closeModal('${modalId}')"
+            style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+            <div style="background:white;border-radius:14px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;position:relative;">
+              <button onclick="closeModal('${modalId}')"
+                style="position:sticky;top:10px;float:right;margin:10px 12px 0 0;background:#1e293b;color:white;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;z-index:10;">✕</button>
+              <!-- Imagen principal -->
+              <div style="padding:16px 16px 0;">
+                <img id="${modalId}-main" src="${images[0]}" alt="${item.servicioNombre}"
+                  style="width:100%;height:280px;object-fit:cover;border-radius:10px;display:block;"
+                  onerror="this.style.display='none'">
+              </div>
+              <!-- Miniaturas -->
+              ${images.length > 1 ? `
+              <div style="display:flex;gap:8px;padding:10px 16px 0;flex-wrap:wrap;">
+                ${lightboxThumbs}
+              </div>` : ''}
+              <!-- Nombre + datos -->
+              <div style="padding:14px 16px;">
+                <h3 style="margin:0 0 8px;color:#1e293b;font-size:17px;">${item.servicioNombre}</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:13px;color:#64748b;margin-bottom:12px;">
+                  <span>📅 ${fechaDisplay}${fechaFinDisplay ? ` → ${fechaFinDisplay}` : ''}</span>
+                  ${item.horarioInicio && item.horarioFin ? `<span>🕐 ${item.horarioInicio}–${item.horarioFin}</span>` : ''}
+                  <span>👥 ${itemPax} persona${itemPax !== 1 ? 's' : ''}</span>
+                  <span style="text-transform:uppercase;background:#f1f5f9;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;">${item.servicioTipo}</span>
+                </div>
+                ${description ? `<p style="margin:0;font-size:14px;color:#475569;line-height:1.65;">${description}</p>` : ''}
+                <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:13px;color:#64748b;">Subtotal</span>
+                  <span style="color:#10b981;font-size:20px;font-weight:700;">$${item.subtotal.toLocaleString('es-CO')} COP</span>
+                </div>
+              </div>
             </div>
           </div>
         `}).join('')}
@@ -288,33 +369,50 @@ export function previewQuote(
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Cotización ${cotizacion.nombre} - GuanaGO</title>
           <style>
-            body {
-              margin: 0;
-              padding: 20px;
-              background: #f1f5f9;
-              font-family: Arial, sans-serif;
-            }
-            @media print {
-              body {
-                background: white;
-                padding: 0;
-              }
-            }
+            body { margin:0; padding:20px; background:#f1f5f9; font-family:Arial,sans-serif; }
+            @media print { body { background:white; padding:0; } .no-print { display:none !important; } }
           </style>
+          <script>
+            function openModal(id, imgIndex) {
+              var m = document.getElementById(id);
+              if (!m) return;
+              m.style.display = 'flex';
+              document.body.style.overflow = 'hidden';
+              setModalImg(id, imgIndex);
+            }
+            function closeModal(id) {
+              var m = document.getElementById(id);
+              if (m) m.style.display = 'none';
+              document.body.style.overflow = '';
+            }
+            function setModalImg(modalId, idx) {
+              var main = document.getElementById(modalId + '-main');
+              var thumbs = document.querySelectorAll('[id^="' + modalId + '-thumb-"]');
+              thumbs.forEach(function(t, i) {
+                if (main && i === idx) { main.src = t.src; }
+                t.style.opacity = i === idx ? '1' : '0.5';
+                t.style.borderColor = i === idx ? '#0ea5e9' : 'transparent';
+              });
+            }
+            document.addEventListener('keydown', function(e) {
+              if (e.key === 'Escape') {
+                document.querySelectorAll('[id^="modal-"]').forEach(function(m) {
+                  m.style.display = 'none';
+                });
+                document.body.style.overflow = '';
+              }
+            });
+          </script>
         </head>
         <body>
           ${html}
-          <div style="text-align: center; margin-top: 30px;">
-            <button 
-              onclick="window.print()" 
-              style="background: #0ea5e9; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-right: 10px;"
-            >
+          <div class="no-print" style="text-align:center;margin-top:30px;">
+            <button onclick="window.print()"
+              style="background:#0ea5e9;color:white;border:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-right:10px;">
               🖨️ Imprimir
             </button>
-            <button 
-              onclick="window.close()" 
-              style="background: #64748b; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;"
-            >
+            <button onclick="window.close()"
+              style="background:#64748b;color:white;border:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">
               Cerrar
             </button>
           </div>
