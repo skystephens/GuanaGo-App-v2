@@ -56,19 +56,22 @@ const AdminBackend: React.FC<AdminBackendProps> = ({ onBack, onNavigate }) => {
   const [adminUser, setAdminUser] = useState<any>(null);
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [tables, setTables] = useState<TableStatus[]>([
-    { name: 'Servicios Turísticos', airtableTable: 'ServiciosTuristicos_SAI', icon: <Package size={20} />, status: 'idle', recordCount: 0, lastSync: null },
-    { name: 'Directorio / Mapa', airtableTable: 'Directorio_Mapa', icon: <MapPin size={20} />, status: 'idle', recordCount: 0, lastSync: null },
-    { name: 'Artistas RIMM', airtableTable: 'Rimm_musicos', icon: <Music size={20} />, status: 'idle', recordCount: 0, lastSync: null },
-    { name: 'Leads', airtableTable: 'Leads', icon: <Users size={20} />, status: 'idle', recordCount: 0, lastSync: null },
-    { name: 'Usuarios Admins', airtableTable: 'Usuarios_Admins', icon: <FileText size={20} />, status: 'idle', recordCount: 0, lastSync: null },
-    { name: 'Pagos', airtableTable: 'Pagos', icon: <DollarSign size={20} />, status: 'idle', recordCount: 0, lastSync: null },
-    { name: 'Reservas', airtableTable: 'Reservas', icon: <Calendar size={20} />, status: 'idle', recordCount: 0, lastSync: null },
-    { name: 'GUANA Transacciones', airtableTable: 'GUANA_Transacciones', icon: <Zap size={20} />, status: 'idle', recordCount: 0, lastSync: null },
-    { name: 'Retos GUANA', airtableTable: 'Retos_GUANA', icon: <Star size={20} />, status: 'idle', recordCount: 0, lastSync: null },
-    { name: 'Productos Artista', airtableTable: 'Productos_Artista', icon: <Music size={20} />, status: 'idle', recordCount: 0, lastSync: null },
-    { name: 'Ventas Artista', airtableTable: 'Ventas_Artista', icon: <ShoppingBag size={20} />, status: 'idle', recordCount: 0, lastSync: null },
-    { name: 'Procedimientos RAG', airtableTable: 'procedimientos_RAG', icon: <FileText size={20} />, status: 'idle', recordCount: 0, lastSync: null },
-    { name: 'Logs Trazabilidad', airtableTable: 'Logs_Trazabilidad', icon: <AlertTriangle size={20} />, status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Tours / Servicios',        airtableTable: 'ServiciosTuristicos_SAI',   icon: <Package size={20} />,     status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Alojamientos',             airtableTable: 'AlojamientosTuristicos_SAI', icon: <Star size={20} />,        status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Taxis & Traslados',        airtableTable: 'Taxis_Traslados',            icon: <Zap size={20} />,         status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Tiquetes Aéreos',          airtableTable: 'Tiquetes_Aereos',            icon: <ShoppingBag size={20} />, status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Directorio / Mapa',        airtableTable: 'Directorio_Mapa',            icon: <MapPin size={20} />,      status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Artistas RIMM',            airtableTable: 'Rimm_musicos',               icon: <Music size={20} />,       status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Leads',                    airtableTable: 'Leads',                      icon: <Users size={20} />,       status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Usuarios Admins',          airtableTable: 'Usuarios_Admins',            icon: <FileText size={20} />,    status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Pagos',                    airtableTable: 'Pagos',                      icon: <DollarSign size={20} />,  status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Reservas',                 airtableTable: 'Reservas',                   icon: <Calendar size={20} />,    status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'GUANA Transacciones',      airtableTable: 'GUANA_Transacciones',        icon: <Zap size={20} />,         status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Retos GUANA',             airtableTable: 'Retos_GUANA',                icon: <Star size={20} />,        status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Productos Artista',        airtableTable: 'Productos_Artista',          icon: <Music size={20} />,       status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Ventas Artista',           airtableTable: 'Ventas_Artista',             icon: <ShoppingBag size={20} />, status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Procedimientos RAG',       airtableTable: 'procedimientos_RAG',         icon: <FileText size={20} />,    status: 'idle', recordCount: 0, lastSync: null },
+    { name: 'Logs Trazabilidad',        airtableTable: 'Logs_Trazabilidad',          icon: <AlertTriangle size={20} />, status: 'idle', recordCount: 0, lastSync: null },
   ]);
   
   const [isSyncingAll, setIsSyncingAll] = useState(false);
@@ -174,6 +177,11 @@ const AdminBackend: React.FC<AdminBackendProps> = ({ onBack, onNavigate }) => {
         case 'ServiciosTuristicos_SAI':
           data = await airtableService.getServices();
           break;
+        case 'AlojamientosTuristicos_SAI':
+        case 'Taxis_Traslados':
+        case 'Tiquetes_Aereos':
+          data = await airtableService.fetchTable(table.airtableTable);
+          break;
         case 'Directorio_Mapa':
           data = await airtableService.getDirectoryPoints();
           break;
@@ -182,6 +190,9 @@ const AdminBackend: React.FC<AdminBackendProps> = ({ onBack, onNavigate }) => {
           break;
         case 'Leads':
           data = await airtableService.fetchTable('Leads');
+          break;
+        default:
+          data = await airtableService.fetchTable(table.airtableTable);
           break;
       }
 
