@@ -1074,6 +1074,54 @@ export async function getHotels() {
 }
 
 /**
+ * Obtener alojamientos desde AlojamientosTuristicos_SAI.
+ * Devuelve objetos normalizados compatibles con Tour (image, gallery, description, etc.)
+ * para que pdfService pueda hacer el lookup por servicioId.
+ */
+export async function getAlojamientosSAI(): Promise<any[]> {
+  try {
+    const records = await fetchTable('AlojamientosTuristicos_SAI', {
+      filterByFormula: '{Publicado} = TRUE()',
+      maxRecords: 100,
+    });
+
+    return records.map((record: any) => {
+      const f = record.fields;
+
+      // Preferir WordPress (permanente) sobre adjunto Airtable (expira)
+      const wpRaw: string = f['ImagenWP'] || f['imagenwp'] || f['imagenWP'] || '';
+      const wpUrls: string[] = wpRaw
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter((s: string) => s.startsWith('http'));
+
+      const allImages: string[] = extractAllImageUrls(f);
+      const combined: string[] = [...new Set([...wpUrls, ...allImages])];
+
+      const fallback = 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800';
+      const primaryImage = combined[0] || fallback;
+
+      return {
+        id: record.id,
+        title: f['Servicio'] || f['Nombre alternativo'] || f['Nombre'] || 'Sin nombre',
+        name:  f['Servicio'] || f['Nombre alternativo'] || f['Nombre'] || 'Sin nombre',
+        category: 'hotel' as const,
+        image:   primaryImage,
+        images:  combined.length > 0 ? combined.slice(0, 4) : [fallback],
+        gallery: combined.length > 0 ? combined.slice(0, 4) : [fallback],
+        description: f['Descripcion'] || f['Itinerario'] || '',
+        descripcion: f['Descripcion'] || f['Itinerario'] || '',
+        active: true,
+        price: parseFloat(f['Precio actualizado'] || f['Precio'] || 0),
+      };
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo AlojamientosTuristicos_SAI:', error);
+    return [];
+  }
+}
+
+/**
  * Obtener solo Paquetes
  */
 export async function getPackages() {

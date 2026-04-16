@@ -10,7 +10,7 @@
  */
 
 import { api } from './api';
-import { airtableService } from './airtableService';
+import { airtableService, getAlojamientosSAI } from './airtableService';
 import cache, { 
   getDataWithFallback,
   getFromCache,
@@ -227,6 +227,28 @@ export const cachedApi = {
       item.category?.toLowerCase().includes(lowerQuery) ||
       item.description?.toLowerCase().includes(lowerQuery)
     );
+  },
+
+  /**
+   * Obtener alojamientos desde AlojamientosTuristicos_SAI con caché 48h.
+   * Devuelve objetos normalizados compatibles con Tour para lookup en pdfService.
+   */
+  getAlojamientos: async (options?: { forceRefresh?: boolean }): Promise<any[]> => {
+    try {
+      const result = await getDataWithFallback<any[]>(
+        'alojamientos_sai' as CacheKey,
+        async () => {
+          const data = await getAlojamientosSAI();
+          return data.length > 0 ? data : null;
+        },
+        options
+      );
+      return result.data;
+    } catch (error) {
+      console.warn('⚠️ Error obteniendo alojamientos:', error);
+      const cached = getFromCache<any[]>('alojamientos_sai' as CacheKey);
+      return cached ?? [];
+    }
   },
 
   /**

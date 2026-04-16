@@ -267,6 +267,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [selectedCotizacion, setSelectedCotizacion] = useState<Cotizacion | null>(null);
   const [items, setItems] = useState<CotizacionItem[]>([]);
   const [services, setServices] = useState<Tour[]>([]);
+  const [alojamientos, setAlojamientos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
@@ -318,6 +319,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   useEffect(() => {
     loadCotizaciones();
     loadServices();
+    cachedApi.getAlojamientos().then(data => setAlojamientos(data));
   }, []);
 
   // Recalcular el total cuando cambien los items
@@ -784,7 +786,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     
     setGeneratingPDF(true);
     try {
-      await downloadQuotePDF(selectedCotizacion, items, services);
+      await downloadQuotePDF(selectedCotizacion, items, [...services, ...alojamientos]);
       alert('✅ PDF descargado exitosamente');
     } catch (error) {
       alert('❌ Error generando PDF. Inténtalo de nuevo.');
@@ -796,7 +798,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
   const handlePreview = () => {
     if (!selectedCotizacion) return;
-    previewQuote(selectedCotizacion, items, services);
+    previewQuote(selectedCotizacion, items, [...services, ...alojamientos]);
   };
 
   const filteredServices = services.filter(service => {
