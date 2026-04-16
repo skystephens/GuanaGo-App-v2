@@ -20,6 +20,18 @@ import {
 import { cachedApi } from '../../services/cachedApi';
 import { downloadQuotePDF, previewQuote } from '../../services/pdfService';
 
+// ─── Date helpers ─────────────────────────────────────────────────────────────
+/** Convierte YYYY-MM-DD a Date local (evita el offset UTC de new Date("YYYY-MM-DD")) */
+function safeDate(d: string | null | undefined): Date | null {
+  if (!d) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    const [y, m, day] = d.split('-').map(Number);
+    return new Date(y, m - 1, day);
+  }
+  const parsed = new Date(d + 'T12:00:00');
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
+
 // ─── Backend URL ──────────────────────────────────────────────────────────────
 const API_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   ? 'http://localhost:5000'
@@ -413,10 +425,10 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     const diasOperacion = (service as any).operatingDays || (service as any).diasOperacion || '';
     if (diasOperacion && diasOperacion.length > 0) {
       // Verificar si el día específico está dentro del rango de fechas
-      const startDate = new Date(selectedCotizacion.fechaInicio);
-      const endDate = new Date(selectedCotizacion.fechaFin);
+      const startDate = safeDate(selectedCotizacion.fechaInicio) ?? new Date();
+      const endDate = safeDate(selectedCotizacion.fechaFin) ?? new Date();
       const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-      
+
       // Buscar si hay algún día en el rango donde el servicio opera
       let hasOperatingDayInRange = false;
       for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -428,7 +440,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       }
       
       if (!hasOperatingDayInRange) {
-        const proceed = confirm(`⚠️ ${service.title} opera en: ${diasOperacion}\nNo hay coincidencia en el rango ${new Date(selectedCotizacion.fechaInicio).toLocaleDateString()} - ${new Date(selectedCotizacion.fechaFin).toLocaleDateString()}\n\n¿Agregar de todas formas?`);
+        const proceed = confirm(`⚠️ ${service.title} opera en: ${diasOperacion}\nNo hay coincidencia en el rango ${safeDate(selectedCotizacion.fechaInicio)?.toLocaleDateString() ?? '—'} - ${safeDate(selectedCotizacion.fechaFin)?.toLocaleDateString() ?? '—'}\n\n¿Agregar de todas formas?`);
         if (!proceed) return;
       }
     }
@@ -772,7 +784,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     
     setGeneratingPDF(true);
     try {
-      await downloadQuotePDF(selectedCotizacion, items);
+      await downloadQuotePDF(selectedCotizacion, items, services);
       alert('✅ PDF descargado exitosamente');
     } catch (error) {
       alert('❌ Error generando PDF. Inténtalo de nuevo.');
@@ -784,7 +796,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
   const handlePreview = () => {
     if (!selectedCotizacion) return;
-    previewQuote(selectedCotizacion, items);
+    previewQuote(selectedCotizacion, items, services);
   };
 
   const filteredServices = services.filter(service => {
@@ -890,7 +902,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                         <div className="flex flex-wrap items-center gap-4 text-gray-400 text-sm">
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
-                            {new Date(cot.fechaInicio).toLocaleDateString()} - {new Date(cot.fechaFin).toLocaleDateString()}
+                            {safeDate(cot.fechaInicio)?.toLocaleDateString() ?? '—'} - {safeDate(cot.fechaFin)?.toLocaleDateString() ?? '—'}
                           </div>
                           <div className="flex items-center gap-2">
                             <Users className="w-4 h-4" />
@@ -1106,7 +1118,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
               <div>
                 <h1 className="text-3xl font-bold">{selectedCotizacion.nombre}</h1>
                 <p className="text-gray-400">
-                  {new Date(selectedCotizacion.fechaInicio).toLocaleDateString()} - {new Date(selectedCotizacion.fechaFin).toLocaleDateString()}
+                  {safeDate(selectedCotizacion.fechaInicio)?.toLocaleDateString() ?? '—'} - {safeDate(selectedCotizacion.fechaFin)?.toLocaleDateString() ?? '—'}
                 </p>
               </div>
             </div>
@@ -1277,8 +1289,8 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                   <span className="text-[10px] text-gray-600 uppercase">{item.servicioTipo}</span>
                                   {item.fecha && (
                                     <span className="text-[10px] text-gray-600">
-                                      {new Date(item.fecha).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
-                                      {item.fechaFin && ` — ${new Date(item.fechaFin).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}`}
+                                      {safeDate(item.fecha)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' }) ?? ''}
+                                      {item.fechaFin && ` — ${safeDate(item.fechaFin)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' }) ?? ''}`}
                                     </span>
                                   )}
                                 </div>

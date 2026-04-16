@@ -4,7 +4,19 @@
 
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Cotizacion, CotizacionItem } from '../types';
+import { Cotizacion, CotizacionItem, Tour } from '../types';
+
+/** Convierte una fecha YYYY-MM-DD o Date a Date local (sin offset UTC) */
+function safeDate(d: string | Date | undefined | null): Date | null {
+  if (!d) return null;
+  if (d instanceof Date) return d;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    const [y, m, day] = d.split('-').map(Number);
+    return new Date(y, m - 1, day);
+  }
+  const parsed = new Date(d + 'T12:00:00');
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
 
 // Logo GuanaGO (data URI - reemplaza con tu logo real)
 const GUANAGO_LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
@@ -14,9 +26,17 @@ const GUANAGO_LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYA
  */
 export function generateQuoteHTML(
   cotizacion: Cotizacion,
-  items: CotizacionItem[]
+  items: CotizacionItem[],
+  services?: Tour[]
 ): string {
   const totalPersonas = cotizacion.adultos + cotizacion.ninos + cotizacion.bebes;
+
+  /** Busca imagen y descripción desde el catálogo de servicios en memoria */
+  const getServiceMeta = (item: CotizacionItem) => {
+    if (!services) return { image: '', description: '' };
+    const svc = services.find(s => s.id === item.servicioId);
+    return { image: svc?.image || '', description: svc?.description || '' };
+  };
   
   return `
     <div style="font-family: 'Arial', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; background: white; color: #1a1a1a;">
@@ -55,8 +75,8 @@ export function generateQuoteHTML(
           <tr>
             <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Fechas:</td>
             <td style="padding: 8px 0; color: #1e293b; font-weight: 500; font-size: 14px;">
-              ${new Date(cotizacion.fechaInicio).toLocaleDateString('es-CO')} - 
-              ${new Date(cotizacion.fechaFin).toLocaleDateString('es-CO')}
+              ${safeDate(cotizacion.fechaInicio)?.toLocaleDateString('es-CO') ?? 'Por confirmar'} -
+              ${safeDate(cotizacion.fechaFin)?.toLocaleDateString('es-CO') ?? 'Por confirmar'}
             </td>
           </tr>
           <tr>
@@ -73,36 +93,45 @@ export function generateQuoteHTML(
       <div style="margin-bottom: 30px;">
         <h3 style="color: #334155; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">Servicios Incluidos</h3>
         
-        ${items.map((item, index) => `
-          <div style="background: white; border: 2px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-              <div style="flex: 1;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                  <span style="background: #0ea5e9; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">
-                    ${index + 1}
-                  </span>
-                  <h4 style="margin: 0; color: #1e293b; font-size: 16px; font-weight: 600;">${item.servicioNombre}</h4>
+        ${items.map((item, index) => {
+          const { image, description } = getServiceMeta(item);
+          const fechaDisplay = safeDate(item.fecha)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? 'Por confirmar';
+          const fechaFinDisplay = item.fechaFin ? safeDate(item.fechaFin)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? '' : '';
+          const itemPax = (item.personas || (item.adultos + item.ninos + item.bebes)) || totalPersonas;
+          return `
+          <div style="background: white; border: 2px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 14px;">
+            ${image ? `<img src="${image}" alt="${item.servicioNombre}" style="width: 100%; height: 160px; object-fit: cover; display: block;" onerror="this.style.display='none'">` : ''}
+            <div style="padding: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                <div style="flex: 1;">
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="background: #0ea5e9; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0;">
+                      ${index + 1}
+                    </span>
+                    <h4 style="margin: 0; color: #1e293b; font-size: 16px; font-weight: 600;">${item.servicioNombre}</h4>
+                  </div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; color: #64748b;">
+                    <span>📅 ${fechaDisplay}${fechaFinDisplay ? ` → ${fechaFinDisplay}` : ''}</span>
+                    ${item.horarioInicio && item.horarioFin ? `<span>🕐 ${item.horarioInicio} - ${item.horarioFin}</span>` : ''}
+                    <span>👥 ${itemPax} persona${itemPax !== 1 ? 's' : ''}</span>
+                    <span style="text-transform: uppercase; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                      ${item.servicioTipo}
+                    </span>
+                  </div>
                 </div>
-                <div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; color: #64748b;">
-                  <span>📅 ${new Date(item.fecha).toLocaleDateString('es-CO')}</span>
-                  ${item.horarioInicio && item.horarioFin ? `<span>🕐 ${item.horarioInicio} - ${item.horarioFin}</span>` : ''}
-                  <span>👥 ${item.adultos + item.ninos + item.bebes} personas</span>
-                  <span style="text-transform: uppercase; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
-                    ${item.servicioTipo}
-                  </span>
+                <div style="text-align: right; flex-shrink: 0; margin-left: 16px;">
+                  <div style="color: #10b981; font-size: 18px; font-weight: 700;">
+                    $${item.subtotal.toLocaleString('es-CO')}
+                  </div>
+                  <div style="color: #94a3b8; font-size: 11px;">
+                    $${item.valorUnitario.toLocaleString('es-CO')} × ${item.personas || itemPax}${item.cantidad > 1 ? ` × ${item.cantidad}u` : ''}
+                  </div>
                 </div>
               </div>
-              <div style="text-align: right;">
-                <div style="color: #10b981; font-size: 18px; font-weight: 700;">
-                  $${item.subtotal.toLocaleString('es-CO')}
-                </div>
-                <div style="color: #94a3b8; font-size: 11px;">
-                  ${item.precioUnitario.toLocaleString('es-CO')} x ${item.adultos + item.ninos + item.bebes}
-                </div>
-              </div>
+              ${description ? `<p style="margin: 8px 0 0 0; font-size: 13px; color: #64748b; line-height: 1.5;">${description}</p>` : ''}
             </div>
           </div>
-        `).join('')}
+        `}).join('')}
       </div>
 
       <!-- Total -->
@@ -175,12 +204,13 @@ export function generateQuoteHTML(
  */
 export async function downloadQuotePDF(
   cotizacion: Cotizacion,
-  items: CotizacionItem[]
+  items: CotizacionItem[],
+  services?: Tour[]
 ): Promise<void> {
   try {
     // Crear elemento temporal con el HTML
     const container = document.createElement('div');
-    container.innerHTML = generateQuoteHTML(cotizacion, items);
+    container.innerHTML = generateQuoteHTML(cotizacion, items, services);
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '0';
@@ -242,9 +272,10 @@ export async function downloadQuotePDF(
  */
 export function previewQuote(
   cotizacion: Cotizacion,
-  items: CotizacionItem[]
+  items: CotizacionItem[],
+  services?: Tour[]
 ): void {
-  const html = generateQuoteHTML(cotizacion, items);
+  const html = generateQuoteHTML(cotizacion, items, services);
   
   const previewWindow = window.open('', '_blank', 'width=900,height=700');
   
