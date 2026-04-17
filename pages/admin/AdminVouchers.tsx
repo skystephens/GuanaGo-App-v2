@@ -270,83 +270,74 @@ function VoucherCard({ voucher, onSelect, onUpdateEstado }: {
   const cfg = ESTADO_CFG[estadoKey(voucher.estado)] ?? ESTADO_CFG['PENDIENTE'];
 
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden hover:border-orange-600/50 transition-colors">
-      {/* Header tipo ticket */}
-      <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-4 py-3 flex justify-between items-start">
-        <div className="flex-1 min-w-0 pr-2">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-orange-200 mb-0.5">
-            Experiencia Reservada
-          </p>
-          <h3 className="font-bold text-sm text-white leading-tight truncate">
-            {voucher.tourName || 'Servicio turístico'}
-          </h3>
-          {voucher.reservaNum && (
-            <p className="text-[10px] text-orange-200 mt-0.5 font-mono"># {voucher.reservaNum}</p>
-          )}
-        </div>
-        <span className={`flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-bold uppercase ${cfg.bg} ${cfg.text} border border-current/20 flex-shrink-0`}>
+    <div
+      className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer border border-gray-100"
+      onClick={() => onSelect(voucher)}
+    >
+      {/* Header naranja */}
+      <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-4 relative">
+        <p className="text-[9px] font-bold uppercase tracking-widest text-orange-100 mb-1">
+          Experiencia Reservada
+        </p>
+        <h3 className="font-bold text-base text-white uppercase leading-tight pr-20 truncate">
+          {voucher.tourName || 'Servicio turístico'}
+        </h3>
+        {voucher.reservaNum && (
+          <p className="text-[10px] text-orange-200 mt-0.5 font-mono"># {voucher.reservaNum}</p>
+        )}
+        <span className={`absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-bold uppercase ${cfg.bg} ${cfg.text} border border-white/20`}>
           {cfg.icon} {cfg.label}
         </span>
       </div>
 
-      {/* Cuerpo */}
-      <div className="px-4 py-3 space-y-2">
-        <div className="flex items-center gap-2">
-          <Users size={12} className="text-gray-500 flex-shrink-0" />
-          <span className="text-sm font-bold text-white truncate">{voucher.titular || '—'}</span>
-          {voucher.pax && <span className="text-[10px] text-gray-500 flex-shrink-0">· {voucher.pax} pax</span>}
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-gray-900 rounded-lg px-2.5 py-1.5">
-            <p className="text-[9px] text-gray-600 uppercase font-bold mb-0.5">Fecha</p>
-            <p className="text-xs font-bold text-white">{fmtFecha(voucher.fecha) || '—'}</p>
-          </div>
-          <div className="bg-gray-900 rounded-lg px-2.5 py-1.5">
-            <p className="text-[9px] text-gray-600 uppercase font-bold mb-0.5">Hora</p>
-            <p className="text-xs font-bold text-teal-400">{voucher.hora || '—'}</p>
-          </div>
-        </div>
-
-        {voucher.puntoEncuentro && (
-          <div className="flex items-start gap-1.5 bg-orange-950/40 border-l-2 border-orange-600 pl-2 pr-2 py-1.5 rounded-r-lg">
-            <MapPin size={11} className="text-orange-500 mt-0.5 flex-shrink-0" />
-            <p className="text-[10px] font-bold text-orange-300 uppercase leading-tight">{voucher.puntoEncuentro}</p>
-          </div>
-        )}
-
-        {voucher.observaciones && (
-          <p className="text-[10px] text-gray-500 leading-relaxed border-l-2 border-teal-800 pl-2">
-            {voucher.observaciones}
-          </p>
-        )}
+      {/* Titular */}
+      <div className="px-4 pt-3 pb-1">
+        <p className="text-[9px] text-gray-400 uppercase font-bold tracking-widest mb-0.5">Titular de Reserva</p>
+        <p className="text-sm font-bold text-gray-900 uppercase truncate">{voucher.titular || '—'}</p>
       </div>
 
-      {/* Footer con acciones */}
-      <div className="border-t border-gray-700 px-3 py-2 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          {voucher.telefono && (
-            <a href={`tel:${voucher.telefono}`} className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-white transition-colors">
-              <Phone size={10} /> {voucher.telefono}
-            </a>
-          )}
+      {/* Grid datos */}
+      <div className="grid grid-cols-2 gap-2 px-4 py-2">
+        <div className="border border-gray-200 rounded-xl p-2">
+          <p className="text-[8px] text-gray-400 uppercase font-bold mb-0.5">ID Reserva</p>
+          <p className="text-xs font-bold text-orange-500">{voucher.reservaNum || '—'}</p>
         </div>
-        <div className="flex items-center gap-1.5">
-          <select
-            value={estadoKey(voucher.estado)}
-            onChange={e => onUpdateEstado(voucher.id, e.target.value)}
-            className="text-[10px] bg-gray-900 border border-gray-700 rounded-lg px-1.5 py-1 text-gray-300 focus:outline-none focus:border-orange-600"
-            onClick={e => e.stopPropagation()}
-          >
-            {ESTADOS.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <button
-            onClick={() => onSelect(voucher)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 text-[10px] font-bold text-white transition-colors"
-          >
-            <Eye size={10} /> Ver
-          </button>
+        <div className="border border-gray-200 rounded-xl p-2">
+          <p className="text-[8px] text-gray-400 uppercase font-bold mb-0.5">Pax</p>
+          <p className="text-xs font-bold text-gray-800">{voucher.pax || '—'}</p>
         </div>
+        <div className="border border-gray-200 rounded-xl p-2">
+          <p className="text-[8px] text-gray-400 uppercase font-bold mb-0.5">Fecha</p>
+          <p className="text-xs font-bold text-gray-800">{fmtFecha(voucher.fecha) || '—'}</p>
+        </div>
+        <div className="border border-gray-200 rounded-xl p-2">
+          <p className="text-[8px] text-gray-400 uppercase font-bold mb-0.5">Hora de Encuentro</p>
+          <p className="text-xs font-bold text-teal-600">{voucher.hora || '—'}</p>
+        </div>
+      </div>
+
+      {/* Punto encuentro */}
+      {voucher.puntoEncuentro && (
+        <div className="mx-4 mb-3 border-l-4 border-orange-500 pl-3 py-2 bg-orange-50 rounded-r-xl">
+          <p className="text-[8px] text-orange-600 uppercase font-bold mb-0.5">◆ Punto de Encuentro</p>
+          <p className="text-[11px] font-bold text-orange-800 uppercase leading-tight">{voucher.puntoEncuentro}</p>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="border-t border-gray-100 px-4 py-2 flex items-center justify-between">
+        <div className="flex items-center gap-3 text-[10px] text-gray-400">
+          <span>+57 315 383 6043</span>
+          <span>guiasanandresislas.com</span>
+        </div>
+        <select
+          value={estadoKey(voucher.estado)}
+          onChange={e => { e.stopPropagation(); onUpdateEstado(voucher.id, e.target.value); }}
+          className="text-[10px] bg-gray-100 border border-gray-200 rounded-lg px-1.5 py-1 text-gray-600 focus:outline-none focus:border-orange-500"
+          onClick={e => e.stopPropagation()}
+        >
+          {ESTADOS.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
       </div>
     </div>
   );
@@ -360,91 +351,109 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
   onUpdateEstado: (id: string, estado: string) => void;
 }) {
   const cfg = ESTADO_CFG[estadoKey(voucher.estado)] ?? ESTADO_CFG['PENDIENTE'];
+  const mapsUrl = voucher.puntoEncuentro
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(voucher.puntoEncuentro + ', San Andrés, Colombia')}`
+    : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70" onClick={onClose}>
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
-        {/* Header naranja estilo ticket */}
-        <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-5 py-5 relative">
-          <button onClick={onClose} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/20 flex items-center justify-center hover:bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/75" onClick={onClose}>
+      <div
+        className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* ── Header naranja ── */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-6 relative">
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/20 flex items-center justify-center hover:bg-black/40 transition-colors"
+          >
             <X size={13} className="text-white" />
           </button>
-          <p className="text-[9px] uppercase tracking-widest text-orange-200 font-bold mb-1">Experiencia Reservada</p>
-          <h2 className="text-lg font-bold text-white uppercase leading-tight pr-8">{voucher.tourName || 'Servicio turístico'}</h2>
-          {voucher.reservaNum && <p className="text-xs text-orange-200 mt-1 font-mono"># {voucher.reservaNum}</p>}
-          <span className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${cfg.bg} ${cfg.text}`}>
+          <p className="text-[9px] uppercase tracking-widest text-orange-100 font-bold mb-1">
+            Experiencia Reservada
+          </p>
+          <h2 className="text-xl font-black text-white uppercase leading-tight pr-8">
+            {voucher.tourName || 'Servicio turístico'}
+          </h2>
+          {voucher.reservaNum && (
+            <p className="text-[11px] text-orange-200 mt-1 font-mono"># {voucher.reservaNum}</p>
+          )}
+          <span className={`mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase ${cfg.bg} ${cfg.text} border border-white/20`}>
             {cfg.icon} {cfg.label}
           </span>
         </div>
 
-        <div className="px-5 py-4 space-y-4">
+        <div className="px-5 py-5 space-y-4">
           {/* Titular */}
           <div>
-            <p className="text-[9px] uppercase text-gray-600 font-bold mb-0.5">Titular</p>
-            <p className="font-bold text-white text-base uppercase">{voucher.titular}</p>
+            <p className="text-[9px] uppercase text-gray-400 font-bold tracking-widest mb-1">
+              Titular de Reserva
+            </p>
+            <p className="text-lg font-black text-gray-900 uppercase leading-tight">
+              {voucher.titular || '—'}
+            </p>
           </div>
 
-          {/* Grid datos */}
+          {/* Grid 2×2 */}
           <div className="grid grid-cols-2 gap-2">
             {[
-              { label: 'ID Reserva', value: voucher.reservaNum, color: 'text-orange-400' },
-              { label: 'Pax',        value: voucher.pax },
-              { label: 'Fecha',      value: fmtFecha(voucher.fecha) },
-              { label: 'Hora',       value: voucher.hora, color: 'text-teal-400' },
-            ].map(({ label, value, color }) => (
-              <div key={label} className="bg-gray-800 rounded-xl p-2.5">
-                <p className="text-[9px] uppercase text-gray-600 font-bold mb-0.5">{label}</p>
-                <p className={`text-sm font-bold ${color ?? 'text-white'}`}>{value || '—'}</p>
+              { label: 'ID Reserva',       value: voucher.reservaNum,      cls: 'text-orange-500 text-base' },
+              { label: 'Pax',              value: voucher.pax,             cls: 'text-gray-900 text-base' },
+              { label: 'Fecha',            value: fmtFecha(voucher.fecha), cls: 'text-gray-900 text-sm' },
+              { label: 'Hora de Encuentro', value: voucher.hora,           cls: 'text-teal-600 text-base font-black' },
+            ].map(({ label, value, cls }) => (
+              <div key={label} className="border border-gray-200 rounded-2xl p-3">
+                <p className="text-[9px] uppercase text-gray-400 font-bold tracking-widest mb-1">{label}</p>
+                <p className={`font-bold leading-tight ${cls}`}>{value || '—'}</p>
               </div>
             ))}
           </div>
 
-          {/* Punto encuentro */}
+          {/* Punto de encuentro */}
           {voucher.puntoEncuentro && (
-            <div className="border-l-4 border-orange-600 pl-3 py-1.5 bg-orange-950/30 rounded-r-xl">
-              <p className="text-[9px] uppercase text-orange-500 font-bold mb-0.5">◆ Punto de Encuentro</p>
-              <p className="text-xs font-bold text-orange-300 uppercase">{voucher.puntoEncuentro}</p>
+            <div className="border-l-4 border-orange-500 pl-3 py-2.5 bg-orange-50 rounded-r-2xl">
+              <p className="text-[9px] uppercase text-orange-500 font-bold tracking-widest mb-1">◆ Punto de Encuentro</p>
+              <p className="text-sm font-black text-orange-800 uppercase leading-snug">{voucher.puntoEncuentro}</p>
             </div>
           )}
 
-          {/* Notas */}
+          {/* Notas / observaciones */}
           {voucher.observaciones && (
-            <div className="border-l-4 border-teal-700 pl-3 py-1.5 bg-teal-950/20 rounded-r-xl">
-              <p className="text-[9px] uppercase text-teal-500 font-bold mb-0.5">⚠ Nota</p>
-              <p className="text-xs text-teal-300 leading-relaxed">{voucher.observaciones}</p>
+            <div className="border-l-4 border-amber-400 pl-3 py-2 bg-amber-50 rounded-r-2xl">
+              <p className="text-[9px] uppercase text-amber-600 font-bold tracking-widest mb-1">⚠ Nota</p>
+              <p className="text-xs text-amber-800 leading-relaxed">{voucher.observaciones}</p>
             </div>
           )}
 
-          {/* Contacto */}
-          {(voucher.telefono || voucher.email) && (
-            <div className="flex gap-2 flex-wrap">
-              {voucher.telefono && (
-                <a href={`tel:${voucher.telefono}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-800 text-xs text-gray-300 hover:text-white">
-                  <Phone size={11} /> {voucher.telefono}
-                </a>
-              )}
-              {voucher.email && (
-                <a href={`mailto:${voucher.email}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-800 text-xs text-gray-300 hover:text-white">
-                  <Mail size={11} /> {voucher.email}
-                </a>
-              )}
-            </div>
+          {/* CTA: Cómo llegar */}
+          {mapsUrl && (
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl font-bold text-sm text-white"
+              style={{ background: 'linear-gradient(135deg, #2FA9B8 0%, #1d8a97 100%)' }}
+            >
+              <MapPin size={16} />
+              CÓMO LLEGAR AL PUNTO
+            </a>
           )}
 
           {/* Cambiar estado */}
           <div>
-            <p className="text-[9px] uppercase text-gray-600 font-bold mb-1.5">Cambiar estado</p>
+            <p className="text-[9px] uppercase text-gray-400 font-bold tracking-widest mb-2">Cambiar Estado</p>
             <div className="flex gap-2 flex-wrap">
               {ESTADOS.map(s => {
                 const c = ESTADO_CFG[s];
+                const isActive = estadoKey(voucher.estado) === s;
                 return (
                   <button
                     key={s}
                     onClick={() => { onUpdateEstado(voucher.id, s); onClose(); }}
                     className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-colors ${
-                      estadoKey(voucher.estado) === s
+                      isActive
                         ? `${c.bg} ${c.text} border-current/30`
-                        : 'bg-gray-800 text-gray-500 border-gray-700 hover:border-gray-500'
+                        : 'bg-gray-100 text-gray-500 border-gray-200 hover:border-gray-400'
                     }`}
                   >
                     {c.icon} {c.label}
@@ -453,6 +462,16 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
               })}
             </div>
           </div>
+        </div>
+
+        {/* Footer GuíaSAI */}
+        <div className="border-t border-gray-100 px-5 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+            <Phone size={11} />
+            <span>+57 315 383 6043</span>
+          </div>
+          <span className="text-[11px] text-gray-400">guiasanandresislas.com</span>
+          <span className="text-[10px] text-gray-400 font-bold">RNT: 48674</span>
         </div>
       </div>
     </div>
