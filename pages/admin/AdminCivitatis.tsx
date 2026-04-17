@@ -123,7 +123,7 @@ const AdminCivitatis: React.FC<AdminCivitatisProps> = ({ onBack }) => {
   const loadVouchers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/admin/vouchers`);
+      const res = await fetch(`${API}/api/reservations/vouchers`);
       const json = await res.json();
       if (json.success) setVouchers(json.data || []);
     } catch (e) {
@@ -138,7 +138,7 @@ const AdminCivitatis: React.FC<AdminCivitatisProps> = ({ onBack }) => {
   const loadServicios = useCallback(async () => {
     setLoadingServ(true);
     try {
-      const res = await fetch(`${API}/api/admin/vouchers/civitatis-servicios`);
+      const res = await fetch(`${API}/api/reservations/vouchers/civitatis-servicios`);
       const json = await res.json();
       if (json.success) setServicios(json.data || []);
     } catch (e) {
@@ -195,7 +195,7 @@ const AdminCivitatis: React.FC<AdminCivitatisProps> = ({ onBack }) => {
       if (form.tourId)    payload.tourId    = form.tourId;
       if (form.reservaNum) payload.reservaNum = form.reservaNum;
 
-      const res = await fetch(`${API}/api/admin/vouchers`, {
+      const res = await fetch(`${API}/api/reservations/vouchers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
