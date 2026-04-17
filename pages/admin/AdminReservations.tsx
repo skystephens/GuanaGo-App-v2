@@ -77,7 +77,15 @@ interface EstadoCfg { label: string; bg: string; text: string; icon: React.React
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const ESTADOS_VOUCHER = ['PENDIENTE', 'CONFIRMADO', 'CANCELADO', 'REALIZADO'];
+// Valores exactos del singleSelect "Estado de la Reserva" en Airtable
+const ESTADOS_VOUCHER = [
+  'Pendiente',
+  'Reserva Confirmada',
+  'Abono Realizado',
+  'Realizado',
+  'Cancelado',
+  'No llego el cliente',
+];
 
 const PUNTOS = [
   'MUELLE CASA DE LA CULTURA',
@@ -89,18 +97,24 @@ const PUNTOS = [
 ];
 
 const VOUCHER_ESTADO_CFG: Record<string, EstadoCfg> = {
-  PENDIENTE:   { label: 'Pendiente',   bg: 'bg-yellow-900/40', text: 'text-yellow-400', icon: <Clock size={11} /> },
-  CONFIRMADO:  { label: 'Confirmado',  bg: 'bg-green-900/40',  text: 'text-green-400',  icon: <CheckCircle2 size={11} /> },
-  CANCELADO:   { label: 'Cancelado',   bg: 'bg-red-900/40',    text: 'text-red-400',    icon: <XCircle size={11} /> },
-  REALIZADO:   { label: 'Realizado',   bg: 'bg-blue-900/40',   text: 'text-blue-400',   icon: <CheckCircle2 size={11} /> },
-  COMPLETADO:  { label: 'Realizado',   bg: 'bg-blue-900/40',   text: 'text-blue-400',   icon: <CheckCircle2 size={11} /> },
+  'Pendiente':          { label: 'Pendiente',          bg: 'bg-yellow-900/40', text: 'text-yellow-400', icon: <Clock size={11} /> },
+  'Reserva Confirmada': { label: 'Reserva Confirmada', bg: 'bg-green-900/40',  text: 'text-green-400',  icon: <CheckCircle2 size={11} /> },
+  'Abono Realizado':    { label: 'Abono Realizado',    bg: 'bg-teal-900/40',   text: 'text-teal-400',   icon: <CheckCircle2 size={11} /> },
+  'Realizado':          { label: 'Realizado',          bg: 'bg-blue-900/40',   text: 'text-blue-400',   icon: <CheckCircle2 size={11} /> },
+  'Cancelado':          { label: 'Cancelado',          bg: 'bg-red-900/40',    text: 'text-red-400',    icon: <XCircle size={11} /> },
+  'No llego el cliente':{ label: 'No llegó',           bg: 'bg-purple-900/40', text: 'text-purple-400', icon: <XCircle size={11} /> },
+  // legados (por si hay registros viejos)
+  'PENDIENTE':   { label: 'Pendiente',  bg: 'bg-yellow-900/40', text: 'text-yellow-400', icon: <Clock size={11} /> },
+  'CONFIRMADO':  { label: 'Confirmado', bg: 'bg-green-900/40',  text: 'text-green-400',  icon: <CheckCircle2 size={11} /> },
+  'CANCELADO':   { label: 'Cancelado',  bg: 'bg-red-900/40',    text: 'text-red-400',    icon: <XCircle size={11} /> },
+  'COMPLETADO':  { label: 'Realizado',  bg: 'bg-blue-900/40',   text: 'text-blue-400',   icon: <CheckCircle2 size={11} /> },
 };
 
 const FORM_EMPTY: VoucherFormData = {
   reservaNum: '', titular: '', telefono: '', email: '',
   pax: '', fecha: '', hora: '', tourId: '', tourName: '',
   puntoEncuentro: '', observaciones: '', notasAdicionales: '',
-  estado: 'PENDIENTE',
+  estado: 'Pendiente',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -284,9 +298,9 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
 
   const vStats = {
     total:      vouchers.length,
-    pendiente:  vouchers.filter(v => v.estado === 'PENDIENTE').length,
-    cancelado:  vouchers.filter(v => v.estado === 'CANCELADO').length,
-    realizado:  vouchers.filter(v => v.estado === 'REALIZADO' || v.estado === 'COMPLETADO').length,
+    pendiente:  vouchers.filter(v => ['Pendiente', 'PENDIENTE'].includes(v.estado)).length,
+    cancelado:  vouchers.filter(v => ['Cancelado', 'No llego el cliente', 'CANCELADO'].includes(v.estado)).length,
+    realizado:  vouchers.filter(v => ['Realizado', 'Abono Realizado', 'Reserva Confirmada', 'REALIZADO', 'COMPLETADO', 'CONFIRMADO'].includes(v.estado)).length,
   };
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -825,9 +839,10 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
                 </h2>
                 {/* Badge estado */}
                 {(() => {
-                  const estado = selectedVoucher.estado || selectedVoucher.estadoVoucher || 'PENDIENTE';
-                  const tealStates = ['CONFIRMADO', 'REALIZADO', 'COMPLETADO'];
-                  const badgeBg = tealStates.includes(estado) ? 'bg-[#00A8A0]' : estado === 'CANCELADO' ? 'bg-red-500' : 'bg-[#00A8A0]';
+                  const estado = selectedVoucher.estado || 'Pendiente';
+                  const okStates = ['Realizado', 'Reserva Confirmada', 'Abono Realizado', 'CONFIRMADO', 'REALIZADO', 'COMPLETADO'];
+                  const badStates = ['Cancelado', 'No llego el cliente', 'CANCELADO'];
+                  const badgeBg = okStates.includes(estado) ? 'bg-[#00A8A0]' : badStates.includes(estado) ? 'bg-red-500' : 'bg-[#00A8A0]';
                   return (
                     <span className={`absolute top-5 right-5 ${badgeBg} text-white text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full`}>
                       {estado}

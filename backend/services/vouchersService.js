@@ -69,7 +69,7 @@ export async function getVoucherById(recordId) {
 export async function createVoucher(data) {
   const fields = {
     'Nombre del Cliente': data.titular,
-    'Estado de la Reserva': data.estado || 'PENDIENTE',
+    'Estado de la Reserva': data.estado || 'Pendiente',
   };
   if (data.telefono)       fields['Telefono']                   = data.telefono;
   if (data.email)          fields['Email']                      = data.email;
