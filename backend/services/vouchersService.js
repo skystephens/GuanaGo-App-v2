@@ -20,6 +20,9 @@ function tableUrl(recordId = '') {
   return recordId ? `${base}/${recordId}` : base;
 }
 
+// Airtable singleSelect fields return {id, name, color} objects — extract name
+const sel = (v) => (v && typeof v === 'object' ? v.name : v) || '';
+
 function mapRecord(record) {
   const f = record.fields;
   return {
@@ -29,15 +32,15 @@ function mapRecord(record) {
     pax:                f['Numero de Personas '] || f['Numero de Personas'] || '',
     fecha:              f['Fecha de Inicio']      || '',
     hora:               f['Hora de Cita']         || '',
-    puntoEncuentro:     f['Punto de Encuentro']   || '',
+    puntoEncuentro:     sel(f['Punto de Encuentro']),
     observaciones:      f['Observaciones Especiales'] || '',
     notasAdicionales:   f['Notas adicionales']    || '',
     tourName:           f['Nombre del tour texto'] ||
                         (Array.isArray(f['Nombre del Servicio (from Tipo de Tour)'])
                           ? f['Nombre del Servicio (from Tipo de Tour)'][0]
                           : '') || '',
-    estado:             f['Estado de la Reserva'] || f['Estado'] || '',
-    estadoVoucher:      f['Estado_Voucher']       || '',
+    estado:             sel(f['Estado de la Reserva']) || f['Estado'] || '',
+    estadoVoucher:      sel(f['Estado_Voucher']),
     telefono:           f['Telefono']             || '',
     email:              f['Email']                || '',
     ultimaModificacion: f['ultima modificacion']  || record.createdTime || '',
