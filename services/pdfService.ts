@@ -68,9 +68,9 @@ export function generateQuoteHTML(
   return `
     <div style="font-family: 'Arial', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; background: white; color: #1a1a1a;">
       <!-- Header -->
-      <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #0ea5e9; padding-bottom: 20px;">
-        <h1 style="color: #0ea5e9; font-size: 36px; margin: 0 0 10px 0;">GuanaGO</h1>
-        <p style="color: #64748b; font-size: 14px; margin: 0;">San Andrés Isla · Turismo Experiencial</p>
+      <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #FF6600; padding-bottom: 20px;">
+        <h1 style="color: #FF6600; font-size: 36px; margin: 0 0 4px 0; font-weight: 800;">GuíaSAI</h1>
+        <p style="color: #64748b; font-size: 14px; margin: 0;">San Andrés Isla · Especialistas en Turismo</p>
       </div>
 
       <!-- Título Cotización -->
@@ -278,12 +278,12 @@ export function generateQuoteHTML(
           Contáctanos para confirmar tu reserva o hacer ajustes
         </p>
         <div style="color: #0ea5e9; font-size: 13px; font-weight: 600;">
-          📱 WhatsApp: +57 XXX XXX XXXX<br/>
-          📧 Email: contacto@guanago.com<br/>
-          🌐 Web: www.guanago.com
+          📱 WhatsApp: +57 315 383 6043<br/>
+          📧 Email: comercial@guiasai.com<br/>
+          🌐 Web: guiasanandresislas.com
         </div>
         <p style="color: #cbd5e1; font-size: 11px; margin: 20px 0 0 0;">
-          GuanaGO © ${new Date().getFullYear()} · San Andrés Isla, Colombia
+          GuíaSAI © ${new Date().getFullYear()} · San Andrés Isla, Colombia
         </p>
       </div>
     </div>
@@ -377,7 +377,7 @@ export function previewQuote(
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Cotización ${cotizacion.nombre} - GuanaGO</title>
+          <title>Cotización ${cotizacion.nombre} - GuíaSAI</title>
           <style>
             body { margin:0; padding:20px; background:#f1f5f9; font-family:Arial,sans-serif; }
             @media print { body { background:white; padding:0; } .no-print { display:none !important; } }
