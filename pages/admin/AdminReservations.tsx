@@ -12,6 +12,7 @@ import {
   ArrowLeft, Calendar, Users, DollarSign, Loader2, AlertCircle,
   CheckCircle2, XCircle, Clock, RefreshCw, Plus, Search,
   MapPin, Phone, Mail, Hash, ChevronDown, X, Ticket, FileText,
+  ArrowUpDown,
 } from 'lucide-react';
 import { AppRoute, Reservation } from '../../types';
 import { api } from '../../services/api';
@@ -162,6 +163,7 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
   const [saveError, setSaveError]       = useState('');
   const [saveOk, setSaveOk]             = useState(false);
   const [selectedVoucher, setSelected]  = useState<VoucherRecord | null>(null);
+  const [sortOrder, setSortOrder]       = useState<'asc' | 'desc'>('desc');
 
   const loadVouchers = useCallback(async () => {
     setLoadingVou(true);
@@ -261,16 +263,23 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
     cancelled: reservations.filter(r => r.status === 'cancelled').length,
   };
 
-  const filteredVou = vouchers.filter(v => {
-    if (!searchVou.trim()) return true;
-    const q = searchVou.toLowerCase();
-    return (
-      v.titular.toLowerCase().includes(q) ||
-      v.reservaNum.toLowerCase().includes(q) ||
-      v.tourName.toLowerCase().includes(q) ||
-      v.fecha.toLowerCase().includes(q)
-    );
-  });
+  const filteredVou = vouchers
+    .filter(v => {
+      if (!searchVou.trim()) return true;
+      const q = searchVou.toLowerCase();
+      return (
+        v.titular.toLowerCase().includes(q) ||
+        v.reservaNum.toLowerCase().includes(q) ||
+        v.tourName.toLowerCase().includes(q) ||
+        v.fecha.toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => {
+      // Fecha de servicio (campo "fecha") o createdTime como fallback
+      const da = a.fecha ? new Date(a.fecha).getTime() : new Date(a.createdTime).getTime();
+      const db = b.fecha ? new Date(b.fecha).getTime() : new Date(b.createdTime).getTime();
+      return sortOrder === 'asc' ? da - db : db - da;
+    });
 
   const vStats = {
     total:      vouchers.length,
@@ -481,15 +490,25 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
             ))}
           </div>
 
-          {/* Search */}
-          <div className="relative">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-            <input
-              value={searchVou}
-              onChange={e => setSearchVou(e.target.value)}
-              placeholder="Buscar por cliente, reserva #, tour…"
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl pl-9 pr-4 py-2.5 text-sm placeholder-gray-500 focus:outline-none focus:border-orange-500"
-            />
+          {/* Search + Sort */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <input
+                value={searchVou}
+                onChange={e => setSearchVou(e.target.value)}
+                placeholder="Buscar por cliente, reserva #, tour…"
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl pl-9 pr-4 py-2.5 text-sm placeholder-gray-500 focus:outline-none focus:border-orange-500"
+              />
+            </div>
+            <button
+              onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')}
+              title={sortOrder === 'asc' ? 'Más antiguos primero' : 'Más recientes primero'}
+              className="flex items-center gap-1.5 px-3 py-2.5 bg-gray-800 border border-gray-700 hover:border-orange-500 rounded-xl text-xs font-medium text-gray-300 transition-colors whitespace-nowrap"
+            >
+              <ArrowUpDown size={14} className="text-orange-400" />
+              {sortOrder === 'asc' ? 'Más antiguo' : 'Más reciente'}
+            </button>
           </div>
 
           {/* Voucher list */}
