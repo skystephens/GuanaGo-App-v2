@@ -19,6 +19,16 @@ router.get('/vouchers', async (req, res, next) => {
   }
 });
 
+// Servicios Civitatis — DEBE ir antes de /vouchers/:id para no ser capturada como id
+router.get('/vouchers/civitatis-servicios', async (req, res, next) => {
+  try {
+    const servicios = await vouchersService.getCivitatisServicios();
+    res.json({ success: true, data: servicios });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Obtener un voucher por ID
 router.get('/vouchers/:id', async (req, res, next) => {
   try {
@@ -46,17 +56,6 @@ router.patch('/vouchers/:id/estado', async (req, res, next) => {
     if (!estado) return res.status(400).json({ success: false, error: 'estado requerido' });
     const voucher = await vouchersService.updateVoucherStatus(req.params.id, estado);
     res.json({ success: true, data: voucher });
-  } catch (err) {
-    next(err);
-  }
-});
-
-
-// Servicios Civitatis para el formulario de nueva reserva
-router.get('/vouchers/civitatis-servicios', async (req, res, next) => {
-  try {
-    const servicios = await vouchersService.getCivitatisServicios();
-    res.json({ success: true, data: servicios });
   } catch (err) {
     next(err);
   }

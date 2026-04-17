@@ -77,7 +77,7 @@ interface EstadoCfg { label: string; bg: string; text: string; icon: React.React
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const ESTADOS_VOUCHER = ['PENDIENTE', 'CONFIRMADO', 'CANCELADO', 'COMPLETADO'];
+const ESTADOS_VOUCHER = ['PENDIENTE', 'CONFIRMADO', 'CANCELADO', 'REALIZADO'];
 
 const PUNTOS = [
   'MUELLE CASA DE LA CULTURA',
@@ -92,7 +92,8 @@ const VOUCHER_ESTADO_CFG: Record<string, EstadoCfg> = {
   PENDIENTE:   { label: 'Pendiente',   bg: 'bg-yellow-900/40', text: 'text-yellow-400', icon: <Clock size={11} /> },
   CONFIRMADO:  { label: 'Confirmado',  bg: 'bg-green-900/40',  text: 'text-green-400',  icon: <CheckCircle2 size={11} /> },
   CANCELADO:   { label: 'Cancelado',   bg: 'bg-red-900/40',    text: 'text-red-400',    icon: <XCircle size={11} /> },
-  COMPLETADO:  { label: 'Completado',  bg: 'bg-blue-900/40',   text: 'text-blue-400',   icon: <CheckCircle2 size={11} /> },
+  REALIZADO:   { label: 'Realizado',   bg: 'bg-blue-900/40',   text: 'text-blue-400',   icon: <CheckCircle2 size={11} /> },
+  COMPLETADO:  { label: 'Realizado',   bg: 'bg-blue-900/40',   text: 'text-blue-400',   icon: <CheckCircle2 size={11} /> },
 };
 
 const FORM_EMPTY: VoucherFormData = {
@@ -284,8 +285,8 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
   const vStats = {
     total:      vouchers.length,
     pendiente:  vouchers.filter(v => v.estado === 'PENDIENTE').length,
-    confirmado: vouchers.filter(v => v.estado === 'CONFIRMADO').length,
-    completado: vouchers.filter(v => v.estado === 'COMPLETADO').length,
+    cancelado:  vouchers.filter(v => v.estado === 'CANCELADO').length,
+    realizado:  vouchers.filter(v => v.estado === 'REALIZADO' || v.estado === 'COMPLETADO').length,
   };
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -478,10 +479,10 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
           {/* Mini stats */}
           <div className="grid grid-cols-4 gap-2">
             {[
-              { label: 'Total',      value: vStats.total,      color: 'text-white' },
-              { label: 'Pendientes', value: vStats.pendiente,  color: 'text-yellow-400' },
-              { label: 'Confirm.',   value: vStats.confirmado, color: 'text-green-400' },
-              { label: 'Completos',  value: vStats.completado, color: 'text-blue-400' },
+              { label: 'Total',      value: vStats.total,     color: 'text-white' },
+              { label: 'Pendiente',  value: vStats.pendiente, color: 'text-yellow-400' },
+              { label: 'Cancelado',  value: vStats.cancelado, color: 'text-red-400' },
+              { label: 'Realizado',  value: vStats.realizado, color: 'text-blue-400' },
             ].map(s => (
               <div key={s.label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                 <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
@@ -796,101 +797,142 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
         </div>
       )}
 
-      {/* ── Voucher Detail Modal ───────────────────────────────────────────── */}
+      {/* ── Voucher Detail Modal — diseño tarjeta ─────────────────────────── */}
       {selectedVoucher && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
+          <div className="w-full max-w-sm">
 
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 sticky top-0 bg-gray-900">
-              <div>
-                <h2 className="font-bold text-base">{selectedVoucher.titular}</h2>
-                {selectedVoucher.reservaNum && (
-                  <p className="text-xs text-orange-400 font-mono">#{selectedVoucher.reservaNum}</p>
-                )}
-              </div>
-              <button onClick={() => setSelected(null)} className="p-1.5 hover:bg-gray-800 rounded-lg">
+            {/* Botón cerrar encima de la tarjeta */}
+            <div className="flex justify-end mb-2">
+              <button
+                onClick={() => setSelected(null)}
+                className="bg-gray-800/80 hover:bg-gray-700 text-white p-2 rounded-full transition-colors"
+              >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="px-5 py-4 space-y-3 text-sm">
+            {/* ── TARJETA VOUCHER ── */}
+            <div className="bg-white rounded-3xl overflow-hidden shadow-2xl">
 
-              {selectedVoucher.tourName && (
-                <div className="bg-orange-950/40 border border-orange-800/30 rounded-xl px-4 py-3">
-                  <p className="text-xs text-orange-400 font-medium mb-0.5">Tour / Servicio</p>
-                  <p className="font-semibold">{selectedVoucher.tourName}</p>
-                </div>
-              )}
-
-              {(() => {
-                const cfg: EstadoCfg = VOUCHER_ESTADO_CFG[selectedVoucher.estado] || { label: selectedVoucher.estado, bg: 'bg-gray-800', text: 'text-gray-300', icon: null };
-                return (
-                  <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl ${cfg.bg}`}>
-                    {cfg.icon}
-                    <span className={`font-medium ${cfg.text}`}>{cfg.label}</span>
-                  </div>
-                );
-              })()}
-
-              <div className="grid grid-cols-2 gap-3">
-                {selectedVoucher.fecha && (
-                  <div className="bg-gray-800 rounded-xl px-3 py-2.5">
-                    <p className="text-xs text-gray-500 mb-0.5 flex items-center gap-1"><Calendar size={10} /> Fecha</p>
-                    <p className="font-medium">{selectedVoucher.fecha}</p>
-                    {selectedVoucher.hora && <p className="text-xs text-gray-400">{selectedVoucher.hora}</p>}
-                  </div>
-                )}
-                {selectedVoucher.pax && (
-                  <div className="bg-gray-800 rounded-xl px-3 py-2.5">
-                    <p className="text-xs text-gray-500 mb-0.5 flex items-center gap-1"><Users size={10} /> Personas</p>
-                    <p className="font-medium">{selectedVoucher.pax}</p>
-                  </div>
-                )}
-                {selectedVoucher.puntoEncuentro && (
-                  <div className="bg-gray-800 rounded-xl px-3 py-2.5 col-span-2">
-                    <p className="text-xs text-gray-500 mb-0.5 flex items-center gap-1"><MapPin size={10} /> Punto de encuentro</p>
-                    <p className="font-medium text-xs">{selectedVoucher.puntoEncuentro}</p>
-                  </div>
-                )}
+              {/* Header naranja */}
+              <div className="bg-[#F5831F] px-5 pt-5 pb-6 relative">
+                <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-1">
+                  Experiencia Reservada
+                </p>
+                <h2 className="text-white text-2xl font-black uppercase leading-tight">
+                  {selectedVoucher.tourName || 'Tour'}
+                </h2>
+                {/* Badge estado */}
+                {(() => {
+                  const estado = selectedVoucher.estado || selectedVoucher.estadoVoucher || 'PENDIENTE';
+                  const tealStates = ['CONFIRMADO', 'REALIZADO', 'COMPLETADO'];
+                  const badgeBg = tealStates.includes(estado) ? 'bg-[#00A8A0]' : estado === 'CANCELADO' ? 'bg-red-500' : 'bg-[#00A8A0]';
+                  return (
+                    <span className={`absolute top-5 right-5 ${badgeBg} text-white text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full`}>
+                      {estado}
+                    </span>
+                  );
+                })()}
               </div>
 
-              {(selectedVoucher.telefono || selectedVoucher.email) && (
-                <div className="bg-gray-800 rounded-xl px-4 py-3 space-y-1">
-                  <p className="text-xs text-gray-500 font-medium mb-1">Contacto</p>
-                  {selectedVoucher.telefono && (
-                    <p className="flex items-center gap-2 text-xs">
-                      <Phone size={11} className="text-gray-500" />
-                      <a href={`tel:${selectedVoucher.telefono}`} className="text-blue-400 hover:underline">{selectedVoucher.telefono}</a>
+              {/* Cuerpo blanco */}
+              <div className="bg-white px-5 pt-5 pb-2 space-y-4">
+
+                {/* Titular */}
+                <div>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">
+                    Titular de Reserva
+                  </p>
+                  <p className="text-gray-900 text-lg font-black uppercase leading-tight">
+                    {selectedVoucher.titular || '—'}
+                  </p>
+                </div>
+
+                {/* Grid: ID + PAX */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="border border-gray-200 rounded-xl px-3 py-2.5">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">ID Reserva</p>
+                    <p className="text-[#F5831F] font-black text-base">{selectedVoucher.reservaNum || '—'}</p>
+                  </div>
+                  <div className="border border-gray-200 rounded-xl px-3 py-2.5">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Pax</p>
+                    <p className="text-gray-900 font-black text-base">{selectedVoucher.pax || '—'}</p>
+                  </div>
+                </div>
+
+                {/* Grid: Fecha + Hora */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="border border-gray-200 rounded-xl px-3 py-2.5">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Fecha</p>
+                    <p className="text-gray-900 font-bold text-sm">{selectedVoucher.fecha || '—'}</p>
+                  </div>
+                  <div className="border border-gray-200 rounded-xl px-3 py-2.5">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Hora de Encuentro</p>
+                    <p className="text-[#00A8A0] font-black text-base">{selectedVoucher.hora || '—'}</p>
+                  </div>
+                </div>
+
+                {/* Punto de encuentro */}
+                {selectedVoucher.puntoEncuentro && (
+                  <div className="border-l-4 border-[#F5831F] bg-orange-50 rounded-r-xl px-4 py-3">
+                    <p className="text-[10px] text-[#F5831F] font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <MapPin size={10} /> Punto de Encuentro
                     </p>
-                  )}
-                  {selectedVoucher.email && (
-                    <p className="flex items-center gap-2 text-xs">
-                      <Mail size={11} className="text-gray-500" />
-                      <a href={`mailto:${selectedVoucher.email}`} className="text-blue-400 hover:underline">{selectedVoucher.email}</a>
+                    <p className="text-gray-900 font-bold text-sm uppercase">
+                      {selectedVoucher.puntoEncuentro}
                     </p>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
 
-              {selectedVoucher.observaciones && (
-                <div className="bg-amber-950/30 border border-amber-800/30 rounded-xl px-4 py-3">
-                  <p className="text-xs text-amber-400 font-medium mb-1">Observaciones</p>
-                  <p className="text-xs text-gray-300 whitespace-pre-wrap">{selectedVoucher.observaciones}</p>
-                </div>
-              )}
+                {/* Observaciones */}
+                {selectedVoucher.observaciones && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                    <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider mb-1">Observaciones</p>
+                    <p className="text-gray-700 text-xs whitespace-pre-wrap">{selectedVoucher.observaciones}</p>
+                  </div>
+                )}
 
-              {selectedVoucher.notasAdicionales && (
-                <div className="bg-gray-800 rounded-xl px-4 py-3">
-                  <p className="text-xs text-gray-500 font-medium mb-1">Notas internas</p>
-                  <p className="text-xs text-gray-300 whitespace-pre-wrap">{selectedVoucher.notasAdicionales}</p>
-                </div>
-              )}
+                {/* Botón Google Maps */}
+                {selectedVoucher.puntoEncuentro && (
+                  <a
+                    href={`https://www.google.com/maps/search/${encodeURIComponent(selectedVoucher.puntoEncuentro + ' San Andrés Colombia')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full bg-[#00A8A0] hover:bg-[#009990] text-white font-bold text-sm py-3.5 rounded-2xl transition-colors"
+                  >
+                    <MapPin size={16} />
+                    CÓMO LLEGAR AL PUNTO
+                  </a>
+                )}
 
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-2 pb-3 border-t border-gray-100 text-[11px] text-gray-400">
+                  <span className="flex items-center gap-1">
+                    <Phone size={11} /> +57 315 383 6043
+                  </span>
+                  <span>guiasanandresislas.com</span>
+                  <span>RNT: 48674</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Botones de acción debajo de la tarjeta */}
+            <div className="flex gap-2 mt-3">
               <button
-                onClick={() => setSelected(null)}
-                className="w-full py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-sm font-medium transition-colors mt-2"
+                onClick={() => window.print()}
+                className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-xl transition-colors"
               >
-                Cerrar
+                Imprimir / PDF
+              </button>
+              <button
+                onClick={() => {
+                  const text = `*Voucher GuíaSAI*\n🎟 ${selectedVoucher.tourName}\n👤 ${selectedVoucher.titular}\n📅 ${selectedVoucher.fecha} ${selectedVoucher.hora}\n👥 ${selectedVoucher.pax} pax\n📍 ${selectedVoucher.puntoEncuentro}\n#️⃣ ${selectedVoucher.reservaNum}`;
+                  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                }}
+                className="flex-1 py-2.5 bg-green-700 hover:bg-green-600 text-white text-sm font-medium rounded-xl transition-colors"
+              >
+                Enviar WhatsApp
               </button>
             </div>
           </div>
