@@ -104,3 +104,24 @@ export async function updateVoucherStatus(recordId, estado) {
   if (!res.ok) throw new Error(`Airtable error ${res.status}`);
   return mapRecord(await res.json());
 }
+
+/** Obtener servicios Civitatis (tabla: Servicios Turisticos, misma base) */
+export async function getCivitatisServicios() {
+  const SERVICIOS_TABLE = 'Servicios Turisticos';
+  const url = `${AT_URL}/${VOUCHER_BASE_ID}/${encodeURIComponent(SERVICIOS_TABLE)}`;
+  const params = new URLSearchParams({
+    maxRecords: '100',
+    'sort[0][field]': 'Nombre del Servicio',
+    'sort[0][direction]': 'asc',
+  });
+  const res = await fetch(`${url}?${params}`, { headers: getHeaders() });
+  if (!res.ok) throw new Error(`Airtable error ${res.status}`);
+  const data = await res.json();
+  return (data.records || []).map(r => ({
+    id:             r.id,
+    nombre:         r.fields['Nombre del Servicio'] || '',
+    tipo:           r.fields['Tipo de Servicio']    || '',
+    precioNeto:     r.fields['Precio Neto 2026']    || 0,
+    horarios:       r.fields['Horarios de Salida']  || [],
+  }));
+}

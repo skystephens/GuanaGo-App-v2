@@ -52,6 +52,16 @@ router.patch('/vouchers/:id/estado', async (req, res, next) => {
 });
 
 
+// Servicios Civitatis para el formulario de nueva reserva
+router.get('/vouchers/civitatis-servicios', async (req, res, next) => {
+  try {
+    const servicios = await vouchersService.getCivitatisServicios();
+    res.json({ success: true, data: servicios });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Obtener todas las reservas (admin/chatbot)
 router.get('/all', reservationsController.getAllReservations);
 

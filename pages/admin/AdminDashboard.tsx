@@ -5,7 +5,7 @@ import {
   Palette, Handshake, ClipboardList, Clock, FileText,
   TowerControl, LayoutGrid, Brain, Route, Map, BarChart3,
   Bot, Send, Sparkles, Loader2, ChevronDown, ChevronUp,
-  X, CheckCircle2, AlertCircle, Receipt,
+  X, CheckCircle2, AlertCircle, Receipt, Ticket,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { api } from '../../services/api';
@@ -419,12 +419,17 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               <MiniButton icon={<FileText size={18} className="text-emerald-400" />} label="Cotizaciones" onClick={() => onNavigate(AppRoute.ADMIN_QUOTES)} />
               <MiniButton icon={<Route size={18} className="text-cyan-400" />} label="Itinerarios" onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY)} />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <MiniButton
                 icon={<Receipt size={18} className="text-orange-400" />} label="Vouchers"
                 onClick={() => onNavigate(AppRoute.ADMIN_VOUCHERS)}
                 pulse="bg-orange-500"
                 gradient="from-orange-900/60 to-red-900/60" border="border-orange-700 hover:border-orange-500"
+              />
+              <MiniButton
+                icon={<Ticket size={18} className="text-amber-400" />} label="Civitatis"
+                onClick={() => onNavigate(AppRoute.ADMIN_CIVITATIS)}
+                gradient="from-amber-900/60 to-orange-900/60" border="border-amber-700 hover:border-amber-500"
               />
               <MiniButton icon={<TrendingUp size={18} className="text-purple-400" />} label="Finanzas" onClick={() => onNavigate(AppRoute.ADMIN_FINANCE)} />
             </div>

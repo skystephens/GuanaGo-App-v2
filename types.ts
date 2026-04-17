@@ -320,6 +320,7 @@ export enum AppRoute {
   ADMIN_SKY_PANEL = 'ADMIN_SKY_PANEL',
   CATALOG_PUBLICO = 'CATALOG_PUBLICO',
   ADMIN_VOUCHERS = 'ADMIN_VOUCHERS',
+  ADMIN_CIVITATIS = 'ADMIN_CIVITATIS',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';
