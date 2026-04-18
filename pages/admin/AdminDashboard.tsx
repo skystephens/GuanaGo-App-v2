@@ -5,7 +5,7 @@ import {
   Palette, Handshake, ClipboardList, Clock, FileText,
   TowerControl, LayoutGrid, Brain, Route, Map, BarChart3,
   Bot, Send, Sparkles, Loader2, ChevronDown, ChevronUp,
-  X, CheckCircle2, AlertCircle, Receipt,
+  X, CheckCircle2, AlertCircle, Receipt, Briefcase,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { api } from '../../services/api';
@@ -456,6 +456,15 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
           {/* ── 4. Cerebro & Sistema ── */}
           <Section label="Cerebro & Sistema" color="indigo">
+            <BigButton
+              label="Cowork IA — B2B"
+              sub="Catálogo OTA · Tarifas netas · Cotizador grupos · Asistente"
+              icon={<Briefcase size={20} className="text-orange-400" />}
+              gradient="from-orange-950 via-amber-950 to-orange-950"
+              border="border-orange-700 hover:border-orange-400"
+              pulse="bg-orange-400"
+              onClick={() => onNavigate(AppRoute.ADMIN_COWORK)}
+            />
             <BigButton
               label="Panel de Control"
               sub="Métricas · Kanban · Mapa Mental · Sistema"

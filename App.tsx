@@ -69,6 +69,7 @@ import AdminOperaciones from './pages/admin/AdminOperaciones';
 import AdminCerebro from './pages/admin/AdminCerebro';
 import AdminControlPanel from './pages/admin/AdminControlPanel';
 import AdminSkyPanel from './pages/admin/AdminSkyPanel';
+import AdminCowork from './pages/admin/AdminCowork';
 
 // Artista Portal
 import ArtistaPortal from './pages/ArtistaPortal';
@@ -230,6 +231,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_CONTROL_PANEL: return <AdminControlPanel onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.TOUR_PRIVADO: return <TourPrivado onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_SKY_PANEL: return <AdminSkyPanel onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_COWORK: return <AdminCowork onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.CATALOG_PUBLICO: return <CatalogPublico onNavigate={navigateTo} onBack={goBack} />;
       default: return <Home onNavigate={navigateTo} />;
     }

@@ -321,6 +321,7 @@ export enum AppRoute {
   CATALOG_PUBLICO = 'CATALOG_PUBLICO',
   ADMIN_VOUCHERS = 'ADMIN_VOUCHERS',
   ADMIN_CIVITATIS = 'ADMIN_CIVITATIS',
+  ADMIN_COWORK = 'ADMIN_COWORK',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';

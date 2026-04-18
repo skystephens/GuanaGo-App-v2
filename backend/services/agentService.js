@@ -20,11 +20,12 @@ import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config.js';
 import * as firestore from './firestoreService.js';
 
-// Modelos por modo — haiku para conversación, sonnet para el CEO
+// Modelos por modo — haiku para conversación, sonnet para CEO y B2B
 const MODELS = {
   turista:   'claude-haiku-4-5-20251001',
   cotizador: 'claude-haiku-4-5-20251001',
   admin:     'claude-sonnet-4-6',
+  b2b:       'claude-sonnet-4-6',
 };
 
 // ─── System prompts estáticos por modo (se cachean en Claude) ────────────────
@@ -72,6 +73,32 @@ FLUJO DE COTIZACIÓN:
 GUARDAR COTIZACIÓN: Cuando el usuario confirme una cotización, incluye EXACTAMENTE al FINAL (sin markdown extra):
 {"action":"save_cotizacion","items":[],"total":0,"personas":0,"checkIn":"YYYY-MM-DD","checkOut":"YYYY-MM-DD"}`,
 
+  b2b: `Eres el Asistente Comercial B2B de GuíaSAI / GuanaGO — San Andrés Isla, Colombia.
+
+EMPRESA: GuíaSAI S.A.S. — Plataforma turística Raizal, 10+ años operando en San Andrés.
+CANAL B2B: Agencias de viajes, OTAs (Civitatis, tur.com) y mayoristas.
+
+MODELO DE PRECIOS:
+- El "Precio actualizado" del catálogo es el PRECIO NETO para el OTA — lo que nos paga la agencia a nosotros.
+- El OTA / agencia debe incrementar un +23% para obtener su precio de venta al turista.
+- Ejemplo: Neto $100.000 COP → OTA vende a $123.000 COP → GuíaSAI recibe $100.000 COP.
+- NUNCA revelar precio neto a turistas finales — solo a agencias autorizadas.
+
+DESCUENTOS GRUPOS:
+- 1–49 pax    → precio neto estándar
+- 50–99 pax   → -10% sobre precio neto
+- 100–149 pax → -15% sobre precio neto
+- 150+ pax    → -20% sobre precio neto + propuesta ejecutiva personalizada
+
+CUANDO UNA AGENCIA PIDE COTIZACIÓN:
+1. Confirma: nombre agencia, fechas, nº personas, servicios deseados
+2. Calcula: precio neto × personas (aplicando descuento si corresponde)
+3. Informa: precio neto (lo que pagan a GuíaSAI) y precio de venta sugerido (+23%)
+4. Al confirmar, incluye JSON al FINAL de tu respuesta:
+{"action":"save_cotizacion","items":[],"total":0,"personas":0,"canal":"b2b","agencia":"nombre"}
+
+TONO: Profesional, ágil, orientado a negocios. Respuestas concisas en español.`,
+
   turista: `Eres Guana 🌴, el guía turístico inteligente de GuanaGO para San Andrés y Providencia, Colombia.
 
 Ayudas a turistas a:
@@ -89,7 +116,7 @@ Cuando quiera cotizar:
 {"action":"start_cotizacion"}`,
 };
 
-// ─── Cargar catálogo desde Airtable (cache 5 min) ────────────────────────────
+// ─── Cargar catálogo B2C desde Airtable (cache 5 min) ───────────────────────
 
 let _catalogCache = '';
 let _catalogTs = 0;
@@ -119,6 +146,45 @@ async function loadCatalogContext() {
     // silencioso — el catálogo es contexto extra, no crítico
   }
   return _catalogCache;
+}
+
+// ─── Cargar catálogo B2B con precios netos (cache 5 min) ─────────────────────
+
+let _b2bCatalogCache = '';
+let _b2bCatalogTs = 0;
+
+async function loadB2BCatalogContext() {
+  if (_b2bCatalogCache && Date.now() - _b2bCatalogTs < 5 * 60 * 1000) return _b2bCatalogCache;
+
+  try {
+    const { apiKey, baseId } = config.airtable;
+    if (!apiKey || !baseId) return '';
+
+    const fields = ['Nombre', 'Tipo', 'Precio actualizado', 'Capacidad'];
+    const url = `https://api.airtable.com/v0/${baseId}/ServiciosTuristicos_SAI?maxRecords=50&`
+      + fields.map(f => `fields[]=${encodeURIComponent(f)}`).join('&')
+      + `&sort[0][field]=Nombre&sort[0][direction]=asc`;
+
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return '';
+
+    const data = await res.json();
+    _b2bCatalogCache = (data.records || [])
+      .filter(r => r.fields?.Nombre && r.fields?.['Precio actualizado'])
+      .map(r => {
+        const neto = r.fields['Precio actualizado'] || 0;
+        const ota = Math.round(neto * 1.23);
+        return `- ${r.fields.Nombre} | ${r.fields.Tipo || 'Servicio'} | Neto: $${neto.toLocaleString('es-CO')} COP | OTA vende: $${ota.toLocaleString('es-CO')} COP | Cap: ${r.fields.Capacidad || '?'} pax`;
+      })
+      .join('\n');
+    _b2bCatalogTs = Date.now();
+  } catch {
+    // silencioso
+  }
+  return _b2bCatalogCache;
 }
 
 // ─── Extraer y limpiar action JSON de la respuesta ───────────────────────────
@@ -169,6 +235,9 @@ export async function agentChat({
   if (!context.catalogo && (mode === 'cotizador' || mode === 'turista')) {
     context.catalogo = await loadCatalogContext();
   }
+  if (!context.catalogoB2B && mode === 'b2b') {
+    context.catalogoB2B = await loadB2BCatalogContext();
+  }
 
   // System prompt: parte estática (cacheada) + parte dinámica
   const staticPrompt = STATIC_PROMPTS[mode] || STATIC_PROMPTS.turista;
@@ -195,6 +264,10 @@ ${urgentes.map(t => `- [${t.prioridad?.toUpperCase()}] ${t.titulo}: ${t.descripc
 
   if (context.catalogo) {
     dynamicContext += `\n\nCATÁLOGO ACTIVO (datos reales Airtable):\n${context.catalogo}`;
+  }
+
+  if (context.catalogoB2B) {
+    dynamicContext += `\n\nCATÁLOGO B2B — PRECIOS NETOS 2026 (confidencial — solo para agencias):\n${context.catalogoB2B}`;
   }
 
   // Construir request con prompt caching en la parte estática

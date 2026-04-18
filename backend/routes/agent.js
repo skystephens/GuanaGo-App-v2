@@ -30,7 +30,7 @@ router.post('/chat', async (req, res) => {
       return res.status(400).json({ success: false, error: 'El mensaje es requerido' });
     }
 
-    const validModes = ['turista', 'cotizador', 'admin'];
+    const validModes = ['turista', 'cotizador', 'admin', 'b2b'];
     const safeMode = validModes.includes(mode) ? mode : 'turista';
 
     const result = await agentChat({

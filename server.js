@@ -19,6 +19,7 @@ import accommodationsRoutes from './backend/routes/accommodations.js';
 import agentRoutes from './backend/routes/agent.js';
 import quotationsRoutes from './backend/routes/quotations.js';
 import storageRoutes from './backend/routes/storage.js';
+import coworkRoutes from './backend/routes/cowork.js';
 
 // Import middleware
 import { requestLogger } from './backend/middleware/logger.js';
@@ -136,6 +137,9 @@ app.use('/api/agent', agentRoutes);
 
 // Quotations (cotizaciones B2B)
 app.use('/api/quotations', quotationsRoutes);
+
+// Cowork B2B — catálogo OTA y calculadora grupos
+app.use('/api/cowork', coworkRoutes);
 
 // Firebase Storage (imágenes de servicios)
 app.use('/api/storage', storageRoutes);
