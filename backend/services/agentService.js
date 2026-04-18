@@ -80,8 +80,10 @@ CANAL B2B: Agencias de viajes, OTAs (Civitatis, tur.com) y mayoristas.
 
 MODELO DE PRECIOS:
 - El "Precio actualizado" del catálogo es el PRECIO NETO para el OTA — lo que nos paga la agencia a nosotros.
-- El OTA / agencia debe incrementar un +23% para obtener su precio de venta al turista.
-- Ejemplo: Neto $100.000 COP → OTA vende a $123.000 COP → GuíaSAI recibe $100.000 COP.
+- Civitatis: debe incrementar +25% sobre el neto para obtener su precio de venta al turista.
+- tur.com: debe incrementar +23% sobre el neto para obtener su precio de venta al turista.
+- Ejemplo (Civitatis): Neto $100.000 → vende a $125.000 → GuíaSAI recibe $100.000.
+- Ejemplo (tur.com):   Neto $100.000 → vende a $123.000 → GuíaSAI recibe $100.000.
 - NUNCA revelar precio neto a turistas finales — solo a agencias autorizadas.
 
 DESCUENTOS GRUPOS:
@@ -173,8 +175,9 @@ async function loadB2BCatalogContext() {
       .filter(r => r.fields?.Servicio && r.fields?.['Precio actualizado'])
       .map(r => {
         const neto = r.fields['Precio actualizado'] || 0;
-        const ota = Math.round(neto * 1.23);
-        return `- ${r.fields.Servicio} | ${r.fields['Tipo de Servicio'] || 'Servicio'} | Neto: $${neto.toLocaleString('es-CO')} COP | OTA vende: $${ota.toLocaleString('es-CO')} COP | Cap: ${r.fields.Capacidad || '?'} pax`;
+        const turcom    = Math.round(neto * 1.23);
+        const civitatis = Math.round(neto * 1.25);
+        return `- ${r.fields.Servicio} | ${r.fields['Tipo de Servicio'] || 'Servicio'} | Neto: $${neto.toLocaleString('es-CO')} COP | tur.com +23%: $${turcom.toLocaleString('es-CO')} | Civitatis +25%: $${civitatis.toLocaleString('es-CO')} COP | Cap: ${r.fields.Capacidad || '?'} pax`;
       })
       .join('\n');
     _b2bCatalogTs = Date.now();

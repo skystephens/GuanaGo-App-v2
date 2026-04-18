@@ -22,8 +22,10 @@ interface Servicio {
   descripcion: string;
   estado: string;
   precioNeto: number;
-  precioOTA: number;
-  markupPct: number;
+  precioOTA_turcom: number;
+  precioOTA_civitatis: number;
+  markupTurcom: number;
+  markupCivitatis: number;
 }
 
 interface ChatMsg {
@@ -100,12 +102,12 @@ function CatalogoTab() {
   const copyPriceList = () => {
     const lines = [
       'CATÁLOGO B2B — TARIFAS NETAS 2026 | GuíaSAI / GuanaGO',
-      '─'.repeat(60),
+      '─'.repeat(70),
       ...filtered.map(s =>
-        `${s.nombre} | ${s.tipo} | Neto: ${COP(s.precioNeto)} COP | OTA vende: ${COP(s.precioOTA)} COP | Cap: ${s.capacidad ?? '?'} pax`
+        `${s.nombre} | ${s.tipo} | Neto: ${COP(s.precioNeto)} COP | tur.com +23%: ${COP(s.precioOTA_turcom)} | Civitatis +25%: ${COP(s.precioOTA_civitatis)} COP | Cap: ${s.capacidad ?? '?'} pax`
       ),
       '',
-      `* Precios netos. OTA debe agregar +23% para precio de venta al turista.`,
+      `* Precios netos. tur.com agrega +23% | Civitatis agrega +25% al precio de venta al turista.`,
       `* Descuentos grupos: 50+ pax (-10%), 100+ (-15%), 150+ (-20%)`,
     ].join('\n');
     navigator.clipboard.writeText(lines);
@@ -119,8 +121,8 @@ function CatalogoTab() {
       <div className="bg-amber-950/40 border border-amber-700/50 rounded-xl p-3 flex gap-2.5">
         <Info size={15} className="text-amber-400 flex-shrink-0 mt-0.5" />
         <div className="text-xs text-amber-200 leading-relaxed">
-          <strong>Precios netos para OTAs.</strong> La agencia o OTA debe incrementar <strong>+23%</strong> para obtener
-          su precio de venta al turista.{' '}
+          <strong>Precios netos para OTAs.</strong>{' '}
+          <span className="text-amber-300">tur.com: +23%</span> · <span className="text-amber-300">Civitatis: +25%</span> sobre el neto para obtener precio de venta al turista.{' '}
           <span className="text-amber-400">No compartir estos precios con el público.</span>
         </div>
       </div>
@@ -210,7 +212,7 @@ function ServicioRow({ s, copied, setCopied }: {
 
   const copyPrice = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const text = `${s.nombre} | Neto: ${COP(s.precioNeto)} COP | OTA vende: ${COP(s.precioOTA)} COP`;
+    const text = `${s.nombre} | Neto: ${COP(s.precioNeto)} COP | tur.com: ${COP(s.precioOTA_turcom)} | Civitatis: ${COP(s.precioOTA_civitatis)} COP`;
     navigator.clipboard.writeText(text);
     setCopied(s.id);
     setTimeout(() => setCopied(null), 2000);
@@ -237,8 +239,10 @@ function ServicioRow({ s, copied, setCopied }: {
         </div>
 
         <div className="text-right flex-shrink-0">
-          <div className="text-xs font-bold text-orange-400">{COP(s.precioOTA)}</div>
-          <div className="text-[10px] text-gray-500">venta +23%</div>
+          <div className="text-[10px] font-bold text-orange-400">{COP(s.precioOTA_turcom)}</div>
+          <div className="text-[9px] text-gray-600">tur.com +23%</div>
+          <div className="text-[10px] font-bold text-amber-300">{COP(s.precioOTA_civitatis)}</div>
+          <div className="text-[9px] text-gray-600">Civitatis +25%</div>
         </div>
 
         {expanded ? <ChevronUp size={13} className="text-gray-600 flex-shrink-0" /> : <ChevronDown size={13} className="text-gray-600 flex-shrink-0" />}
@@ -415,8 +419,9 @@ function GruposTab() {
   const [loadingServ, setLoadingServ] = useState(false);
   const [result, setResult] = useState<null | {
     pct: number; label: string;
-    netoConDescuento: number; precioOTA: number;
-    totalNeto: number; totalOTA: number;
+    netoConDescuento: number;
+    precioOTA_turcom: number; precioOTA_civitatis: number;
+    totalNeto: number; totalTurcom: number; totalCivitatis: number;
   }>(null);
 
   // Cargar servicios para el selector
@@ -433,14 +438,17 @@ function GruposTab() {
     if (!precioNeto || !pax) return;
     const descuento = getDescuento(pax);
     const netoConDescuento = Math.round(precioNeto * (1 - descuento.pct / 100));
-    const precioOTA = Math.round(netoConDescuento * 1.23);
+    const precioOTA_turcom    = Math.round(netoConDescuento * 1.23);
+    const precioOTA_civitatis = Math.round(netoConDescuento * 1.25);
     setResult({
       pct: descuento.pct,
       label: descuento.label,
       netoConDescuento,
-      precioOTA,
-      totalNeto: netoConDescuento * pax,
-      totalOTA: precioOTA * pax,
+      precioOTA_turcom,
+      precioOTA_civitatis,
+      totalNeto:      netoConDescuento * pax,
+      totalTurcom:    precioOTA_turcom * pax,
+      totalCivitatis: precioOTA_civitatis * pax,
     });
   };
 
@@ -558,22 +566,34 @@ function GruposTab() {
               color="teal"
             />
             <PrecioCard
-              label="OTA por persona"
-              value={COP(result.precioOTA)}
-              sub="Precio de venta al turista (+23%)"
-              color="orange"
-            />
-            <PrecioCard
               label={`Total neto × ${pax} pax`}
               value={COP(result.totalNeto)}
               sub="Ingreso total GuíaSAI"
               color="teal"
             />
             <PrecioCard
-              label={`Total OTA × ${pax} pax`}
-              value={COP(result.totalOTA)}
-              sub="Ingreso total de la agencia"
+              label="tur.com por persona"
+              value={COP(result.precioOTA_turcom)}
+              sub="Venta al turista (+23%)"
               color="orange"
+            />
+            <PrecioCard
+              label={`tur.com total × ${pax} pax`}
+              value={COP(result.totalTurcom)}
+              sub="Ingreso total tur.com"
+              color="orange"
+            />
+            <PrecioCard
+              label="Civitatis por persona"
+              value={COP(result.precioOTA_civitatis)}
+              sub="Venta al turista (+25%)"
+              color="amber"
+            />
+            <PrecioCard
+              label={`Civitatis total × ${pax} pax`}
+              value={COP(result.totalCivitatis)}
+              sub="Ingreso total Civitatis"
+              color="amber"
             />
           </div>
 
@@ -589,10 +609,12 @@ function GruposTab() {
 }
 
 function PrecioCard({ label, value, sub, color }: {
-  label: string; value: string; sub: string; color: 'teal' | 'orange';
+  label: string; value: string; sub: string; color: 'teal' | 'orange' | 'amber';
 }) {
   const c = color === 'teal'
     ? { text: 'text-teal-400', bg: 'bg-teal-950/40' }
+    : color === 'amber'
+    ? { text: 'text-amber-300', bg: 'bg-amber-950/40' }
     : { text: 'text-orange-400', bg: 'bg-orange-950/40' };
   return (
     <div className={`${c.bg} rounded-xl p-3`}>

@@ -9,7 +9,8 @@ import { config } from '../config.js';
 
 const router = express.Router();
 const AT_URL = 'https://api.airtable.com/v0';
-const OTA_MARKUP = 1.23;
+const TURCOM_MARKUP    = 1.23;   // tur.com cobra 23%
+const CIVITATIS_MARKUP = 1.25;   // Civitatis cobra 25%
 
 const GRUPO_DESCUENTOS = [
   { min: 150, max: Infinity, pct: 20 },
@@ -62,8 +63,10 @@ router.get('/catalogo-b2b', async (req, res, next) => {
           capacidad:   r.fields['Capacidad']          || null,
           descripcion: r.fields['Descripcion']        || '',
           precioNeto,
-          precioOTA:   Math.round(precioNeto * OTA_MARKUP),
-          markupPct:   23,
+          precioOTA_turcom:    Math.round(precioNeto * TURCOM_MARKUP),
+          precioOTA_civitatis: Math.round(precioNeto * CIVITATIS_MARKUP),
+          markupTurcom:    23,
+          markupCivitatis: 25,
         };
       })
       .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
@@ -82,16 +85,19 @@ router.get('/calcular-grupo', (req, res) => {
   const precioNeto = parseFloat(req.query.precioNeto) || 0;
   const pct = descuentoPct(pax);
   const netoConDescuento = Math.round(precioNeto * (1 - pct / 100));
-  const precioOTA = Math.round(netoConDescuento * OTA_MARKUP);
-  const totalNeto = netoConDescuento * pax;
-  const totalOTA = precioOTA * pax;
+  const precioOTA_turcom    = Math.round(netoConDescuento * TURCOM_MARKUP);
+  const precioOTA_civitatis = Math.round(netoConDescuento * CIVITATIS_MARKUP);
+  const totalNeto           = netoConDescuento * pax;
+  const totalTurcom         = precioOTA_turcom * pax;
+  const totalCivitatis      = precioOTA_civitatis * pax;
 
   res.json({
     success: true,
     data: {
       pax, precioNeto, pct,
-      netoConDescuento, precioOTA,
-      totalNeto, totalOTA,
+      netoConDescuento,
+      precioOTA_turcom, precioOTA_civitatis,
+      totalNeto, totalTurcom, totalCivitatis,
     },
   });
 });
