@@ -31,9 +31,8 @@ router.get('/catalogo-b2b', async (req, res, next) => {
       return res.status(503).json({ success: false, error: 'Airtable no configurado' });
     }
 
-    // Traer todos los campos — filtrar en servidor evita problemas de encoding en fields[]
-    const url = `${AT_URL}/${baseId}/ServiciosTuristicos_SAI`
-      + `?maxRecords=100&sort%5B0%5D%5Bfield%5D=Nombre&sort%5B0%5D%5Bdirection%5D=asc`;
+    // Sin filtro de campos ni sort de Airtable — sort se hace en JS
+    const url = `${AT_URL}/${baseId}/ServiciosTuristicos_SAI?maxRecords=100`;
 
     const atRes = await fetch(url, {
       headers: { Authorization: `Bearer ${apiKey}` },
@@ -53,21 +52,21 @@ router.get('/catalogo-b2b', async (req, res, next) => {
     const data = await atRes.json();
 
     const servicios = (data.records || [])
-      .filter(r => r.fields?.Nombre)
+      .filter(r => r.fields?.Servicio && r.fields?.['Precio actualizado'])
       .map(r => {
-        const precioNeto = r.fields['Precio actualizado'] || r.fields['Precio'] || 0;
+        const precioNeto = Number(r.fields['Precio actualizado']) || 0;
         return {
           id:          r.id,
-          nombre:      r.fields['Nombre']       || '',
-          tipo:        r.fields['Tipo']          || '',
-          capacidad:   r.fields['Capacidad']     || null,
-          descripcion: r.fields['Descripcion']   || '',
-          estado:      r.fields['Estado']        || 'Activo',
+          nombre:      r.fields['Servicio']           || '',
+          tipo:        r.fields['Tipo de Servicio']   || '',
+          capacidad:   r.fields['Capacidad']          || null,
+          descripcion: r.fields['Descripcion']        || '',
           precioNeto,
           precioOTA:   Math.round(precioNeto * OTA_MARKUP),
           markupPct:   23,
         };
-      });
+      })
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
 
     res.json({ success: true, data: servicios, total: servicios.length });
   } catch (err) {

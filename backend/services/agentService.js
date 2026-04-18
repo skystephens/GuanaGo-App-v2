@@ -129,7 +129,7 @@ async function loadCatalogContext() {
     if (!apiKey || !baseId) return '';
 
     const url = `https://api.airtable.com/v0/${baseId}/ServiciosTuristicos_SAI`
-      + `?maxRecords=30&fields[]=Nombre&fields[]=Precio&fields[]=Tipo&fields[]=Capacidad`;
+      + `?maxRecords=30&fields[]=Servicio&fields[]=Precio&fields[]=Tipo%20de%20Servicio&fields[]=Capacidad`;
 
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${apiKey}` },
@@ -139,7 +139,7 @@ async function loadCatalogContext() {
 
     const data = await res.json();
     _catalogCache = (data.records || [])
-      .map(r => `- ${r.fields?.Nombre || '?'} | ${r.fields?.Tipo || 'Servicio'} | $${(r.fields?.Precio || 0).toLocaleString('es-CO')} COP | Cap: ${r.fields?.Capacidad || '?'} pax`)
+      .map(r => `- ${r.fields?.Servicio || '?'} | ${r.fields?.['Tipo de Servicio'] || 'Servicio'} | $${(r.fields?.Precio || 0).toLocaleString('es-CO')} COP | Cap: ${r.fields?.Capacidad || '?'} pax`)
       .join('\n');
     _catalogTs = Date.now();
   } catch {
@@ -160,8 +160,7 @@ async function loadB2BCatalogContext() {
     const { apiKey, baseId } = config.airtable;
     if (!apiKey || !baseId) return '';
 
-    const url = `https://api.airtable.com/v0/${baseId}/ServiciosTuristicos_SAI`
-      + `?maxRecords=50&sort%5B0%5D%5Bfield%5D=Nombre&sort%5B0%5D%5Bdirection%5D=asc`;
+    const url = `https://api.airtable.com/v0/${baseId}/ServiciosTuristicos_SAI?maxRecords=50`;
 
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${apiKey}` },
@@ -171,11 +170,11 @@ async function loadB2BCatalogContext() {
 
     const data = await res.json();
     _b2bCatalogCache = (data.records || [])
-      .filter(r => r.fields?.Nombre && r.fields?.['Precio actualizado'])
+      .filter(r => r.fields?.Servicio && r.fields?.['Precio actualizado'])
       .map(r => {
         const neto = r.fields['Precio actualizado'] || 0;
         const ota = Math.round(neto * 1.23);
-        return `- ${r.fields.Nombre} | ${r.fields.Tipo || 'Servicio'} | Neto: $${neto.toLocaleString('es-CO')} COP | OTA vende: $${ota.toLocaleString('es-CO')} COP | Cap: ${r.fields.Capacidad || '?'} pax`;
+        return `- ${r.fields.Servicio} | ${r.fields['Tipo de Servicio'] || 'Servicio'} | Neto: $${neto.toLocaleString('es-CO')} COP | OTA vende: $${ota.toLocaleString('es-CO')} COP | Cap: ${r.fields.Capacidad || '?'} pax`;
       })
       .join('\n');
     _b2bCatalogTs = Date.now();
