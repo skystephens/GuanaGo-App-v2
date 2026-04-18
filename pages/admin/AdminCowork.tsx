@@ -26,6 +26,7 @@ interface Servicio {
   precioOTA_civitatis: number;
   markupTurcom: number;
   markupCivitatis: number;
+  canalesOTA: string[];
 }
 
 interface ChatMsg {
@@ -37,6 +38,13 @@ interface ChatMsg {
 
 const COP = (n: number) =>
   n ? `$${n.toLocaleString('es-CO')}` : '—';
+
+const OTA_BADGE: Record<string, string> = {
+  'Civitatis':      'bg-red-900/60 text-red-300 border-red-700',
+  'Tur.com':        'bg-purple-900/60 text-purple-300 border-purple-700',
+  'Get Your Guide': 'bg-blue-900/60 text-blue-300 border-blue-600',
+  'Airbnb':         'bg-cyan-900/60 text-cyan-300 border-cyan-700',
+};
 
 const TIPO_BADGE: Record<string, string> = {
   Tour:         'bg-teal-900/60 text-teal-300 border-teal-700',
@@ -72,6 +80,7 @@ function CatalogoTab() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [tipoFilter, setTipoFilter] = useState('');
+  const [otaFilter, setOtaFilter] = useState('');
   const [copied, setCopied] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -96,7 +105,8 @@ function CatalogoTab() {
   const filtered = servicios.filter(s => {
     const matchSearch = !search || s.nombre.toLowerCase().includes(search.toLowerCase());
     const matchTipo = !tipoFilter || s.tipo === tipoFilter;
-    return matchSearch && matchTipo;
+    const matchOTA = !otaFilter || s.canalesOTA.includes(otaFilter);
+    return matchSearch && matchTipo && matchOTA;
   });
 
   const copyPriceList = () => {
@@ -145,6 +155,17 @@ function CatalogoTab() {
         >
           <option value="">Todos los tipos</option>
           {tipos.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <select
+          value={otaFilter}
+          onChange={e => setOtaFilter(e.target.value)}
+          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-teal-600"
+        >
+          <option value="">Todas las OTAs</option>
+          <option value="Civitatis">Civitatis</option>
+          <option value="Tur.com">Tur.com</option>
+          <option value="Get Your Guide">Get Your Guide</option>
+          <option value="Airbnb">Airbnb</option>
         </select>
         <button
           onClick={copyPriceList}
@@ -232,6 +253,15 @@ function ServicioRow({ s, copied, setCopied }: {
         {/* Nombre */}
         <span className="flex-1 text-sm font-bold text-white truncate">{s.nombre}</span>
 
+        {/* OTA badges */}
+        <div className="flex gap-1 flex-shrink-0">
+          {s.canalesOTA.map(ota => (
+            <span key={ota} className={`text-[8px] font-bold px-1.5 py-0.5 rounded border hidden sm:inline ${OTA_BADGE[ota] || 'bg-gray-700 text-gray-400 border-gray-600'}`}>
+              {ota === 'Get Your Guide' ? 'GYG' : ota}
+            </span>
+          ))}
+        </div>
+
         {/* Precios */}
         <div className="text-right flex-shrink-0">
           <div className="text-xs font-bold text-teal-400">{COP(s.precioNeto)}</div>
@@ -259,6 +289,16 @@ function ServicioRow({ s, copied, setCopied }: {
               <span className="text-gray-500">Estado: </span>
               <span className={`font-medium ${s.estado === 'Activo' ? 'text-green-400' : 'text-yellow-400'}`}>{s.estado}</span>
             </div>
+            {s.canalesOTA.length > 0 && (
+              <div className="col-span-2 flex items-center gap-1.5 flex-wrap">
+                <span className="text-gray-500">OTAs:</span>
+                {s.canalesOTA.map(ota => (
+                  <span key={ota} className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${OTA_BADGE[ota] || 'bg-gray-700 text-gray-400 border-gray-600'}`}>
+                    {ota}
+                  </span>
+                ))}
+              </div>
+            )}
             {s.descripcion && (
               <div className="col-span-2 text-gray-400 italic leading-relaxed">{s.descripcion}</div>
             )}

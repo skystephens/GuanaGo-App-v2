@@ -67,6 +67,7 @@ router.get('/catalogo-b2b', async (req, res, next) => {
           precioOTA_civitatis: Math.round(precioNeto * CIVITATIS_MARKUP),
           markupTurcom:    23,
           markupCivitatis: 25,
+          canalesOTA: r.fields?.['Canales_OTA'] || [],
         };
       })
       .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
