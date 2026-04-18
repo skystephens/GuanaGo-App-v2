@@ -12,9 +12,10 @@ export const config = {
   anthropicApiKey: process.env.ANTHROPIC_API_KEY,
   
   // Airtable (para catálogo de servicios)
+  // Acepta AIRTABLE_API_KEY (backend) o VITE_AIRTABLE_API_KEY (si solo hay una)
   airtable: {
-    apiKey: process.env.AIRTABLE_API_KEY,
-    baseId: process.env.AIRTABLE_BASE_ID
+    apiKey: process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY,
+    baseId: process.env.AIRTABLE_BASE_ID || process.env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk',
   },
   
   // Make.com Webhooks
