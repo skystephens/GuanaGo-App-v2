@@ -31,10 +31,9 @@ router.get('/catalogo-b2b', async (req, res, next) => {
       return res.status(503).json({ success: false, error: 'Airtable no configurado' });
     }
 
-    const fields = ['Nombre', 'Tipo', 'Precio actualizado', 'Precio', 'Capacidad', 'Descripcion', 'Estado'];
-    const url = `${AT_URL}/${baseId}/ServiciosTuristicos_SAI?maxRecords=100&`
-      + fields.map(f => `fields[]=${encodeURIComponent(f)}`).join('&')
-      + `&sort[0][field]=Nombre&sort[0][direction]=asc`;
+    // Traer todos los campos — filtrar en servidor evita problemas de encoding en fields[]
+    const url = `${AT_URL}/${baseId}/ServiciosTuristicos_SAI`
+      + `?maxRecords=100&sort%5B0%5D%5Bfield%5D=Nombre&sort%5B0%5D%5Bdirection%5D=asc`;
 
     const atRes = await fetch(url, {
       headers: { Authorization: `Bearer ${apiKey}` },

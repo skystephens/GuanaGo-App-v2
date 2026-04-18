@@ -160,10 +160,8 @@ async function loadB2BCatalogContext() {
     const { apiKey, baseId } = config.airtable;
     if (!apiKey || !baseId) return '';
 
-    const fields = ['Nombre', 'Tipo', 'Precio actualizado', 'Capacidad'];
-    const url = `https://api.airtable.com/v0/${baseId}/ServiciosTuristicos_SAI?maxRecords=50&`
-      + fields.map(f => `fields[]=${encodeURIComponent(f)}`).join('&')
-      + `&sort[0][field]=Nombre&sort[0][direction]=asc`;
+    const url = `https://api.airtable.com/v0/${baseId}/ServiciosTuristicos_SAI`
+      + `?maxRecords=50&sort%5B0%5D%5Bfield%5D=Nombre&sort%5B0%5D%5Bdirection%5D=asc`;
 
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${apiKey}` },
