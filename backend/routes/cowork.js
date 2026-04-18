@@ -40,7 +40,16 @@ router.get('/catalogo-b2b', async (req, res, next) => {
       headers: { Authorization: `Bearer ${apiKey}` },
       signal: AbortSignal.timeout(8000),
     });
-    if (!atRes.ok) throw new Error(`Airtable error ${atRes.status}`);
+
+    if (!atRes.ok) {
+      const errText = await atRes.text().catch(() => '');
+      console.error(`[cowork] Airtable ${atRes.status}:`, errText.slice(0, 300));
+      return res.status(502).json({
+        success: false,
+        error: `Airtable error ${atRes.status}`,
+        detail: errText.slice(0, 200),
+      });
+    }
 
     const data = await atRes.json();
 
