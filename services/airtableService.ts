@@ -373,13 +373,6 @@ const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY || '';
 const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
 const AIRTABLE_API_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
 
-// Debug: Mostrar si las credenciales están configuradas
-console.log('🔧 Airtable Config:', {
-  hasApiKey: !!AIRTABLE_API_KEY,
-  apiKeyLength: AIRTABLE_API_KEY.length,
-  hasBaseId: !!AIRTABLE_BASE_ID,
-  baseIdValue: AIRTABLE_BASE_ID || '(vacío)'
-});
 
 // Nombres de las tablas
 const TABLES = {
@@ -730,7 +723,6 @@ async function fetchTable<T = any>(
       });
     }
 
-    console.log(`📡 Fetching from Airtable: ${tableName}`);
 
     // Airtable devuelve máx. 100 registros por página — paginamos hasta traer todos
     const allRecords: AirtableRecord<T>[] = [];

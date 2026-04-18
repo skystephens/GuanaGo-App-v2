@@ -40,39 +40,22 @@ export const cachedApi = {
       const result = await getDataWithFallback<Tour[]>(
         'services_turisticos',
         async () => {
-          // Debug: Verificar configuración de Airtable
           const isConfigured = airtableService.isConfigured();
-          console.log('🔧 Airtable configurado?', isConfigured);
-          console.log('🔧 API Key existe?', Boolean(import.meta.env.VITE_AIRTABLE_API_KEY));
-          console.log('🔧 Base ID existe?', Boolean(import.meta.env.VITE_AIRTABLE_BASE_ID));
-          
-          // 🔥 PRIMERO: Intentar Airtable directo
           if (isConfigured) {
-            console.log('📡 Cargando servicios desde Airtable directo...');
             const airtableData = await airtableService.getServices();
             if (airtableData && airtableData.length > 0) {
-              console.log(`✅ ${airtableData.length} servicios desde Airtable`);
               return airtableData as unknown as Tour[];
             }
           }
-          
-          // Fallback: Make.com webhook
-          console.log('📡 Fallback a Make.com webhook...');
           const data = await api.services.listPublic();
           return data.length > 0 ? data : null;
         },
         options
       );
       return result.data;
-    } catch (error) {
-      console.warn('⚠️ Error obteniendo servicios:', error);
-      // Intentar caché viejo antes de fallback demo
+    } catch {
       const cached = getFromCache<Tour[]>('services_turisticos');
-      if (cached) {
-        console.log('📦 Usando caché anterior de servicios');
-        return cached;
-      }
-      return FALLBACK_SERVICES;
+      return cached ?? FALLBACK_SERVICES;
     }
   },
 
@@ -85,18 +68,12 @@ export const cachedApi = {
       const result = await getDataWithFallback<GuanaLocation[]>(
         'directory_map',
         async () => {
-          // 🔥 PRIMERO: Intentar Airtable directo
           if (airtableService.isConfigured()) {
-            console.log('📡 Cargando directorio desde Airtable directo...');
             const airtableData = await airtableService.getDirectoryPoints();
             if (airtableData && airtableData.length > 0) {
-              console.log(`✅ ${airtableData.length} puntos desde Airtable`);
               return airtableData as unknown as GuanaLocation[];
             }
           }
-          
-          // Fallback: Make.com webhook
-          console.log('📡 Fallback a Make.com webhook...');
           const data = await api.directory.getDirectoryMap();
           if (data && data.length > 0) {
             return data.map((item: any) => ({
@@ -119,15 +96,9 @@ export const cachedApi = {
         options
       );
       return result.data;
-    } catch (error) {
-      console.warn('⚠️ Error obteniendo directorio:', error);
-      // Intentar caché viejo antes de fallback demo
+    } catch {
       const cached = getFromCache<GuanaLocation[]>('directory_map');
-      if (cached) {
-        console.log('📦 Usando caché anterior de directorio');
-        return cached;
-      }
-      return FALLBACK_DIRECTORY;
+      return cached ?? FALLBACK_DIRECTORY;
     }
   },
 
@@ -161,32 +132,19 @@ export const cachedApi = {
       const result = await getDataWithFallback<any[]>(
         'artistas_rimm',
         async () => {
-          // 🔥 PRIMERO: Intentar Airtable directo
           if (airtableService.isConfigured()) {
-            console.log('📡 Cargando artistas desde Airtable (Rimm_musicos)...');
             const airtableData = await airtableService.getArtists();
-            if (airtableData && airtableData.length > 0) {
-              console.log(`✅ ${airtableData.length} artistas desde Airtable`);
-              return airtableData;
-            }
+            if (airtableData && airtableData.length > 0) return airtableData;
           }
-          
-          // Fallback: Make.com webhook
-          console.log('📡 Fallback a Make.com webhook para artistas...');
           const data = await api.rimmArtists.list();
           return data.length > 0 ? data : null;
         },
         options
       );
       return result.data;
-    } catch (error) {
-      console.warn('⚠️ Error obteniendo artistas:', error);
+    } catch {
       const cached = getFromCache<any[]>('artistas_rimm');
-      if (cached) {
-        console.log('📦 Usando caché anterior de artistas');
-        return cached;
-      }
-      return FALLBACK_ARTISTS;
+      return cached ?? FALLBACK_ARTISTS;
     }
   },
 
@@ -279,16 +237,8 @@ export const cachedApi = {
  * Llamar en App.tsx o index.tsx
  */
 export function initializeCachedApi(): void {
-  console.log('🚀 Inicializando GuanaGO Cached API...');
-  
-  // Inicializar caché con datos de fallback
   initializeCache();
-  
-  // Si necesita sincronización, hacerlo en background
-  if (needsSync(6)) { // 6 horas
-    console.log('📡 Sincronización pendiente, iniciando en background...');
-    syncInBackground();
-  }
+  if (needsSync(6)) syncInBackground();
 }
 
 /**
@@ -306,16 +256,13 @@ async function syncInBackground(): Promise<void> {
       reservations: () => Promise.resolve(null),
       rimm_packages: () => api.rimmPackages.list()
     } as Record<CacheKey, () => Promise<unknown>>);
-  } catch (error) {
-    console.warn('⚠️ Error en sincronización background:', error);
-  }
+  } catch { /* silent */ }
 }
 
 /**
  * Forzar sincronización de todos los datos
  */
 export async function forceFullSync(): Promise<{ success: string[]; failed: string[] }> {
-  console.log('🔄 Forzando sincronización completa...');
   return syncInBackground().then(() => ({ success: ['all'], failed: [] }));
 }
 
@@ -324,16 +271,12 @@ export async function forceFullSync(): Promise<{ success: string[]; failed: stri
  * Útil para forzar recarga de datos frescos desde Airtable
  */
 export function clearAllCache(): void {
-  console.log('🗑️ Limpiando toda la caché local...');
   const keysToRemove: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && key.startsWith('guanago_')) {
-      keysToRemove.push(key);
-    }
+    if (key && key.startsWith('guanago_')) keysToRemove.push(key);
   }
   keysToRemove.forEach(key => localStorage.removeItem(key));
-  console.log(`✅ ${keysToRemove.length} items de caché eliminados`);
 }
 
 // =========================================================

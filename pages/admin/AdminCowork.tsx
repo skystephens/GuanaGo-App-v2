@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ArrowLeft, Package2, Bot, Users, Send, Loader2,
   Copy, Check, TrendingUp, ChevronDown, ChevronUp,
-  Search, Filter, RefreshCw, Building2, Sparkles,
-  Calculator, DollarSign, Tag, Info,
+  Search, RefreshCw, Sparkles, ShoppingCart,
+  Calculator, Info, Hotel, Car, Plane, Plus, Minus, Trash2, X,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 
@@ -14,13 +14,51 @@ interface Props {
 
 type Tab = 'catalogo' | 'asistente' | 'grupos';
 
+// ─── Tipos ───────────────────────────────────────────────────────────────────
+
+interface CatItem {
+  id: string;
+  tabla: 'tours' | 'alojamientos' | 'traslados' | 'tiquetes';
+  nombre: string;
+  tipo: string;
+  capacidad?: string | number | null;
+  precioNeto: number;
+  precioPorPersona?: number;
+  precioNeto2?: number | null;
+  precioNeto3?: number | null;
+  precioNeto4?: number | null;
+  precioAdulto?: string;
+  precioNino?: string;
+  origen?: string;
+  destino?: string;
+  aerolinea?: string;
+  canalesOTA: string[];
+  unidad: 'persona' | 'noche' | 'traslado';
+}
+
+interface CatalogoCompleto {
+  tours: CatItem[];
+  alojamientos: CatItem[];
+  traslados: CatItem[];
+  tiquetes: CatItem[];
+}
+
+interface QuoteItem {
+  id: string;
+  nombre: string;
+  tabla: string;
+  tipo: string;
+  precioNeto: number;
+  qty: number;
+  unidad: string;
+}
+
+// Legacy — usado solo por GruposTab
 interface Servicio {
   id: string;
   nombre: string;
   tipo: string;
   capacidad: number | null;
-  descripcion: string;
-  estado: string;
   precioNeto: number;
   precioOTA_turcom: number;
   precioOTA_civitatis: number;
@@ -65,6 +103,20 @@ function getDescuento(pax: number) {
   return DESCUENTOS.find(d => pax >= d.min) || DESCUENTOS[DESCUENTOS.length - 1];
 }
 
+const OTA_OPTIONS = [
+  { id: 'turcom',    label: 'Tur.com',        markup: 1.23, pct: 23, color: 'text-purple-400' },
+  { id: 'civitatis', label: 'Civitatis',       markup: 1.25, pct: 25, color: 'text-red-400' },
+  { id: 'gyg',       label: 'Get Your Guide',  markup: 1.25, pct: 25, color: 'text-blue-400' },
+  { id: 'airbnb',    label: 'Airbnb',          markup: 1.20, pct: 20, color: 'text-cyan-400' },
+];
+
+const CAT_TABS = [
+  { id: 'tours',        label: 'Tours',        icon: <Package2 size={13} /> },
+  { id: 'alojamientos', label: 'Alojamiento',  icon: <Hotel size={13} /> },
+  { id: 'traslados',    label: 'Traslados',     icon: <Car size={13} /> },
+  { id: 'tiquetes',     label: 'Tiquetes',      icon: <Plane size={13} /> },
+] as const;
+
 const QUICK_PROMPTS = [
   { icon: '📋', label: 'Lista completa', prompt: 'Dame una lista completa de todos los servicios disponibles con precios netos para el OTA y el precio de venta sugerido (+23%).' },
   { icon: '✈️', label: 'Civitatis', prompt: '¿Qué servicios son más adecuados para Civitatis? ¿Cómo funciona la estructura de comisiones con ellos?' },
@@ -72,247 +124,331 @@ const QUICK_PROMPTS = [
   { icon: '📑', label: 'Condiciones B2B', prompt: '¿Cuáles son las condiciones de pago y cancelación para agencias de viajes que trabajan con GuíaSAI?' },
 ];
 
-// ─── Tab: Catálogo B2B ────────────────────────────────────────────────────────
+// ─── Tab: Cotizador Multi-tabla ───────────────────────────────────────────────
 
-function CatalogoTab() {
-  const [servicios, setServicios] = useState<Servicio[]>([]);
+function CotizadorTab() {
+  const [catalogo, setCatalogo] = useState<CatalogoCompleto>({ tours: [], alojamientos: [], traslados: [], tiquetes: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [catTab, setCatTab] = useState<'tours' | 'alojamientos' | 'traslados' | 'tiquetes'>('tours');
   const [search, setSearch] = useState('');
-  const [tipoFilter, setTipoFilter] = useState('');
-  const [otaFilter, setOtaFilter] = useState('');
-  const [copied, setCopied] = useState<string | null>(null);
+  const [selectedOTA, setSelectedOTA] = useState('turcom');
+  const [pax, setPax] = useState(2);
+  const [noches, setNoches] = useState(3);
+  const [quote, setQuote] = useState<QuoteItem[]>([]);
+  const [showQuote, setShowQuote] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
-      const res = await fetch('/api/cowork/catalogo-b2b');
+      const res = await fetch('/api/cowork/catalogo-completo');
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error cargando catálogo');
-      setServicios(data.data || []);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
+      if (!res.ok) throw new Error(data.error || 'Error');
+      setCatalogo(data.data || { tours: [], alojamientos: [], traslados: [], tiquetes: [] });
+    } catch (e: any) { setError(e.message); }
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const tipos = Array.from(new Set(servicios.map(s => s.tipo).filter(Boolean))).sort();
+  const ota = OTA_OPTIONS.find(o => o.id === selectedOTA) || OTA_OPTIONS[0];
+  const activeItems: CatItem[] = (catalogo[catTab] || []).filter(
+    item => !search || item.nombre.toLowerCase().includes(search.toLowerCase())
+  );
 
-  const filtered = servicios.filter(s => {
-    const matchSearch = !search || s.nombre.toLowerCase().includes(search.toLowerCase());
-    const matchTipo = !tipoFilter || s.tipo === tipoFilter;
-    const matchOTA = !otaFilter || s.canalesOTA.includes(otaFilter);
-    return matchSearch && matchTipo && matchOTA;
-  });
+  const addToQuote = (item: CatItem) => {
+    setQuote(prev => {
+      const ex = prev.find(q => q.id === item.id);
+      if (ex) return prev.map(q => q.id === item.id ? { ...q, qty: q.qty + 1 } : q);
+      return [...prev, { id: item.id, nombre: item.nombre, tabla: item.tabla, tipo: item.tipo, precioNeto: item.precioNeto, qty: 1, unidad: item.unidad }];
+    });
+  };
 
-  const copyPriceList = () => {
+  const changeQty = (id: string, delta: number) => {
+    setQuote(prev => prev.map(q => q.id === id ? { ...q, qty: Math.max(1, q.qty + delta) } : q));
+  };
+
+  const removeItem = (id: string) => setQuote(prev => prev.filter(q => q.id !== id));
+
+  const totalNeto = quote.reduce((s, q) => s + q.precioNeto * q.qty, 0);
+  const totalOTA  = Math.round(totalNeto * ota.markup);
+
+  const copyQuote = () => {
     const lines = [
-      'CATÁLOGO B2B — TARIFAS NETAS 2026 | GuíaSAI / GuanaGO',
-      '─'.repeat(70),
-      ...filtered.map(s =>
-        `${s.nombre} | ${s.tipo} | Neto: ${COP(s.precioNeto)} COP | tur.com +23%: ${COP(s.precioOTA_turcom)} | Civitatis +25%: ${COP(s.precioOTA_civitatis)} COP | Cap: ${s.capacidad ?? '?'} pax`
-      ),
-      '',
-      `* Precios netos. tur.com agrega +23% | Civitatis agrega +25% al precio de venta al turista.`,
-      `* Descuentos grupos: 50+ pax (-10%), 100+ (-15%), 150+ (-20%)`,
+      `COTIZACIÓN B2B — GuíaSAI / GuanaGO`,
+      `Canal OTA: ${ota.label} | Pax: ${pax} | Noches: ${noches}`,
+      `${'─'.repeat(55)}`,
+      ...quote.map(q => {
+        const sub = q.precioNeto * q.qty;
+        const subOTA = Math.round(sub * ota.markup);
+        const u = q.unidad === 'noche' ? `${q.qty} noche(s)` : q.unidad === 'traslado' ? `${q.qty} traslado(s)` : `${q.qty} pax`;
+        return `• ${q.nombre} × ${u}\n  Neto: ${COP(sub)} | ${ota.label} +${ota.pct}%: ${COP(subOTA)} COP`;
+      }),
+      `${'─'.repeat(55)}`,
+      `Total neto GuíaSAI:  ${COP(totalNeto)} COP`,
+      `Total venta ${ota.label} (+${ota.pct}%): ${COP(totalOTA)} COP`,
+      ``,
+      `* Precios netos confidenciales — solo para uso interno del OTA.`,
+      `* Descuentos grupo disponibles: 50+ pax (-10%), 100+ (-15%), 150+ (-20%).`,
     ].join('\n');
     navigator.clipboard.writeText(lines);
-    setCopied('lista');
-    setTimeout(() => setCopied(null), 2000);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const totales = {
+    tours:        catalogo.tours.length,
+    alojamientos: catalogo.alojamientos.length,
+    traslados:    catalogo.traslados.length,
+    tiquetes:     catalogo.tiquetes.length,
   };
 
   return (
-    <div className="space-y-4">
-      {/* Info banner */}
-      <div className="bg-amber-950/40 border border-amber-700/50 rounded-xl p-3 flex gap-2.5">
-        <Info size={15} className="text-amber-400 flex-shrink-0 mt-0.5" />
-        <div className="text-xs text-amber-200 leading-relaxed">
-          <strong>Precios netos para OTAs.</strong>{' '}
-          <span className="text-amber-300">tur.com: +23%</span> · <span className="text-amber-300">Civitatis: +25%</span> sobre el neto para obtener precio de venta al turista.{' '}
-          <span className="text-amber-400">No compartir estos precios con el público.</span>
+    <div className="space-y-3">
+      {/* Banner confidencial */}
+      <div className="bg-amber-950/40 border border-amber-700/50 rounded-xl p-3 flex gap-2">
+        <Info size={13} className="text-amber-400 flex-shrink-0 mt-0.5" />
+        <p className="text-[11px] text-amber-200 leading-relaxed">
+          <strong>Precios netos B2B — confidenciales.</strong> No compartir con turistas finales.
+        </p>
+      </div>
+
+      {/* Configuración: OTA + pax + noches */}
+      <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-3 space-y-2">
+        <p className="text-[10px] text-gray-500 uppercase font-bold">Configuración de cotización</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="col-span-2">
+            <label className="text-[9px] text-gray-500 uppercase block mb-1">OTA / Agencia</label>
+            <div className="flex gap-1 flex-wrap">
+              {OTA_OPTIONS.map(o => (
+                <button
+                  key={o.id}
+                  onClick={() => setSelectedOTA(o.id)}
+                  className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all ${
+                    selectedOTA === o.id
+                      ? 'border-teal-500 bg-teal-900/40 text-teal-300'
+                      : 'border-gray-700 bg-gray-900 text-gray-500 hover:border-gray-500'
+                  }`}
+                >
+                  {o.label} <span className="opacity-60">+{o.pct}%</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="text-[9px] text-gray-500 uppercase block mb-1">Pax</label>
+            <input type="number" min={1} value={pax} onChange={e => setPax(Number(e.target.value))}
+              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-600" />
+          </div>
+          <div>
+            <label className="text-[9px] text-gray-500 uppercase block mb-1">Noches</label>
+            <input type="number" min={1} value={noches} onChange={e => setNoches(Number(e.target.value))}
+              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-600" />
+          </div>
         </div>
       </div>
 
-      {/* Barra de herramientas */}
-      <div className="flex gap-2 flex-wrap">
-        <div className="flex-1 min-w-[160px] relative">
+      {/* Tabs de categoría */}
+      <div className="flex bg-gray-800/60 border border-gray-700 rounded-xl p-1 gap-1">
+        {CAT_TABS.map(t => (
+          <button
+            key={t.id}
+            onClick={() => { setCatTab(t.id); setSearch(''); }}
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+              catTab === t.id ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            {t.icon}
+            <span className="hidden sm:inline">{t.label}</span>
+            <span className="text-[9px] opacity-50">({totales[t.id]})</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Búsqueda */}
+      <div className="flex gap-2">
+        <div className="flex-1 relative">
           <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar servicio..."
+            placeholder={`Buscar en ${CAT_TABS.find(t => t.id === catTab)?.label}...`}
             className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-teal-600"
           />
         </div>
-        <select
-          value={tipoFilter}
-          onChange={e => setTipoFilter(e.target.value)}
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-teal-600"
-        >
-          <option value="">Todos los tipos</option>
-          {tipos.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
-        <select
-          value={otaFilter}
-          onChange={e => setOtaFilter(e.target.value)}
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-teal-600"
-        >
-          <option value="">Todas las OTAs</option>
-          <option value="Civitatis">Civitatis</option>
-          <option value="Tur.com">Tur.com</option>
-          <option value="Get Your Guide">Get Your Guide</option>
-          <option value="Airbnb">Airbnb</option>
-        </select>
-        <button
-          onClick={copyPriceList}
-          className="flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 transition-colors"
-        >
-          {copied === 'lista' ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
-          {copied === 'lista' ? 'Copiado' : 'Copiar lista'}
-        </button>
-        <button
-          onClick={load}
-          className="flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 transition-colors"
-        >
+        <button onClick={load} className="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg px-3 text-gray-400 transition-colors">
           <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
         </button>
+        {quote.length > 0 && (
+          <button
+            onClick={() => setShowQuote(v => !v)}
+            className="relative flex items-center gap-1.5 bg-teal-900/60 hover:bg-teal-800/60 border border-teal-600 rounded-lg px-3 py-2 text-xs text-teal-300 font-bold transition-colors"
+          >
+            <ShoppingCart size={13} />
+            <span className="hidden sm:inline">Cotización</span>
+            <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+              {quote.length}
+            </span>
+          </button>
+        )}
       </div>
 
-      {/* Stats rápidas */}
-      {!loading && servicios.length > 0 && (
-        <div className="grid grid-cols-3 gap-2">
-          <div className="bg-gray-800/60 rounded-lg p-2.5 text-center">
-            <div className="text-lg font-bold text-white">{filtered.length}</div>
-            <div className="text-[10px] text-gray-500">servicios</div>
-          </div>
-          <div className="bg-gray-800/60 rounded-lg p-2.5 text-center">
-            <div className="text-lg font-bold text-teal-400">
-              {filtered.length > 0 ? COP(Math.round(filtered.reduce((a, s) => a + s.precioNeto, 0) / filtered.length)) : '—'}
-            </div>
-            <div className="text-[10px] text-gray-500">neto promedio</div>
-          </div>
-          <div className="bg-gray-800/60 rounded-lg p-2.5 text-center">
-            <div className="text-lg font-bold text-orange-400">{tipos.length}</div>
-            <div className="text-[10px] text-gray-500">categorías</div>
-          </div>
-        </div>
-      )}
-
-      {/* Tabla */}
+      {/* Lista de ítems */}
       {loading ? (
-        <div className="flex items-center justify-center py-12 text-gray-600">
-          <Loader2 size={20} className="animate-spin mr-2" /> Cargando catálogo desde Airtable...
+        <div className="flex items-center justify-center py-10 text-gray-600">
+          <Loader2 size={18} className="animate-spin mr-2" /> Cargando catálogo...
         </div>
       ) : error ? (
         <div className="bg-red-950/40 border border-red-800 rounded-xl p-4 text-sm text-red-300">{error}</div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-gray-600 text-sm">
-          {search || tipoFilter ? 'Sin resultados para ese filtro' : 'No hay servicios con "Precio actualizado" en Airtable'}
+      ) : activeItems.length === 0 ? (
+        <div className="text-center py-10 text-gray-600 text-sm">
+          {search ? 'Sin resultados' : 'Sin datos en esta categoría'}
         </div>
       ) : (
-        <div className="space-y-2">
-          {filtered.map(s => (
-            <ServicioRow key={s.id} s={s} copied={copied} setCopied={setCopied} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+        <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
+          {activeItems.map(item => {
+            const inQuote = quote.find(q => q.id === item.id);
+            const precioOTA = item.precioNeto ? Math.round(item.precioNeto * ota.markup) : null;
+            return (
+              <div key={item.id}
+                className="bg-gray-800/60 border border-gray-700/60 rounded-xl p-3 flex items-center gap-3 hover:border-gray-600 transition-colors">
+                {/* Tipo */}
+                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full border flex-shrink-0 ${TIPO_BADGE[item.tipo] || 'bg-gray-700 text-gray-400 border-gray-600'}`}>
+                  {item.tipo || '—'}
+                </span>
 
-function ServicioRow({ s, copied, setCopied }: {
-  s: Servicio;
-  copied: string | null;
-  setCopied: (v: string | null) => void;
-}) {
-  const [expanded, setExpanded] = useState(false);
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-white truncate">{item.nombre}</p>
+                  {(item.origen || item.aerolinea) && (
+                    <p className="text-[10px] text-gray-500 truncate">
+                      {item.origen}{item.destino ? ` → ${item.destino}` : ''}{item.aerolinea ? ` · ${item.aerolinea}` : ''}
+                    </p>
+                  )}
+                  {item.canalesOTA?.length > 0 && (
+                    <div className="flex gap-1 mt-0.5">
+                      {item.canalesOTA.map(o => (
+                        <span key={o} className={`text-[7px] font-bold px-1 rounded border ${OTA_BADGE[o] || 'bg-gray-700 text-gray-500 border-gray-600'}`}>
+                          {o === 'Get Your Guide' ? 'GYG' : o}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-  const copyPrice = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const text = `${s.nombre} | Neto: ${COP(s.precioNeto)} COP | tur.com: ${COP(s.precioOTA_turcom)} | Civitatis: ${COP(s.precioOTA_civitatis)} COP`;
-    navigator.clipboard.writeText(text);
-    setCopied(s.id);
-    setTimeout(() => setCopied(null), 2000);
-  };
+                {/* Precio */}
+                <div className="text-right flex-shrink-0">
+                  {item.precioNeto > 0 ? (
+                    <>
+                      <div className="text-[10px] font-bold text-teal-400">{COP(item.precioNeto)}</div>
+                      <div className="text-[9px] text-gray-600">neto</div>
+                      {precioOTA && (
+                        <>
+                          <div className={`text-[10px] font-bold ${ota.color}`}>{COP(precioOTA)}</div>
+                          <div className="text-[9px] text-gray-600">+{ota.pct}%</div>
+                        </>
+                      )}
+                    </>
+                  ) : item.precioAdulto ? (
+                    <>
+                      <div className="text-[10px] text-gray-300">{item.precioAdulto}</div>
+                      <div className="text-[9px] text-gray-600">adulto ref.</div>
+                    </>
+                  ) : <span className="text-[10px] text-gray-600">a consultar</span>}
+                </div>
 
-  return (
-    <div className="bg-gray-800/60 border border-gray-700/60 rounded-xl overflow-hidden">
-      <button
-        onClick={() => setExpanded(v => !v)}
-        className="w-full p-3.5 flex items-center gap-3 text-left hover:bg-gray-700/30 transition-colors"
-      >
-        {/* Tipo badge */}
-        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${TIPO_BADGE[s.tipo] || 'bg-gray-700 text-gray-300 border-gray-600'}`}>
-          {s.tipo || 'Servicio'}
-        </span>
-
-        {/* Nombre */}
-        <span className="flex-1 text-sm font-bold text-white truncate">{s.nombre}</span>
-
-        {/* OTA badges */}
-        <div className="flex gap-1 flex-shrink-0">
-          {s.canalesOTA.map(ota => (
-            <span key={ota} className={`text-[8px] font-bold px-1.5 py-0.5 rounded border hidden sm:inline ${OTA_BADGE[ota] || 'bg-gray-700 text-gray-400 border-gray-600'}`}>
-              {ota === 'Get Your Guide' ? 'GYG' : ota}
-            </span>
-          ))}
-        </div>
-
-        {/* Precios */}
-        <div className="text-right flex-shrink-0">
-          <div className="text-xs font-bold text-teal-400">{COP(s.precioNeto)}</div>
-          <div className="text-[10px] text-gray-500">neto OTA</div>
-        </div>
-
-        <div className="text-right flex-shrink-0">
-          <div className="text-[10px] font-bold text-orange-400">{COP(s.precioOTA_turcom)}</div>
-          <div className="text-[9px] text-gray-600">tur.com +23%</div>
-          <div className="text-[10px] font-bold text-amber-300">{COP(s.precioOTA_civitatis)}</div>
-          <div className="text-[9px] text-gray-600">Civitatis +25%</div>
-        </div>
-
-        {expanded ? <ChevronUp size={13} className="text-gray-600 flex-shrink-0" /> : <ChevronDown size={13} className="text-gray-600 flex-shrink-0" />}
-      </button>
-
-      {expanded && (
-        <div className="px-4 pb-3 border-t border-gray-700/50 pt-3 space-y-2">
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span className="text-gray-500">Capacidad: </span>
-              <span className="text-gray-200">{s.capacidad ? `${s.capacidad} pax` : 'No especificada'}</span>
-            </div>
-            <div>
-              <span className="text-gray-500">Estado: </span>
-              <span className={`font-medium ${s.estado === 'Activo' ? 'text-green-400' : 'text-yellow-400'}`}>{s.estado}</span>
-            </div>
-            {s.canalesOTA.length > 0 && (
-              <div className="col-span-2 flex items-center gap-1.5 flex-wrap">
-                <span className="text-gray-500">OTAs:</span>
-                {s.canalesOTA.map(ota => (
-                  <span key={ota} className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${OTA_BADGE[ota] || 'bg-gray-700 text-gray-400 border-gray-600'}`}>
-                    {ota}
-                  </span>
-                ))}
+                {/* Agregar */}
+                {inQuote ? (
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button onClick={() => changeQty(item.id, -1)}
+                      className="w-6 h-6 rounded-lg bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-white transition-colors">
+                      <Minus size={10} />
+                    </button>
+                    <span className="text-xs font-bold text-white w-4 text-center">{inQuote.qty}</span>
+                    <button onClick={() => changeQty(item.id, 1)}
+                      className="w-6 h-6 rounded-lg bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-white transition-colors">
+                      <Plus size={10} />
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => addToQuote(item)}
+                    disabled={item.precioNeto === 0 && !item.precioAdulto}
+                    className="w-7 h-7 rounded-xl flex items-center justify-center transition-colors disabled:opacity-30 flex-shrink-0"
+                    style={{ background: '#00A8A0' }}>
+                    <Plus size={13} className="text-white" />
+                  </button>
+                )}
               </div>
-            )}
-            {s.descripcion && (
-              <div className="col-span-2 text-gray-400 italic leading-relaxed">{s.descripcion}</div>
-            )}
-          </div>
-          <button
-            onClick={copyPrice}
-            className="flex items-center gap-1.5 text-[10px] bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg text-gray-300 transition-colors"
-          >
-            {copied === s.id ? <Check size={11} className="text-green-400" /> : <Copy size={11} />}
-            {copied === s.id ? 'Copiado' : 'Copiar precio'}
-          </button>
+            );
+          })}
         </div>
       )}
-    </div>
+
+      {/* Panel de cotización */}
+      {showQuote && quote.length > 0 && (
+        <div className="bg-gray-800/80 border border-teal-700/60 rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-teal-300 flex items-center gap-2">
+              <ShoppingCart size={14} /> Cotización — {ota.label}
+            </h3>
+            <button onClick={() => setShowQuote(false)} className="text-gray-600 hover:text-gray-300">
+              <X size={14} />
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {quote.map(q => {
+              const sub = q.precioNeto * q.qty;
+              return (
+                <div key={q.id} className="flex items-center gap-2 text-xs">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium truncate">{q.nombre}</p>
+                    <p className="text-gray-500 text-[10px]">
+                      {q.qty} {q.unidad === 'noche' ? 'noche(s)' : q.unidad === 'traslado' ? 'traslado(s)' : 'pax'} · Neto: {COP(sub)}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className={`text-xs font-bold ${ota.color}`}>{COP(Math.round(sub * ota.markup))}</div>
+                    <div className="text-[9px] text-gray-600">+{ota.pct}%</div>
+                  </div>
+                  <button onClick={() => removeItem(q.id)} className="text-gray-600 hover:text-red-400 transition-colors">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="border-t border-gray-700 pt-3 grid grid-cols-2 gap-2">
+            <div className="bg-teal-950/40 rounded-xl p-2.5 text-center">
+              <div className="text-base font-bold text-teal-400">{COP(totalNeto)}</div>
+              <div className="text-[9px] text-gray-500">total neto GuíaSAI</div>
+            </div>
+            <div className="bg-orange-950/40 rounded-xl p-2.5 text-center">
+              <div className={`text-base font-bold ${ota.color}`}>{COP(totalOTA)}</div>
+              <div className="text-[9px] text-gray-500">total {ota.label} +{ota.pct}%</div>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={copyQuote}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold text-white transition-colors"
+              style={{ background: '#F5831F' }}
+            >
+              {copied ? <Check size={13} /> : <Copy size={13} />}
+              {copied ? '¡Copiado!' : 'Copiar cotización'}
+            </button>
+            <button
+              onClick={() => setQuote([])}
+              className="px-3 py-2.5 rounded-xl text-xs text-gray-500 hover:text-red-400 border border-gray-700 hover:border-red-800 transition-colors"
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
+        </div>
+      )}</div>
   );
 }
 
@@ -668,7 +804,7 @@ function PrecioCard({ label, value, sub, color }: {
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: 'catalogo',  label: 'Catálogo',   icon: <Package2 size={14} /> },
+  { id: 'catalogo',  label: 'Cotizador',  icon: <ShoppingCart size={14} /> },
   { id: 'asistente', label: 'Asistente',  icon: <Bot size={14} /> },
   { id: 'grupos',    label: 'Grupos',     icon: <Users size={14} /> },
 ];
@@ -723,7 +859,7 @@ const AdminCowork: React.FC<Props> = ({ onBack }) => {
 
       {/* Contenido */}
       <div className="px-4">
-        {tab === 'catalogo'  && <CatalogoTab />}
+        {tab === 'catalogo'  && <CotizadorTab />}
         {tab === 'asistente' && <AsistenteTab />}
         {tab === 'grupos'    && <GruposTab />}
       </div>
