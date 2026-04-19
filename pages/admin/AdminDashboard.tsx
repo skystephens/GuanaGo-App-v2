@@ -2,8 +2,8 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   TrendingUp, Users, DollarSign, Activity, Calendar,
   Package as PackageIcon, ChevronRight, Server, Music,
-  Palette, Handshake, ClipboardList, Clock, FileText,
-  TowerControl, LayoutGrid, Brain, Route, Map, BarChart3,
+  Palette, Handshake, Clock, FileText,
+  LayoutGrid, Route, Map,
   Bot, Send, Sparkles, Loader2, ChevronDown, ChevronUp,
   X, CheckCircle2, AlertCircle, Receipt, Briefcase,
 } from 'lucide-react';
@@ -454,11 +454,11 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             </div>
           </Section>
 
-          {/* ── 4. Cerebro & Sistema ── */}
-          <Section label="Cerebro & Sistema" color="indigo">
+          {/* ── 4. Hub de trabajo ── */}
+          <Section label="Hub de trabajo" color="indigo">
             <BigButton
               label="Cowork IA — B2B"
-              sub="Catálogo OTA · Tarifas netas · Cotizador grupos · Asistente"
+              sub={`Cotizador OTA · Asistente · Torre${criticas > 0 ? ` (${criticas} críticas)` : ''} · Cerebro · Dashboard`}
               icon={<Briefcase size={20} className="text-orange-400" />}
               gradient="from-orange-950 via-amber-950 to-orange-950"
               border="border-orange-700 hover:border-orange-400"
@@ -466,45 +466,15 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               onClick={() => onNavigate(AppRoute.ADMIN_COWORK)}
             />
             <BigButton
-              label="Panel de Control"
-              sub="Métricas · Kanban · Mapa Mental · Sistema"
-              icon={<BarChart3 size={20} className="text-emerald-400" />}
-              gradient="from-emerald-950 via-teal-950 to-emerald-950"
-              border="border-emerald-600 hover:border-emerald-400"
-              pulse="bg-emerald-400"
-              onClick={() => onNavigate(AppRoute.ADMIN_CONTROL_PANEL)}
-            />
-            <BigButton
-              label="Cerebro"
-              sub="Notas · Oportunidades · Trazabilidad · Contexto Claude"
-              icon={<Brain size={20} className="text-indigo-400" />}
-              gradient="from-indigo-950 via-violet-950 to-indigo-950"
-              border="border-indigo-600 hover:border-indigo-400"
-              onClick={() => onNavigate(AppRoute.ADMIN_CEREBRO)}
-            />
-            <BigButton
               label="SkyPanel Pro"
-              sub="Torre de Control · Todos los proyectos · Airtable live"
+              sub="Todos los proyectos · Airtable live · Vista multi-proyecto"
               icon={<span className="text-lg">🌴</span>}
               gradient="from-slate-900 via-cyan-950 to-slate-900"
               border="border-cyan-500 hover:border-cyan-300"
               pulse="bg-cyan-300"
               onClick={() => onNavigate(AppRoute.ADMIN_SKY_PANEL)}
             />
-            <BigButton
-              label="Torre de Control"
-              sub={`Checklist lanzamiento · Super Admin${criticas > 0 ? ` · ${criticas} tareas críticas` : ''}`}
-              icon={<TowerControl size={18} className="text-cyan-400" />}
-              gradient="from-cyan-900/60 via-blue-900/60 to-cyan-900/60"
-              border="border-cyan-700 hover:border-cyan-500"
-              pulse="bg-cyan-400"
-              onClick={() => onNavigate(AppRoute.ADMIN_TORRE_CONTROL)}
-            />
-            <div className="grid grid-cols-3 gap-2">
-              <MiniButton icon={<ClipboardList size={18} className="text-cyan-400" />} label="Tareas"
-                onClick={() => onNavigate(AppRoute.ADMIN_TASKS)}
-                pulse="bg-yellow-500" gradient="from-cyan-900/50 to-blue-900/50" border="border-cyan-800 hover:border-cyan-600"
-                badge={criticas > 0 ? String(criticas) : undefined} />
+            <div className="grid grid-cols-2 gap-2">
               <MiniButton icon={<Server size={18} className="text-purple-400" />} label="Backend"
                 onClick={() => onNavigate(AppRoute.ADMIN_BACKEND)}
                 pulse="bg-green-500" gradient="from-purple-900/50 to-blue-900/50" border="border-purple-800 hover:border-purple-600" />
