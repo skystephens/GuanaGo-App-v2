@@ -68,30 +68,9 @@ export const cachedApi = {
       const result = await getDataWithFallback<GuanaLocation[]>(
         'directory_map',
         async () => {
-          if (airtableService.isConfigured()) {
-            const airtableData = await airtableService.getDirectoryPoints();
-            if (airtableData && airtableData.length > 0) {
-              return airtableData as unknown as GuanaLocation[];
-            }
-          }
+          // Fuente única: backend /api/directory (que lee Airtable de forma segura)
           const data = await api.directory.getDirectoryMap();
-          if (data && data.length > 0) {
-            return data.map((item: any) => ({
-              id: item.id || item.Id,
-              name: item.name || item.nombre || item.Name,
-              latitude: parseFloat(item.latitude || item.lat || item.Latitude || 0),
-              longitude: parseFloat(item.longitude || item.lng || item.Longitude || 0),
-              category: item.category || item.categoria || item.Category || 'General',
-              price: item.price || item.precio || 0,
-              description: item.description || item.descripcion || '',
-              phone: item.phone || item.telefono || '',
-              address: item.address || item.direccion || '',
-              hours: item.hours || item.horario || '',
-              image: item.image || item.imagen || '',
-              rating: item.rating || 0
-            }));
-          }
-          return null;
+          return data.length > 0 ? (data as unknown as GuanaLocation[]) : null;
         },
         options
       );

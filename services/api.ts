@@ -402,125 +402,22 @@ export const api = {
     },
 
     getDirectoryMap: async (): Promise<any[]> => {
-      // Usar backend relativo (mismo servidor en producción, localhost en dev)
-      const backendUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-        ? 'http://localhost:3002' 
+      const backendUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        ? 'http://localhost:3002'
         : '';
-      
-      try {
-        console.log('📍 Fetching directory from backend...');
-        const response = await fetch(`${backendUrl}/api/directory`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const result = await response.json();
-          console.log('📍 Backend response:', result);
-          
-          if (result.success && result.data && Array.isArray(result.data)) {
-            // Normalizar datos del backend
-            const items = result.data.map((item: any) => ({
-              id: item.id || item.Id || '',
-              nombre: item.name || item.nombre || item.Name || '',
-              name: item.name || item.nombre || item.Name || '',
-              categoria: item.category || item.categoria || item.Category || 'General',
-              category: item.category || item.categoria || item.Category || 'General',
-              latitude: parseFloat(item.lat || item.latitude || item.Latitude || 0),
-              lat: parseFloat(item.lat || item.latitude || item.Latitude || 0),
-              longitude: parseFloat(item.lng || item.longitude || item.Longitude || 0),
-              lng: parseFloat(item.lng || item.longitude || item.Longitude || 0),
-              telefono: item.phone || item.telefono || item.Phone || '',
-              phone: item.phone || item.telefono || item.Phone || '',
-              direccion: item.address || item.direccion || item.Address || '',
-              address: item.address || item.direccion || item.Address || '',
-              horario: item.hours || item.horario || item.Hours || '',
-              hours: item.hours || item.horario || item.Hours || '',
-              descripcion: item.description || item.descripcion || item.Description || '',
-              description: item.description || item.descripcion || item.Description || '',
-              imagen: item.image || item.imagen || '',
-              image: item.image || item.imagen || '',
-              rating: item.rating || 0
-            }));
-            
-            console.log(`✅ Loaded ${items.length} directory items from backend`);
-            return items;
-          }
-        }
-        
-        // Fallback a Airtable directo si el backend falla
-        console.log('⚠️ Backend failed, trying Airtable directly...');
-        return await api.directory.getDirectoryFromAirtable();
-        
-      } catch (e) {
-        console.error('❌ Error fetching from backend:', e);
-        // Fallback a Airtable directo
-        return await api.directory.getDirectoryFromAirtable();
-      }
+
+      const response = await fetch(`${backendUrl}/api/directory`, {
+        headers: { 'Accept': 'application/json' },
+      });
+
+      if (!response.ok) throw new Error(`Backend directory ${response.status}`);
+
+      const result = await response.json();
+      if (!result.success || !Array.isArray(result.data)) return [];
+
+      // El backend ya normaliza los campos — pasar directo
+      return result.data;
     },
-    
-    getDirectoryFromAirtable: async (): Promise<any[]> => {
-      // Llamada directa a Airtable API como fallback
-      const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY;
-      const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
-      const TABLE_NAME = 'Directorio_Mapa';
-      
-      try {
-        console.log('📍 Fetching directory from Airtable directly...');
-        const response = await fetch(
-          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(TABLE_NAME)}?maxRecords=100`,
-          {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        
-        if (!response.ok) {
-          console.error('Airtable API error:', response.status, response.statusText);
-          return [];
-        }
-        
-        const data = await response.json();
-        
-        if (data && data.records && Array.isArray(data.records)) {
-          const items = data.records.map((record: any) => ({
-            id: record.id,
-            nombre: record.fields.Nombre || record.fields.nombre || record.fields.Name || '',
-            name: record.fields.Nombre || record.fields.nombre || record.fields.Name || '',
-            categoria: record.fields.Categoria || record.fields.categoria || record.fields.Category || 'General',
-            category: record.fields.Categoria || record.fields.categoria || record.fields.Category || 'General',
-            latitude: parseFloat(record.fields.Latitude || record.fields.latitude || record.fields.Lat || 0),
-            lat: parseFloat(record.fields.Latitude || record.fields.latitude || record.fields.Lat || 0),
-            longitude: parseFloat(record.fields.Longitude || record.fields.longitude || record.fields.Lng || 0),
-            lng: parseFloat(record.fields.Longitude || record.fields.longitude || record.fields.Lng || 0),
-            telefono: record.fields.Telefono || record.fields.telefono || record.fields.Phone || '',
-            phone: record.fields.Telefono || record.fields.telefono || record.fields.Phone || '',
-            direccion: record.fields.Direccion || record.fields.direccion || record.fields.Address || '',
-            address: record.fields.Direccion || record.fields.direccion || record.fields.Address || '',
-            horario: record.fields.Horario || record.fields.horario || record.fields.Hours || '',
-            hours: record.fields.Horario || record.fields.horario || record.fields.Hours || '',
-            descripcion: record.fields.Descripcion || record.fields.descripcion || record.fields.Description || '',
-            description: record.fields.Descripcion || record.fields.descripcion || record.fields.Description || '',
-            imagen: record.fields.Imagen?.[0]?.url || record.fields.imagen?.[0]?.url || '',
-            image: record.fields.Imagen?.[0]?.url || record.fields.imagen?.[0]?.url || ''
-          }));
-          
-          console.log(`✅ Loaded ${items.length} directory items from Airtable`);
-          return items;
-        }
-        
-        return [];
-      } catch (e) {
-        console.error('❌ Error fetching from Airtable:', e);
-        return [];
-      }
-    }
   },
 
   services: {
