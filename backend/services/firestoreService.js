@@ -195,6 +195,46 @@ export async function getTorreTasks(filter = {}) {
   }
 }
 
+// ─── Documentos RAG de Jarvis ────────────────────────────────────────────────
+// Colección: jarvis_docs — documentos de contexto que Jarvis carga al chatear
+
+export async function listJarvisDocs() {
+  const firestore = db();
+  if (!firestore) return [];
+  try {
+    const snap = await firestore.collection('jarvis_docs').orderBy('updatedAt', 'desc').get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    console.warn('Firestore listJarvisDocs:', e.message);
+    return [];
+  }
+}
+
+export async function upsertJarvisDoc(id, data) {
+  const firestore = db();
+  if (!firestore) return null;
+  try {
+    await firestore.collection('jarvis_docs').doc(id).set(
+      { ...data, updatedAt: ts() },
+      { merge: true }
+    );
+    return id;
+  } catch (e) {
+    console.warn('Firestore upsertJarvisDoc:', e.message);
+    return null;
+  }
+}
+
+export async function deleteJarvisDoc(id) {
+  const firestore = db();
+  if (!firestore) return;
+  try {
+    await firestore.collection('jarvis_docs').doc(id).delete();
+  } catch (e) {
+    console.warn('Firestore deleteJarvisDoc:', e.message);
+  }
+}
+
 // ─── Contexto Persistente de Jarvis (proyecto) ───────────────────────────────
 // Colección: jarvis_context / doc: guanago_sky
 // Guarda el estado del proyecto que Jarvis carga al inicio de cada sesión.

@@ -23,6 +23,22 @@ import * as firestore from './firestoreService.js';
 // Usuario fijo del admin (Sky). El contexto de proyecto se guarda bajo este ID.
 const ADMIN_USER_ID = 'sky-admin-guanago';
 
+// ─── Cache de documentos RAG (10 min) ────────────────────────────────────────
+let _docsCache = null;
+let _docsTs = 0;
+
+async function loadRagDocs() {
+  if (_docsCache && Date.now() - _docsTs < 10 * 60 * 1000) return _docsCache;
+  try {
+    const docs = await firestore.listJarvisDocs();
+    _docsCache = docs.filter(d => d.activo !== false && d.contenido);
+    _docsTs = Date.now();
+  } catch {
+    _docsCache = _docsCache || [];
+  }
+  return _docsCache;
+}
+
 // Modelos por modo — haiku para conversación, sonnet para CEO y B2B
 const MODELS = {
   turista:   'claude-haiku-4-5-20251001',
@@ -247,8 +263,12 @@ export async function agentChat({
 
   // Cargar contexto persistente del proyecto desde Firestore (admin y b2b)
   let jarvisCtx = null;
+  let ragDocs = [];
   if (mode === 'admin' || mode === 'b2b') {
-    jarvisCtx = await firestore.loadJarvisContext().catch(() => null);
+    [jarvisCtx, ragDocs] = await Promise.all([
+      firestore.loadJarvisContext().catch(() => null),
+      loadRagDocs().catch(() => []),
+    ]);
   }
 
   // System prompt: parte estática (cacheada) + parte dinámica
@@ -280,6 +300,17 @@ ${urgentes.map(t => `- [${t.prioridad?.toUpperCase()}] ${t.titulo}: ${t.descripc
 
   if (context.catalogoB2B) {
     dynamicContext += `\n\nCATÁLOGO B2B — PRECIOS NETOS 2026 (confidencial — solo para agencias):\n${context.catalogoB2B}`;
+  }
+
+  // Documentos RAG del proyecto
+  if (ragDocs.length > 0) {
+    dynamicContext += `\n\nDOCUMENTOS DE CONTEXTO DEL PROYECTO (${ragDocs.length} docs):`;
+    for (const doc of ragDocs) {
+      const preview = doc.contenido.length > 2000
+        ? doc.contenido.slice(0, 2000) + '\n...[contenido truncado]'
+        : doc.contenido;
+      dynamicContext += `\n\n--- ${doc.titulo} ---\n${preview}`;
+    }
   }
 
   // Contexto persistente del proyecto (cargado de Firestore)

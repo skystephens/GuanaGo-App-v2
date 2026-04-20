@@ -1195,6 +1195,15 @@ interface JarvisCtx {
   notas?: Array<{ texto: string; categoria: string; fecha: string }>;
 }
 
+interface RagDoc {
+  id: string;
+  titulo: string;
+  contenido: string;
+  tags?: string[];
+  activo?: boolean;
+  updatedAt?: { seconds: number };
+}
+
 function DashboardTab({ onNavigate }: { onNavigate: (r: AppRoute) => void }) {
   const [checks, setChecks]   = useState<SysCheck[]>([
     { label: 'Backend API',    status: 'checking', detail: '' },
@@ -1205,6 +1214,16 @@ function DashboardTab({ onNavigate }: { onNavigate: (r: AppRoute) => void }) {
   const [copInput, setCopInput] = useState(100000);
   const [kpis, setKpis]       = useState({ servicios: 0, leads: 0, tareasTotal: 0, tareasOk: 0 });
   const [jarvis, setJarvis]   = useState<JarvisCtx | null>(null);
+  const [docs, setDocs]       = useState<RagDoc[]>([]);
+  const [showDocForm, setShowDocForm] = useState(false);
+  const [docForm, setDocForm] = useState({ titulo: '', contenido: '', tags: '' });
+  const [docSaving, setDocSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState('');
+
+  const loadDocs = () =>
+    fetch('/api/agent/jarvis-docs').then(r => r.json())
+      .then(d => { if (d.success) setDocs(d.data); }).catch(() => {});
 
   useEffect(() => {
     // KPIs desde localStorage (Torre)
@@ -1212,11 +1231,12 @@ function DashboardTab({ onNavigate }: { onNavigate: (r: AppRoute) => void }) {
     const allT = torre.flatMap(s => s.tareas);
     setKpis(prev => ({ ...prev, tareasTotal: allT.length, tareasOk: allT.filter(t => t.estado === 'completado').length }));
 
-    // Memoria Jarvis desde Firestore (vía backend)
+    // Memoria Jarvis + docs RAG desde Firestore
     fetch('/api/agent/jarvis-context')
       .then(r => r.json())
       .then(d => { if (d.success && d.data) setJarvis(d.data); })
       .catch(() => {});
+    loadDocs();
 
     // System checks
     const runChecks = async () => {
@@ -1252,6 +1272,49 @@ function DashboardTab({ onNavigate }: { onNavigate: (r: AppRoute) => void }) {
     };
     runChecks();
   }, []);
+
+  const saveDoc = async () => {
+    if (!docForm.titulo.trim() || !docForm.contenido.trim()) return;
+    setDocSaving(true);
+    try {
+      await fetch('/api/agent/jarvis-docs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titulo: docForm.titulo,
+          contenido: docForm.contenido,
+          tags: docForm.tags.split(',').map(t => t.trim()).filter(Boolean),
+        }),
+      });
+      setDocForm({ titulo: '', contenido: '', tags: '' });
+      setShowDocForm(false);
+      loadDocs();
+    } finally {
+      setDocSaving(false);
+    }
+  };
+
+  const deleteDoc = async (id: string) => {
+    await fetch(`/api/agent/jarvis-docs/${id}`, { method: 'DELETE' });
+    loadDocs();
+  };
+
+  const syncFromRepo = async () => {
+    setSyncing(true);
+    setSyncResult('');
+    try {
+      const r = await fetch('/api/agent/jarvis-docs/sync', { method: 'POST' });
+      const d = await r.json();
+      const synced = d.results?.filter((x: { status: string }) => x.status === 'synced').length || 0;
+      const notFound = d.results?.filter((x: { status: string }) => x.status === 'not_found').length || 0;
+      setSyncResult(`✓ ${synced} sincronizados · ${notFound} no encontrados`);
+      loadDocs();
+    } catch {
+      setSyncResult('Error al sincronizar');
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const saveTrm = (v: number) => { setTrm(v); localStorage.setItem('guanago_trm_v1', String(v)); };
   const usd = trm > 0 ? (copInput * 1.10 / trm).toFixed(2) : '0';
@@ -1377,6 +1440,77 @@ function DashboardTab({ onNavigate }: { onNavigate: (r: AppRoute) => void }) {
               </div>
             )}
           </>
+        )}
+      </div>
+
+      {/* Docs RAG */}
+      <div className="bg-gray-800/60 border border-purple-900/60 rounded-xl p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-bold text-purple-400 flex items-center gap-2 flex-1">
+            <Sparkles size={13} /> Docs de contexto Jarvis
+            <span className="text-[10px] text-gray-500 font-normal">({docs.length} docs)</span>
+          </p>
+          <button onClick={syncFromRepo} disabled={syncing}
+            className="text-[10px] text-gray-400 hover:text-purple-300 border border-gray-700 hover:border-purple-700 rounded-lg px-2 py-1 transition-colors flex items-center gap-1">
+            {syncing ? <Loader2 size={10} className="animate-spin" /> : <RefreshCw size={10} />}
+            Sync repo
+          </button>
+          <button onClick={() => setShowDocForm(v => !v)}
+            className="text-[10px] text-gray-400 hover:text-teal-300 border border-gray-700 hover:border-teal-700 rounded-lg px-2 py-1 transition-colors flex items-center gap-1">
+            <Plus size={10} /> Nuevo
+          </button>
+        </div>
+
+        {syncResult && (
+          <p className="text-[10px] text-green-400">{syncResult}</p>
+        )}
+
+        {showDocForm && (
+          <div className="space-y-2 bg-gray-900/60 rounded-xl p-3">
+            <input value={docForm.titulo} onChange={e => setDocForm(v => ({ ...v, titulo: e.target.value }))}
+              placeholder="Título del documento"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-600" />
+            <textarea value={docForm.contenido} onChange={e => setDocForm(v => ({ ...v, contenido: e.target.value }))}
+              placeholder="Contenido (markdown, texto, etc.)"
+              rows={5}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-600 resize-none font-mono" />
+            <input value={docForm.tags} onChange={e => setDocForm(v => ({ ...v, tags: e.target.value }))}
+              placeholder="Tags separados por coma (ej: cowork, b2b)"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-600" />
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setShowDocForm(false)}
+                className="text-[11px] text-gray-500 hover:text-gray-300 px-3 py-1">
+                Cancelar
+              </button>
+              <button onClick={saveDoc} disabled={docSaving}
+                className="text-[11px] bg-purple-700 hover:bg-purple-600 text-white rounded-lg px-3 py-1.5 flex items-center gap-1 transition-colors">
+                {docSaving ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />}
+                Guardar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {docs.length === 0 ? (
+          <p className="text-[11px] text-gray-600">Sin documentos. Usa "Sync repo" para cargar los .md del proyecto, o "Nuevo" para agregar manualmente.</p>
+        ) : (
+          <div className="space-y-1.5">
+            {docs.map(doc => (
+              <div key={doc.id} className="flex items-center gap-2 bg-gray-900/40 rounded-lg px-3 py-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] text-gray-200 truncate">{doc.titulo}</p>
+                  <p className="text-[9px] text-gray-600">
+                    {doc.contenido.length.toLocaleString()} chars
+                    {doc.tags?.length ? ` · ${doc.tags.join(', ')}` : ''}
+                  </p>
+                </div>
+                <button onClick={() => deleteDoc(doc.id)}
+                  className="text-gray-700 hover:text-red-400 flex-shrink-0 transition-colors">
+                  <Trash2 size={11} />
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

@@ -8,6 +8,9 @@
  * POST /api/agent/sync-catalog        → Sincronizar Airtable -> Firestore
  */
 import express from 'express';
+import { readFileSync, existsSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { agentChat } from '../services/agentService.js';
 import {
   getCotizaciones,
@@ -18,8 +21,14 @@ import {
   updateReservationStatus,
   loadJarvisContext,
   saveJarvisContext,
+  listJarvisDocs,
+  upsertJarvisDoc,
+  deleteJarvisDoc,
 } from '../services/firestoreService.js';
 import { config } from '../config.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = join(__dirname, '..', '..');
 
 const router = express.Router();
 
@@ -76,6 +85,75 @@ router.post('/jarvis-context', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
+});
+
+// ─── GET /api/agent/jarvis-docs ──────────────────────────────────────────────
+router.get('/jarvis-docs', async (req, res) => {
+  try {
+    const docs = await listJarvisDocs();
+    res.json({ success: true, data: docs, count: docs.length });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ─── POST /api/agent/jarvis-docs ─────────────────────────────────────────────
+router.post('/jarvis-docs', async (req, res) => {
+  try {
+    const { id, titulo, contenido, tags = [], activo = true } = req.body;
+    if (!titulo || !contenido) {
+      return res.status(400).json({ success: false, error: 'titulo y contenido son requeridos' });
+    }
+    const docId = id || titulo.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 40);
+    await upsertJarvisDoc(docId, { titulo, contenido, tags, activo });
+    res.json({ success: true, id: docId });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ─── DELETE /api/agent/jarvis-docs/:id ───────────────────────────────────────
+router.delete('/jarvis-docs/:id', async (req, res) => {
+  try {
+    await deleteJarvisDoc(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ─── POST /api/agent/jarvis-docs/sync ────────────────────────────────────────
+// Lee los .md clave del repo y los sube a Firestore
+const REPO_DOCS = [
+  { id: 'estado_proyecto', titulo: 'Estado del Proyecto 2026', file: 'ESTADO_PROYECTO_2026.md' },
+  { id: 'tareas_q1',       titulo: 'Tareas Q1 2026',           file: 'TAREAS_Q1_2026.md' },
+  { id: 'hoja_ruta_anato', titulo: 'Hoja de Ruta ANATO 2026',  file: 'HOJA_RUTA_2026_ANATO.md' },
+  { id: 'resumen_b2b',     titulo: 'Resumen Ejecutivo GuiaSAI B2B', file: 'RESUMEN_EJECUTIVO_GUIASAI_B2B.md' },
+  { id: 'resumen_90dias',  titulo: 'Resumen Ejecutivo 90 Días', file: 'RESUMEN_EJECUTIVO_90_DIAS.md' },
+];
+
+router.post('/jarvis-docs/sync', async (req, res) => {
+  const results = [];
+  for (const doc of REPO_DOCS) {
+    const filePath = join(REPO_ROOT, doc.file);
+    if (!existsSync(filePath)) {
+      results.push({ id: doc.id, status: 'not_found', file: doc.file });
+      continue;
+    }
+    try {
+      const contenido = readFileSync(filePath, 'utf-8');
+      await upsertJarvisDoc(doc.id, {
+        titulo: doc.titulo,
+        contenido,
+        tags: ['repo', 'auto-sync'],
+        activo: true,
+      });
+      results.push({ id: doc.id, status: 'synced', chars: contenido.length });
+    } catch (e) {
+      results.push({ id: doc.id, status: 'error', error: e.message });
+    }
+  }
+  res.json({ success: true, results });
 });
 
 // ─── GET /api/agent/cotizaciones/:userId ──────────────────────────────────────
