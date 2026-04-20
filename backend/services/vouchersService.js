@@ -83,7 +83,7 @@ export async function createVoucher(data) {
   if (data.observaciones)  fields['Observaciones Especiales']   = data.observaciones;
   if (data.notasAdicionales) fields['Notas adicionales']        = data.notasAdicionales;
   if (data.tourId)         fields['Tipo de Tour']               = [{ id: data.tourId }];
-  if (data.tourName)       fields['Nombre del tour texto']      = data.tourName;
+  if (data.tourName)       fields['Notas adicionales']          = data.tourName;
 
   const res = await fetch(tableUrl(), {
     method: 'POST',
