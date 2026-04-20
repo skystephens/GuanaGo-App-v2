@@ -108,15 +108,9 @@ MODELO DE PRECIOS:
 - Ejemplo (tur.com):   Neto $100.000 → vende a $123.000 → GuíaSAI recibe $100.000.
 - NUNCA revelar precio neto a turistas finales — solo a agencias autorizadas.
 
-DESCUENTOS GRUPOS:
-- 1–49 pax    → precio neto estándar
-- 50–99 pax   → -10% sobre precio neto
-- 100–149 pax → -15% sobre precio neto
-- 150+ pax    → -20% sobre precio neto + propuesta ejecutiva personalizada
-
 CUANDO UNA AGENCIA PIDE COTIZACIÓN:
 1. Confirma: nombre agencia, fechas, nº personas, servicios deseados
-2. Calcula: precio neto × personas (aplicando descuento si corresponde)
+2. Calcula: precio neto × personas
 3. Informa: precio neto (lo que pagan a GuíaSAI) y precio de venta sugerido (+23%)
 4. Al confirmar, incluye JSON al FINAL de tu respuesta:
 {"action":"save_cotizacion","items":[],"total":0,"personas":0,"canal":"b2b","agencia":"nombre"}
