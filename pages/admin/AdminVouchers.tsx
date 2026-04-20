@@ -617,6 +617,7 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
   const [loading, setLoading]             = useState(true);
   const [search, setSearch]               = useState('');
   const [filterEstado, setFilterEstado]   = useState<string>('TODOS');
+  const [sortFecha, setSortFecha]         = useState<'asc' | 'desc'>('desc');
   const [selected, setSelected]           = useState<VoucherRecord | null>(null);
   const [showForm, setShowForm]           = useState(false);
   const [updatingId, setUpdatingId]       = useState<string | null>(null);
@@ -659,17 +660,23 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
     setShowForm(false);
   };
 
-  // Filtros
-  const filtered = vouchers.filter(v => {
-    const q = search.toLowerCase();
-    const matchSearch = !q ||
-      v.titular.toLowerCase().includes(q) ||
-      v.tourName.toLowerCase().includes(q) ||
-      v.reservaNum.toLowerCase().includes(q) ||
-      v.puntoEncuentro.toLowerCase().includes(q);
-    const matchEstado = filterEstado === 'TODOS' || estadoKey(v.estado) === filterEstado;
-    return matchSearch && matchEstado;
-  });
+  // Filtros + orden por fecha
+  const filtered = vouchers
+    .filter(v => {
+      const q = search.toLowerCase();
+      const matchSearch = !q ||
+        v.titular.toLowerCase().includes(q) ||
+        v.tourName.toLowerCase().includes(q) ||
+        v.reservaNum.toLowerCase().includes(q) ||
+        v.puntoEncuentro.toLowerCase().includes(q);
+      const matchEstado = filterEstado === 'TODOS' || estadoKey(v.estado) === filterEstado;
+      return matchSearch && matchEstado;
+    })
+    .sort((a, b) => {
+      const da = a.fecha || '';
+      const db = b.fecha || '';
+      return sortFecha === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
+    });
 
   // Stats
   const stats = {
@@ -760,6 +767,13 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
                 </button>
               );
             })}
+            <button
+              onClick={() => setSortFecha(s => s === 'desc' ? 'asc' : 'desc')}
+              className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-bold bg-gray-800 border border-orange-700 text-orange-400 hover:bg-orange-900/30 transition-colors"
+            >
+              <Calendar size={10} />
+              {sortFecha === 'desc' ? 'Fecha ↓' : 'Fecha ↑'}
+            </button>
           </div>
         </div>
 
