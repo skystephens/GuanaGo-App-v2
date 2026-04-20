@@ -20,6 +20,9 @@ import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config.js';
 import * as firestore from './firestoreService.js';
 
+// Usuario fijo del admin (Sky). El contexto de proyecto se guarda bajo este ID.
+const ADMIN_USER_ID = 'sky-admin-guanago';
+
 // Modelos por modo — haiku para conversación, sonnet para CEO y B2B
 const MODELS = {
   turista:   'claude-haiku-4-5-20251001',
@@ -47,6 +50,9 @@ CREAR TAREA: Cuando el usuario pida crear una tarea, incluye EXACTAMENTE al FINA
 {"action":"create_task","seccion":"id_seccion","titulo":"titulo de la tarea","descripcion":"descripcion detallada","prioridad":"critica|alta|media|baja"}
 
 Secciones disponibles: aliados, pagos, lanzamiento, firebase, ia, comercial, b2c, b2b, ceo, marca, guiasai_agencias, lean_canvas, marketing, tokens_blockchain
+
+GUARDAR NOTA: Cuando detectes una decisión importante, acuerdo, bloqueo o prioridad nueva, guárdala automáticamente al FINAL de tu respuesta:
+{"action":"save_note","texto":"descripción de la decisión o nota","categoria":"decision|prioridad|bloqueo|avance"}
 
 TONO: Profesional, directo, orientado a resultados. Respuestas concisas. Hablas en español.`,
 
@@ -239,6 +245,12 @@ export async function agentChat({
     context.catalogoB2B = await loadB2BCatalogContext();
   }
 
+  // Cargar contexto persistente del proyecto desde Firestore (admin y b2b)
+  let jarvisCtx = null;
+  if (mode === 'admin' || mode === 'b2b') {
+    jarvisCtx = await firestore.loadJarvisContext().catch(() => null);
+  }
+
   // System prompt: parte estática (cacheada) + parte dinámica
   const staticPrompt = STATIC_PROMPTS[mode] || STATIC_PROMPTS.turista;
 
@@ -270,6 +282,21 @@ ${urgentes.map(t => `- [${t.prioridad?.toUpperCase()}] ${t.titulo}: ${t.descripc
     dynamicContext += `\n\nCATÁLOGO B2B — PRECIOS NETOS 2026 (confidencial — solo para agencias):\n${context.catalogoB2B}`;
   }
 
+  // Contexto persistente del proyecto (cargado de Firestore)
+  if (jarvisCtx) {
+    dynamicContext += `\n\nCONTEXTO DEL PROYECTO (persistido entre sesiones):`;
+    if (jarvisCtx.sesiones) dynamicContext += `\n- Sesiones totales: ${jarvisCtx.sesiones}`;
+    if (jarvisCtx.ultimaSesion) dynamicContext += `\n- Última sesión: ${jarvisCtx.ultimaSesion}`;
+    if (jarvisCtx.resumenUltimaSesion) dynamicContext += `\n- Resumen última sesión: ${jarvisCtx.resumenUltimaSesion}`;
+    if (jarvisCtx.notas?.length) {
+      const ultimas = jarvisCtx.notas.slice(-10);
+      dynamicContext += `\n\nNOTAS Y DECISIONES RECIENTES (${jarvisCtx.notas.length} total, mostrando últimas ${ultimas.length}):`;
+      ultimas.forEach(n => {
+        dynamicContext += `\n- [${n.categoria?.toUpperCase() || 'NOTA'}] ${n.fecha?.slice(0, 10) || ''}: ${n.texto}`;
+      });
+    }
+  }
+
   // Construir request con prompt caching en la parte estática
   const response = await anthropic.messages.create({
     model,
@@ -296,13 +323,26 @@ ${urgentes.map(t => `- [${t.prioridad?.toUpperCase()}] ${t.titulo}: ${t.descripc
 
   // Persistir en Firestore (no bloquea la respuesta)
   const convId = conversationId || `conv-${Date.now()}`;
-  if (userId) {
-    firestore.saveMessage(userId, convId, { role: 'user', content: message, mode }).catch(() => {});
-    firestore.saveMessage(userId, convId, {
+  // Para admin/b2b siempre usamos el userId del administrador
+  const effectiveUserId = userId || (mode === 'admin' || mode === 'b2b' ? ADMIN_USER_ID : null);
+
+  if (effectiveUserId) {
+    firestore.saveMessage(effectiveUserId, convId, { role: 'user', content: message, mode }).catch(() => {});
+    firestore.saveMessage(effectiveUserId, convId, {
       role: 'assistant', content: rawResponse, mode, action: action?.action,
       model, inputTokens: response.usage?.input_tokens,
     }).catch(() => {});
-    firestore.logEvent('agent_chat', { userId, mode, hasAction: !!action, model }).catch(() => {});
+    firestore.logEvent('agent_chat', { userId: effectiveUserId, mode, hasAction: !!action, model }).catch(() => {});
+  }
+
+  // Actualizar contexto persistente del proyecto en cada sesión admin/b2b
+  if (mode === 'admin' || mode === 'b2b') {
+    const ctxUpdate = {
+      sesiones: (jarvisCtx?.sesiones || 0) + 1,
+      ultimaSesion: new Date().toISOString(),
+      modoUltimoUso: mode,
+    };
+    firestore.saveJarvisContext(ctxUpdate).catch(() => {});
   }
 
   // Persistir cotización si el agente la confirmó
@@ -317,6 +357,14 @@ ${urgentes.map(t => `- [${t.prioridad?.toUpperCase()}] ${t.titulo}: ${t.descripc
       generatedBy: 'claude',
     }).catch(() => null);
     if (saved) action.cotizacionId = saved;
+  }
+
+  // Guardar nota/decisión en el contexto persistente del proyecto
+  if (action?.action === 'save_note' && action.texto) {
+    firestore.appendJarvisNote({
+      texto: action.texto,
+      categoria: action.categoria || 'nota',
+    }).catch(() => {});
   }
 
   // Persistir tarea si el agente la creó (modo admin)

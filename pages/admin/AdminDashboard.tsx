@@ -3,7 +3,7 @@ import {
   TrendingUp, Users, DollarSign, Activity, Calendar,
   Package as PackageIcon, ChevronRight, Server, Music,
   Palette, Handshake, Clock, FileText,
-  LayoutGrid, Route, Map,
+  LayoutGrid, Route, Map, Network, ExternalLink,
   Bot, Send, Sparkles, Loader2, ChevronDown, ChevronUp,
   X, CheckCircle2, AlertCircle, Receipt, Briefcase,
 } from 'lucide-react';
@@ -479,6 +479,14 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 onClick={() => onNavigate(AppRoute.ADMIN_BACKEND)}
                 pulse="bg-green-500" gradient="from-purple-900/50 to-blue-900/50" border="border-purple-800 hover:border-purple-600" />
               <MiniButton icon={<Map size={18} className="text-purple-400" />} label="Estructura" onClick={() => onNavigate(AppRoute.ADMIN_STRUCTURE)} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <MiniButton icon={<Network size={18} className="text-teal-400" />} label="Mapa Mental"
+                onClick={() => onNavigate(AppRoute.ADMIN_MAPA_MENTAL)}
+                pulse="bg-teal-400" gradient="from-teal-900/50 to-cyan-900/50" border="border-teal-800 hover:border-teal-500" />
+              <MiniButton icon={<ExternalLink size={18} className="text-teal-300" />} label="Ecosistema"
+                onClick={() => window.open('/mapa-ecosistema.html', '_blank')}
+                pulse="bg-cyan-400" gradient="from-cyan-900/50 to-teal-900/50" border="border-cyan-800 hover:border-cyan-500" />
             </div>
           </Section>
 

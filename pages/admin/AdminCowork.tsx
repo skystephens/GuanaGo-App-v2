@@ -1187,6 +1187,14 @@ function CerebroTab({ onNavigate }: { onNavigate: (r: AppRoute) => void }) {
 type CheckStatus = 'ok' | 'error' | 'checking' | 'warn';
 interface SysCheck { label: string; status: CheckStatus; detail: string }
 
+interface JarvisCtx {
+  sesiones?: number;
+  ultimaSesion?: string;
+  resumenUltimaSesion?: string;
+  modoUltimoUso?: string;
+  notas?: Array<{ texto: string; categoria: string; fecha: string }>;
+}
+
 function DashboardTab({ onNavigate }: { onNavigate: (r: AppRoute) => void }) {
   const [checks, setChecks]   = useState<SysCheck[]>([
     { label: 'Backend API',    status: 'checking', detail: '' },
@@ -1196,12 +1204,19 @@ function DashboardTab({ onNavigate }: { onNavigate: (r: AppRoute) => void }) {
   const [trm, setTrm]         = useState(() => { try { return parseFloat(localStorage.getItem('guanago_trm_v1') || '4200') || 4200; } catch { return 4200; } });
   const [copInput, setCopInput] = useState(100000);
   const [kpis, setKpis]       = useState({ servicios: 0, leads: 0, tareasTotal: 0, tareasOk: 0 });
+  const [jarvis, setJarvis]   = useState<JarvisCtx | null>(null);
 
   useEffect(() => {
     // KPIs desde localStorage (Torre)
     const torre: SeccionControl[] = loadTorre();
     const allT = torre.flatMap(s => s.tareas);
     setKpis(prev => ({ ...prev, tareasTotal: allT.length, tareasOk: allT.filter(t => t.estado === 'completado').length }));
+
+    // Memoria Jarvis desde Firestore (vía backend)
+    fetch('/api/agent/jarvis-context')
+      .then(r => r.json())
+      .then(d => { if (d.success && d.data) setJarvis(d.data); })
+      .catch(() => {});
 
     // System checks
     const runChecks = async () => {
@@ -1319,6 +1334,50 @@ function DashboardTab({ onNavigate }: { onNavigate: (r: AppRoute) => void }) {
             <div className="text-[9px] text-gray-500">precio USD agencia</div>
           </div>
         </div>
+      </div>
+
+      {/* Memoria Jarvis */}
+      <div className="bg-gray-800/60 border border-teal-900/60 rounded-xl p-4 space-y-2">
+        <p className="text-xs font-bold text-teal-400 flex items-center gap-2">
+          <Brain size={13} /> Memoria Jarvis
+          {jarvis?.sesiones && (
+            <span className="ml-auto text-[10px] text-gray-500">{jarvis.sesiones} sesiones</span>
+          )}
+        </p>
+        {!jarvis ? (
+          <p className="text-[11px] text-gray-600">Sin datos — Firestore no conectado o primera sesión.</p>
+        ) : (
+          <>
+            {jarvis.ultimaSesion && (
+              <p className="text-[11px] text-gray-400">
+                Última sesión: <span className="text-gray-300">{new Date(jarvis.ultimaSesion).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                {jarvis.modoUltimoUso && <span className="ml-2 text-[10px] text-teal-600 uppercase">{jarvis.modoUltimoUso}</span>}
+              </p>
+            )}
+            {jarvis.resumenUltimaSesion && (
+              <p className="text-[11px] text-gray-400 italic">"{jarvis.resumenUltimaSesion}"</p>
+            )}
+            {jarvis.notas && jarvis.notas.length > 0 && (
+              <div className="mt-2 space-y-1">
+                <p className="text-[10px] text-gray-500 uppercase font-bold">Últimas notas guardadas</p>
+                {jarvis.notas.slice(-5).reverse().map((n, i) => {
+                  const catColor: Record<string, string> = {
+                    decision: 'text-orange-400', prioridad: 'text-yellow-400',
+                    bloqueo: 'text-red-400', avance: 'text-green-400', nota: 'text-gray-400',
+                  };
+                  return (
+                    <div key={i} className="flex gap-2 items-start">
+                      <span className={`text-[9px] font-bold uppercase flex-shrink-0 mt-0.5 ${catColor[n.categoria] || 'text-gray-400'}`}>
+                        {n.categoria}
+                      </span>
+                      <span className="text-[11px] text-gray-300 leading-tight">{n.texto}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Shortcuts */}

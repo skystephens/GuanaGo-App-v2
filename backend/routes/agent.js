@@ -16,6 +16,8 @@ import {
   upsertCatalogItem,
   updateCotizacionStatus,
   updateReservationStatus,
+  loadJarvisContext,
+  saveJarvisContext,
 } from '../services/firestoreService.js';
 import { config } from '../config.js';
 
@@ -50,6 +52,29 @@ router.post('/chat', async (req, res) => {
       error: error.message,
       response: 'Estoy teniendo problemas tecnicos. Intenta de nuevo en un momento.',
     });
+  }
+});
+
+// ─── GET /api/agent/jarvis-context ───────────────────────────────────────────
+router.get('/jarvis-context', async (req, res) => {
+  try {
+    const ctx = await loadJarvisContext();
+    res.json({ success: true, data: ctx || {} });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ─── POST /api/agent/jarvis-context ──────────────────────────────────────────
+router.post('/jarvis-context', async (req, res) => {
+  try {
+    const { resumenUltimaSesion } = req.body;
+    if (resumenUltimaSesion) {
+      await saveJarvisContext({ resumenUltimaSesion });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

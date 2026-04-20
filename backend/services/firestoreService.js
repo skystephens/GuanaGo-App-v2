@@ -195,6 +195,56 @@ export async function getTorreTasks(filter = {}) {
   }
 }
 
+// ─── Contexto Persistente de Jarvis (proyecto) ───────────────────────────────
+// Colección: jarvis_context / doc: guanago_sky
+// Guarda el estado del proyecto que Jarvis carga al inicio de cada sesión.
+
+const JARVIS_DOC = 'guanago_sky';
+
+export async function loadJarvisContext() {
+  const firestore = db();
+  if (!firestore) return null;
+  try {
+    const snap = await firestore.collection('jarvis_context').doc(JARVIS_DOC).get();
+    return snap.exists ? snap.data() : null;
+  } catch (e) {
+    console.warn('Firestore loadJarvisContext:', e.message);
+    return null;
+  }
+}
+
+export async function saveJarvisContext(update) {
+  const firestore = db();
+  if (!firestore) return;
+  try {
+    await firestore.collection('jarvis_context').doc(JARVIS_DOC).set(
+      { ...update, updatedAt: ts() },
+      { merge: true }
+    );
+  } catch (e) {
+    console.warn('Firestore saveJarvisContext:', e.message);
+  }
+}
+
+// Agrega una nota/decisión al log del proyecto (array limitado a 50 entradas)
+export async function appendJarvisNote(nota) {
+  const firestore = db();
+  if (!firestore) return;
+  try {
+    const entry = {
+      texto: nota.texto,
+      categoria: nota.categoria || 'nota',
+      fecha: new Date().toISOString(),
+    };
+    await firestore.collection('jarvis_context').doc(JARVIS_DOC).set(
+      { notas: admin.firestore.FieldValue.arrayUnion(entry), updatedAt: ts() },
+      { merge: true }
+    );
+  } catch (e) {
+    console.warn('Firestore appendJarvisNote:', e.message);
+  }
+}
+
 // ─── Analytics ────────────────────────────────────────────────────────────────
 
 export async function logEvent(eventName, data = {}) {
