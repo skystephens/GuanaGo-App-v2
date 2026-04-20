@@ -74,7 +74,6 @@ export async function createVoucher(data) {
     'Nombre del Cliente': data.titular,
     'Estado de la Reserva': data.estado || 'Pendiente',
   };
-  if (data.reservaNum)     fields['Reserva #']                  = String(data.reservaNum);
   if (data.telefono)       fields['Telefono']                   = data.telefono;
   if (data.email)          fields['Email']                      = data.email;
   if (data.pax)            fields['Numero de Personas ']        = String(data.pax);
@@ -84,7 +83,6 @@ export async function createVoucher(data) {
   if (data.observaciones)  fields['Observaciones Especiales']   = data.observaciones;
   if (data.notasAdicionales) fields['Notas adicionales']        = data.notasAdicionales;
   if (data.tourId)         fields['Tipo de Tour']               = [{ id: data.tourId }];
-  if (data.tourName)       fields['Notas adicionales']          = data.tourName;
 
   const res = await fetch(tableUrl(), {
     method: 'POST',
