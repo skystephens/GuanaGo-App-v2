@@ -123,9 +123,12 @@ export function generateQuoteHTML(
         ${items.map((item, index) => {
           const { images: rawImages, description } = getServiceMeta(item);
           const fallbackUrl = categoryFallback[item.servicioTipo] || categoryFallback['tour'];
-          // Always pad to 4 images so the grid is full
-          const images: string[] = [...rawImages];
-          while (images.length < 4) images.push(images[images.length - 1] || fallbackUrl);
+          // allImages: todas las disponibles (para el lightbox)
+          const allImages: string[] = rawImages.length > 0 ? rawImages : [fallbackUrl];
+          // gridImages: siempre 4 slots para el grid de la card
+          const gridImages: string[] = [...allImages];
+          while (gridImages.length < 4) gridImages.push(gridImages[gridImages.length - 1] || fallbackUrl);
+          const images = gridImages; // alias para compatibilidad con código existente
           const fechaDisplay = safeDate(item.fecha)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? 'Por confirmar';
           const fechaFinDisplay = item.fechaFin ? safeDate(item.fechaFin)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? '' : '';
           const itemPax = (item.personas || (item.adultos + item.ninos + item.bebes)) || totalPersonas;
@@ -142,8 +145,8 @@ export function generateQuoteHTML(
             </div>
           `).join('');
 
-          // Lightbox con todas las fotos
-          const lightboxThumbs = images.map((url, i) => `
+          // Lightbox con TODAS las fotos disponibles
+          const lightboxThumbs = allImages.map((url, i) => `
             <img src="${url}" id="${modalId}-thumb-${i}"
                  style="width:60px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.6;border:2px solid transparent;"
                  onclick="setModalImg('${modalId}',${i})"
@@ -200,12 +203,12 @@ export function generateQuoteHTML(
                 style="position:sticky;top:10px;float:right;margin:10px 12px 0 0;background:#1e293b;color:white;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;z-index:10;">✕</button>
               <!-- Imagen principal -->
               <div style="padding:16px 16px 0;">
-                <img id="${modalId}-main" src="${images[0]}" alt="${item.servicioNombre}"
+                <img id="${modalId}-main" src="${allImages[0]}" alt="${item.servicioNombre}"
                   style="width:100%;height:280px;object-fit:cover;border-radius:10px;display:block;"
                   onerror="this.src='${fallbackUrl}'">
               </div>
-              <!-- Miniaturas -->
-              ${images.length > 1 ? `
+              <!-- Miniaturas (todas las disponibles) -->
+              ${allImages.length > 1 ? `
               <div style="display:flex;gap:8px;padding:10px 16px 0;flex-wrap:wrap;">
                 ${lightboxThumbs}
               </div>` : ''}

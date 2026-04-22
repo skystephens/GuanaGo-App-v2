@@ -138,7 +138,7 @@ function extractImageUrls(f) {
       }
     }
   }
-  return urls.slice(0, 4);
+  return [...new Set(urls)]; // sin límite — el grid se encarga de mostrar solo 4
 }
 
 /** Fetch images + description from ServiciosTuristicos_SAI by record ID */
@@ -189,12 +189,14 @@ async function fetchAlojamientoMeta(nombre) {
 function renderServiceCard(item, index) {
   const tipo = item.servicioTipo || 'otro';
   const fallback = FALLBACK_IMGS[tipo] || FALLBACK_IMGS['tour'];
-  // Always pad to exactly 4 images
-  const images = item.images?.length > 0 ? [...item.images] : [fallback];
-  while (images.length < 4) images.push(images[images.length - 1] || fallback);
+  // allImages: todas las disponibles → van al lightbox
+  const allImages = item.images?.length > 0 ? [...item.images] : [fallback];
+  // gridImages: siempre 4 slots para el grid de la card (repite la última si hay menos)
+  const gridImages = [...allImages];
+  while (gridImages.length < 4) gridImages.push(gridImages[gridImages.length - 1] || fallback);
   const mid = `modal-${index}`;
 
-  const photoGrid = images.map((url, i) => `
+  const photoGrid = gridImages.map((url, i) => `
     <div style="width:calc(25% - 3px);aspect-ratio:1/1;overflow:hidden;border-radius:6px;cursor:pointer;flex-shrink:0;"
          onclick="openModal('${mid}',${i})">
       <img src="${url}" loading="lazy"
@@ -204,7 +206,7 @@ function renderServiceCard(item, index) {
     </div>`).join('');
 
   const fallbackUrl = FALLBACK_IMGS[tipo] || FALLBACK_IMGS['tour'];
-  const thumbs = images.map((url, i) => `
+  const thumbs = allImages.map((url, i) => `
     <img src="${url}" id="${mid}-thumb-${i}"
          style="width:60px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.6;border:2px solid transparent;"
          onclick="setModalImg('${mid}',${i})"
@@ -249,11 +251,11 @@ function renderServiceCard(item, index) {
       <button onclick="closeModal('${mid}')"
         style="position:sticky;top:10px;float:right;margin:10px 12px 0 0;background:#1e293b;color:white;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;z-index:10;">✕</button>
       <div style="padding:16px 16px 0;">
-        <img id="${mid}-main" src="${images[0]}" alt="${esc(item.servicioNombre)}"
+        <img id="${mid}-main" src="${allImages[0]}" alt="${esc(item.servicioNombre)}"
           style="width:100%;height:280px;object-fit:cover;border-radius:10px;display:block;"
-          onerror="this.src='${FALLBACK_IMGS[tipo] || FALLBACK_IMGS['tour']}'">
+          onerror="this.src='${fallbackUrl}'">
       </div>
-      ${images.length > 1 ? `<div style="display:flex;gap:8px;padding:10px 16px 0;flex-wrap:wrap;">${thumbs}</div>` : ''}
+      ${allImages.length > 1 ? `<div style="display:flex;gap:8px;padding:10px 16px 0;flex-wrap:wrap;">${thumbs}</div>` : ''}
       <div style="padding:14px 16px;">
         <h3 style="margin:0 0 8px;color:#1e293b;font-size:17px;">${esc(item.servicioNombre)}</h3>
         ${item.description ? `<p style="margin:0 0 12px;font-size:14px;color:#475569;line-height:1.65;">${esc(item.description)}</p>` : ''}
