@@ -201,11 +201,12 @@ function renderServiceCard(item, index) {
            onerror="this.parentElement.style.display='none'">
     </div>`).join('');
 
+  const fallbackUrl = FALLBACK_IMGS[tipo] || FALLBACK_IMGS['tour'];
   const thumbs = images.map((url, i) => `
     <img src="${url}" id="${mid}-thumb-${i}"
          style="width:60px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.6;border:2px solid transparent;"
          onclick="setModalImg('${mid}',${i})"
-         onerror="this.style.display='none'">`).join('');
+         onerror="this.src='${fallbackUrl}'">`).join('');
 
   const card = `
   <div style="background:white;border:2px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:16px;">
@@ -248,7 +249,7 @@ function renderServiceCard(item, index) {
       <div style="padding:16px 16px 0;">
         <img id="${mid}-main" src="${images[0]}" alt="${esc(item.servicioNombre)}"
           style="width:100%;height:280px;object-fit:cover;border-radius:10px;display:block;"
-          onerror="this.style.display='none'">
+          onerror="this.src='${FALLBACK_IMGS[tipo] || FALLBACK_IMGS['tour']}'">
       </div>
       ${images.length > 1 ? `<div style="display:flex;gap:8px;padding:10px 16px 0;flex-wrap:wrap;">${thumbs}</div>` : ''}
       <div style="padding:14px 16px;">
@@ -417,7 +418,10 @@ ${modals}
     var main = document.getElementById(modalId + '-main');
     var thumbs = document.querySelectorAll('[id^="' + modalId + '-thumb-"]');
     thumbs.forEach(function(t, i) {
-      if (main && i === idx) main.src = t.src;
+      if (main && i === idx) {
+        main.src = t.src;
+        main.style.display = 'block';
+      }
       t.style.opacity = i === idx ? '1' : '0.5';
       t.style.borderColor = i === idx ? '#0ea5e9' : 'transparent';
     });
