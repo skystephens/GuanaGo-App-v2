@@ -132,36 +132,48 @@ function extractImageUrls(f) {
   return urls.slice(0, 4);
 }
 
-async function fetchServiceImages(servicioId) {
-  if (!servicioId) return [];
+/** Fetch images + description from ServiciosTuristicos_SAI by record ID */
+async function fetchServiceMeta(servicioId) {
+  if (!servicioId) return { images: [], description: '' };
   try {
     const res = await fetch(
       `${AT_URL}/${BASE_ID}/${encodeURIComponent('ServiciosTuristicos_SAI')}/${servicioId}`,
       { headers: headers() }
     );
-    if (!res.ok) return [];
+    if (!res.ok) return { images: [], description: '' };
     const r = await res.json();
-    return extractImageUrls(r.fields || {});
+    const f = r.fields || {};
+    return {
+      images: extractImageUrls(f),
+      description: f['Descripcion'] || f['Itinerario'] || f['descripcion'] || '',
+    };
   } catch (_) {}
-  return [];
+  return { images: [], description: '' };
 }
 
-async function fetchAlojamientoImagesByName(nombre) {
-  if (!nombre) return [];
+/** Fetch images + description from AlojamientosTuristicos_SAI by name (field: Servicio) */
+async function fetchAlojamientoMeta(nombre) {
+  if (!nombre) return { images: [], description: '' };
   try {
-    const formula = `FIND(LOWER("${nombre.replace(/"/g, '\\"')}"), LOWER({Nombre}))`;
+    // Field name for the service name is "Servicio" in AlojamientosTuristicos_SAI
+    const safe = nombre.replace(/"/g, '\\"');
+    const formula = `FIND(LOWER("${safe}"), LOWER({Servicio}))`;
     const params = new URLSearchParams({ filterByFormula: formula, maxRecords: '1' });
     const res = await fetch(
       `${AT_URL}/${BASE_ID}/${encodeURIComponent('AlojamientosTuristicos_SAI')}?${params}`,
       { headers: headers() }
     );
-    if (!res.ok) return [];
+    if (!res.ok) return { images: [], description: '' };
     const data = await res.json();
     const record = (data.records || [])[0];
-    if (!record) return [];
-    return extractImageUrls(record.fields || {});
+    if (!record) return { images: [], description: '' };
+    const f = record.fields || {};
+    return {
+      images: extractImageUrls(f),
+      description: f['Descripcion'] || f['Itinerario'] || '',
+    };
   } catch (_) {}
-  return [];
+  return { images: [], description: '' };
 }
 
 function renderServiceCard(item, index) {
@@ -206,6 +218,14 @@ function renderServiceCard(item, index) {
           <div style="color:#94a3b8;font-size:11px;">$${fmtCOP(item.valorUnitario)} × ${item.personas}${item.cantidad > 1 ? ` × ${item.cantidad}u` : ''}</div>
         </div>
       </div>
+      ${item.description ? `
+      <div id="${mid}-short" style="font-size:13px;color:#64748b;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">
+        ${item.description}
+      </div>
+      <button onclick="openModal('${mid}',0)"
+        style="margin-top:6px;background:none;border:none;color:#0ea5e9;font-size:12px;font-weight:600;cursor:pointer;padding:0;">
+        Ver más info e imágenes ▼
+      </button>` : ''}
     </div>
   </div>
 
@@ -222,6 +242,7 @@ function renderServiceCard(item, index) {
       ${images.length > 1 ? `<div style="display:flex;gap:8px;padding:10px 16px 0;flex-wrap:wrap;">${thumbs}</div>` : ''}
       <div style="padding:14px 16px;">
         <h3 style="margin:0 0 8px;color:#1e293b;font-size:17px;">${item.servicioNombre}</h3>
+        ${item.description ? `<p style="margin:0 0 12px;font-size:14px;color:#475569;line-height:1.65;">${item.description}</p>` : ''}
         <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:13px;color:#64748b;">Subtotal</span>
           <span style="color:#10b981;font-size:20px;font-weight:700;">$${fmtCOP(item.subtotal)} COP</span>
@@ -413,15 +434,18 @@ router.get('/:id', async (req, res) => {
 
     const items = await fetchItems(id);
 
-    // Enrich items with service images (parallel)
+    // Enrich items with images + description (parallel)
     await Promise.all(items.map(async (item) => {
-      const isAloj = item.servicioTipo.includes('hotel') || item.servicioTipo.includes('alojamiento');
       if (item.servicioId) {
-        item.images = await fetchServiceImages(item.servicioId);
-      } else if (isAloj) {
-        item.images = await fetchAlojamientoImagesByName(item.servicioNombre);
+        // Tours, transfers, etc. linked to ServiciosTuristicos_SAI
+        const meta = await fetchServiceMeta(item.servicioId);
+        item.images = meta.images;
+        item.description = meta.description;
       } else {
-        item.images = [];
+        // Alojamientos: servicioId not stored → search AlojamientosTuristicos_SAI by name
+        const meta = await fetchAlojamientoMeta(item.servicioNombre);
+        item.images = meta.images;
+        item.description = meta.description;
       }
     }));
 
