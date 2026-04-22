@@ -121,20 +121,24 @@ export function generateQuoteHTML(
         <h3 style="color: #334155; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">Servicios Incluidos</h3>
         
         ${items.map((item, index) => {
-          const { images, description } = getServiceMeta(item);
+          const { images: rawImages, description } = getServiceMeta(item);
+          const fallbackUrl = categoryFallback[item.servicioTipo] || categoryFallback['tour'];
+          // Always pad to 4 images so the grid is full
+          const images: string[] = [...rawImages];
+          while (images.length < 4) images.push(images[images.length - 1] || fallbackUrl);
           const fechaDisplay = safeDate(item.fecha)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? 'Por confirmar';
           const fechaFinDisplay = item.fechaFin ? safeDate(item.fechaFin)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? '' : '';
           const itemPax = (item.personas || (item.adultos + item.ninos + item.bebes)) || totalPersonas;
           const cardId = `svc-${index}`;
           const modalId = `modal-${index}`;
 
-          // Grid de fotos pequeñas (hasta 4)
+          // Grid de fotos pequeñas (4 slots siempre)
           const photoGrid = images.map((url, i) => `
             <div style="width: calc(25% - 3px); aspect-ratio: 1/1; overflow: hidden; border-radius: 6px; cursor: pointer; flex-shrink: 0;"
                  onclick="openModal('${modalId}', ${i})">
               <img src="${url}" style="width:100%; height:100%; object-fit:cover; display:block; transition:opacity .2s;"
                    onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"
-                   onerror="this.parentElement.style.display='none'" loading="lazy">
+                   onerror="this.src='${fallbackUrl}'" loading="lazy">
             </div>
           `).join('');
 
@@ -143,7 +147,7 @@ export function generateQuoteHTML(
             <img src="${url}" id="${modalId}-thumb-${i}"
                  style="width:60px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.6;border:2px solid transparent;"
                  onclick="setModalImg('${modalId}',${i})"
-                 onerror="this.style.display='none'">
+                 onerror="this.src='${fallbackUrl}'">
           `).join('');
 
           return `
@@ -198,7 +202,7 @@ export function generateQuoteHTML(
               <div style="padding:16px 16px 0;">
                 <img id="${modalId}-main" src="${images[0]}" alt="${item.servicioNombre}"
                   style="width:100%;height:280px;object-fit:cover;border-radius:10px;display:block;"
-                  onerror="this.style.display='none'">
+                  onerror="this.src='${fallbackUrl}'">
               </div>
               <!-- Miniaturas -->
               ${images.length > 1 ? `
@@ -399,7 +403,10 @@ export function previewQuote(
               var main = document.getElementById(modalId + '-main');
               var thumbs = document.querySelectorAll('[id^="' + modalId + '-thumb-"]');
               thumbs.forEach(function(t, i) {
-                if (main && i === idx) { main.src = t.src; }
+                if (main && i === idx) {
+                  main.src = t.src;
+                  main.style.display = 'block';
+                }
                 t.style.opacity = i === idx ? '1' : '0.5';
                 t.style.borderColor = i === idx ? '#0ea5e9' : 'transparent';
               });

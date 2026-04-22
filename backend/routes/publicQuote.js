@@ -189,7 +189,9 @@ async function fetchAlojamientoMeta(nombre) {
 function renderServiceCard(item, index) {
   const tipo = item.servicioTipo || 'otro';
   const fallback = FALLBACK_IMGS[tipo] || FALLBACK_IMGS['tour'];
-  const images = item.images?.length > 0 ? item.images : [fallback];
+  // Always pad to exactly 4 images
+  const images = item.images?.length > 0 ? [...item.images] : [fallback];
+  while (images.length < 4) images.push(images[images.length - 1] || fallback);
   const mid = `modal-${index}`;
 
   const photoGrid = images.map((url, i) => `
