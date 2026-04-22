@@ -96,6 +96,42 @@ async function fetchItems(cotizacionId) {
   return items;
 }
 
+function extractImageUrls(f) {
+  const candidates = [
+    f['ImagenWP'], f['imagenwp'], f['imagenWP'], f['Imagen_WP'],
+    f['Imagenurl'], f['ImagenUrl'], f['imagenurl'], f['imagenUrl'],
+    f['Imagen'], f['Imagen Principal'], f['Image'], f['Images'],
+    f['Foto'], f['Fotos'], f['Galeria'], f['Gallery'],
+    f['Attachments'], f['Attachment'], f['Media'],
+    f['Pictures'], f['Photo'], f['Photos'],
+  ];
+  const urls = [];
+  for (const c of candidates) {
+    if (!c) continue;
+    if (Array.isArray(c)) {
+      for (const item of c) {
+        const u = item?.url || item?.thumbnails?.large?.url || (typeof item === 'string' ? item : null);
+        if (u && !urls.includes(u)) urls.push(u);
+      }
+    } else if (typeof c === 'string') {
+      for (const part of c.split(',').map(s => s.trim())) {
+        if (part.startsWith('http') && !urls.includes(part)) urls.push(part);
+      }
+    }
+  }
+  // Fallback: any array field with .url
+  if (urls.length === 0) {
+    for (const value of Object.values(f)) {
+      if (Array.isArray(value) && value.length > 0 && value[0]?.url) {
+        for (const item of value) {
+          if (item?.url && !urls.includes(item.url)) urls.push(item.url);
+        }
+      }
+    }
+  }
+  return urls.slice(0, 4);
+}
+
 async function fetchServiceImages(servicioId) {
   if (!servicioId) return [];
   try {
@@ -105,8 +141,25 @@ async function fetchServiceImages(servicioId) {
     );
     if (!res.ok) return [];
     const r = await res.json();
-    const imgs = r.fields?.Imagenes || r.fields?.Fotos || r.fields?.gallery || [];
-    if (Array.isArray(imgs)) return imgs.map(i => i.url || i).filter(Boolean).slice(0, 4);
+    return extractImageUrls(r.fields || {});
+  } catch (_) {}
+  return [];
+}
+
+async function fetchAlojamientoImagesByName(nombre) {
+  if (!nombre) return [];
+  try {
+    const formula = `FIND(LOWER("${nombre.replace(/"/g, '\\"')}"), LOWER({Nombre}))`;
+    const params = new URLSearchParams({ filterByFormula: formula, maxRecords: '1' });
+    const res = await fetch(
+      `${AT_URL}/${BASE_ID}/${encodeURIComponent('AlojamientosTuristicos_SAI')}?${params}`,
+      { headers: headers() }
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const record = (data.records || [])[0];
+    if (!record) return [];
+    return extractImageUrls(record.fields || {});
   } catch (_) {}
   return [];
 }
@@ -362,7 +415,14 @@ router.get('/:id', async (req, res) => {
 
     // Enrich items with service images (parallel)
     await Promise.all(items.map(async (item) => {
-      item.images = await fetchServiceImages(item.servicioId);
+      const isAloj = item.servicioTipo.includes('hotel') || item.servicioTipo.includes('alojamiento');
+      if (item.servicioId) {
+        item.images = await fetchServiceImages(item.servicioId);
+      } else if (isAloj) {
+        item.images = await fetchAlojamientoImagesByName(item.servicioNombre);
+      } else {
+        item.images = [];
+      }
     }));
 
     const html = buildPage(cotizacion, items, new Date());
