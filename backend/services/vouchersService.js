@@ -23,8 +23,25 @@ function tableUrl(recordId = '') {
 // Airtable singleSelect fields return {id, name, color} objects — extract name
 const sel = (v) => (v && typeof v === 'object' ? v.name : v) || '';
 
+// Mapeo bidireccional entre estados del frontend y valores singleSelect de Airtable
+const ESTADO_TO_AT = {
+  'PENDIENTE':  'Pendiente',
+  'CONFIRMADO': 'Reserva Confirmada',
+  'CANCELADO':  'Cancelado',
+  'COMPLETADO': 'Realizado',
+};
+const ESTADO_FROM_AT = {
+  'Pendiente':          'PENDIENTE',
+  'Reserva Confirmada': 'CONFIRMADO',
+  'Abono Realizado':    'CONFIRMADO',
+  'Realizado':          'COMPLETADO',
+  'Cancelado':          'CANCELADO',
+  'No llego el cliente':'CANCELADO',
+};
+
 function mapRecord(record) {
   const f = record.fields;
+  const rawEstado = sel(f['Estado de la Reserva']) || f['Estado'] || '';
   return {
     id:                 record.id,
     titular:            f['Nombre del Cliente']  || '',
@@ -39,7 +56,7 @@ function mapRecord(record) {
                         (Array.isArray(f['Nombre del Servicio (from Tipo de Tour)'])
                           ? f['Nombre del Servicio (from Tipo de Tour)'][0]
                           : '') || '',
-    estado:             sel(f['Estado de la Reserva']) || f['Estado'] || '',
+    estado:             ESTADO_FROM_AT[rawEstado] || rawEstado.toUpperCase() || 'PENDIENTE',
     estadoVoucher:      sel(f['Estado_Voucher']),
     telefono:           f['Telefono']             || '',
     email:              f['Email']                || '',
@@ -98,10 +115,11 @@ export async function createVoucher(data) {
 
 /** Actualizar estado de un voucher */
 export async function updateVoucherStatus(recordId, estado) {
+  const estadoAirtable = ESTADO_TO_AT[estado.toUpperCase()] || estado;
   const res = await fetch(tableUrl(recordId), {
     method: 'PATCH',
     headers: getHeaders(),
-    body: JSON.stringify({ fields: { 'Estado de la Reserva': estado } }),
+    body: JSON.stringify({ fields: { 'Estado de la Reserva': estadoAirtable } }),
   });
   if (!res.ok) throw new Error(`Airtable error ${res.status}`);
   return mapRecord(await res.json());
