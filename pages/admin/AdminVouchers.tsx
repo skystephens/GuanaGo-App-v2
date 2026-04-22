@@ -65,7 +65,7 @@ interface AdminVouchersProps {
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
-const ESTADOS = ['PENDIENTE', 'CONFIRMADO', 'CANCELADO', 'COMPLETADO'];
+const ESTADOS = ['Pendiente', 'Reserva Confirmada', 'Abono Realizado', 'Realizado', 'Cancelado', 'No llego el cliente'];
 const PUNTOS  = [
   'MUELLE CASA DE LA CULTURA',
   'MUELLE PORTOFINO',
@@ -76,15 +76,17 @@ const PUNTOS  = [
 ];
 
 const ESTADO_CFG: Record<string, { label: string; bg: string; text: string; icon: React.ReactNode }> = {
-  PENDIENTE:  { label: 'Pendiente',  bg: 'bg-yellow-900/40', text: 'text-yellow-400', icon: <Clock size={11} /> },
-  CONFIRMADO: { label: 'Confirmado', bg: 'bg-green-900/40',  text: 'text-green-400',  icon: <CheckCircle2 size={11} /> },
-  CANCELADO:  { label: 'Cancelado',  bg: 'bg-red-900/40',    text: 'text-red-400',    icon: <XCircle size={11} /> },
-  COMPLETADO: { label: 'Completado', bg: 'bg-indigo-900/40', text: 'text-indigo-400', icon: <CheckCircle2 size={11} /> },
+  'Pendiente':           { label: 'Pendiente',          bg: 'bg-yellow-900/40',  text: 'text-yellow-400',  icon: <Clock size={11} /> },
+  'Reserva Confirmada':  { label: 'Confirmada',         bg: 'bg-green-900/40',   text: 'text-green-400',   icon: <CheckCircle2 size={11} /> },
+  'Abono Realizado':     { label: 'Abono',              bg: 'bg-blue-900/40',    text: 'text-blue-400',    icon: <CheckCircle2 size={11} /> },
+  'Realizado':           { label: 'Realizado',          bg: 'bg-indigo-900/40',  text: 'text-indigo-400',  icon: <CheckCircle2 size={11} /> },
+  'Cancelado':           { label: 'Cancelado',          bg: 'bg-red-900/40',     text: 'text-red-400',     icon: <XCircle size={11} /> },
+  'No llego el cliente': { label: 'No llegó',           bg: 'bg-orange-900/40',  text: 'text-orange-400',  icon: <XCircle size={11} /> },
 };
 
 const EMPTY_FORM: VoucherFormData = {
   titular: '', telefono: '', email: '', pax: '',
-  fecha: '', hora: '', puntoEncuentro: '', observaciones: '', tourName: '', estado: 'PENDIENTE',
+  fecha: '', hora: '', puntoEncuentro: '', observaciones: '', tourName: '', estado: 'Pendiente',
 };
 
 const AGENT_PROMPTS = [
@@ -102,9 +104,6 @@ function fmtFecha(iso: string) {
   return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function estadoKey(estado: string) {
-  return (estado || '').toUpperCase();
-}
 
 // ─── Agente IA ────────────────────────────────────────────────────────────────
 
@@ -122,11 +121,11 @@ function AgenteVouchers({ vouchers }: { vouchers: VoucherRecord[] }) {
 
   const buildContext = useCallback(() => {
     const total      = vouchers.length;
-    const pendientes = vouchers.filter(v => estadoKey(v.estado) === 'PENDIENTE').length;
+    const pendientes = vouchers.filter(v => v.estado === 'Pendiente').length;
     const hoy        = new Date().toISOString().slice(0, 10);
     const hoyList    = vouchers.filter(v => v.fecha === hoy).map(v => `${v.titular} — ${v.tourName} @ ${v.hora}`).join('; ') || 'ninguna';
     const proximos   = vouchers
-      .filter(v => v.fecha >= hoy && estadoKey(v.estado) !== 'CANCELADO')
+      .filter(v => v.fecha >= hoy && v.estado !== 'Cancelado')
       .slice(0, 5)
       .map(v => `${v.fecha} · ${v.titular} · ${v.tourName} · ${v.estado}`)
       .join('\n');
@@ -267,7 +266,7 @@ function VoucherCard({ voucher, onSelect, onUpdateEstado }: {
   onSelect: (v: VoucherRecord) => void;
   onUpdateEstado: (id: string, estado: string) => void;
 }) {
-  const cfg = ESTADO_CFG[estadoKey(voucher.estado)] ?? ESTADO_CFG['PENDIENTE'];
+  const cfg = ESTADO_CFG[voucher.estado] ?? ESTADO_CFG['Pendiente'];
 
   return (
     <div
@@ -350,7 +349,7 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
   onClose: () => void;
   onUpdateEstado: (id: string, estado: string) => void;
 }) {
-  const cfg = ESTADO_CFG[estadoKey(voucher.estado)] ?? ESTADO_CFG['PENDIENTE'];
+  const cfg = ESTADO_CFG[voucher.estado] ?? ESTADO_CFG['Pendiente'];
   const mapsUrl = voucher.puntoEncuentro
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(voucher.puntoEncuentro + ', San Andrés, Colombia')}`
     : null;
@@ -616,7 +615,7 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
   const [vouchers, setVouchers]           = useState<VoucherRecord[]>([]);
   const [loading, setLoading]             = useState(true);
   const [search, setSearch]               = useState('');
-  const [filterEstado, setFilterEstado]   = useState<string>('TODOS');
+  const [filterEstado, setFilterEstado]   = useState<string>('Todos');
   const [sortFecha, setSortFecha]         = useState<'asc' | 'desc'>('desc');
   const [selected, setSelected]           = useState<VoucherRecord | null>(null);
   const [showForm, setShowForm]           = useState(false);
@@ -669,7 +668,7 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
         v.tourName.toLowerCase().includes(q) ||
         v.reservaNum.toLowerCase().includes(q) ||
         v.puntoEncuentro.toLowerCase().includes(q);
-      const matchEstado = filterEstado === 'TODOS' || estadoKey(v.estado) === filterEstado;
+      const matchEstado = filterEstado === 'Todos' || v.estado === filterEstado;
       return matchSearch && matchEstado;
     })
     .sort((a, b) => {
@@ -681,8 +680,8 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
   // Stats
   const stats = {
     total:      vouchers.length,
-    pendientes: vouchers.filter(v => estadoKey(v.estado) === 'PENDIENTE').length,
-    confirmados:vouchers.filter(v => estadoKey(v.estado) === 'CONFIRMADO').length,
+    pendientes: vouchers.filter(v => v.estado === 'Pendiente').length,
+    confirmados:vouchers.filter(v => v.estado === 'Reserva Confirmada').length,
     hoy: (() => {
       const hoy = new Date().toISOString().slice(0, 10);
       return vouchers.filter(v => v.fecha === hoy).length;
@@ -749,15 +748,15 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
             />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {['TODOS', ...ESTADOS].map(s => {
-              const cfg = s === 'TODOS' ? null : ESTADO_CFG[s];
+            {['Todos', ...ESTADOS].map(s => {
+              const cfg = s === 'Todos' ? null : ESTADO_CFG[s];
               return (
                 <button
                   key={s}
                   onClick={() => setFilterEstado(s)}
                   className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-colors ${
                     filterEstado === s
-                      ? s === 'TODOS'
+                      ? s === 'Todos'
                         ? 'bg-orange-600 text-white'
                         : `${cfg!.bg} ${cfg!.text} border border-current/20`
                       : 'bg-gray-800 text-gray-500 border border-gray-700 hover:border-gray-600'
@@ -787,7 +786,7 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
           <div className="text-center py-16">
             <div className="text-4xl mb-3">🎫</div>
             <p className="text-gray-600 text-sm">
-              {search || filterEstado !== 'TODOS' ? 'Sin resultados para este filtro' : 'No hay vouchers aún'}
+              {search || filterEstado !== 'Todos' ? 'Sin resultados para este filtro' : 'No hay vouchers aún'}
             </p>
             <button onClick={() => setShowForm(true)} className="mt-4 text-orange-400 text-sm font-bold hover:text-orange-300">
               Crear el primero →
