@@ -597,7 +597,10 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
 
   // Links (solo si existen)
   if (item.cotizacionId?.trim()) fields['ID CotizacionGG'] = [item.cotizacionId];
-  if (item.servicioId?.trim())   fields['Servicio']         = [item.servicioId];
+  // Alojamientos vienen de otra tabla Airtable — no se pueden linkear en campo Servicio
+  const isAlojamiento = (item.servicioTipo || '').toLowerCase().includes('hotel') ||
+                        (item.servicioTipo || '').toLowerCase().includes('alojamiento');
+  if (item.servicioId?.trim() && !isAlojamiento) fields['Servicio'] = [item.servicioId];
 
   return fields;
 }
