@@ -16,6 +16,15 @@ const headers = () => ({
   'Content-Type': 'application/json',
 });
 
+function esc(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function safeDate(d) {
   if (!d) return null;
   if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
@@ -176,6 +185,7 @@ async function fetchAlojamientoMeta(nombre) {
   return { images: [], description: '' };
 }
 
+// Returns { card, modal } — modals are rendered at body level to avoid stacking context issues
 function renderServiceCard(item, index) {
   const tipo = item.servicioTipo || 'otro';
   const fallback = FALLBACK_IMGS[tipo] || FALLBACK_IMGS['tour'];
@@ -197,7 +207,7 @@ function renderServiceCard(item, index) {
          onclick="setModalImg('${mid}',${i})"
          onerror="this.style.display='none'">`).join('');
 
-  return `
+  const card = `
   <div style="background:white;border:2px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:16px;">
     <div style="display:flex;gap:4px;padding:10px 10px 0;">${photoGrid}</div>
     <div style="padding:14px 16px 16px;">
@@ -205,10 +215,10 @@ function renderServiceCard(item, index) {
         <div style="flex:1;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
             <span style="background:#0ea5e9;color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${index + 1}</span>
-            <h4 style="margin:0;color:#1e293b;font-size:15px;font-weight:700;">${item.servicioNombre}</h4>
+            <h4 style="margin:0;color:#1e293b;font-size:15px;font-weight:700;">${esc(item.servicioNombre)}</h4>
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:#64748b;">
-            <span style="text-transform:uppercase;background:#f1f5f9;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;">${tipo}</span>
+            <span style="text-transform:uppercase;background:#f1f5f9;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;">${esc(tipo)}</span>
             <span>👥 ${item.personas} persona${item.personas !== 1 ? 's' : ''}</span>
             ${item.cantidad > 1 ? `<span>× ${item.cantidad} unidades</span>` : ''}
           </div>
@@ -219,30 +229,31 @@ function renderServiceCard(item, index) {
         </div>
       </div>
       ${item.description ? `
-      <div id="${mid}-short" style="font-size:13px;color:#64748b;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">
-        ${item.description}
+      <div style="font-size:13px;color:#64748b;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">
+        ${esc(item.description)}
       </div>
       <button onclick="openModal('${mid}',0)"
         style="margin-top:6px;background:none;border:none;color:#0ea5e9;font-size:12px;font-weight:600;cursor:pointer;padding:0;">
         Ver más info e imágenes ▼
       </button>` : ''}
     </div>
-  </div>
+  </div>`;
 
+  const modal = `
   <div id="${mid}" onclick="if(event.target===this)closeModal('${mid}')"
        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px;">
     <div style="background:white;border-radius:14px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;position:relative;">
       <button onclick="closeModal('${mid}')"
         style="position:sticky;top:10px;float:right;margin:10px 12px 0 0;background:#1e293b;color:white;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;z-index:10;">✕</button>
       <div style="padding:16px 16px 0;">
-        <img id="${mid}-main" src="${images[0]}" alt="${item.servicioNombre}"
+        <img id="${mid}-main" src="${images[0]}" alt="${esc(item.servicioNombre)}"
           style="width:100%;height:280px;object-fit:cover;border-radius:10px;display:block;"
           onerror="this.style.display='none'">
       </div>
       ${images.length > 1 ? `<div style="display:flex;gap:8px;padding:10px 16px 0;flex-wrap:wrap;">${thumbs}</div>` : ''}
       <div style="padding:14px 16px;">
-        <h3 style="margin:0 0 8px;color:#1e293b;font-size:17px;">${item.servicioNombre}</h3>
-        ${item.description ? `<p style="margin:0 0 12px;font-size:14px;color:#475569;line-height:1.65;">${item.description}</p>` : ''}
+        <h3 style="margin:0 0 8px;color:#1e293b;font-size:17px;">${esc(item.servicioNombre)}</h3>
+        ${item.description ? `<p style="margin:0 0 12px;font-size:14px;color:#475569;line-height:1.65;">${esc(item.description)}</p>` : ''}
         <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:13px;color:#64748b;">Subtotal</span>
           <span style="color:#10b981;font-size:20px;font-weight:700;">$${fmtCOP(item.subtotal)} COP</span>
@@ -250,11 +261,15 @@ function renderServiceCard(item, index) {
       </div>
     </div>
   </div>`;
+
+  return { card, modal };
 }
 
 function buildPage(cotizacion, items, now) {
   const totalPax = cotizacion.adultos + cotizacion.ninos + cotizacion.bebes;
-  const cards = items.map((item, i) => renderServiceCard(item, i)).join('');
+  const rendered = items.map((item, i) => renderServiceCard(item, i));
+  const cards  = rendered.map(r => r.card).join('');
+  const modals = rendered.map(r => r.modal).join('');
   const emitida = now.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
 
   return `<!DOCTYPE html>
@@ -382,6 +397,8 @@ function buildPage(cotizacion, items, now) {
   </div>
 
 </div>
+
+${modals}
 
 <script>
   function openModal(id, imgIndex) {
