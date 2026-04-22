@@ -377,9 +377,25 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
           {voucher.reservaNum && (
             <p className="text-[11px] text-orange-200 mt-1 font-mono"># {voucher.reservaNum}</p>
           )}
-          <span className={`mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase ${cfg.bg} ${cfg.text} border border-white/20`}>
-            {cfg.icon} {cfg.label}
-          </span>
+          <div className="mt-2 flex gap-1.5 flex-wrap">
+            {ESTADOS.map(s => {
+              const c = ESTADO_CFG[s];
+              const isActive = voucher.estado === s;
+              return (
+                <button
+                  key={s}
+                  onClick={() => { onUpdateEstado(voucher.id, s); onClose(); }}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold border transition-all ${
+                    isActive
+                      ? `${c.bg} ${c.text} border-white/30 scale-105`
+                      : 'bg-black/20 text-white/60 border-white/10 hover:bg-black/30 hover:text-white'
+                  }`}
+                >
+                  {c.icon} {c.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="px-5 py-5 space-y-4">
@@ -438,29 +454,6 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
             </a>
           )}
 
-          {/* Cambiar estado */}
-          <div>
-            <p className="text-[9px] uppercase text-gray-400 font-bold tracking-widest mb-2">Cambiar Estado</p>
-            <div className="flex gap-2 flex-wrap">
-              {ESTADOS.map(s => {
-                const c = ESTADO_CFG[s];
-                const isActive = voucher.estado === s;
-                return (
-                  <button
-                    key={s}
-                    onClick={() => { onUpdateEstado(voucher.id, s); onClose(); }}
-                    className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-colors ${
-                      isActive
-                        ? `${c.bg} ${c.text} border-current/30`
-                        : 'bg-gray-100 text-gray-500 border-gray-200 hover:border-gray-400'
-                    }`}
-                  >
-                    {c.icon} {c.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
 
         {/* Footer GuíaSAI */}
