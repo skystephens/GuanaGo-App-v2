@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ArrowLeft, Plus, Send, Trash2, Calendar, Users, DollarSign, Clock,
   CheckCircle2, AlertCircle, FileText, Search, Filter, User, Mail, Phone,
-  Download, Eye, Loader2, Bot, ChevronDown, ChevronUp, Sparkles,
+  Download, Eye, Loader2, Bot, ChevronDown, ChevronUp, Sparkles, Link2,
 } from 'lucide-react';
 import { AppRoute, Cotizacion, CotizacionItem, Tour, QuoteStatus, QUOTE_STATUS_CONFIG } from '../../types';
 import {
@@ -1135,6 +1135,17 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  const url = `https://www.guanago.travel/cotizacion/${selectedCotizacion?.id}`;
+                  navigator.clipboard.writeText(url).then(() => alert('✅ Link copiado: ' + url));
+                }}
+                title="Copiar link público para compartir con el cliente"
+                className="flex items-center gap-2 px-4 py-3 bg-purple-700 hover:bg-purple-600 rounded-lg transition-colors font-medium"
+              >
+                <Link2 className="w-5 h-5" />
+                Copiar Link
+              </button>
               <button
                 onClick={handlePreview}
                 className="flex items-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors font-medium"

@@ -20,6 +20,7 @@ import agentRoutes from './backend/routes/agent.js';
 import quotationsRoutes from './backend/routes/quotations.js';
 import storageRoutes from './backend/routes/storage.js';
 import coworkRoutes from './backend/routes/cowork.js';
+import publicQuoteRoutes from './backend/routes/publicQuote.js';
 
 // Import middleware
 import { requestLogger } from './backend/middleware/logger.js';
@@ -199,6 +200,10 @@ app.use('/agencias', (req, res) => {
     res.status(404).send('GuiaSAI B2B not built. Run: cd guiasai-b2b && npm run build');
   }
 });
+
+// ==================== PUBLIC QUOTATION PAGE ====================
+// /cotizacion/:id — página pública sin auth (compartible con clientes)
+app.use('/cotizacion', publicQuoteRoutes);
 
 // ==================== SPA FALLBACK ====================
 // Servir index.html para cualquier ruta no API (GuanaGO)
