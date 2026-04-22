@@ -330,7 +330,7 @@ function VoucherCard({ voucher, onSelect, onUpdateEstado }: {
           <span>guiasanandresislas.com</span>
         </div>
         <select
-          value={estadoKey(voucher.estado)}
+          value={voucher.estado}
           onChange={e => { e.stopPropagation(); onUpdateEstado(voucher.id, e.target.value); }}
           className="text-[10px] bg-gray-100 border border-gray-200 rounded-lg px-1.5 py-1 text-gray-600 focus:outline-none focus:border-orange-500"
           onClick={e => e.stopPropagation()}
@@ -444,7 +444,7 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
             <div className="flex gap-2 flex-wrap">
               {ESTADOS.map(s => {
                 const c = ESTADO_CFG[s];
-                const isActive = estadoKey(voucher.estado) === s;
+                const isActive = voucher.estado === s;
                 return (
                   <button
                     key={s}
