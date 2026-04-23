@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ArrowLeft, Plus, Send, Trash2, Calendar, Users, DollarSign, Clock,
   CheckCircle2, AlertCircle, FileText, Search, Filter, User, Mail, Phone,
-  Download, Eye, Loader2, Bot, ChevronDown, ChevronUp, Sparkles, Link2,
+  Download, Eye, Loader2, Bot, ChevronDown, ChevronUp, Sparkles, Link2, CreditCard, X,
 } from 'lucide-react';
 import { AppRoute, Cotizacion, CotizacionItem, Tour, QuoteStatus, QUOTE_STATUS_CONFIG } from '../../types';
 import {
@@ -291,6 +291,40 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [inlineTotalId, setInlineTotalId] = useState<string | null>(null);
   const [inlineTotalValue, setInlineTotalValue] = useState('');
   const inlineTotalSavingRef = useRef(false);
+
+  // ── PayU Payment Link ──────────────────────────────────────────────────────
+  const [showPayModal, setShowPayModal]   = useState(false);
+  const [payLoading, setPayLoading]       = useState(false);
+  const [payResult, setPayResult]         = useState<{ pagoUrl: string; referenceCode: string; test: boolean } | null>(null);
+  const [payAmount, setPayAmount]         = useState('');
+
+  const handleGeneratePayLink = async () => {
+    if (!selectedCotizacion) return;
+    const amount = parseFloat(payAmount) || selectedCotizacion.precioTotal;
+    if (!amount || amount <= 0) { alert('El total de la cotización es $0. Agrega servicios primero.'); return; }
+    setPayLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/payments/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cotizacionId: selectedCotizacion.id,
+          amount,
+          description: `Cotización GuíaSAI — ${selectedCotizacion.nombre}`,
+          buyerName:  selectedCotizacion.nombre,
+          buyerEmail: selectedCotizacion.email,
+          buyerPhone: selectedCotizacion.telefono,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error creando link');
+      setPayResult(data);
+    } catch (err: any) {
+      alert('❌ ' + err.message);
+    } finally {
+      setPayLoading(false);
+    }
+  };
 
   // Modo agregar item: catálogo o ítem libre
   const [addItemMode, setAddItemMode] = useState<'catalog' | 'free'>('catalog');
@@ -1147,6 +1181,15 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {/* 💳 Generar Link de Pago PayU */}
+              <button
+                onClick={() => { setPayResult(null); setPayAmount(String(selectedCotizacion.precioTotal || '')); setShowPayModal(true); }}
+                title="Generar link de pago PayU para cobrarle al cliente"
+                className="flex items-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors font-medium"
+              >
+                <CreditCard className="w-5 h-5" />
+                Cobrar
+              </button>
               <button
                 onClick={() => {
                   const url = `https://www.guanago.travel/cotizacion/${selectedCotizacion?.id}`;
@@ -1773,6 +1816,115 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
           </div>
         </div>
       </div>
+
+      {/* ── Modal PayU: Generar Link de Pago ── */}
+      {showPayModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75" onClick={() => setShowPayModal(false)}>
+          <div className="bg-gray-900 rounded-2xl w-full max-w-md shadow-2xl border border-gray-700" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white">Generar Link de Pago</h3>
+                  <p className="text-xs text-gray-400">PayU Latam · Tarjeta / PSE / Efecty</p>
+                </div>
+              </div>
+              <button onClick={() => setShowPayModal(false)} className="text-gray-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              {!payResult ? (
+                <>
+                  {/* Cliente */}
+                  <div className="bg-gray-800 rounded-xl p-4 space-y-1">
+                    <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-2">Cliente</p>
+                    <p className="text-white font-semibold">{selectedCotizacion?.nombre}</p>
+                    {selectedCotizacion?.email && <p className="text-gray-400 text-sm">{selectedCotizacion.email}</p>}
+                    {selectedCotizacion?.telefono && <p className="text-gray-400 text-sm">{selectedCotizacion.telefono}</p>}
+                  </div>
+
+                  {/* Monto */}
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Monto a cobrar (COP)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={payAmount}
+                      onChange={e => setPayAmount(e.target.value)}
+                      placeholder="Ej: 938390"
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white text-lg font-bold focus:border-emerald-500 focus:outline-none"
+                    />
+                    {payAmount && parseFloat(payAmount) > 0 && (
+                      <p className="text-emerald-400 text-sm mt-1 font-semibold">
+                        ${parseFloat(payAmount).toLocaleString('es-CO')} COP
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Total cotización: ${(selectedCotizacion?.precioTotal || 0).toLocaleString('es-CO')} COP
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleGeneratePayLink}
+                    disabled={payLoading || !payAmount || parseFloat(payAmount) <= 0}
+                    className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold text-white transition-colors flex items-center justify-center gap-2"
+                  >
+                    {payLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
+                    {payLoading ? 'Generando...' : 'Generar Link de Pago'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Resultado */}
+                  <div className="text-center py-2">
+                    <div className="text-4xl mb-3">✅</div>
+                    <p className="text-white font-bold text-lg">¡Link de pago listo!</p>
+                    {payResult.test && (
+                      <span className="text-xs bg-yellow-900/50 text-yellow-400 border border-yellow-700 px-2 py-0.5 rounded-full">
+                        Modo sandbox (prueba)
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="bg-gray-800 rounded-xl p-3 break-all">
+                    <p className="text-emerald-400 text-sm font-mono">{payResult.pagoUrl}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => navigator.clipboard.writeText(payResult.pagoUrl).then(() => alert('✅ Link copiado'))}
+                      className="py-3 bg-purple-700 hover:bg-purple-600 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
+                    >
+                      <Link2 className="w-4 h-4" />
+                      Copiar Link
+                    </button>
+                    <a
+                      href={`https://wa.me/${(selectedCotizacion?.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${selectedCotizacion?.nombre?.split(' ')[0]}, aquí está el link para realizar el pago de tu reserva con GuíaSAI:\n\n${payResult.pagoUrl}\n\n¡Pago 100% seguro con PayU! 🔒`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-3 bg-green-700 hover:bg-green-600 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 text-white no-underline"
+                    >
+                      💬 Enviar WA
+                    </a>
+                  </div>
+
+                  <button
+                    onClick={() => { setPayResult(null); }}
+                    className="w-full py-2.5 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm text-gray-300"
+                  >
+                    Generar otro link
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     );
   }
 

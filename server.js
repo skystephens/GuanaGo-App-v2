@@ -21,6 +21,7 @@ import quotationsRoutes from './backend/routes/quotations.js';
 import storageRoutes from './backend/routes/storage.js';
 import coworkRoutes from './backend/routes/cowork.js';
 import publicQuoteRoutes from './backend/routes/publicQuote.js';
+import paymentsRoutes from './backend/routes/payments.js';
 
 // Import middleware
 import { requestLogger } from './backend/middleware/logger.js';
@@ -204,6 +205,13 @@ app.use('/agencias', (req, res) => {
 // ==================== PUBLIC QUOTATION PAGE ====================
 // /cotizacion/:id — página pública sin auth (compartible con clientes)
 app.use('/cotizacion', publicQuoteRoutes);
+
+// ==================== PAYMENT LINKS ====================
+// POST /api/payments/create   → genera link de pago firmado (PayU)
+// GET  /pagar/:referenceCode  → página de pago auto-submit a PayU
+// POST /api/payments/webhook  → confirmación de pago desde PayU
+app.use('/api/payments', paymentsRoutes);
+app.use('/pagar', paymentsRoutes);
 
 // ==================== SPA FALLBACK ====================
 // Servir index.html para cualquier ruta no API (GuanaGO)
