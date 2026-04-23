@@ -185,6 +185,53 @@ async function fetchAlojamientoMeta(nombre) {
   return { images: [], description: '' };
 }
 
+// Renders a boarding-pass style card for tipo='tiquete' (no photo grid)
+function renderFlightCard(item) {
+  const nombre = item.servicioNombre || '';
+  // Parse: "✈️ JetSmart · CLO→ADZ · Ida y vuelta | Sal. 12:33 | ..."
+  const parts = nombre.replace(/^✈️\s*/, '').split('·').map(s => s.trim());
+  const aerolinea = parts[0] || 'Vuelo';
+  const ruta      = parts[1] || '';
+  const tipoVuelo = parts[2] ? parts[2].split('|')[0].trim() : '';
+  const notas     = nombre.includes('|') ? nombre.split('|').slice(1).map(s => s.trim()).join(' · ') : '';
+  const [orig, dest] = ruta.includes('→') ? ruta.split('→').map(s => s.trim()) : [ruta, ''];
+
+  return `
+  <div style="background:white;border:2px solid #bfdbfe;border-radius:12px;overflow:hidden;margin-bottom:12px;">
+    <!-- header azul -->
+    <div style="background:linear-gradient(135deg,#1d4ed8,#2563eb);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:22px;">✈️</span>
+        <div>
+          <div style="color:white;font-weight:700;font-size:15px;">${esc(aerolinea)}</div>
+          ${tipoVuelo ? `<div style="color:rgba(255,255,255,.8);font-size:11px;">${esc(tipoVuelo)}</div>` : ''}
+        </div>
+      </div>
+      <div style="color:#10b981;font-size:18px;font-weight:700;background:white;padding:4px 12px;border-radius:20px;">
+        $${fmtCOP(item.subtotal)}
+      </div>
+    </div>
+    <!-- ruta -->
+    <div style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed #e2e8f0;">
+      <div style="text-align:center;">
+        <div style="font-size:26px;font-weight:800;color:#1e293b;">${esc(orig)}</div>
+        <div style="font-size:11px;color:#64748b;">Origen</div>
+      </div>
+      <div style="color:#94a3b8;font-size:20px;flex:1;text-align:center;">→</div>
+      <div style="text-align:center;">
+        <div style="font-size:26px;font-weight:800;color:#1e293b;">${esc(dest || 'ADZ')}</div>
+        <div style="font-size:11px;color:#64748b;">Destino</div>
+      </div>
+    </div>
+    <!-- detalles -->
+    <div style="padding:12px 18px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#64748b;flex-wrap:wrap;gap:8px;">
+      <div>👥 ${item.personas} pasajero${item.personas !== 1 ? 's' : ''}</div>
+      <div>$${fmtCOP(item.valorUnitario)}/pax${item.cantidad > 1 ? ` × ${item.cantidad}` : ''}</div>
+      ${notas ? `<div style="color:#475569;">🕐 ${esc(notas)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
 // Returns { card, modal } — modals are rendered at body level to avoid stacking context issues
 function renderServiceCard(item, index) {
   const tipo = item.servicioTipo || 'otro';
@@ -272,7 +319,14 @@ function renderServiceCard(item, index) {
 
 function buildPage(cotizacion, items, now) {
   const totalPax = cotizacion.adultos + cotizacion.ninos + cotizacion.bebes;
-  const rendered = items.map((item, i) => renderServiceCard(item, i));
+
+  // Separate tiquetes from regular services
+  const tiquetes  = items.filter(i => i.servicioTipo === 'tiquete');
+  const servicios = items.filter(i => i.servicioTipo !== 'tiquete');
+
+  const flightCards = tiquetes.map(t => renderFlightCard(t)).join('');
+  let svcIndex = 0;
+  const rendered = servicios.map(item => renderServiceCard(item, svcIndex++));
   const cards  = rendered.map(r => r.card).join('');
   const modals = rendered.map(r => r.modal).join('');
   const emitida = now.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -338,11 +392,19 @@ function buildPage(cotizacion, items, now) {
     </table>
   </div>
 
+  ${tiquetes.length > 0 ? `
+  <!-- Tiquetes Aéreos -->
+  <div style="margin-bottom:30px;">
+    <h3 style="color:#1d4ed8;margin:0 0 15px;font-size:18px;font-weight:600;">✈️ Tiquetes Aéreos</h3>
+    ${flightCards}
+  </div>` : ''}
+
   <!-- Servicios -->
+  ${servicios.length > 0 ? `
   <div style="margin-bottom:30px;">
     <h3 style="color:#334155;margin:0 0 15px;font-size:18px;font-weight:600;">Servicios Incluidos</h3>
     ${cards}
-  </div>
+  </div>` : ''}
 
   <!-- Total -->
   <div style="background:linear-gradient(135deg,#10b981,#059669);padding:24px;border-radius:12px;margin-bottom:30px;">

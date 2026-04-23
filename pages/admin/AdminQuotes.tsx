@@ -296,7 +296,9 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [addItemMode, setAddItemMode] = useState<'catalog' | 'free'>('catalog');
   const [freeItemForm, setFreeItemForm] = useState<{
     nombre: string; tipo: CotizacionItem['servicioTipo']; valorUnitario: string; personas: string; cantidad: string;
-  }>({ nombre: '', tipo: 'tour', valorUnitario: '', personas: '2', cantidad: '1' });
+    aerolinea: string; origen: string; destino: string; tipoVuelo: string; notasTiquete: string;
+  }>({ nombre: '', tipo: 'tiquete', valorUnitario: '', personas: '2', cantidad: '1',
+       aerolinea: 'JetSmart', origen: '', destino: 'ADZ', tipoVuelo: 'Ida y vuelta', notasTiquete: '' });
 
   // Form states
   const [formData, setFormData] = useState({
@@ -545,7 +547,17 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
   const handleAddFreeItem = async () => {
     if (!selectedCotizacion) return;
-    const nombre = freeItemForm.nombre.trim();
+    let nombre = freeItemForm.nombre.trim();
+
+    // Tiquete: auto-build nombre from flight details
+    if (freeItemForm.tipo === 'tiquete') {
+      const orig = (freeItemForm.origen || '').toUpperCase().trim();
+      const dest = (freeItemForm.destino || '').toUpperCase().trim();
+      if (!orig || !dest) { alert('Ingresa origen y destino del vuelo'); return; }
+      const notasPart = freeItemForm.notasTiquete.trim() ? ` | ${freeItemForm.notasTiquete.trim()}` : '';
+      nombre = `✈️ ${freeItemForm.aerolinea} · ${orig}→${dest} · ${freeItemForm.tipoVuelo}${notasPart}`;
+    }
+
     const valorUnitario = parseFloat(freeItemForm.valorUnitario);
     const personas = parseInt(freeItemForm.personas) || 1;
     const cantidad = parseInt(freeItemForm.cantidad) || 1;
@@ -1596,43 +1608,114 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                   </>
                 ) : (
                   /* ── ÍTEM LIBRE ── */
-                  <div className="space-y-4">
-                    <p className="text-xs text-gray-500">
-                      Agrega tiquetes, seguros, traslados o cualquier ítem no listado en el catálogo.
-                    </p>
-
+                  <div className="space-y-3">
+                    {/* Tipo primero */}
                     <div>
-                      <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Nombre del ítem *</label>
-                      <input
-                        type="text"
-                        value={freeItemForm.nombre}
-                        onChange={e => setFreeItemForm({ ...freeItemForm, nombre: e.target.value })}
-                        placeholder="Ej: Tiquete aéreo BOG–ADZ ida y vuelta"
-                        className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-purple-500 focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Tipo</label>
+                      <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Tipo de ítem</label>
                       <select
                         value={freeItemForm.tipo}
-                        onChange={e => setFreeItemForm({ ...freeItemForm, tipo: e.target.value as CotizacionItem['servicioTipo'] })}
+                        onChange={e => setFreeItemForm({ ...freeItemForm, tipo: e.target.value as CotizacionItem['servicioTipo'], nombre: '' })}
                         className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-purple-500 focus:outline-none"
                       >
-                        <option value="tiquete">Tiquete aéreo</option>
-                        <option value="seguro">Seguro de viaje</option>
-                        <option value="transfer">Transfer / Traslado</option>
-                        <option value="tour">Tour</option>
-                        <option value="hotel">Alojamiento</option>
-                        <option value="taxi">Taxi</option>
-                        <option value="package">Paquete</option>
-                        <option value="otro">Otro</option>
+                        <option value="tiquete">✈️ Tiquete aéreo</option>
+                        <option value="gestion">💼 Costos de gestión</option>
+                        <option value="seguro">🛡️ Seguro de viaje</option>
+                        <option value="transfer">🚐 Transfer / Traslado</option>
+                        <option value="tour">🏄 Tour</option>
+                        <option value="hotel">🏨 Alojamiento</option>
+                        <option value="taxi">🚕 Taxi</option>
+                        <option value="otro">📦 Otro</option>
                       </select>
                     </div>
 
+                    {/* ── Campos específicos para TIQUETE ── */}
+                    {freeItemForm.tipo === 'tiquete' && (
+                      <div className="space-y-3 bg-blue-950/30 rounded-lg p-3 border border-blue-800/40">
+                        <p className="text-[10px] text-blue-300 font-semibold uppercase tracking-wide">Detalles del vuelo</p>
+
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Aerolínea</label>
+                          <select
+                            value={freeItemForm.aerolinea}
+                            onChange={e => setFreeItemForm({ ...freeItemForm, aerolinea: e.target.value })}
+                            className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
+                          >
+                            {['JetSmart', 'LATAM', 'Avianca', 'Copa Airlines', 'Wingo', 'Otra'].map(a => (
+                              <option key={a} value={a}>{a}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Origen (IATA)</label>
+                            <input
+                              type="text"
+                              value={freeItemForm.origen}
+                              onChange={e => setFreeItemForm({ ...freeItemForm, origen: e.target.value.toUpperCase() })}
+                              placeholder="BOG / CLO / MDE"
+                              maxLength={3}
+                              className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none uppercase"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Destino (IATA)</label>
+                            <input
+                              type="text"
+                              value={freeItemForm.destino}
+                              onChange={e => setFreeItemForm({ ...freeItemForm, destino: e.target.value.toUpperCase() })}
+                              placeholder="ADZ"
+                              maxLength={3}
+                              className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none uppercase"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Tipo de vuelo</label>
+                          <select
+                            value={freeItemForm.tipoVuelo}
+                            onChange={e => setFreeItemForm({ ...freeItemForm, tipoVuelo: e.target.value })}
+                            className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
+                          >
+                            <option>Ida y vuelta</option>
+                            <option>Solo ida</option>
+                            <option>Solo regreso</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Notas (horario, # vuelo, etc.)</label>
+                          <input
+                            type="text"
+                            value={freeItemForm.notasTiquete}
+                            onChange={e => setFreeItemForm({ ...freeItemForm, notasTiquete: e.target.value })}
+                            placeholder="Sal. 12:33 · Reg. 09:51 · 1 escala"
+                            className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Nombre manual (si no es tiquete) */}
+                    {freeItemForm.tipo !== 'tiquete' && (
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Nombre del ítem *</label>
+                        <input
+                          type="text"
+                          value={freeItemForm.nombre}
+                          onChange={e => setFreeItemForm({ ...freeItemForm, nombre: e.target.value })}
+                          placeholder={freeItemForm.tipo === 'gestion' ? 'Ej: Costos de gestión tiquetes' : 'Ej: Seguro de viaje Assist Card'}
+                          className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Valor Unit. $</label>
+                        <label className="block text-xs text-gray-400 mb-1.5 font-semibold">
+                          {freeItemForm.tipo === 'tiquete' ? 'Precio/pax $' : 'Valor Unit. $'}
+                        </label>
                         <input
                           type="number"
                           min="0"
@@ -1668,7 +1751,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                     {freeItemForm.valorUnitario && parseFloat(freeItemForm.valorUnitario) > 0 && (
                       <div className="flex justify-between items-center py-2 px-3 bg-gray-800 rounded-lg text-sm">
                         <span className="text-gray-400">
-                          ${parseFloat(freeItemForm.valorUnitario || '0').toLocaleString('es-CO')} × {freeItemForm.personas || 1} × {freeItemForm.cantidad || 1}
+                          ${parseFloat(freeItemForm.valorUnitario || '0').toLocaleString('es-CO')} × {freeItemForm.personas || 1}pax × {freeItemForm.cantidad || 1}
                         </span>
                         <span className="font-bold text-green-400">
                           = ${(parseFloat(freeItemForm.valorUnitario || '0') * parseInt(freeItemForm.personas || '1') * parseInt(freeItemForm.cantidad || '1')).toLocaleString('es-CO')}
@@ -1681,7 +1764,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                       className="w-full py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2"
                     >
                       <Plus className="w-4 h-4" />
-                      Agregar Ítem Libre
+                      {freeItemForm.tipo === 'tiquete' ? 'Agregar Tiquete Aéreo' : 'Agregar Ítem'}
                     </button>
                   </div>
                 )}
