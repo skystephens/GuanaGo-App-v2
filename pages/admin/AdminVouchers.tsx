@@ -349,6 +349,7 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
   onClose: () => void;
   onUpdateEstado: (id: string, estado: string) => void;
 }) {
+  const [showEstados, setShowEstados] = useState(false);
   const cfg = ESTADO_CFG[voucher.estado] ?? ESTADO_CFG['Pendiente'];
   const mapsUrl = voucher.puntoEncuentro
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(voucher.puntoEncuentro + ', San Andrés, Colombia')}`
@@ -362,40 +363,46 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
       >
         {/* ── Header naranja ── */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-6 relative">
+          {/* X cerrar */}
           <button
             onClick={onClose}
             className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/20 flex items-center justify-center hover:bg-black/40 transition-colors"
           >
             <X size={13} className="text-white" />
           </button>
+          {/* Badge estado activo — top right, debajo del X */}
+          <button
+            onClick={() => setShowEstados(v => !v)}
+            className={`absolute top-12 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold border border-white/30 transition-all ${cfg.bg} ${cfg.text}`}
+          >
+            {cfg.icon} {cfg.label} ▾
+          </button>
           <p className="text-[9px] uppercase tracking-widest text-orange-100 font-bold mb-1">
             Experiencia Reservada
           </p>
-          <h2 className="text-xl font-black text-white uppercase leading-tight pr-8">
+          <h2 className="text-xl font-black text-white uppercase leading-tight pr-24">
             {voucher.tourName || 'Servicio turístico'}
           </h2>
           {voucher.reservaNum && (
             <p className="text-[11px] text-orange-200 mt-1 font-mono"># {voucher.reservaNum}</p>
           )}
-          <div className="mt-2 flex gap-1.5 flex-wrap">
-            {ESTADOS.map(s => {
-              const c = ESTADO_CFG[s];
-              const isActive = voucher.estado === s;
-              return (
-                <button
-                  key={s}
-                  onClick={() => { onUpdateEstado(voucher.id, s); onClose(); }}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold border transition-all ${
-                    isActive
-                      ? `${c.bg} ${c.text} border-white/30 scale-105`
-                      : 'bg-black/20 text-white/60 border-white/10 hover:bg-black/30 hover:text-white'
-                  }`}
-                >
-                  {c.icon} {c.label}
-                </button>
-              );
-            })}
-          </div>
+          {/* Dropdown de cambio de estado */}
+          {showEstados && (
+            <div className="mt-3 flex gap-1.5 flex-wrap">
+              {ESTADOS.filter(s => s !== voucher.estado).map(s => {
+                const c = ESTADO_CFG[s];
+                return (
+                  <button
+                    key={s}
+                    onClick={() => { onUpdateEstado(voucher.id, s); onClose(); }}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold border bg-black/20 text-white/70 border-white/10 hover:bg-black/40 hover:text-white transition-all"
+                  >
+                    {c.icon} {c.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <div className="px-5 py-5 space-y-4">
