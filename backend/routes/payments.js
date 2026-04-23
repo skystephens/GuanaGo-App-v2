@@ -19,9 +19,10 @@ import crypto from 'crypto';
 const router = express.Router();
 
 // ─── PayU endpoints ───────────────────────────────────────────────────────────
+// Usa PAYU_GATEWAY_URL del .env si está definido; si no, usa el checkout estándar.
 const PAYU_CHECKOUT = {
   sandbox: 'https://sandbox.checkout.payulatam.com/ppp-web-gateway-payu/',
-  prod:    'https://checkout.payulatam.com/ppp-web-gateway-payu/',
+  prod:    process.env.PAYU_GATEWAY_URL || 'https://checkout.payulatam.com/ppp-web-gateway-payu/',
 };
 
 // ─── Almacén en memoria (TTL 24h) ─────────────────────────────────────────────
