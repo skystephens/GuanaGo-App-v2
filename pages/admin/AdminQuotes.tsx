@@ -2,8 +2,10 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ArrowLeft, Plus, Send, Trash2, Calendar, Users, DollarSign, Clock,
   CheckCircle2, AlertCircle, FileText, Search, Filter, User, Mail, Phone,
-  Download, Eye, Loader2, Bot, ChevronDown, ChevronUp, Sparkles, Link2, CreditCard, X,
+  Download, Eye, Loader2, Bot, ChevronDown, ChevronUp, Sparkles, Link2,
+  CreditCard, X, Pencil, Check, CalendarDays,
 } from 'lucide-react';
+import DynamicItineraryBuilder from './DynamicItineraryBuilder';
 import { AppRoute, Cotizacion, CotizacionItem, Tour, QuoteStatus, QUOTE_STATUS_CONFIG } from '../../types';
 import {
   getCotizaciones,
@@ -291,6 +293,28 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [inlineTotalId, setInlineTotalId] = useState<string | null>(null);
   const [inlineTotalValue, setInlineTotalValue] = useState('');
   const inlineTotalSavingRef = useRef(false);
+
+  // ── Itinerario ─────────────────────────────────────────────────────────────
+  const [showItinerario, setShowItinerario] = useState(false);
+
+  // ── Notas inline ───────────────────────────────────────────────────────────
+  const [editingNotas, setEditingNotas]   = useState(false);
+  const [notasValue, setNotasValue]       = useState('');
+  const [notasSaving, setNotasSaving]     = useState(false);
+
+  const handleSaveNotas = async () => {
+    if (!selectedCotizacion) return;
+    setNotasSaving(true);
+    try {
+      await updateCotizacion(selectedCotizacion.id, { notasInternas: notasValue });
+      setSelectedCotizacion(prev => prev ? { ...prev, notasInternas: notasValue } : prev);
+      setEditingNotas(false);
+    } catch {
+      alert('Error guardando notas');
+    } finally {
+      setNotasSaving(false);
+    }
+  };
 
   // ── PayU Payment Link ──────────────────────────────────────────────────────
   const [showPayModal, setShowPayModal]   = useState(false);
@@ -1181,6 +1205,15 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {/* 📅 Itinerario */}
+              <button
+                onClick={() => setShowItinerario(true)}
+                title="Abrir planificador de itinerario"
+                className="flex items-center gap-2 px-4 py-3 bg-teal-700 hover:bg-teal-600 rounded-lg transition-colors font-medium"
+              >
+                <CalendarDays className="w-5 h-5" />
+                Itinerario
+              </button>
               {/* 💳 Generar Link de Pago PayU */}
               <button
                 onClick={() => { setPayResult(null); setPayAmount(String(selectedCotizacion.precioTotal || '')); setShowPayModal(true); }}
@@ -1492,13 +1525,55 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 )}
               </div>
 
-              {/* Notas internas */}
-              {selectedCotizacion.notasInternas && (
-                <div className="bg-gray-900 p-6 rounded-xl">
-                  <h3 className="text-xl font-semibold mb-2">Notas Internas</h3>
-                  <p className="text-gray-400">{selectedCotizacion.notasInternas}</p>
+              {/* Notas internas — editable inline */}
+              <div className="bg-gray-900 p-5 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-base font-semibold text-white">Notas Internas</h3>
+                  {!editingNotas ? (
+                    <button
+                      onClick={() => { setNotasValue(selectedCotizacion.notasInternas || ''); setEditingNotas(true); }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      Editar
+                    </button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveNotas}
+                        disabled={notasSaving}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs bg-green-600 hover:bg-green-500 text-white rounded-lg disabled:opacity-50"
+                      >
+                        {notasSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                        Guardar
+                      </button>
+                      <button
+                        onClick={() => setEditingNotas(false)}
+                        className="px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+                {editingNotas ? (
+                  <textarea
+                    value={notasValue}
+                    onChange={e => setNotasValue(e.target.value)}
+                    rows={4}
+                    autoFocus
+                    className="w-full px-3 py-2.5 bg-gray-800 border border-gray-600 rounded-lg text-gray-200 text-sm focus:border-blue-500 focus:outline-none resize-none leading-relaxed"
+                    placeholder="Notas internas, instrucciones especiales, detalles del cliente..."
+                  />
+                ) : (
+                  <p
+                    onClick={() => { setNotasValue(selectedCotizacion.notasInternas || ''); setEditingNotas(true); }}
+                    className={`text-sm leading-relaxed cursor-text rounded-lg px-1 py-1 hover:bg-gray-800 transition-colors ${selectedCotizacion.notasInternas ? 'text-gray-300' : 'text-gray-600 italic'}`}
+                  >
+                    {selectedCotizacion.notasInternas || 'Clic para agregar notas...'}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Columna derecha: Agregar servicios */}
@@ -1816,6 +1891,33 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
           </div>
         </div>
       </div>
+
+      {/* ── Panel Itinerario ── */}
+      {showItinerario && (
+        <div className="fixed inset-0 z-50 flex">
+          {/* Overlay */}
+          <div className="flex-1 bg-black/60" onClick={() => setShowItinerario(false)} />
+          {/* Panel */}
+          <div className="w-full max-w-4xl bg-gray-950 overflow-y-auto flex flex-col">
+            <div className="sticky top-0 z-10 bg-gray-900 px-6 py-3 flex items-center justify-between border-b border-gray-700">
+              <div>
+                <h3 className="font-bold text-white">📅 Itinerario</h3>
+                <p className="text-xs text-gray-400">{selectedCotizacion.nombre} · {selectedCotizacion.fechaInicio} → {selectedCotizacion.fechaFin}</p>
+              </div>
+              <button onClick={() => setShowItinerario(false)} className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-gray-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <DynamicItineraryBuilder
+              initialStartDate={selectedCotizacion.fechaInicio || undefined}
+              initialEndDate={selectedCotizacion.fechaFin || undefined}
+              initialAdults={selectedCotizacion.adultos || 2}
+              initialChildren={selectedCotizacion.ninos || 0}
+              initialInfants={selectedCotizacion.bebes || 0}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ── Modal PayU: Generar Link de Pago ── */}
       {showPayModal && (

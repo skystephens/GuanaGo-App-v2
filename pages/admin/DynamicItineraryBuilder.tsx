@@ -14,11 +14,25 @@ interface SelectedActivity {
   scaling: 'PER_PAX' | 'FIXED';
 }
 
-const DynamicItineraryBuilder: React.FC = () => {
+interface ItineraryProps {
+  initialStartDate?: string;
+  initialEndDate?: string;
+  initialAdults?: number;
+  initialChildren?: number;
+  initialInfants?: number;
+}
+
+const DynamicItineraryBuilder: React.FC<ItineraryProps> = ({
+  initialStartDate,
+  initialEndDate,
+  initialAdults,
+  initialChildren,
+  initialInfants,
+}) => {
   // Estado de Pasajeros con definiciones de edad solicitadas
-  const [adults, setAdults] = useState(2);    // > 18 años
-  const [children, setChildren] = useState(0);  // > 4 años
-  const [infants, setInfants] = useState(0);    // < 4 años (No pagan)
+  const [adults, setAdults] = useState(initialAdults ?? 2);
+  const [children, setChildren] = useState(initialChildren ?? 0);
+  const [infants, setInfants] = useState(initialInfants ?? 0);
   
   // Lógica de pago: Solo pagan adultos y niños
   const paxPaying = adults + children; 
@@ -31,15 +45,17 @@ const DynamicItineraryBuilder: React.FC = () => {
 
   // Fechas de Viaje
   const [startDate, setStartDate] = useState(() => {
-     const d = new Date();
-     d.setDate(d.getDate() + 7); 
-     return d.toISOString().split('T')[0];
+    if (initialStartDate) return initialStartDate;
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().split('T')[0];
   });
   const [endDate, setEndDate] = useState(() => {
+    if (initialEndDate) return initialEndDate;
     const d = new Date();
     d.setDate(d.getDate() + 11);
     return d.toISOString().split('T')[0];
- });
+  });
   const [dates, setDates] = useState<{raw: string, formatted: string}[]>([]);
 
   // Cargar Servicios al Montar
