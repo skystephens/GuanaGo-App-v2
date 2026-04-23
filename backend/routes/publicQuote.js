@@ -91,11 +91,15 @@ async function fetchItems(cotizacionId) {
     const personas      = parseInt(f['Personas'] || '0') || 0;
     const cantidad      = parseInt(f['Cantidad'] || '1') || 1;
     const subtotal      = parseFloat(f['Precio Subtotal'] || '0') || (valorUnitario * personas * cantidad);
+    const nombre = f.Nombre || '';
+    // Detect tiquete by Tipo Item field OR by ✈️ name prefix (for legacy records saved without Tipo Item)
+    let tipoRaw = (f['Tipo Item'] || 'otro').toLowerCase();
+    if (tipoRaw === 'otro' && nombre.startsWith('✈️')) tipoRaw = 'tiquete';
     items.push({
       id:             record.id,
       servicioId:     (f.Servicio || [])[0] || null,
-      servicioNombre: f.Nombre || '',
-      servicioTipo:   (f['Tipo Item'] || 'otro').toLowerCase(),
+      servicioNombre: nombre,
+      servicioTipo:   tipoRaw,
       valorUnitario,
       personas,
       cantidad,

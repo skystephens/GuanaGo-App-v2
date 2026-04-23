@@ -592,6 +592,9 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
   if (item.cantidad      !== undefined) fields['Cantidad']       = item.cantidad;
   if (item.subtotal      !== undefined) fields['Precio Subtotal'] = item.subtotal;
 
+  // Tipo de ítem (tiquete, tour, hotel, gestion, etc.)
+  if (item.servicioTipo) fields['Tipo Item'] = item.servicioTipo;
+
   // Ítem libre (no vinculado al catálogo)
   if (item.esPersonalizado !== undefined) fields['Es Personalizado'] = item.esPersonalizado;
 
