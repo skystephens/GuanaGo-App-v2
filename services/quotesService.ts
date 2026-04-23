@@ -479,16 +479,19 @@ export async function updateCotizacionItem(id: string, updates: Partial<Cotizaci
   try {
     const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES_ITEMS)}/${id}`;
     
+    const mappedFields = mapCotizacionItemToFields(updates);
+    console.log('📤 PATCH campos enviados a Airtable:', mappedFields);
+
     const response = await fetch(url, {
       method: 'PATCH',
       headers: getHeaders(),
-      body: JSON.stringify({
-        fields: mapCotizacionItemToFields(updates)
-      })
+      body: JSON.stringify({ fields: mappedFields })
     });
 
     if (!response.ok) {
-      throw new Error(`Error ${response.status}`);
+      const errBody = await response.json().catch(() => ({}));
+      console.error('❌ Airtable 422 detalle:', JSON.stringify(errBody));
+      throw new Error(`Error ${response.status}: ${errBody?.error?.message || JSON.stringify(errBody)}`);
     }
 
     const data = await response.json();
@@ -591,8 +594,6 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
   if (item.personas      !== undefined) fields['Personas']       = item.personas;
   if (item.cantidad      !== undefined) fields['Cantidad']       = item.cantidad;
   if (item.subtotal      !== undefined) fields['Precio Subtotal'] = item.subtotal;
-
-  // Tipo Item: solo en creación — en PATCH causa 422 si el valor no es opción válida del singleSelect
 
   // Ítem libre (no vinculado al catálogo)
   if (item.esPersonalizado !== undefined) fields['Es Personalizado'] = item.esPersonalizado;

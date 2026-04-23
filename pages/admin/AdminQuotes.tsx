@@ -689,8 +689,16 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       subtotal: newSubtotal
     };
 
-    // Guardar en Airtable
-    const saved = await updateCotizacionItem(itemId, updatedItem);
+    // Guardar en Airtable — solo campos que cambiaron (evita 422 por linked records)
+    const patchFields: Partial<CotizacionItem> = {
+      valorUnitario: valUnit,
+      personas,
+      cantidad,
+      subtotal: newSubtotal,
+      ...(editingItemData.servicioNombre && editingItemData.servicioNombre !== currentItem.servicioNombre
+        ? { servicioNombre: editingItemData.servicioNombre } : {}),
+    };
+    const saved = await updateCotizacionItem(itemId, patchFields);
     if (!saved) {
       alert('❌ Error al guardar el item');
       return;
@@ -742,7 +750,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       subtotal: newSubtotal,
     };
 
-    const saved = await updateCotizacionItem(itemId, updatedItem);
+    const saved = await updateCotizacionItem(itemId, { valorUnitario: newPrice, subtotal: newSubtotal });
     if (saved) {
       const updatedItems = [...items];
       updatedItems[itemIndex] = updatedItem;
@@ -766,7 +774,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     const currentItem = items[itemIndex];
     const newSubtotal = currentItem.valorUnitario * newPersonas * currentItem.cantidad;
     const updatedItem: CotizacionItem = { ...currentItem, personas: newPersonas, subtotal: newSubtotal };
-    const saved = await updateCotizacionItem(itemId, updatedItem);
+    const saved = await updateCotizacionItem(itemId, { personas: newPersonas, subtotal: newSubtotal });
     if (saved) {
       const updatedItems = [...items];
       updatedItems[itemIndex] = updatedItem;
@@ -790,7 +798,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     const currentItem = items[itemIndex];
     const newSubtotal = currentItem.valorUnitario * currentItem.personas * newCantidad;
     const updatedItem: CotizacionItem = { ...currentItem, cantidad: newCantidad, subtotal: newSubtotal };
-    const saved = await updateCotizacionItem(itemId, updatedItem);
+    const saved = await updateCotizacionItem(itemId, { cantidad: newCantidad, subtotal: newSubtotal });
     if (saved) {
       const updatedItems = [...items];
       updatedItems[itemIndex] = updatedItem;
@@ -821,7 +829,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       precioUnitario: newValorUnitario,
       subtotal: newTotal,
     };
-    const saved = await updateCotizacionItem(itemId, updatedItem);
+    const saved = await updateCotizacionItem(itemId, { valorUnitario: newValorUnitario, subtotal: newTotal });
     if (saved) {
       const updatedItems = [...items];
       updatedItems[itemIndex] = updatedItem;
@@ -1386,9 +1394,9 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                             // ── MODO VISUALIZACIÓN (fila tabla Excel) ──
                             <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-x-3 items-center px-3 py-2.5">
                               {/* Nombre */}
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-medium text-sm truncate">{item.servicioNombre}</span>
+                              <div className="min-w-0 overflow-hidden">
+                                <div className="flex items-center gap-1.5 overflow-hidden">
+                                  <span className="font-medium text-sm truncate" title={item.servicioNombre}>{item.servicioNombre}</span>
                                   {item.esPersonalizado && (
                                     <span className="px-1.5 py-0.5 bg-purple-900/40 text-purple-400 rounded text-[9px] font-bold flex-shrink-0">LIBRE</span>
                                   )}
@@ -1397,7 +1405,9 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                  <span className="text-[10px] text-gray-600 uppercase">{item.servicioTipo}</span>
+                                  <span className="text-[10px] text-gray-600 uppercase">
+                                    {item.servicioNombre?.startsWith('✈️') ? 'tiquete' : item.servicioTipo}
+                                  </span>
                                   {item.fecha && (
                                     <span className="text-[10px] text-gray-600">
                                       {safeDate(item.fecha)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' }) ?? ''}
@@ -1890,7 +1900,6 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
             </div>
           </div>
         </div>
-      </div>
 
       {/* ── Panel Itinerario ── */}
       {showItinerario && (
@@ -2027,6 +2036,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
           </div>
         </div>
       )}
+      </div>
     );
   }
 
