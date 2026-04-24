@@ -228,11 +228,16 @@ function renderFlightCard(item) {
       </div>
     </div>
     <!-- detalles -->
-    <div style="padding:12px 18px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#64748b;flex-wrap:wrap;gap:8px;">
+    <div style="padding:10px 18px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#64748b;flex-wrap:wrap;gap:6px;border-bottom:${notas ? '1px dashed #e2e8f0' : 'none'};">
       <div>👥 ${item.personas} pasajero${item.personas !== 1 ? 's' : ''}</div>
       <div>$${fmtCOP(item.valorUnitario)}/pax${item.cantidad > 1 ? ` × ${item.cantidad}` : ''}</div>
-      ${notas ? `<div style="color:#475569;">🕐 ${esc(notas)}</div>` : ''}
     </div>
+    ${notas ? `
+    <!-- notas vuelo -->
+    <div style="padding:12px 18px;background:#f8fafc;">
+      <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">ℹ️ Detalles del vuelo</div>
+      <div style="font-size:13px;color:#334155;line-height:1.7;white-space:pre-line;">${esc(notas).replace(/ · /g, '\n')}</div>
+    </div>` : ''}
   </div>`;
 }
 
