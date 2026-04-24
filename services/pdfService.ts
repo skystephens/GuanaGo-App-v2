@@ -121,6 +121,63 @@ export function generateQuoteHTML(
         <h3 style="color: #334155; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">Servicios Incluidos</h3>
         
         ${items.map((item, index) => {
+          // ── Tiquete aéreo: card especial sin fotos ──────────────────────────
+          const isTiquete = item.servicioNombre?.startsWith('✈️') || item.servicioTipo === 'tiquete';
+          if (isTiquete) {
+            const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const nameNoIcon = (item.servicioNombre || '').replace(/^✈️\s*/, '');
+            const nameParts  = nameNoIcon.split(/\s*·\s*/);
+            const airline    = nameParts[0]?.trim() || nameNoIcon;
+            const flightType = nameParts[1]?.trim() || '';
+            const routeRaw   = nameParts[2]?.trim() || '';
+            let origin = '', destination = '';
+            const rm = routeRaw.match(/^([A-Z]{3})\s*[→\-]\s*([A-Z]{3})$/);
+            if (rm) { origin = rm[1]; destination = rm[2]; }
+            const notas = ((item as any).notas || '').replace(/ · /g, '\n');
+            const fmtCOP = (n: number) => `$${n.toLocaleString('es-CO')}`;
+            const pax = item.personas || 1;
+
+            return `
+            <!-- ── Tiquete aéreo ${index + 1} ── -->
+            <div style="background:white;border:2px solid #bfdbfe;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+              <!-- Header azul -->
+              <div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="font-size:20px;">✈️</span>
+                  <div>
+                    <div style="color:white;font-size:16px;font-weight:700;">${esc(airline)}</div>
+                    ${flightType ? `<div style="color:rgba(255,255,255,.75);font-size:12px;">${esc(flightType)}</div>` : ''}
+                  </div>
+                </div>
+                <div style="color:white;font-size:17px;font-weight:700;">${fmtCOP(item.subtotal)}</div>
+              </div>
+              ${origin && destination ? `
+              <!-- Ruta -->
+              <div style="padding:16px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0;">
+                <div>
+                  <div style="font-size:26px;font-weight:800;color:#1e293b;">${origin}</div>
+                  <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Origen</div>
+                </div>
+                <div style="color:#94a3b8;font-size:24px;">→</div>
+                <div style="text-align:right;">
+                  <div style="font-size:26px;font-weight:800;color:#1e293b;">${destination}</div>
+                  <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Destino</div>
+                </div>
+              </div>` : ''}
+              <!-- Pasajeros y precio -->
+              <div style="padding:10px 18px;display:flex;justify-content:space-between;font-size:13px;color:#475569;${notas ? 'border-bottom:1px dashed #e2e8f0;' : ''}">
+                <div>👥 ${pax} pasajero${pax !== 1 ? 's' : ''}</div>
+                <div>${fmtCOP(item.valorUnitario)}/pax${item.cantidad > 1 ? ` × ${item.cantidad}` : ''}</div>
+              </div>
+              ${notas ? `
+              <div style="padding:12px 18px;background:#f8fafc;">
+                <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">ℹ️ Detalles del vuelo</div>
+                <div style="font-size:13px;color:#334155;line-height:1.7;white-space:pre-line;">${esc(notas)}</div>
+              </div>` : ''}
+            </div>`;
+          }
+
+          // ── Servicios con foto-grid (tours, hoteles, etc.) ──────────────────
           const { images: rawImages, description } = getServiceMeta(item);
           const fallbackUrl = categoryFallback[item.servicioTipo] || categoryFallback['tour'];
           // allImages: todas las disponibles (para el lightbox)
