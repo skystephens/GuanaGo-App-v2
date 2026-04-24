@@ -1,139 +1,147 @@
 /**
- * Admin Service - Gestión de administradores y validación de PIN
+ * Admin Service — autenticación de administradores
+ *
+ * Flujo:
+ *   1. Consulta Airtable `Usuarios_Admins` (fuente de verdad).
+ *   2. Si Airtable no responde (caída, pago vencido, timeout) → fallback a
+ *      ADMIN_EMERGENCY_PIN en variables de entorno de Render.
+ *
+ * Variables de entorno requeridas (Render):
+ *   AIRTABLE_API_KEY
+ *   AIRTABLE_BASE_ID        (appiReH55Qhrbv4Lk)
+ *   ADMIN_EMERGENCY_PIN     PIN de emergencia — solo Super Admin
  */
 
-// Configuración: PIN por defecto (cambia esto en producción)
-const DEFAULT_ADMIN_PIN = '2026';
+import crypto from 'crypto';
 
-// Base de datos simulada de admins (en producción, usar Airtable o base de datos real)
-const ADMIN_USERS = {
-  '2026': {
-    id: 'admin-001',
-    nombre: 'Administrador Principal',
-    email: 'admin@guanago.com',
-    rol: 'admin',
-    pin: '2026',
-    activo: true,
-    permisos: ['tareas', 'usuarios', 'servicios', 'finanzas', 'aprobaciones', 'configuracion']
+const AT_TABLE   = 'Usuarios_Admins';
+const AT_TIMEOUT = 5000; // ms — si Airtable tarda más de 5s, usamos fallback
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
+
+function atUrl() {
+  const base = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
+  return `https://api.airtable.com/v0/${base}/${encodeURIComponent(AT_TABLE)}`;
+}
+
+function atHeaders() {
+  return {
+    Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}`,
+    'Content-Type': 'application/json',
+  };
+}
+
+/** Comparación segura (evita timing attacks) */
+function safeCompare(a, b) {
+  const ba = Buffer.from(String(a));
+  const bb = Buffer.from(String(b));
+  if (ba.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ba, bb);
+}
+
+/** Fetch con timeout */
+async function fetchWithTimeout(url, options, ms) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
   }
-};
+}
 
-/**
- * Validar PIN de administrador
- * @param {string} pin - PIN ingresado por el usuario
- * @returns {Promise<Object|null>} - Datos del admin si es válido, null si no
- */
+// ─── query Airtable ───────────────────────────────────────────────────────────
+
+async function findUserByPin(pin) {
+  const filter = encodeURIComponent(`AND({Pin}="${pin}",{Activo}=1)`);
+  const url = `${atUrl()}?filterByFormula=${filter}&maxRecords=1`;
+
+  const res = await fetchWithTimeout(url, { headers: atHeaders() }, AT_TIMEOUT);
+
+  if (!res.ok) {
+    throw new Error(`Airtable ${res.status}`);
+  }
+
+  const data = await res.json();
+  const record = data.records?.[0];
+  if (!record) return null;
+
+  const f = record.fields;
+  return {
+    id:       record.id,
+    nombre:   f.Nombre || 'Admin',
+    email:    f.Email  || '',
+    rol:      f.Rol?.name || f.Rol || 'Admin',
+    activo:   f.Activo === true,
+    permisos: f.Permisos_especificos || [],
+    _recordId: record.id,
+  };
+}
+
+/** Actualiza "Ultimo acceso" en Airtable de forma async (no bloquea el login) */
+function updateUltimoAcceso(recordId) {
+  const url = `${atUrl()}/${recordId}`;
+  fetch(url, {
+    method:  'PATCH',
+    headers: atHeaders(),
+    body:    JSON.stringify({ fields: { 'Ultimo acceso': new Date().toISOString() } }),
+  }).catch(() => {}); // silencioso — no crítico
+}
+
+// ─── fallback de emergencia ───────────────────────────────────────────────────
+
+function checkEmergencyPin(pin) {
+  const emergency = process.env.ADMIN_EMERGENCY_PIN;
+  if (!emergency) return null;
+  if (!safeCompare(pin, emergency)) return null;
+
+  console.warn('⚠️  Login con ADMIN_EMERGENCY_PIN (Airtable no disponible)');
+  return {
+    id:       'emergency-superadmin',
+    nombre:   'Administrador Principal',
+    email:    'info@guiasai.com',
+    rol:      'Super Admin',
+    activo:   true,
+    permisos: ['*'],
+    _fallback: true,
+  };
+}
+
+// ─── función principal ────────────────────────────────────────────────────────
+
 export async function validateAdminPin(pin) {
-  if (!pin) {
-    console.warn('⚠️ PIN vacío recibido');
+  if (!pin) return null;
+
+  // 1. Intentar Airtable
+  try {
+    const user = await findUserByPin(pin);
+
+    if (!user) {
+      console.warn('❌ PIN no encontrado en Airtable');
+      return null;
+    }
+
+    if (!user.activo) {
+      console.warn(`⛔ Admin inactivo: ${user.nombre}`);
+      return null;
+    }
+
+    console.log(`✅ Admin validado (Airtable): ${user.nombre} [${user.rol}]`);
+    updateUltimoAcceso(user._recordId);
+
+    const { _recordId, ...publicUser } = user;
+    return publicUser;
+
+  } catch (err) {
+    // Airtable caído, timeout, 402 pago, etc.
+    console.error(`⚠️  Airtable no disponible (${err.message}) — intentando fallback`);
+
+    const fallback = checkEmergencyPin(pin);
+    if (fallback) return fallback;
+
+    console.warn('❌ Fallback también falló — acceso denegado');
     return null;
   }
-
-  // Buscar admin con este PIN
-  const adminUser = ADMIN_USERS[pin];
-  
-  if (adminUser && adminUser.activo) {
-    console.log(`✅ Admin validado: ${adminUser.nombre}`);
-    
-    // Retornar datos del admin (sin exponer el PIN completo)
-    return {
-      id: adminUser.id,
-      nombre: adminUser.nombre,
-      email: adminUser.email,
-      rol: adminUser.rol,
-      permisos: adminUser.permisos
-    };
-  }
-
-  console.warn(`❌ Intento de login con PIN inválido`);
-  return null;
 }
 
-/**
- * Obtener datos del admin por ID
- * @param {string} adminId - ID del administrador
- * @returns {Object|null} - Datos del admin o null
- */
-export function getAdminById(adminId) {
-  for (const [pin, admin] of Object.entries(ADMIN_USERS)) {
-    if (admin.id === adminId && admin.activo) {
-      return {
-        id: admin.id,
-        nombre: admin.nombre,
-        email: admin.email,
-        rol: admin.rol,
-        permisos: admin.permisos
-      };
-    }
-  }
-  return null;
-}
-
-/**
- * Cambiar PIN del administrador
- * @param {string} currentPin - PIN actual
- * @param {string} newPin - Nuevo PIN
- * @returns {Promise<boolean>} - true si cambio fue exitoso
- */
-export async function changeAdminPin(currentPin, newPin) {
-  if (!ADMIN_USERS[currentPin]) {
-    console.warn('❌ PIN actual inválido');
-    return false;
-  }
-
-  if (!newPin || newPin.length < 4) {
-    console.warn('❌ Nuevo PIN debe tener al menos 4 dígitos');
-    return false;
-  }
-
-  const admin = ADMIN_USERS[currentPin];
-  
-  // Eliminar entrada antigua
-  delete ADMIN_USERS[currentPin];
-  
-  // Crear entrada nueva con nuevo PIN
-  ADMIN_USERS[newPin] = {
-    ...admin,
-    pin: newPin
-  };
-
-  console.log(`✅ PIN cambiado exitosamente para ${admin.nombre}`);
-  return true;
-}
-
-/**
- * Verificar si un admin tiene permiso para una acción
- * @param {string} adminId - ID del admin
- * @param {string} permiso - Permiso a verificar
- * @returns {boolean} - true si tiene permiso
- */
-export function hasPermission(adminId, permiso) {
-  for (const admin of Object.values(ADMIN_USERS)) {
-    if (admin.id === adminId && admin.activo) {
-      return admin.permisos.includes(permiso) || admin.permisos.includes('*');
-    }
-  }
-  return false;
-}
-
-/**
- * Obtener todos los permisos de un admin
- * @param {string} adminId - ID del admin
- * @returns {Array<string>} - Lista de permisos
- */
-export function getAdminPermissions(adminId) {
-  for (const admin of Object.values(ADMIN_USERS)) {
-    if (admin.id === adminId && admin.activo) {
-      return admin.permisos;
-    }
-  }
-  return [];
-}
-
-export default {
-  validateAdminPin,
-  getAdminById,
-  changeAdminPin,
-  hasPermission,
-  getAdminPermissions
-};
+export default { validateAdminPin };
