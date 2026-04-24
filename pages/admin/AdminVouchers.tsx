@@ -349,41 +349,9 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
   onClose: () => void;
   onUpdateEstado: (id: string, estado: string) => void;
 }) {
-  const [showEstados, setShowEstados]   = useState(false);
-  const [showPayModal, setShowPayModal] = useState(false);
-  const [payAmount, setPayAmount]       = useState('');
-  const [payLoading, setPayLoading]     = useState(false);
-  const [payResult, setPayResult]       = useState<{ pagoUrl: string; test: boolean } | null>(null);
+  const [showEstados, setShowEstados] = useState(false);
   const cfg = ESTADO_CFG[voucher.estado] ?? ESTADO_CFG['Pendiente'];
 
-  const handleGeneratePayLink = async () => {
-    const amount = parseFloat(payAmount);
-    if (!amount || amount <= 0) { alert('Ingresa un monto válido'); return; }
-    setPayLoading(true);
-    try {
-      const API = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-        ? 'http://localhost:5000' : '';
-      const res = await fetch(`${API}/api/payments/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          voucherId:   voucher.id,
-          amount,
-          description: `Reserva GuíaSAI — ${voucher.tourName || 'Servicio turístico'}`,
-          buyerName:   voucher.titular,
-          buyerPhone:  voucher.telefono,
-          buyerEmail:  voucher.email,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error');
-      setPayResult(data);
-    } catch (err: any) {
-      alert('❌ ' + err.message);
-    } finally {
-      setPayLoading(false);
-    }
-  };
   const mapsUrl = voucher.puntoEncuentro
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(voucher.puntoEncuentro + ', San Andrés, Colombia')}`
     : null;
@@ -492,69 +460,6 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
               <MapPin size={16} />
               CÓMO LLEGAR AL PUNTO
             </a>
-          )}
-
-          {/* CTA: Cobrar con PayU */}
-          {!showPayModal ? (
-            <button
-              onClick={() => { setPayResult(null); setShowPayModal(true); }}
-              className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-500 transition-colors"
-            >
-              💳 GENERAR LINK DE PAGO
-            </button>
-          ) : (
-            <div className="border border-emerald-200 bg-emerald-50 rounded-2xl p-4 space-y-3">
-              {!payResult ? (
-                <>
-                  <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">Monto a cobrar (COP)</p>
-                  <input
-                    type="number"
-                    min="1"
-                    value={payAmount}
-                    onChange={e => setPayAmount(e.target.value)}
-                    placeholder="Ej: 504395"
-                    className="w-full px-3 py-2.5 border border-emerald-300 rounded-xl text-gray-900 font-bold text-lg focus:outline-none focus:border-emerald-500"
-                    autoFocus
-                  />
-                  {payAmount && parseFloat(payAmount) > 0 && (
-                    <p className="text-emerald-600 font-bold text-sm">${parseFloat(payAmount).toLocaleString('es-CO')} COP</p>
-                  )}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleGeneratePayLink}
-                      disabled={payLoading || !payAmount || parseFloat(payAmount) <= 0}
-                      className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-1"
-                    >
-                      {payLoading ? '⏳ Generando...' : '🔒 Generar Link'}
-                    </button>
-                    <button onClick={() => setShowPayModal(false)} className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 rounded-xl text-gray-600 text-sm font-semibold">
-                      Cancelar
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-[10px] font-bold text-emerald-700 uppercase">✅ Link generado</p>
-                  <p className="text-xs text-emerald-800 break-all font-mono bg-white rounded-lg p-2">{payResult.pagoUrl}</p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => navigator.clipboard.writeText(payResult.pagoUrl).then(() => alert('✅ Link copiado'))}
-                      className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 rounded-xl text-white text-sm font-bold"
-                    >
-                      📋 Copiar
-                    </button>
-                    <a
-                      href={`https://wa.me/${(voucher.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${voucher.titular?.split(' ')[0] || ''}, aquí el link de pago para tu reserva:\n\n${payResult.pagoUrl}\n\n🔒 PayU — 100% seguro`)}`}
-                      target="_blank" rel="noopener noreferrer"
-                      className="flex-1 py-2.5 bg-green-600 hover:bg-green-500 rounded-xl text-white text-sm font-bold flex items-center justify-center"
-                    >
-                      💬 WA
-                    </a>
-                  </div>
-                  {payResult.test && <p className="text-[10px] text-yellow-600 text-center">⚠️ Modo sandbox (prueba)</p>}
-                </>
-              )}
-            </div>
           )}
 
         </div>
