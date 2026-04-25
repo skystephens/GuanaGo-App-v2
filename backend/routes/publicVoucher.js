@@ -1,7 +1,7 @@
 /**
  * Public Voucher Route — GuanaGO
  * GET /voucher/:id → HTML page (shareable with clients, no auth required)
- * Shows tour details + meeting point with Google Maps link
+ * Design matches the admin VoucherCard/VoucherModal style.
  */
 
 import express from 'express';
@@ -23,7 +23,7 @@ function esc(s) {
 function fmtDate(d) {
   if (!d) return '';
   const dt = new Date(d + 'T12:00:00');
-  return isNaN(dt.getTime()) ? d : dt.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  return isNaN(dt.getTime()) ? d : dt.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function sel(v) {
@@ -33,18 +33,17 @@ function sel(v) {
   return String(v);
 }
 
-// Coordenadas conocidas de los puntos de encuentro en San Andrés
 const PUNTO_COORDS = {
-  'MUELLE CASA DE LA CULTURA': '12.5547,-81.7185',
-  'MUELLE PORTOFINO':          '12.5410,-81.7238',
-  'MUELLE TONY':               '12.5360,-81.7270',
-  'AEROPUERTO GUSTAVO ROJAS PINILLA': '12.5836,-81.7112',
+  'MUELLE CASA DE LA CULTURA':        '12.5547,-81.7185',
+  'MUELLE PORTOFINO':                  '12.5410,-81.7238',
+  'MUELLE TONY':                       '12.5360,-81.7270',
+  'AEROPUERTO GUSTAVO ROJAS PINILLA':  '12.5836,-81.7112',
 };
 
 function mapsUrl(punto) {
   if (!punto) return null;
-  const coords = PUNTO_COORDS[punto.toUpperCase()];
-  if (coords) return `https://www.google.com/maps/dir/?api=1&destination=${coords}`;
+  const key = Object.keys(PUNTO_COORDS).find(k => punto.toUpperCase().startsWith(k));
+  if (key) return `https://www.google.com/maps/dir/?api=1&destination=${PUNTO_COORDS[key]}`;
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(punto + ', San Andrés, Colombia')}`;
 }
 
@@ -54,21 +53,21 @@ async function fetchVoucher(id) {
   const r = await res.json();
   const f = r.fields || {};
   return {
-    id:             r.id,
-    titular:        f['Nombre del Cliente'] || '',
-    reservaNum:     f['Numero de Reserva'] || r.id.slice(-6).toUpperCase(),
-    pax:            f['Numero de Personas '] || f['Numero de Personas'] || '',
-    fecha:          f['Fecha de Inicio'] || '',
-    hora:           f['Hora de Cita'] || '',
-    puntoEncuentro: sel(f['Punto de Encuentro']),
-    observaciones:  f['Observaciones Especiales'] || '',
+    id:               r.id,
+    titular:          f['Nombre del Cliente'] || '',
+    reservaNum:       f['Numero de Reserva'] || r.id.slice(-6).toUpperCase(),
+    pax:              f['Numero de Personas '] || f['Numero de Personas'] || '',
+    fecha:            f['Fecha de Inicio'] || '',
+    hora:             f['Hora de Cita'] || '',
+    puntoEncuentro:   sel(f['Punto de Encuentro']),
+    observaciones:    f['Observaciones Especiales'] || '',
     notasAdicionales: f['Notas adicionales'] || '',
-    tourName:       f['Nombre del tour texto'] ||
-                    (Array.isArray(f['Nombre del Servicio (from Tipo de Tour)'])
-                      ? f['Nombre del Servicio (from Tipo de Tour)'][0] : '') || '',
-    estado:         sel(f['Estado de la Reserva']) || sel(f['Estado']) || 'Pendiente',
-    telefono:       f['Telefono'] || '',
-    email:          f['Email'] || '',
+    tourName:         f['Nombre del tour texto'] ||
+                      (Array.isArray(f['Nombre del Servicio (from Tipo de Tour)'])
+                        ? f['Nombre del Servicio (from Tipo de Tour)'][0] : '') || '',
+    estado:           sel(f['Estado de la Reserva']) || sel(f['Estado']) || 'Pendiente',
+    telefono:         f['Telefono'] || '',
+    email:            f['Email'] || '',
   };
 }
 
@@ -83,7 +82,7 @@ router.get('/:id', async (req, res) => {
       </body></html>`);
     }
 
-    const map = mapsUrl(voucher.puntoEncuentro);
+    const map      = mapsUrl(voucher.puntoEncuentro);
     const fechaFmt = fmtDate(voucher.fecha);
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -95,110 +94,99 @@ router.get('/:id', async (req, res) => {
   <title>Voucher ${esc(voucher.tourName)} — GuíaSAI</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:#f1f5f9;font-family:Arial,sans-serif;color:#1a1a1a;padding:20px;min-height:100vh}
-    .wrap{max-width:480px;margin:0 auto}
-    @media(max-width:520px){body{padding:10px}}
-    @media print{body{background:white;padding:0}.no-print{display:none!important}}
+    body{background:#111827;font-family:Arial,sans-serif;color:#f1f5f9;padding:20px;min-height:100vh;display:flex;align-items:flex-start;justify-content:center}
+    .card{background:#1f2937;border-radius:24px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .cell{border:1px solid #374151;border-radius:14px;padding:10px 12px}
+    .cell-label{font-size:9px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
+    .cell-val{font-size:12px;font-weight:700;color:#f9fafb}
+    .cell-val.teal{color:#2dd4bf}
+    @media(max-width:480px){body{padding:10px;align-items:flex-start}}
+    @media print{body{background:white;padding:0}.no-print{display:none!important}.card{box-shadow:none;border-radius:0}}
   </style>
 </head>
 <body>
-<div class="wrap">
+<div class="card">
 
-  <!-- Header GuíaSAI -->
-  <div style="text-align:center;background:white;border-radius:16px;padding:24px 20px 18px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.07);">
-    <div style="font-size:28px;font-weight:900;color:#F5831F;letter-spacing:-1px;">GuíaSAI</div>
-    <div style="font-size:12px;color:#94a3b8;margin-top:2px;">San Andrés Isla · Especialistas en Turismo</div>
-    <div style="margin-top:10px;display:inline-block;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:4px 12px;font-size:11px;color:#64748b;font-weight:600;">
-      Reserva #${esc(voucher.reservaNum)}
-    </div>
-  </div>
-
-  <!-- Tour + estado -->
-  <div style="background:linear-gradient(135deg,#F5831F,#e8720f);border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 4px 16px rgba(245,131,31,.3);">
-    <div style="font-size:11px;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Servicio Reservado</div>
-    <div style="font-size:20px;font-weight:800;color:white;line-height:1.2;">${esc(voucher.tourName || 'Servicio turístico')}</div>
-    <div style="margin-top:10px;display:inline-block;background:rgba(255,255,255,.25);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:white;">
+  <!-- Header naranja -->
+  <div style="background:linear-gradient(135deg,#f97316,#ea580c);padding:22px 18px 18px;position:relative;">
+    <p style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.75);margin-bottom:6px;">Experiencia Reservada</p>
+    <h2 style="font-size:22px;font-weight:900;color:white;text-transform:uppercase;line-height:1.15;padding-right:90px;">${esc(voucher.tourName || 'Servicio turístico')}</h2>
+    ${voucher.reservaNum ? `<p style="font-size:10px;color:rgba(255,255,255,.65);margin-top:5px;font-family:monospace;"># ${esc(voucher.reservaNum)}</p>` : ''}
+    <span style="position:absolute;top:16px;right:16px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 10px;font-size:9px;font-weight:700;color:rgba(255,255,255,.9);">
       ${esc(voucher.estado)}
+    </span>
+  </div>
+
+  <!-- Titular -->
+  <div style="padding:14px 18px 8px;">
+    <p style="font-size:9px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;">Titular de Reserva</p>
+    <p style="font-size:15px;font-weight:800;color:#f9fafb;text-transform:uppercase;">${esc(voucher.titular || '—')}</p>
+  </div>
+
+  <!-- Grid datos -->
+  <div class="grid2" style="padding:4px 18px 14px;">
+    <div class="cell">
+      <div class="cell-label">ID Reserva</div>
+      <div class="cell-val" style="color:#fb923c;">${esc(voucher.reservaNum || '—')}</div>
+    </div>
+    <div class="cell">
+      <div class="cell-label">Pax</div>
+      <div class="cell-val">${esc(voucher.pax || '—')}</div>
+    </div>
+    <div class="cell">
+      <div class="cell-label">Fecha</div>
+      <div class="cell-val">${esc(fechaFmt || voucher.fecha || '—')}</div>
+    </div>
+    <div class="cell">
+      <div class="cell-label">Hora de Encuentro</div>
+      <div class="cell-val teal">${esc(voucher.hora || '—')}</div>
     </div>
   </div>
 
-  <!-- Datos del servicio -->
-  <div style="background:white;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);">
-    <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;">Detalles de la Reserva</div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div>
-        <div style="font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-bottom:3px;">📅 Fecha</div>
-        <div style="font-size:13px;font-weight:700;color:#1e293b;line-height:1.3;">${esc(fechaFmt || voucher.fecha || 'Por confirmar')}</div>
-      </div>
-      <div>
-        <div style="font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-bottom:3px;">🕐 Hora</div>
-        <div style="font-size:13px;font-weight:700;color:#1e293b;">${esc(voucher.hora || 'Por confirmar')}</div>
-      </div>
-      <div>
-        <div style="font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-bottom:3px;">👤 Titular</div>
-        <div style="font-size:13px;font-weight:700;color:#1e293b;">${esc(voucher.titular)}</div>
-      </div>
-      <div>
-        <div style="font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-bottom:3px;">👥 Pasajeros</div>
-        <div style="font-size:13px;font-weight:700;color:#1e293b;">${esc(voucher.pax)} persona${voucher.pax == '1' ? '' : 's'}</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Punto de encuentro (bloque principal) -->
+  <!-- Punto de encuentro -->
   ${voucher.puntoEncuentro ? `
-  <div style="background:white;border-radius:16px;padding:20px;margin-bottom:14px;border:2px solid #FED7AA;box-shadow:0 2px 12px rgba(0,0,0,.06);">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-      <span style="font-size:20px;">📍</span>
-      <div>
-        <div style="font-size:10px;color:#F5831F;font-weight:700;text-transform:uppercase;letter-spacing:.8px;">Punto de Encuentro</div>
-        <div style="font-size:17px;font-weight:900;color:#92400e;text-transform:uppercase;line-height:1.2;">${esc(voucher.puntoEncuentro)}</div>
-      </div>
-    </div>
-    ${map ? `
+  <div style="margin:0 18px 14px;border-left:4px solid #f97316;padding:10px 14px;background:rgba(249,115,22,.1);border-radius:0 12px 12px 0;">
+    <p style="font-size:8px;color:#fb923c;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">◆ Punto de Encuentro</p>
+    <p style="font-size:13px;font-weight:800;color:#fed7aa;text-transform:uppercase;line-height:1.3;">${esc(voucher.puntoEncuentro)}</p>
+  </div>
+  ${map ? `
+  <div style="padding:0 18px 16px;">
     <a href="${map}" target="_blank" rel="noopener noreferrer"
-       style="display:block;background:#F5831F;color:white;text-decoration:none;text-align:center;padding:14px;border-radius:12px;font-weight:700;font-size:15px;letter-spacing:.3px;">
-      🗺️ Cómo llegar — Abrir en Google Maps
-    </a>` : ''}
-  </div>` : ''}
+       style="display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#0d9488,#0f766e);color:white;text-decoration:none;padding:14px;border-radius:14px;font-weight:700;font-size:14px;letter-spacing:.3px;">
+      📍 CÓMO LLEGAR AL PUNTO
+    </a>
+  </div>` : ''}` : ''}
 
   <!-- Observaciones -->
   ${voucher.observaciones ? `
-  <div style="background:white;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);">
-    <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">📝 Observaciones</div>
-    <div style="font-size:13px;color:#475569;line-height:1.6;">${esc(voucher.observaciones)}</div>
+  <div style="margin:0 18px 14px;border-left:4px solid #f59e0b;padding:10px 14px;background:rgba(245,158,11,.08);border-radius:0 12px 12px 0;">
+    <p style="font-size:8px;color:#fbbf24;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">⚠ Nota</p>
+    <p style="font-size:12px;color:#fde68a;line-height:1.5;">${esc(voucher.observaciones)}</p>
   </div>` : ''}
 
   ${voucher.notasAdicionales ? `
-  <div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:0 12px 12px 0;padding:14px 16px;margin-bottom:14px;">
-    <div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">ℹ️ Información importante</div>
-    <div style="font-size:13px;color:#78350f;line-height:1.6;">${esc(voucher.notasAdicionales)}</div>
+  <div style="margin:0 18px 14px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:12px;padding:12px 14px;">
+    <p style="font-size:8px;color:#a5b4fc;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">ℹ Información importante</p>
+    <p style="font-size:12px;color:#c7d2fe;line-height:1.5;">${esc(voucher.notasAdicionales)}</p>
   </div>` : ''}
 
-  <!-- Contacto -->
-  <div style="background:white;border-radius:16px;padding:18px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,.06);">
-    <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;">¿Necesitas ayuda?</div>
-    <a href="https://wa.me/573153836043" target="_blank"
-       style="display:flex;align-items:center;gap:10px;background:#25d366;color:white;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:8px;">
-      <span style="font-size:18px;">💬</span> WhatsApp: +57 315 383 6043
-    </a>
-    <a href="mailto:comercial@guiasai.com"
-       style="display:flex;align-items:center;gap:10px;background:#f8fafc;color:#0ea5e9;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:600;font-size:13px;border:1px solid #e2e8f0;">
-      <span>📧</span> comercial@guiasai.com
-    </a>
+  <!-- Footer GuíaSAI -->
+  <div style="border-top:1px solid #374151;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:10px;color:#6b7280;">
+      <span>📞 +57 315 383 6043</span>
+    </div>
+    <div style="font-size:10px;color:#6b7280;">guiasanandresislas.com</div>
+    <div style="font-size:9px;font-weight:700;color:#6b7280;">RNT: 48674</div>
   </div>
 
-  <!-- Footer -->
-  <div style="text-align:center;padding:16px 0 8px;border-top:1px solid #e2e8f0;" class="no-print">
+  <!-- Imprimir (no se imprime) -->
+  <div class="no-print" style="padding:0 18px 18px;">
     <button onclick="window.print()"
-      style="background:#64748b;color:white;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;">
+      style="width:100%;background:#374151;color:#9ca3af;border:none;padding:10px;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;">
       🖨️ Imprimir / Guardar PDF
     </button>
   </div>
-  <p style="text-align:center;color:#cbd5e1;font-size:11px;padding-bottom:20px;">
-    GuíaSAI © ${new Date().getFullYear()} · San Andrés Isla, Colombia · RNT 48674
-  </p>
 
 </div>
 </body>

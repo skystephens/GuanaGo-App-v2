@@ -324,11 +324,20 @@ function VoucherCard({ voucher, onSelect, onUpdateEstado }: {
       )}
 
       {/* Footer */}
-      <div className="border-t border-gray-100 px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-3 text-[10px] text-gray-400">
-          <span>+57 315 383 6043</span>
-          <span>guiasanandresislas.com</span>
-        </div>
+      <div className="border-t border-gray-100 px-4 py-2 flex items-center justify-between gap-2">
+        <button
+          onClick={e => {
+            e.stopPropagation();
+            const url = `https://www.guanago.travel/voucher/${voucher.id}`;
+            navigator.clipboard.writeText(url)
+              .then(() => alert('¡Enlace copiado! Compártelo con el cliente.'))
+              .catch(() => window.open(url, '_blank'));
+          }}
+          className="flex items-center gap-1 text-[10px] font-bold text-orange-500 hover:text-orange-700 transition-colors shrink-0"
+          title="Copiar enlace del voucher"
+        >
+          <ChevronRight size={12} /> Compartir enlace
+        </button>
         <select
           value={voucher.estado}
           onChange={e => { e.stopPropagation(); onUpdateEstado(voucher.id, e.target.value); }}
@@ -462,19 +471,6 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
             </a>
           )}
 
-          {/* CTA: Compartir enlace del voucher */}
-          <button
-            onClick={() => {
-              const url = `https://www.guanago.travel/voucher/${voucher.id}`;
-              navigator.clipboard.writeText(url).then(() => alert('¡Enlace copiado! Compártelo con el cliente.')).catch(() => {
-                window.open(url, '_blank');
-              });
-            }}
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm border-2 border-orange-400 text-orange-600 hover:bg-orange-50 transition-colors mt-2"
-          >
-            <ChevronRight size={15} />
-            COMPARTIR ENLACE DEL VOUCHER
-          </button>
 
         </div>
 
