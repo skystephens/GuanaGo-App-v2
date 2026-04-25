@@ -80,6 +80,9 @@ import TourPrivado from './pages/TourPrivado';
 // Catálogo Público B2C (cliente directo / promotores)
 import CatalogPublico from './pages/CatalogPublico';
 
+// Coco Art Historia
+import CocoArtHistoria from './pages/CocoArtHistoria';
+
 // Unified Panel
 import UnifiedPanel from './components/UnifiedPanel';
 import UserProfileButton from './components/UserProfileButton';
@@ -233,6 +236,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_SKY_PANEL: return <AdminSkyPanel onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_COWORK: return <AdminCowork onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.CATALOG_PUBLICO: return <CatalogPublico onNavigate={navigateTo} onBack={goBack} />;
+      case AppRoute.COCO_ART_HISTORIA: return <CocoArtHistoria onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };

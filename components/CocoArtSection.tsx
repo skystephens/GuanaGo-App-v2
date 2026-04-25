@@ -104,6 +104,14 @@ const CocoArtSection: React.FC<CocoArtSectionProps> = ({ onNavigate }) => {
         <p className="text-sm" style={{ color: 'rgba(200,230,200,0.7)' }}>
           🥥 La historia del coco convertida en arte · «Breda Sky»
         </p>
+        <button
+          onClick={() => onNavigate(AppRoute.COCO_ART_HISTORIA)}
+          className="mt-2 flex items-center gap-1 text-[11px] font-bold"
+          style={{ color: PALM_GOLD, opacity: 0.85 }}
+        >
+          <span>📖 Conoce nuestra historia</span>
+          <ChevronRight size={11} />
+        </button>
       </div>
 
       {/* ── DESCRIPCIÓN + CARRUSEL ── */}

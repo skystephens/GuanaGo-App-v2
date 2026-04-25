@@ -322,6 +322,7 @@ export enum AppRoute {
   ADMIN_VOUCHERS = 'ADMIN_VOUCHERS',
   ADMIN_CIVITATIS = 'ADMIN_CIVITATIS',
   ADMIN_COWORK = 'ADMIN_COWORK',
+  COCO_ART_HISTORIA = 'COCO_ART_HISTORIA',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';
