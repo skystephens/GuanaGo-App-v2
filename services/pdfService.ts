@@ -183,12 +183,15 @@ export function generateQuoteHTML(
           // ── Servicios con foto-grid (tours, hoteles, etc.) ──────────────────
           const { images: rawImages, description } = getServiceMeta(item);
           const fallbackUrl = categoryFallback[item.servicioTipo] || categoryFallback['tour'];
+          // Items personalizados (libres) no tienen fotos — solo mostrar si hay imágenes reales del catálogo
+          const hasRealImages = rawImages.length > 0;
+          const showPhotoGrid = !item.esPersonalizado && hasRealImages;
           // allImages: todas las disponibles (para el lightbox)
-          const allImages: string[] = rawImages.length > 0 ? rawImages : [fallbackUrl];
-          // gridImages: siempre 4 slots para el grid de la card
-          const gridImages: string[] = [...allImages];
+          const allImages: string[] = hasRealImages ? rawImages : [fallbackUrl];
+          // gridImages: siempre 4 slots para el grid de la card (solo si hay fotos reales)
+          const gridImages: string[] = [...rawImages];
           while (gridImages.length < 4) gridImages.push(gridImages[gridImages.length - 1] || fallbackUrl);
-          const images = gridImages; // alias para compatibilidad con código existente
+          const images = gridImages;
           const fechaDisplay = safeDate(item.fecha)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? 'Por confirmar';
           const fechaFinDisplay = item.fechaFin ? safeDate(item.fechaFin)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? '' : '';
           const itemPax = (item.personas || (item.adultos + item.ninos + item.bebes)) || totalPersonas;
@@ -217,10 +220,10 @@ export function generateQuoteHTML(
           <!-- ── Tarjeta servicio ${index + 1} ── -->
           <div style="background:white;border:2px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:16px;">
 
-            <!-- Grid fotos -->
+            ${showPhotoGrid ? `<!-- Grid fotos -->
             <div style="display:flex;gap:4px;padding:10px 10px 0;">
               ${photoGrid}
-            </div>
+            </div>` : ''}
 
             <!-- Info principal -->
             <div style="padding:14px 16px 16px;">
@@ -248,14 +251,14 @@ export function generateQuoteHTML(
               <div id="${cardId}-short" style="font-size:13px;color:#64748b;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">
                 ${description}
               </div>
-              <button onclick="openModal('${modalId}', 0)"
+              ${showPhotoGrid ? `<button onclick="openModal('${modalId}', 0)"
                 style="margin-top:6px;background:none;border:none;color:#0ea5e9;font-size:12px;font-weight:600;cursor:pointer;padding:0;">
                 Ver más info e imágenes ▼
-              </button>` : ''}
+              </button>` : ''}` : ''}
             </div>
           </div>
 
-          <!-- ── Lightbox / Modal ── -->
+          ${showPhotoGrid ? `<!-- ── Lightbox / Modal ── -->
           <div id="${modalId}" onclick="if(event.target===this)closeModal('${modalId}')"
             style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px;">
             <div style="background:white;border-radius:14px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;position:relative;">
@@ -288,7 +291,7 @@ export function generateQuoteHTML(
                 </div>
               </div>
             </div>
-          </div>
+          </div>` : ''}
         `}).join('')}
       </div>
 
