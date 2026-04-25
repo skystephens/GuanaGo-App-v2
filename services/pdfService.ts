@@ -349,7 +349,7 @@ export function generateQuoteHTML(
           🌐 Web: guiasanandresislas.com
         </div>
         <p style="color: #cbd5e1; font-size: 11px; margin: 20px 0 0 0;">
-          GuíaSAI © ${new Date().getFullYear()} · San Andrés Isla, Colombia
+          GuíaSAI © ${new Date().getFullYear()} · San Andrés Isla, Colombia · RNT 48674
         </p>
       </div>
     </div>

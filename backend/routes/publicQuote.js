@@ -460,7 +460,7 @@ function buildPage(cotizacion, items, now) {
       📧 Email: <a href="mailto:comercial@guiasai.com" style="color:#0ea5e9;">comercial@guiasai.com</a><br>
       🌐 Web: <a href="https://guiasanandresislas.com" style="color:#0ea5e9;">guiasanandresislas.com</a>
     </div>
-    <p style="color:#cbd5e1;font-size:11px;margin:20px 0 0;">GuíaSAI © ${now.getFullYear()} · San Andrés Isla, Colombia</p>
+    <p style="color:#cbd5e1;font-size:11px;margin:20px 0 0;">GuíaSAI © ${now.getFullYear()} · San Andrés Isla, Colombia · RNT 48674</p>
   </div>
 
   <!-- Botones imprimir (no se imprimen) -->
