@@ -462,6 +462,20 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
             </a>
           )}
 
+          {/* CTA: Compartir enlace del voucher */}
+          <button
+            onClick={() => {
+              const url = `https://www.guanago.travel/voucher/${voucher.id}`;
+              navigator.clipboard.writeText(url).then(() => alert('¡Enlace copiado! Compártelo con el cliente.')).catch(() => {
+                window.open(url, '_blank');
+              });
+            }}
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm border-2 border-orange-400 text-orange-600 hover:bg-orange-50 transition-colors mt-2"
+          >
+            <ChevronRight size={15} />
+            COMPARTIR ENLACE DEL VOUCHER
+          </button>
+
         </div>
 
         {/* Footer GuíaSAI */}

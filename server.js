@@ -21,6 +21,7 @@ import quotationsRoutes from './backend/routes/quotations.js';
 import storageRoutes from './backend/routes/storage.js';
 import coworkRoutes from './backend/routes/cowork.js';
 import publicQuoteRoutes from './backend/routes/publicQuote.js';
+import publicVoucherRoutes from './backend/routes/publicVoucher.js';
 import paymentsRoutes from './backend/routes/payments.js';
 
 // Import middleware
@@ -205,6 +206,10 @@ app.use('/agencias', (req, res) => {
 // ==================== PUBLIC QUOTATION PAGE ====================
 // /cotizacion/:id — página pública sin auth (compartible con clientes)
 app.use('/cotizacion', publicQuoteRoutes);
+
+// ==================== PUBLIC VOUCHER PAGE ====================
+// /voucher/:id — voucher público con punto de encuentro + Google Maps
+app.use('/voucher', publicVoucherRoutes);
 
 // ==================== PAYMENT LINKS ====================
 // POST /api/payments/create   → genera link de pago firmado (PayU)
