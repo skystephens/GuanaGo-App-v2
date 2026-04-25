@@ -100,6 +100,7 @@ async function fetchItems(cotizacionId) {
       servicioId:     (f.Servicio || [])[0] || null,
       servicioNombre: nombre,
       servicioTipo:   tipoRaw,
+      esPersonalizado: f['Es Personalizado'] === true,
       valorUnitario,
       personas,
       cantidad,
@@ -245,10 +246,12 @@ function renderFlightCard(item) {
 function renderServiceCard(item, index) {
   const tipo = item.servicioTipo || 'otro';
   const fallback = FALLBACK_IMGS[tipo] || FALLBACK_IMGS['tour'];
-  // allImages: todas las disponibles → van al lightbox
-  const allImages = item.images?.length > 0 ? [...item.images] : [fallback];
-  // gridImages: siempre 4 slots para el grid de la card (repite la última si hay menos)
-  const gridImages = [...allImages];
+  // Solo mostrar fotos si hay imágenes REALES del catálogo y el item no es personalizado
+  const realImages = item.images?.length > 0 ? item.images : [];
+  const showPhotos = !item.esPersonalizado && realImages.length > 0;
+  const allImages = realImages.length > 0 ? [...realImages] : [fallback];
+  // gridImages: 4 slots (solo se usa si showPhotos)
+  const gridImages = [...realImages];
   while (gridImages.length < 4) gridImages.push(gridImages[gridImages.length - 1] || fallback);
   const mid = `modal-${index}`;
 
@@ -270,7 +273,7 @@ function renderServiceCard(item, index) {
 
   const card = `
   <div style="background:white;border:2px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:16px;">
-    <div style="display:flex;gap:4px;padding:10px 10px 0;">${photoGrid}</div>
+    ${showPhotos ? `<div style="display:flex;gap:4px;padding:10px 10px 0;">${photoGrid}</div>` : ''}
     <div style="padding:14px 16px 16px;">
       <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;">
         <div style="flex:1;">
@@ -293,14 +296,14 @@ function renderServiceCard(item, index) {
       <div style="font-size:13px;color:#64748b;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">
         ${esc(item.description)}
       </div>
-      <button onclick="openModal('${mid}',0)"
+      ${showPhotos ? `<button onclick="openModal('${mid}',0)"
         style="margin-top:6px;background:none;border:none;color:#0ea5e9;font-size:12px;font-weight:600;cursor:pointer;padding:0;">
         Ver más info e imágenes ▼
-      </button>` : ''}
+      </button>` : ''}` : ''}
     </div>
   </div>`;
 
-  const modal = `
+  const modal = showPhotos ? `
   <div id="${mid}" onclick="if(event.target===this)closeModal('${mid}')"
        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px;">
     <div style="background:white;border-radius:14px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;position:relative;">
@@ -321,7 +324,7 @@ function renderServiceCard(item, index) {
         </div>
       </div>
     </div>
-  </div>`;
+  </div>` : '';
 
   return { card, modal };
 }
