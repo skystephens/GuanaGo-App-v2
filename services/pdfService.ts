@@ -56,11 +56,9 @@ export function generateQuoteHTML(
       );
     }
 
-    const rawImages: string[] = (svc as any)?.gallery || (svc as any)?.images || (svc?.image ? [svc.image] : []);
-    const fallback = categoryFallback[item.servicioTipo] || categoryFallback['tour'];
-    const images = rawImages.length > 0 ? rawImages.slice(0, 4) : [fallback];
+    const realImages: string[] = (svc as any)?.gallery || (svc as any)?.images || (svc?.image ? [svc.image] : []);
     return {
-      images,
+      images: realImages,  // real catalog images only, NO fallback — caller decides
       description: svc?.description || (svc as any)?.descripcion || '',
     };
   };
@@ -181,17 +179,15 @@ export function generateQuoteHTML(
           }
 
           // ── Servicios con foto-grid (tours, hoteles, etc.) ──────────────────
-          const { images: rawImages, description } = getServiceMeta(item);
+          const { images: catalogImages, description } = getServiceMeta(item);
           const fallbackUrl = categoryFallback[item.servicioTipo] || categoryFallback['tour'];
-          // Items personalizados (libres) no tienen fotos — solo mostrar si hay imágenes reales del catálogo
-          const hasRealImages = rawImages.length > 0;
-          const showPhotoGrid = !item.esPersonalizado && hasRealImages;
-          // allImages: todas las disponibles (para el lightbox)
-          const allImages: string[] = hasRealImages ? rawImages : [fallbackUrl];
-          // gridImages: siempre 4 slots para el grid de la card (solo si hay fotos reales)
-          const gridImages: string[] = [...rawImages];
+          // Items libres (esPersonalizado=true) nunca muestran fotos
+          const showPhotoGrid = !item.esPersonalizado && catalogImages.length > 0;
+          // gridImages: 4 slots rellenos con la última imagen real disponible
+          const gridImages: string[] = [...catalogImages];
           while (gridImages.length < 4) gridImages.push(gridImages[gridImages.length - 1] || fallbackUrl);
           const images = gridImages;
+          const allImages = catalogImages.length > 0 ? catalogImages : [fallbackUrl];
           const fechaDisplay = safeDate(item.fecha)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? 'Por confirmar';
           const fechaFinDisplay = item.fechaFin ? safeDate(item.fechaFin)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? '' : '';
           const itemPax = (item.personas || (item.adultos + item.ninos + item.bebes)) || totalPersonas;
