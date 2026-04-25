@@ -96,9 +96,9 @@ const CocoArtHistoria: React.FC<CocoArtHistoriaProps> = ({ onBack }) => {
           </p>
           <div className="mt-2 space-y-2">
             {[
-              { part: '🌿 Las hojas', use: 'Tejido de canastos, sombreros, techos de ranchos y decoración ceremonial' },
+              { part: '🌿 Las hojas (arte)', use: 'Las hojas de la palmera son el material principal: tejidas en cestos, figuras, flores y esculturas decorativas con técnicas ancestrales Raizales' },
+              { part: '🌿 Las hojas (uso diario)', use: 'Sombreros, techos de ranchos, abanicos y decoración ceremonial en festividades de la isla' },
               { part: '🥥 El fruto', use: 'Aceite de coco para cocinar, jabón artesanal, crema corporal y bebida sagrada' },
-              { part: '🪵 El tronco', use: 'Construcción de canoas, muebles, pilares de casas tradicionales' },
               { part: '🌰 La fibra (estopa)', use: 'Cuerdas, relleno de colchones, tejidos impermeables' },
               { part: '🫙 La copra', use: 'Exportación. Durante décadas fue el principal producto de comercio exterior de la isla' },
             ].map(({ part, use }) => (
@@ -110,22 +110,25 @@ const CocoArtHistoria: React.FC<CocoArtHistoriaProps> = ({ onBack }) => {
           </div>
         </Section>
 
-        {/* Quién es Breda Sky */}
-        <Section title="Breda Sky · El Artesano" icon={<Heart size={14} />}>
+        {/* Quién es el artesano */}
+        <Section title="El Artesano · Legado Familiar" icon={<Heart size={14} />}>
           <div className="rounded-2xl p-4 mb-3" style={{ background: 'rgba(200,168,75,0.08)', border: `1px solid ${PALM_GOLD}30` }}>
-            <p className="text-xs font-black mb-2" style={{ color: PALM_GOLD }}>«Breda Sky» — Sky Stephens</p>
+            <p className="text-xs font-black mb-2" style={{ color: PALM_GOLD }}>Breda Sky — El Pionero</p>
             <p className="text-sm leading-relaxed" style={{ color: 'rgba(200,230,200,0.82)' }}>
-              Nacido y criado en San Andrés Isla, Sky Stephens —conocido artísticamente como <strong style={{ color: 'white' }}>«Breda Sky»</strong> («hermano del cielo» en Creole)— creció entre palmeras y talleres artesanales. Desde niño aprendió el oficio de sus mayores: transformar la madera de coco en piezas que cuentan historias.
+              Todo comenzó con <strong style={{ color: 'white' }}>Breda Sky</strong>, artesano pionero de San Andrés Isla con más de 50 años creando hermosos detalles artesanales con hojas de palma. Sus manos aprendieron a leer cada hoja, a doblar sin romper, a tejer sin perder la forma. Durante décadas mantuvo vivo un oficio que pocos dominaban, convirtiéndose en referente de la artesanía Raizal.
+            </p>
+          </div>
+          <div className="rounded-2xl p-4 mb-3" style={{ background: 'rgba(76,175,80,0.06)', border: '1px solid rgba(76,175,80,0.15)' }}>
+            <p className="text-xs font-black mb-2" style={{ color: PALM_ACCENT }}>Sky Stephens Jr. — La Nueva Generación</p>
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(200,230,200,0.82)' }}>
+              Su hijo, <strong style={{ color: 'white' }}>Sky Stephens Jr.</strong>, heredó el oficio desde pequeño y lleva más de 30 años trabajando la palma. Formado directamente por su padre, perfeccionó las técnicas ancestrales y las llevó a nuevos formatos: talleres experienciales para turistas, piezas personalizadas para eventos y un puente vivo entre la tradición Raizal y el mundo contemporáneo.
             </p>
           </div>
           <p>
-            Su arte no es decoración — es narración. Cada pieza lleva grabada una historia de la isla: una canoa antigua, un muelle olvidado, una familia Raizal, un ritual de cosecha. El coco es su lienzo y su mensaje.
+            Su arte no es decoración — es narración. Cada pieza lleva tejida una historia de la isla. Las hojas de palma son su lienzo y su mensaje.
           </p>
           <p>
-            «El coco nos alimentó por siglos. Ahora yo lo convierto en memoria para que nadie olvide de dónde venimos.» — Sky Stephens
-          </p>
-          <p>
-            Hoy, como co-fundador de GuíaSAI, Sky lleva esa misma filosofía al mundo digital: tecnología al servicio de la identidad Raizal, conectando a turistas con experiencias auténticas y a artesanos locales con el mercado global.
+            Hoy, como co-fundador de GuíaSAI, Sky Stephens Jr. lleva esa misma filosofía al mundo digital: tecnología al servicio de la identidad Raizal, conectando turistas con experiencias auténticas y preservando el legado de su familia.
           </p>
         </Section>
 
