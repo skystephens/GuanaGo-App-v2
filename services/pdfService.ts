@@ -124,55 +124,58 @@ export function generateQuoteHTML(
           // ── Tiquete aéreo: card especial sin fotos ──────────────────────────
           const isTiquete = item.servicioNombre?.startsWith('✈️') || item.servicioTipo === 'tiquete';
           if (isTiquete) {
-            const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-            const nameNoIcon = (item.servicioNombre || '').replace(/^✈️\s*/, '');
-            const nameParts  = nameNoIcon.split(/\s*·\s*/);
-            const airline    = nameParts[0]?.trim() || nameNoIcon;
-            const flightType = nameParts[1]?.trim() || '';
-            const routeRaw   = nameParts[2]?.trim() || '';
-            let origin = '', destination = '';
-            const rm = routeRaw.match(/^([A-Z]{3})\s*[→\-]\s*([A-Z]{3})$/);
-            if (rm) { origin = rm[1]; destination = rm[2]; }
-            const notas = ((item as any).notas || '').replace(/ · /g, '\n');
-            const fmtCOP = (n: number) => `$${n.toLocaleString('es-CO')}`;
+            const escH = (s: string) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const nombre   = item.servicioNombre || '';
+            // Same parsing as backend renderFlightCard:
+            // "✈️ LATAM · CLO→ADZ · Ida y vuelta | Vuelo de ida..."
+            const parts    = nombre.replace(/^✈️\s*/, '').split('·').map((s: string) => s.trim());
+            const aerolinea = parts[0] || 'Vuelo';
+            const ruta      = parts[1] || '';
+            const tipoVuelo = parts[2] ? parts[2].split('|')[0].trim() : '';
+            const notas     = nombre.includes('|')
+              ? nombre.split('|').slice(1).map((s: string) => s.trim()).join(' · ')
+              : '';
+            const [orig, dest] = ruta.includes('→') ? ruta.split('→').map((s: string) => s.trim()) : [ruta, ''];
+            const fmtP = (n: number) => `$${n.toLocaleString('es-CO')}`;
             const pax = item.personas || 1;
 
             return `
             <!-- ── Tiquete aéreo ${index + 1} ── -->
             <div style="background:white;border:2px solid #bfdbfe;border-radius:12px;overflow:hidden;margin-bottom:16px;">
-              <!-- Header azul -->
-              <div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;">
+              <!-- header azul -->
+              <div style="background:linear-gradient(135deg,#1d4ed8,#2563eb);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;">
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span style="font-size:20px;">✈️</span>
+                  <span style="font-size:22px;">✈️</span>
                   <div>
-                    <div style="color:white;font-size:16px;font-weight:700;">${esc(airline)}</div>
-                    ${flightType ? `<div style="color:rgba(255,255,255,.75);font-size:12px;">${esc(flightType)}</div>` : ''}
+                    <div style="color:white;font-weight:700;font-size:15px;">${escH(aerolinea)}</div>
+                    ${tipoVuelo ? `<div style="color:rgba(255,255,255,.8);font-size:11px;">${escH(tipoVuelo)}</div>` : ''}
                   </div>
                 </div>
-                <div style="color:white;font-size:17px;font-weight:700;">${fmtCOP(item.subtotal)}</div>
+                <div style="color:#10b981;font-size:18px;font-weight:700;background:white;padding:4px 12px;border-radius:20px;">
+                  ${fmtP(item.subtotal)}
+                </div>
               </div>
-              ${origin && destination ? `
-              <!-- Ruta -->
-              <div style="padding:16px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0;">
-                <div>
-                  <div style="font-size:26px;font-weight:800;color:#1e293b;">${origin}</div>
-                  <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Origen</div>
+              <!-- ruta -->
+              <div style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed #e2e8f0;">
+                <div style="text-align:center;">
+                  <div style="font-size:26px;font-weight:800;color:#1e293b;">${escH(orig)}</div>
+                  <div style="font-size:11px;color:#64748b;">Origen</div>
                 </div>
-                <div style="color:#94a3b8;font-size:24px;">→</div>
-                <div style="text-align:right;">
-                  <div style="font-size:26px;font-weight:800;color:#1e293b;">${destination}</div>
-                  <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Destino</div>
+                <div style="color:#94a3b8;font-size:20px;flex:1;text-align:center;">→</div>
+                <div style="text-align:center;">
+                  <div style="font-size:26px;font-weight:800;color:#1e293b;">${escH(dest || 'ADZ')}</div>
+                  <div style="font-size:11px;color:#64748b;">Destino</div>
                 </div>
-              </div>` : ''}
-              <!-- Pasajeros y precio -->
-              <div style="padding:10px 18px;display:flex;justify-content:space-between;font-size:13px;color:#475569;${notas ? 'border-bottom:1px dashed #e2e8f0;' : ''}">
+              </div>
+              <!-- detalles pasajeros -->
+              <div style="padding:10px 18px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#64748b;flex-wrap:wrap;gap:6px;border-bottom:${notas ? '1px dashed #e2e8f0' : 'none'};">
                 <div>👥 ${pax} pasajero${pax !== 1 ? 's' : ''}</div>
-                <div>${fmtCOP(item.valorUnitario)}/pax${item.cantidad > 1 ? ` × ${item.cantidad}` : ''}</div>
+                <div>${fmtP(item.valorUnitario)}/pax${item.cantidad > 1 ? ` × ${item.cantidad}` : ''}</div>
               </div>
               ${notas ? `
               <div style="padding:12px 18px;background:#f8fafc;">
                 <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">ℹ️ Detalles del vuelo</div>
-                <div style="font-size:13px;color:#334155;line-height:1.7;white-space:pre-line;">${esc(notas)}</div>
+                <div style="font-size:13px;color:#334155;line-height:1.7;white-space:pre-line;">${escH(notas).replace(/ · /g, '\n')}</div>
               </div>` : ''}
             </div>`;
           }
