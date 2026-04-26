@@ -4,6 +4,31 @@ import { authenticateToken, authorizeRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
+function extractAlojImage(f) {
+  const candidates = [
+    f['ImagenWP'], f['imagenwp'], f['imagenWP'], f['Imagen_WP'],
+    f['Imagenurl'], f['ImagenUrl'], f['imagenurl'], f['imagenUrl'],
+    f['Imagen'], f['Imagen Principal'], f['Image'], f['Images'],
+    f['Foto'], f['Fotos'], f['Galeria'], f['Gallery'],
+    f['Imagenes'], f['Attachments'], f['Attachment'], f['Media'],
+    f['Pictures'], f['Photo'], f['Photos'],
+  ];
+  for (const c of candidates) {
+    if (!c) continue;
+    if (Array.isArray(c) && c.length > 0) {
+      const u = c[0]?.url || c[0]?.thumbnails?.large?.url || (typeof c[0] === 'string' ? c[0] : null);
+      if (u) return u;
+    } else if (typeof c === 'string' && c.startsWith('http')) {
+      return c.split(',')[0].trim();
+    }
+  }
+  // Fallback: any array field with .url
+  for (const value of Object.values(f)) {
+    if (Array.isArray(value) && value.length > 0 && value[0]?.url) return value[0].url;
+  }
+  return '';
+}
+
 // ── Catálogo público de alojamientos (AlojamientosTuristicos_SAI) ──────────
 router.get('/catalog', async (req, res) => {
   const apiKey = process.env.AIRTABLE_API_KEY;
@@ -11,21 +36,7 @@ router.get('/catalog', async (req, res) => {
   if (!apiKey) return res.status(503).json({ error: 'AIRTABLE_API_KEY no configurado' });
 
   try {
-    const params = new URLSearchParams({
-      filterByFormula: '{Publicado} = TRUE()',
-      maxRecords: '100',
-      'fields[]': ['Servicio', 'Descripcion', 'ImagenWP', 'Tipo de Alojamiento',
-                   'Precio actualizado', 'Precio 2 Huespedes', 'Precio 3 Huespedes',
-                   'Precio 4+ Huespedes', 'Capacidad', 'Publicado'].join('&fields[]='),
-    });
-    // URLSearchParams joins arrays with comma — rebuild manually for fields[]
-    const fieldsParam = [
-      'Servicio', 'Descripcion', 'ImagenWP', 'Tipo de Alojamiento',
-      'Precio actualizado', 'Precio 2 Huespedes', 'Precio 3 Huespedes',
-      'Precio 4+ Huespedes', 'Capacidad',
-    ].map(f => `fields[]=${encodeURIComponent(f)}`).join('&');
-
-    const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent('AlojamientosTuristicos_SAI')}?filterByFormula=${encodeURIComponent('{Publicado} = TRUE()')}&maxRecords=100&${fieldsParam}`;
+    const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent('AlojamientosTuristicos_SAI')}?filterByFormula=${encodeURIComponent('{Publicado} = TRUE()')}&maxRecords=100`;
     const atRes = await fetch(url, {
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     });
@@ -34,13 +45,11 @@ router.get('/catalog', async (req, res) => {
     const data = await atRes.json();
     const records = (data.records || []).map(r => {
       const f = r.fields || {};
-      const imageWP = typeof f['ImagenWP'] === 'string' ? f['ImagenWP'] : '';
-      const imageAT = Array.isArray(f['Imagenes']) ? (f['Imagenes'][0]?.url || '') : '';
       return {
         id:          r.id,
         title:       f['Servicio'] || '',
         description: f['Descripcion'] || '',
-        image:       imageWP || imageAT,
+        image:       extractAlojImage(f),
         category:    'hotel',
         price:       Number(f['Precio actualizado']) || 0,
         price2:      Number(f['Precio 2 Huespedes']) || 0,
