@@ -61,6 +61,14 @@ const T = {
           { year: '2012', title: 'El fallo de La Haya', emoji: '⚖️', text: 'La Corte Internacional de Justicia resolvió el litigio entre Colombia y Nicaragua. Los límites cambiaron y la industria pesquera Raizal quedó devastada. Hoy, la cultura y el turismo son nuestra economía.', tag: 'Historia reciente' },
         ],
       },
+      {
+        label: 'La Historia de Breda Sky · El origen del arte',
+        events: [
+          { year: '1945', title: 'Nace Breda Sky', emoji: '👶', text: 'Breda Sky "Vertic Delano" nace en San Andrés Isla. Crecería rodeado de palmeras, del olor del coco y de las manos trabajadoras de su comunidad Raizal.', tag: 'Familia' },
+          { year: '~1947–1950', title: 'La palma que se marchita', emoji: '🌿', text: 'De brazos, su familia lo llevaba a los lugares donde los isleños pelaban y alistaban cocos para exportación. Usaban hojas de palma verdes para cubrir los cocos durante el viaje. El pequeño Breda observaba esas hojas hermosas y horas después las veía marchitas por el calor. Esa imagen triste quedó grabada en él para siempre.', tag: 'Infancia' },
+          { year: '~1969', title: 'El descubrimiento', emoji: '✨', text: 'A sus 24 años, durante un viaje a otra isla, encontró a un señor que trabajaba la palma con sus manos. Se quedó en silencio observándolo. Aprendió mirando. Comenzó a practicar, descubrió nuevas figuras propias — y así nació Coco ART.', tag: 'El origen' },
+        ],
+      },
     ],
     creoleTitle: 'El lenguaje del Creole',
     creoleSub: 'La voz del pueblo Raizal',
@@ -143,6 +151,14 @@ const T = {
         events: [
           { year: '2000', title: 'Seaflower — UNESCO', emoji: '🌊', text: 'UNESCO recognized the archipelago as the "Seaflower" World Biosphere Reserve. The same name as the ship that brought the first settlers, now a symbol of planetary conservation.', tag: 'World Heritage' },
           { year: '2012', title: 'The Hague ruling', emoji: '⚖️', text: 'The International Court of Justice resolved the dispute between Colombia and Nicaragua. The maritime limits changed and the Raizal fishing industry was devastated. Today, culture and tourism are our economy.', tag: 'Recent history' },
+        ],
+      },
+      {
+        label: 'The Story of Breda Sky · The origin of the art',
+        events: [
+          { year: '1945', title: 'Breda Sky is born', emoji: '👶', text: 'Breda Sky "Vertic Delano" is born on San Andrés Island. He would grow up surrounded by palm trees, the scent of coconut and the working hands of his Raizal community.', tag: 'Family' },
+          { year: '~1947–1950', title: 'The withering palm', emoji: '🌿', text: 'Carried in his father\'s arms as a small child, he was taken to the places where islanders peeled and prepared coconuts for export. They used fresh green palm leaves to cover the coconuts during the journey. Little Breda would watch those beautiful leaves and hours later see them withered by the heat. That sad image stayed with him forever.', tag: 'Childhood' },
+          { year: '~1969', title: 'The discovery', emoji: '✨', text: 'At 24 years old, during a trip to another island, he came across a man working palm leaves with his hands. He stood in silence and watched. He learned by watching. He began to practice, discovered new figures of his own — and that is how Coco ART was born.', tag: 'The origin' },
         ],
       },
     ],
@@ -229,6 +245,14 @@ const T = {
           { year: '2012', title: 'L\'arrêt de La Haye', emoji: '⚖️', text: "La Cour internationale de justice trancha le litige entre la Colombie et le Nicaragua. Les limites maritimes changèrent et l'industrie de la pêche Raizale fut dévastée. Aujourd'hui, la culture et le tourisme sont notre économie.", tag: 'Histoire récente' },
         ],
       },
+      {
+        label: 'L\'histoire de Breda Sky · L\'origine de l\'art',
+        events: [
+          { year: '1945', title: 'Naissance de Breda Sky', emoji: '👶', text: 'Breda Sky "Vertic Delano" naît sur l\'île de San Andrés. Il grandira entouré de palmiers, de l\'odeur du coco et des mains travailleuses de sa communauté Raizale.', tag: 'Famille' },
+          { year: '~1947–1950', title: 'La palme qui se fane', emoji: '🌿', text: 'Porté dans les bras de son père, il était emmené aux endroits où les insulaires épluchaient et préparaient les noix de coco pour l\'exportation. Ils utilisaient des feuilles de palmier vertes pour couvrir les noix pendant le voyage. Le petit Breda regardait ces belles feuilles et quelques heures plus tard les voyait se faner sous la chaleur. Cette image triste resta gravée en lui pour toujours.', tag: 'Enfance' },
+          { year: '~1969', title: 'La découverte', emoji: '✨', text: 'À 24 ans, lors d\'un voyage sur une autre île, il croisa un homme qui travaillait les feuilles de palmier de ses mains. Il s\'arrêta en silence et l\'observa. Il apprit en regardant. Il commença à pratiquer, découvrit de nouvelles figures à lui — et c\'est ainsi que Coco ART est né.', tag: 'L\'origine' },
+        ],
+      },
     ],
     creoleTitle: 'La langue Créole',
     creoleSub: 'La voix du peuple Raizal',
@@ -311,6 +335,14 @@ const T = {
         events: [
           { year: '2000', title: 'Seaflower — UNESCO', emoji: '🌊', text: 'A UNESCO reconheceu o arquipélago como Reserva Mundial da Biosfera "Seaflower". O mesmo nome do barco que trouxe os primeiros habitantes, agora símbolo de conservação planetária.', tag: 'Patrimônio mundial' },
           { year: '2012', title: 'O julgamento de Haia', emoji: '⚖️', text: 'O Tribunal Internacional de Justiça resolveu o litígio entre a Colômbia e a Nicarágua. Os limites marítimos mudaram e a indústria pesqueira Raizal foi devastada. Hoje, cultura e turismo são nossa economia.', tag: 'História recente' },
+        ],
+      },
+      {
+        label: 'A história de Breda Sky · A origem da arte',
+        events: [
+          { year: '1945', title: 'Nasce Breda Sky', emoji: '👶', text: 'Breda Sky "Vertic Delano" nasce na Ilha de San Andrés. Cresceria rodeado de palmeiras, do cheiro do coco e das mãos trabalhadoras de sua comunidade Raizal.', tag: 'Família' },
+          { year: '~1947–1950', title: 'A palma que murcha', emoji: '🌿', text: 'Nos braços de seu pai, era levado aos lugares onde os ilhéus descascavam e preparavam os cocos para exportação. Usavam folhas de palmeira verdes para cobrir os cocos durante a viagem. O pequeno Breda observava aquelas folhas bonitas e horas depois as via murchas pelo calor. Essa imagem triste ficou gravada nele para sempre.', tag: 'Infância' },
+          { year: '~1969', title: 'A descoberta', emoji: '✨', text: 'Aos 24 anos, durante uma viagem a outra ilha, encontrou um senhor que trabalhava as folhas de palmeira com as mãos. Ficou em silêncio observando. Aprendeu olhando. Começou a praticar, descobriu novas figuras próprias — e assim nasceu o Coco ART.', tag: 'A origem' },
         ],
       },
     ],
