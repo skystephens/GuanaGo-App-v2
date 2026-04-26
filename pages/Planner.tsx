@@ -25,15 +25,19 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, onBack, initialCategory }
     : initialCategory === 'taxi' ? 'taxi'
     : 'tour';
 
-  const [activeTab, setActiveTab] = useState<Tab>(startTab);
-  const [allServices, setAllServices] = useState<Tour[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [syncing, setSyncing]   = useState(false);
+  const [activeTab, setActiveTab]           = useState<Tab>(startTab);
+  const [allServices, setAllServices]       = useState<Tour[]>([]);
+  const [alojamientos, setAlojamientos]     = useState<Tour[]>([]);
+  const [loading, setLoading]               = useState(true);
+  const [loadingAloj, setLoadingAloj]       = useState(false);
+  const [syncing, setSyncing]               = useState(false);
 
-  useEffect(() => { fetchServices(); }, []);
+  useEffect(() => {
+    fetchServices();
+    fetchAlojamientos();
+  }, []);
 
   const fetchServices = async (force = false) => {
-    // 1. Caché primero
     if (!force) {
       const cached = getFromCache<Tour[]>('services_turisticos');
       if (cached && cached.length > 0) {
@@ -43,8 +47,6 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, onBack, initialCategory }
         return;
       }
     }
-
-    // 2. Sin caché: carga desde API
     setLoading(true);
     try {
       const services = await api.services.listPublic();
@@ -58,6 +60,25 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, onBack, initialCategory }
     }
   };
 
+  const fetchAlojamientos = async () => {
+    const cached = getFromCache<Tour[]>('alojamientos_catalog');
+    if (cached && cached.length > 0) {
+      setAlojamientos(cached);
+      return;
+    }
+    setLoadingAloj(true);
+    try {
+      const records = await api.accommodations.listCatalog();
+      const mapped = records as Tour[];
+      setAlojamientos(mapped);
+      if (mapped.length > 0) saveToCache('alojamientos_catalog', mapped);
+    } catch {
+      setAlojamientos([]);
+    } finally {
+      setLoadingAloj(false);
+    }
+  };
+
   const refreshBackground = async () => {
     setSyncing(true);
     try {
@@ -67,19 +88,28 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, onBack, initialCategory }
         setAllServices(active);
         saveToCache('services_turisticos', active);
       }
+      const records = await api.accommodations.listCatalog();
+      if (records.length > 0) {
+        setAlojamientos(records as Tour[]);
+        saveToCache('alojamientos_catalog', records);
+      }
     } finally {
       setSyncing(false);
     }
   };
 
-  const filtered = allServices.filter(s => s.category === activeTab);
+  const filtered = activeTab === 'hotel'
+    ? alojamientos
+    : allServices.filter(s => s.category === activeTab);
+
+  const isLoadingTab = activeTab === 'hotel' ? loadingAloj : loading;
 
   const navigateTo = (service: Tour) => {
     if (!onNavigate) return;
-    if (service.category === 'hotel')   onNavigate(AppRoute.HOTEL_DETAIL,   service);
-    else if (service.category === 'taxi') onNavigate(AppRoute.TAXI_DETAIL,  service);
+    if (service.category === 'hotel')        onNavigate(AppRoute.HOTEL_DETAIL,   service);
+    else if (service.category === 'taxi')    onNavigate(AppRoute.TAXI_DETAIL,    service);
     else if (service.category === 'package') onNavigate(AppRoute.PACKAGE_DETAIL, service);
-    else onNavigate(AppRoute.TOUR_DETAIL, service);
+    else                                     onNavigate(AppRoute.TOUR_DETAIL,    service);
   };
 
   return (
@@ -101,8 +131,8 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, onBack, initialCategory }
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-400">{filtered.length} disponibles</span>
             <button
-              onClick={() => fetchServices(true)}
-              disabled={syncing || loading}
+              onClick={() => { fetchServices(true); fetchAlojamientos(); }}
+              disabled={syncing || loading || loadingAloj}
               className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-40"
               title="Sincronizar"
             >
@@ -132,7 +162,7 @@ const Planner: React.FC<PlannerProps> = ({ onNavigate, onBack, initialCategory }
 
       {/* Content */}
       <div className="px-4 py-5">
-        {loading ? (
+        {isLoadingTab ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="bg-white rounded-3xl h-64 animate-pulse border border-gray-100" />

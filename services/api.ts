@@ -237,7 +237,16 @@ export const api = {
       } catch (e) {
         return { success: false, error: 'Network error' };
       }
-    }
+    },
+    listCatalog: async (): Promise<any[]> => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/accommodations/catalog`);
+        const data = await safeJson(response);
+        return data?.records || [];
+      } catch {
+        return [];
+      }
+    },
   },
 
   taxis: {
