@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Leaf, Crown, Heart } from 'lucide-react';
-import { AppRoute } from '../types';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Leaf, Crown, Heart, Calendar } from 'lucide-react';
+import { AppRoute, Tour } from '../types';
+import { api } from '../services/api';
+import { getFromCache } from '../services/cacheService';
+import { getPrecioB2C } from '../services/pricing';
 
 interface CocoArtHistoriaProps {
   onBack: () => void;
@@ -116,6 +119,12 @@ const T = {
     ctaBtn: '🥥 Ver experiencia completa',
     ctaWa: '📱 Reservar por WhatsApp',
     footerSub: 'Turismo comunitario y cultural',
+    bookTitle: 'Reserva tu fecha',
+    bookSub: 'Selecciona el paquete y elige el día de tu experiencia',
+    bookBtn: 'Seleccionar fecha →',
+    bookVip: 'VIP',
+    bookPer: 'COP / persona',
+    bookConsult: 'Consultar precio',
   },
   EN: {
     headerLabel: 'History',
@@ -208,6 +217,12 @@ const T = {
     ctaBtn: '🥥 See the full experience',
     ctaWa: '📱 Book via WhatsApp',
     footerSub: 'Community & cultural tourism',
+    bookTitle: 'Book your date',
+    bookSub: 'Select a package and choose the day of your experience',
+    bookBtn: 'Select date →',
+    bookVip: 'VIP',
+    bookPer: 'COP / person',
+    bookConsult: 'Ask for price',
   },
   FR: {
     headerLabel: 'Histoire',
@@ -300,6 +315,12 @@ const T = {
     ctaBtn: "🥥 Voir l'expérience complète",
     ctaWa: '📱 Réserver via WhatsApp',
     footerSub: 'Tourisme communautaire & culturel',
+    bookTitle: 'Réservez votre date',
+    bookSub: 'Sélectionnez un forfait et choisissez le jour de votre expérience',
+    bookBtn: 'Choisir une date →',
+    bookVip: 'VIP',
+    bookPer: 'COP / personne',
+    bookConsult: 'Demander le prix',
   },
   PT: {
     headerLabel: 'História',
@@ -392,6 +413,12 @@ const T = {
     ctaBtn: '🥥 Ver a experiência completa',
     ctaWa: '📱 Reservar pelo WhatsApp',
     footerSub: 'Turismo comunitário e cultural',
+    bookTitle: 'Reserve sua data',
+    bookSub: 'Selecione o pacote e escolha o dia da sua experiência',
+    bookBtn: 'Selecionar data →',
+    bookVip: 'VIP',
+    bookPer: 'COP / pessoa',
+    bookConsult: 'Consultar preço',
   },
 } as const;
 
@@ -406,9 +433,22 @@ const modBorder: Record<string, string> = {
   ocean: 'rgba(42,155,168,0.25)',
 };
 
-const CocoArtHistoria: React.FC<CocoArtHistoriaProps> = ({ onBack }) => {
+const CocoArtHistoria: React.FC<CocoArtHistoriaProps> = ({ onBack, onNavigate }) => {
   const [lang, setLang] = useState<Lang>('ES');
+  const [paquetes, setPaquetes] = useState<Tour[]>([]);
   const t = T[lang];
+
+  useEffect(() => {
+    const load = async () => {
+      let all: Tour[] = getFromCache<Tour[]>('services_turisticos') || [];
+      if (all.length === 0) all = await api.services.listPublic();
+      setPaquetes(all.filter(s =>
+        s.title?.toLowerCase().includes('cocoart') ||
+        s.title?.toLowerCase().includes('coco art')
+      ));
+    };
+    load();
+  }, []);
 
   return (
     <div className="min-h-screen" style={{ background: `linear-gradient(160deg, ${PALM_DARK} 0%, ${PALM_MID} 60%, ${PALM_GREEN} 100%)` }}>
@@ -567,22 +607,83 @@ const CocoArtHistoria: React.FC<CocoArtHistoriaProps> = ({ onBack }) => {
           </div>
         </div>
 
-        {/* ── CTA ── */}
-        <div className="rounded-2xl p-5 text-center mb-6"
-          style={{ background: `radial-gradient(ellipse at 50% 0%, ${PALM_CORAL}20 0%, transparent 60%), rgba(200,169,122,0.05)`, border: '1px solid rgba(200,169,122,0.12)' }}>
-          <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: PALM_CORAL }}>{t.ctaEyebrow}</p>
-          <h3 className="text-xl font-black text-white leading-tight mb-2" style={{ fontFamily: 'Georgia, serif' }}>
-            {t.ctaTitle.split('\n').map((l, i) => <span key={i}>{l}<br /></span>)}
-          </h3>
-          <p className="text-xs font-light leading-relaxed mb-4" style={{ color: 'rgba(245,237,216,0.7)' }}>{t.ctaText}</p>
+        {/* ── RESERVA TU FECHA ── */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Calendar size={13} style={{ color: PALM_GOLD }} />
+            <h3 className="text-sm font-black uppercase tracking-widest" style={{ color: PALM_GOLD }}>{t.bookTitle}</h3>
+          </div>
+          <p className="text-xs mb-3" style={{ color: 'rgba(245,237,216,0.5)' }}>{t.bookSub}</p>
+
+          {paquetes.length > 0 ? (
+            <div className="space-y-3">
+              {paquetes.map(pkg => {
+                const precio = getPrecioB2C(pkg);
+                const isVip = pkg.title?.toLowerCase().includes('vip');
+                return (
+                  <div key={pkg.id} className="rounded-2xl overflow-hidden"
+                    style={{ border: `1px solid ${isVip ? PALM_GOLD + '50' : 'rgba(255,255,255,0.1)'}` }}>
+                    {/* imagen + badge */}
+                    {pkg.image && (
+                      <div className="relative h-28 overflow-hidden">
+                        <img src={pkg.image} alt={pkg.title}
+                          className="w-full h-full object-cover"
+                          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(10,31,15,0.9) 0%, transparent 50%)' }} />
+                        {isVip && (
+                          <span className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black"
+                            style={{ background: PALM_GOLD, color: PALM_DARK }}>
+                            <Crown size={9} /> {t.bookVip}
+                          </span>
+                        )}
+                        <span className="absolute bottom-2 left-3 text-white font-black text-sm">{pkg.title}</span>
+                      </div>
+                    )}
+                    <div className="p-3" style={{ background: isVip ? 'rgba(200,168,75,0.08)' : 'rgba(255,255,255,0.04)' }}>
+                      {!pkg.image && (
+                        <p className="font-black text-white text-sm mb-1">{pkg.title}</p>
+                      )}
+                      {pkg.description && (
+                        <p className="text-[11px] leading-relaxed mb-2 line-clamp-2" style={{ color: 'rgba(245,237,216,0.6)' }}>
+                          {pkg.description}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          {precio > 0 ? (
+                            <>
+                              <span className="font-black text-base" style={{ color: PALM_GOLD }}>${precio.toLocaleString()}</span>
+                              <span className="text-[10px] ml-1" style={{ color: 'rgba(245,237,216,0.4)' }}>{t.bookPer}</span>
+                            </>
+                          ) : (
+                            <span className="text-xs" style={{ color: 'rgba(245,237,216,0.4)' }}>{t.bookConsult}</span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => onNavigate(AppRoute.TOUR_DETAIL, pkg)}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all active:scale-95"
+                          style={{ background: isVip ? PALM_GOLD : PALM_ACCENT, color: PALM_DARK }}>
+                          <Calendar size={11} />
+                          {t.bookBtn}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* Fallback si no cargan los paquetes */
+            <a href="https://wa.me/573153836043" target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold text-sm text-white"
+              style={{ background: `linear-gradient(135deg, ${PALM_CORAL}, #b83e0e)` }}>
+              <Calendar size={14} /> {t.ctaBtn}
+            </a>
+          )}
+
           <a href="https://wa.me/573153836043" target="_blank" rel="noopener noreferrer"
-            className="block w-full text-center py-3 rounded-xl font-bold text-sm text-white mb-2"
-            style={{ background: `linear-gradient(135deg, ${PALM_CORAL}, #b83e0e)` }}>
-            {t.ctaBtn}
-          </a>
-          <a href="https://wa.me/573153836043" target="_blank" rel="noopener noreferrer"
-            className="block w-full text-center py-3 rounded-xl font-bold text-sm"
-            style={{ background: 'transparent', border: `1px solid rgba(200,169,122,0.3)`, color: PALM_GOLD }}>
+            className="flex items-center justify-center gap-2 mt-3 w-full py-3 rounded-xl font-bold text-sm"
+            style={{ background: 'transparent', border: `1px solid rgba(200,169,122,0.25)`, color: PALM_GOLD }}>
             {t.ctaWa}
           </a>
         </div>
