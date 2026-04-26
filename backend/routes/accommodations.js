@@ -7,8 +7,8 @@ const router = express.Router();
 // ── Catálogo público de alojamientos (AlojamientosTuristicos_SAI) ──────────
 router.get('/catalog', async (req, res) => {
   const apiKey = process.env.AIRTABLE_API_KEY;
-  const baseId = process.env.AIRTABLE_BASE_ID;
-  if (!apiKey || !baseId) return res.status(503).json({ error: 'Airtable no configurado' });
+  const baseId = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
+  if (!apiKey) return res.status(503).json({ error: 'AIRTABLE_API_KEY no configurado' });
 
   try {
     const params = new URLSearchParams({
