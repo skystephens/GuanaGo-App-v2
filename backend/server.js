@@ -13,6 +13,7 @@ const path = require('path');
 // Importar rutas
 const partnerRoutes = require('./routes/partnerRoutes');
 const healthRoutes = require('./routes/healthRoutes');
+const tasksRoutes = require('./routes/tasks');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -49,6 +50,9 @@ app.use('/api/health', healthRoutes);
 // Partner Routes
 app.use('/api/partners', partnerRoutes);
 
+// Tasks / Roadmap
+app.use('/api/tasks', tasksRoutes);
+
 // Root endpoint
 app.get('/api', (req, res) => {
   res.json({
@@ -75,7 +79,15 @@ app.use((req, res) => {
       'POST /api/partners/login',
       'POST /api/partners/register',
       'GET /api/partners/:id',
-      'GET /api/partners/:id/dashboard/stats'
+      'GET /api/partners/:id/dashboard/stats',
+      'GET /api/tasks',
+      'POST /api/tasks',
+      'PUT /api/tasks/:id',
+      'DELETE /api/tasks/:id',
+      'GET /api/tasks/stats',
+      'POST /api/tasks/analyze',
+      'POST /api/tasks/webhook',
+      'GET /api/tasks/export'
     ]
   });
 });
