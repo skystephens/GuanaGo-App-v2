@@ -3,13 +3,16 @@
  * GuanaGO · GuíaSAI
  *
  * Flujo:
- *   POST /api/payments/create  → genera link de pago y lo guarda en memoria (24h)
+ *   POST /api/payments/create  → genera link de pago y lo persiste en Airtable (24h)
  *   GET  /pagar/:ref           → página HTML que auto-submite a PayU checkout
  *   POST /api/payments/webhook → confirmación de PayU, actualiza Airtable
  *
  * Env vars requeridas:
- *   PAYU_MERCHANT_ID, PAYU_ACCOUNT_ID, PAYU_API_KEY
+ *   PAYU_MERCHANT_ID=508029        ← sandbox
+ *   PAYU_ACCOUNT_ID=512321         ← sandbox Colombia
+ *   PAYU_API_KEY=4Vj8eK4rloUd272L48hsrarnUA  ← sandbox
  *   PAYU_TEST=1 (sandbox) | PAYU_TEST=0 (producción)
+ *   AIRTABLE_API_KEY, AIRTABLE_BASE_ID
  *   BASE_URL=https://www.guanago.travel
  */
 
@@ -19,24 +22,67 @@ import crypto from 'crypto';
 const router = express.Router();
 
 // ─── PayU endpoints ───────────────────────────────────────────────────────────
-// Usa PAYU_GATEWAY_URL del .env si está definido; si no, usa el checkout estándar.
 const PAYU_CHECKOUT = {
   sandbox: 'https://sandbox.checkout.payulatam.com/ppp-web-gateway-payu/',
-  prod:    process.env.PAYU_GATEWAY_URL || 'https://checkout.payulatam.com/ppp-web-gateway-payu/',
+  prod:    'https://checkout.payulatam.com/ppp-web-gateway-payu/',
 };
 
-// ─── Almacén en memoria (TTL 24h) ─────────────────────────────────────────────
-const pendingPayments = new Map();
+// ─── Airtable — persistencia de pagos temporales ──────────────────────────────
+const PAGOS_TABLE = 'PagosTemporales';
+
+async function savePagoTemporal(referenceCode, fields, payuUrl, meta) {
+  const AT_KEY  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+  const AT_BASE = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
+  if (!AT_KEY) throw new Error('AIRTABLE_API_KEY no configurado');
+
+  const expiresAt = new Date(Date.now() + 86_400_000).toISOString(); // 24h
+
+  const res = await fetch(`https://api.airtable.com/v0/${AT_BASE}/${encodeURIComponent(PAGOS_TABLE)}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${AT_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      records: [{ fields: { referenceCode, Payload: JSON.stringify({ fields, payuUrl, meta }), ExpiresAt: expiresAt } }],
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Airtable savePago error ${res.status}: ${err}`);
+  }
+}
+
+async function getPagoTemporal(referenceCode) {
+  const AT_KEY  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+  const AT_BASE = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
+  if (!AT_KEY) return null;
+
+  const formula = encodeURIComponent(`{referenceCode}="${referenceCode}"`);
+  const res = await fetch(
+    `https://api.airtable.com/v0/${AT_BASE}/${encodeURIComponent(PAGOS_TABLE)}?filterByFormula=${formula}&maxRecords=1`,
+    { headers: { 'Authorization': `Bearer ${AT_KEY}` } },
+  );
+
+  if (!res.ok) return null;
+  const data = await res.json();
+  const record = data.records?.[0];
+  if (!record) return null;
+
+  // Verificar TTL
+  const expiresAt = record.fields.ExpiresAt;
+  if (expiresAt && new Date(expiresAt) < new Date()) {
+    console.warn(`⏱️ Pago expirado: ${referenceCode}`);
+    return null;
+  }
+
+  try {
+    return JSON.parse(record.fields.Payload);
+  } catch {
+    return null;
+  }
+}
 
 function md5(str) {
   return crypto.createHash('md5').update(str).digest('hex');
-}
-
-function cleanOldPayments() {
-  const cutoff = Date.now() - 86_400_000; // 24h
-  for (const [key, val] of pendingPayments) {
-    if (val.createdAt < cutoff) pendingPayments.delete(key);
-  }
 }
 
 // ─── POST /api/payments/create ────────────────────────────────────────────────
@@ -95,15 +141,15 @@ router.post('/create', async (req, res) => {
     confirmationUrl: `${BASE_URL}/api/payments/webhook`,
   };
 
-  pendingPayments.set(referenceCode, {
-    fields,
-    payuUrl,
-    meta: { cotizacionId, voucherId, amount: parsed, description, buyerName, buyerEmail },
-    createdAt: Date.now(),
-  });
-  cleanOldPayments();
-
-  console.log(`💳 Link de pago creado: ${referenceCode} · $${amountStr} COP`);
+  try {
+    await savePagoTemporal(referenceCode, fields, payuUrl, {
+      cotizacionId, voucherId, amount: parsed, description, buyerName, buyerEmail,
+    });
+    console.log(`💳 Link de pago creado: ${referenceCode} · $${amountStr} COP · test=${IS_TEST}`);
+  } catch (err) {
+    console.error('❌ Error guardando pago en Airtable:', err.message);
+    return res.status(500).json({ error: 'No se pudo guardar el link de pago. Intenta de nuevo.' });
+  }
 
   res.json({
     success: true,
@@ -114,8 +160,13 @@ router.post('/create', async (req, res) => {
 });
 
 // ─── GET /pagar/:referenceCode — página de pago ───────────────────────────────
-router.get('/:referenceCode', (req, res) => {
-  const data = pendingPayments.get(req.params.referenceCode);
+router.get('/:referenceCode', async (req, res) => {
+  let data;
+  try {
+    data = await getPagoTemporal(req.params.referenceCode);
+  } catch (err) {
+    console.error('❌ Error leyendo pago de Airtable:', err.message);
+  }
 
   if (!data) {
     return res.status(404).send(`<!DOCTYPE html>
@@ -158,7 +209,6 @@ router.get('/:referenceCode', (req, res) => {
     @keyframes spin{to{transform:rotate(360deg)}}
     .secure{color:#94a3b8;font-size:11px;margin-top:20px;line-height:1.6;}
     .payu-logo{color:#0061b0;font-weight:700;font-size:13px;}
-    ${data.meta.cotizacionId || data.meta.voucherId ? '' : ''}
   </style>
 </head>
 <body>
@@ -210,8 +260,8 @@ router.post('/webhook', express.urlencoded({ extended: true }), async (req, res)
   console.log('💳 PayU webhook:', { reference_sale, state_pol, value });
 
   // Validar firma: MD5("apiKey~merchantId~referenceCode~newAmount~currency~state_pol")
-  const newAmount   = parseFloat(value || '0').toFixed(1);
-  const expected    = md5(`${API_KEY}~${MERCHANT_ID}~${reference_sale}~${newAmount}~${currency}~${state_pol}`);
+  const newAmount = parseFloat(value || '0').toFixed(1);
+  const expected  = md5(`${API_KEY}~${MERCHANT_ID}~${reference_sale}~${newAmount}~${currency}~${state_pol}`);
 
   if (sign !== expected) {
     console.warn('⚠️ PayU webhook firma inválida. Recibida:', sign, '| Esperada:', expected);
@@ -224,12 +274,12 @@ router.post('/webhook', express.urlencoded({ extended: true }), async (req, res)
   console.log(`✅ ${reference_sale} → ${estadoNuevo}`);
 
   // Extraer cotizacionId de referenceCode "GG-{id}-{timestamp}"
-  const match = (reference_sale || '').match(/^GG-(.+)-\d+$/);
+  const match    = (reference_sale || '').match(/^GG-(.+)-\d+$/);
   const entityId = match?.[1];
 
   if (entityId && state_pol === '4') {
     try {
-      const AT_KEY  = process.env.AIRTABLE_API_KEY;
+      const AT_KEY  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
       const AT_BASE = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
 
       await fetch(`https://api.airtable.com/v0/${AT_BASE}/CotizacionesGG/${entityId}`, {
@@ -238,9 +288,9 @@ router.post('/webhook', express.urlencoded({ extended: true }), async (req, res)
         body: JSON.stringify({
           fields: {
             'Estado': 'Pagado',
-            'PayU Reference': reference_sale,
+            'PayU Reference':    reference_sale,
             'PayU Transaction':  transaction_id || '',
-          }
+          },
         }),
       });
       console.log(`✅ Cotización ${entityId} marcada Pagado en Airtable`);
