@@ -4,11 +4,12 @@ import {
   Package as PackageIcon, ChevronRight, Server, Music,
   Palette, Handshake, Clock, FileText,
   LayoutGrid, Route, Map, Network, ExternalLink,
-  Bot, Send, Sparkles, Loader2, ChevronDown, ChevronUp,
-  X, CheckCircle2, AlertCircle, Receipt, Briefcase,
+  Bot, Send, Loader2, ChevronDown, ChevronUp,
+  CheckCircle2, AlertCircle, Receipt, Briefcase, ListChecks,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { api } from '../../services/api';
+import { getTareas } from '../../services/airtableService';
 import type { Reservation } from '../../types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -233,6 +234,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const [recentReservations, setRecentReservations] = useState<Reservation[]>([]);
   const [loadingRes, setLoadingRes] = useState(false);
   const [pendingApprovals, setPendingApprovals] = useState<number | null>(null);
+  const [atStats, setAtStats] = useState<{ total: number; criticas: number } | null>(null);
 
   // Cargar reservas recientes
   const loadRecent = useCallback(async () => {
@@ -275,10 +277,19 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     return () => clearInterval(id);
   }, [loadRecent, loadApprovals]);
 
-  // Leer tareas críticas de Torre (badge count)
+  // Cargar tareas desde Airtable
+  useEffect(() => {
+    getTareas().then(tareas => {
+      const total = tareas.length;
+      const criticas = tareas.filter(t => t.prioridad === 'critica' && t.status !== 'completado').length;
+      setAtStats({ total, criticas });
+    }).catch(() => {});
+  }, []);
+
+  // Tareas: Airtable tiene prioridad, localStorage como fallback
   const torreData = loadTorreContext();
-  const tareasCount = torreData?.stats.total ?? 0;
-  const criticas = torreData?.stats.criticas ?? 0;
+  const tareasCount = atStats?.total ?? torreData?.stats.total ?? 0;
+  const criticas = atStats?.criticas ?? torreData?.stats.criticas ?? 0;
 
   return (
     <div className="bg-gray-900 min-h-screen text-white pb-24 font-sans">
@@ -313,13 +324,18 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             STATS — Datos reales + Torre
         ══════════════════════════════════════════════ */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
-            <span className="text-gray-500 text-[10px] uppercase font-bold">Tareas Torre</span>
+          <button
+            onClick={() => onNavigate(AppRoute.ADMIN_TASKS)}
+            className="bg-gray-800 p-3.5 rounded-xl border border-gray-700 hover:border-teal-700 transition-colors text-left w-full"
+          >
+            <span className="text-gray-500 text-[10px] uppercase font-bold">
+              Tareas {atStats ? '· Airtable' : '· Local'}
+            </span>
             <div className="mt-1.5 flex items-baseline justify-between">
               <span className="text-xl font-bold">{tareasCount || '—'}</span>
               {criticas > 0 && <span className="text-red-400 text-xs font-bold">{criticas} críticas</span>}
             </div>
-          </div>
+          </button>
           <div className="bg-gray-800 p-3.5 rounded-xl border border-gray-700 relative">
             {pendingApprovals !== null && pendingApprovals > 0 && (
               <div className="absolute top-2 right-2 w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
@@ -480,13 +496,17 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 pulse="bg-green-500" gradient="from-purple-900/50 to-blue-900/50" border="border-purple-800 hover:border-purple-600" />
               <MiniButton icon={<Map size={18} className="text-purple-400" />} label="Estructura" onClick={() => onNavigate(AppRoute.ADMIN_STRUCTURE)} />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <MiniButton icon={<Network size={18} className="text-teal-400" />} label="Mapa Mental"
                 onClick={() => onNavigate(AppRoute.ADMIN_MAPA_MENTAL)}
                 pulse="bg-teal-400" gradient="from-teal-900/50 to-cyan-900/50" border="border-teal-800 hover:border-teal-500" />
               <MiniButton icon={<ExternalLink size={18} className="text-teal-300" />} label="Ecosistema"
                 onClick={() => window.open('/mapa-ecosistema.html', '_blank')}
                 pulse="bg-cyan-400" gradient="from-cyan-900/50 to-teal-900/50" border="border-cyan-800 hover:border-cyan-500" />
+              <MiniButton icon={<ListChecks size={18} className="text-green-400" />} label="Tareas"
+                onClick={() => onNavigate(AppRoute.ADMIN_TASKS)}
+                badge={criticas > 0 ? String(criticas) : undefined}
+                pulse="bg-green-400" gradient="from-green-900/50 to-teal-900/50" border="border-green-800 hover:border-green-500" />
             </div>
           </Section>
 
