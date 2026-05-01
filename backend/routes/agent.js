@@ -130,6 +130,7 @@ const REPO_DOCS = [
   { id: 'hoja_ruta_anato', titulo: 'Hoja de Ruta ANATO 2026',  file: 'HOJA_RUTA_2026_ANATO.md' },
   { id: 'resumen_b2b',     titulo: 'Resumen Ejecutivo GuiaSAI B2B', file: 'RESUMEN_EJECUTIVO_GUIASAI_B2B.md' },
   { id: 'resumen_90dias',  titulo: 'Resumen Ejecutivo 90 Días', file: 'RESUMEN_EJECUTIVO_90_DIAS.md' },
+  { id: 'sesion_30abril',  titulo: 'Sesión 30 Abril 2026 — Diagnóstico PayU + Estrategia Docs', file: '30abril-guanagolanzamiento.md' },
 ];
 
 router.post('/jarvis-docs/sync', async (req, res) => {
