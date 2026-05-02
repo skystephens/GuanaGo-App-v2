@@ -329,8 +329,8 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   return (
     <div className="bg-gray-900 min-h-screen text-white font-sans flex">
 
-      {/* ── Desktop sidebar ── */}
-      <aside className={`hidden lg:flex flex-col bg-gray-950 border-r border-gray-800 transition-all duration-200 shrink-0 ${sidebarExpanded ? 'w-52' : 'w-16'}`}>
+      {/* ── Sidebar (always visible, collapsible) ── */}
+      <aside className={`flex flex-col bg-gray-950 border-r border-gray-800 transition-all duration-200 shrink-0 ${sidebarExpanded ? 'w-52' : 'w-16'}`}>
         {/* Logo / toggle */}
         <div className="h-14 flex items-center justify-between px-3 border-b border-gray-800">
           {sidebarExpanded && <span className="text-xs font-bold text-teal-400 tracking-widest">GUANAGO</span>}
@@ -374,64 +374,16 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         </div>
       </aside>
 
-      {/* ── Mobile overlay drawer ── */}
-      {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setSidebarOpen(false)} />
-          <aside className="relative w-60 bg-gray-950 border-r border-gray-800 flex flex-col z-10">
-            <div className="h-14 flex items-center justify-between px-4 border-b border-gray-800">
-              <span className="text-xs font-bold text-teal-400 tracking-widest">GUANAGO</span>
-              <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded hover:bg-gray-800 text-gray-400 hover:text-white">
-                <Menu size={18} />
-              </button>
-            </div>
-            <nav className="flex-1 overflow-y-auto py-3 space-y-4">
-              {SIDEBAR_ITEMS.map(group => (
-                <div key={group.label}>
-                  <p className="px-4 mb-1 text-[9px] font-bold text-gray-600 tracking-widest">{group.label}</p>
-                  {group.items.map(item => (
-                    <button
-                      key={item.label}
-                      onClick={() => { onNavigate(item.route); setSidebarOpen(false); }}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white hover:bg-gray-800/70 transition-colors"
-                    >
-                      <span className="shrink-0">{item.icon}</span>
-                      <span className="text-sm font-medium">{item.label}</span>
-                    </button>
-                  ))}
-                </div>
-              ))}
-            </nav>
-            <div className="px-4 py-3 border-t border-gray-800">
-              <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold w-fit ${atStatus === 'ok' ? 'bg-green-900/50 text-green-400' : atStatus === 'error' ? 'bg-red-900/50 text-red-400' : 'bg-gray-800 text-gray-500'}`}>
-                {atStatus === 'ok' ? <Wifi size={10} /> : atStatus === 'error' ? <WifiOff size={10} /> : <Loader2 size={10} className="animate-spin" />}
-                {atStatus === 'ok' ? 'Airtable OK' : atStatus === 'error' ? 'AT Error' : 'Conectando…'}
-              </div>
-            </div>
-          </aside>
-        </div>
-      )}
-
       {/* ── Main content ── */}
       <div className="flex-1 min-w-0 overflow-y-auto pb-24">
 
         {/* Header */}
         <header className="px-6 pt-10 pb-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors">
-              <Menu size={20} />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold">Super Admin</h1>
-              <p className="text-gray-500 text-xs">GuanaGO · {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold">Super Admin</h1>
+            <p className="text-gray-500 text-xs">GuanaGO · {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
           </div>
           <div className="flex items-center gap-2">
-            {/* Airtable badge (mobile) */}
-            <div className={`lg:hidden flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${atStatus === 'ok' ? 'bg-green-900/50 text-green-400' : atStatus === 'error' ? 'bg-red-900/50 text-red-400' : 'bg-gray-800 text-gray-500'}`}>
-              {atStatus === 'ok' ? <Wifi size={10} /> : atStatus === 'error' ? <WifiOff size={10} /> : <Loader2 size={10} className="animate-spin" />}
-              AT
-            </div>
             {criticas > 0 && (
               <div className="flex items-center gap-1 bg-red-900/50 border border-red-700 px-2 py-1 rounded-full">
                 <AlertCircle size={11} className="text-red-400" />
