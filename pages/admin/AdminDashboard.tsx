@@ -6,6 +6,7 @@ import {
   LayoutGrid, Route, Map, Network, ExternalLink,
   Bot, Send, Loader2, ChevronDown, ChevronUp,
   CheckCircle2, AlertCircle, Receipt, Briefcase, ListChecks,
+  Menu, Wifi, WifiOff, Home, Settings,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { api } from '../../services/api';
@@ -235,6 +236,9 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const [loadingRes, setLoadingRes] = useState(false);
   const [pendingApprovals, setPendingApprovals] = useState<number | null>(null);
   const [atStats, setAtStats] = useState<{ total: number; criticas: number } | null>(null);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [atStatus, setAtStatus] = useState<'checking' | 'ok' | 'error'>('checking');
 
   // Cargar reservas recientes
   const loadRecent = useCallback(async () => {
@@ -283,7 +287,8 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       const total = tareas.length;
       const criticas = tareas.filter(t => t.prioridad === 'critica' && t.status !== 'completado').length;
       setAtStats({ total, criticas });
-    }).catch(() => {});
+      setAtStatus('ok');
+    }).catch(() => setAtStatus('error'));
   }, []);
 
   // Tareas: Airtable tiene prioridad, localStorage como fallback
@@ -291,29 +296,155 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const tareasCount = atStats?.total ?? torreData?.stats.total ?? 0;
   const criticas = atStats?.criticas ?? torreData?.stats.criticas ?? 0;
 
-  return (
-    <div className="bg-gray-900 min-h-screen text-white pb-24 font-sans">
+  const SIDEBAR_ITEMS = [
+    { label: 'INICIO', items: [
+      { icon: <Home size={18} />, label: 'Dashboard', route: AppRoute.ADMIN_DASHBOARD },
+    ]},
+    { label: 'OPERACIONES', items: [
+      { icon: <LayoutGrid size={18} />, label: 'Operaciones', route: AppRoute.ADMIN_OPERACIONES },
+      { icon: <Calendar size={18} />, label: 'Reservas', route: AppRoute.ADMIN_RESERVATIONS },
+      { icon: <Receipt size={18} />, label: 'Vouchers', route: AppRoute.ADMIN_VOUCHERS },
+      { icon: <FileText size={18} />, label: 'Cotizaciones', route: AppRoute.ADMIN_QUOTES },
+      { icon: <Clock size={18} />, label: 'Aprobaciones', route: AppRoute.ADMIN_APPROVALS },
+      { icon: <TrendingUp size={18} />, label: 'Finanzas', route: AppRoute.ADMIN_FINANCE },
+    ]},
+    { label: 'SOCIOS & ALIADOS', items: [
+      { icon: <Handshake size={18} />, label: 'Socios', route: AppRoute.ADMIN_SOCIOS },
+      { icon: <Users size={18} />, label: 'Usuarios', route: AppRoute.ADMIN_USERS },
+      { icon: <PackageIcon size={18} />, label: 'Servicios', route: AppRoute.ADMIN_SERVICES },
+      { icon: <Music size={18} />, label: 'Caribbean', route: AppRoute.ADMIN_CARIBBEAN },
+    ]},
+    { label: 'TRABAJO', items: [
+      { icon: <Briefcase size={18} />, label: 'Cowork IA', route: AppRoute.ADMIN_COWORK },
+      { icon: <ListChecks size={18} />, label: 'Tareas', route: AppRoute.ADMIN_TASKS },
+      { icon: <Network size={18} />, label: 'Torre Control', route: AppRoute.ADMIN_TORRE_CONTROL },
+      { icon: <Map size={18} />, label: 'Mapa Mental', route: AppRoute.ADMIN_MAPA_MENTAL },
+      { icon: <Server size={18} />, label: 'Backend', route: AppRoute.ADMIN_BACKEND },
+    ]},
+    { label: 'CONFIG', items: [
+      { icon: <Settings size={18} />, label: 'Control Panel', route: AppRoute.ADMIN_CONTROL_PANEL },
+    ]},
+  ];
 
-      {/* Header */}
-      <header className="px-6 pt-12 pb-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Super Admin</h1>
-          <p className="text-gray-500 text-xs">GuanaGO · {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+  return (
+    <div className="bg-gray-900 min-h-screen text-white font-sans flex">
+
+      {/* ── Desktop sidebar ── */}
+      <aside className={`hidden lg:flex flex-col bg-gray-950 border-r border-gray-800 transition-all duration-200 shrink-0 ${sidebarExpanded ? 'w-52' : 'w-16'}`}>
+        {/* Logo / toggle */}
+        <div className="h-14 flex items-center justify-between px-3 border-b border-gray-800">
+          {sidebarExpanded && <span className="text-xs font-bold text-teal-400 tracking-widest">GUANAGO</span>}
+          <button onClick={() => setSidebarExpanded(v => !v)} className="p-1.5 rounded hover:bg-gray-800 transition-colors text-gray-400 hover:text-white ml-auto">
+            <Menu size={18} />
+          </button>
         </div>
-        <div className="flex items-center gap-2">
-          {criticas > 0 && (
-            <div className="flex items-center gap-1 bg-red-900/50 border border-red-700 px-2 py-1 rounded-full">
-              <AlertCircle size={11} className="text-red-400" />
-              <span className="text-[10px] text-red-400 font-bold">{criticas} críticas</span>
+        {/* Nav items */}
+        <nav className="flex-1 overflow-y-auto py-3 space-y-4">
+          {SIDEBAR_ITEMS.map(group => (
+            <div key={group.label}>
+              {sidebarExpanded && (
+                <p className="px-3 mb-1 text-[9px] font-bold text-gray-600 tracking-widest">{group.label}</p>
+              )}
+              {group.items.map(item => (
+                <button
+                  key={item.label}
+                  onClick={() => onNavigate(item.route)}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/70 transition-colors"
+                  title={!sidebarExpanded ? item.label : undefined}
+                >
+                  <span className="shrink-0">{item.icon}</span>
+                  {sidebarExpanded && <span className="text-xs font-medium truncate">{item.label}</span>}
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+        {/* Airtable status (bottom) */}
+        <div className="px-3 py-3 border-t border-gray-800">
+          {sidebarExpanded ? (
+            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold ${atStatus === 'ok' ? 'bg-green-900/50 text-green-400' : atStatus === 'error' ? 'bg-red-900/50 text-red-400' : 'bg-gray-800 text-gray-500'}`}>
+              {atStatus === 'ok' ? <Wifi size={10} /> : atStatus === 'error' ? <WifiOff size={10} /> : <Loader2 size={10} className="animate-spin" />}
+              {atStatus === 'ok' ? 'Airtable OK' : atStatus === 'error' ? 'AT Error' : 'Conectando…'}
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              {atStatus === 'ok' ? <Wifi size={14} className="text-green-400" /> : atStatus === 'error' ? <WifiOff size={14} className="text-red-400" /> : <Loader2 size={14} className="text-gray-500 animate-spin" />}
             </div>
           )}
-          <div className="bg-gray-800 p-2 rounded-full">
-            <Activity size={18} className="text-green-500" />
-          </div>
         </div>
-      </header>
+      </aside>
 
-      <div className="px-6 space-y-5">
+      {/* ── Mobile overlay drawer ── */}
+      {sidebarOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setSidebarOpen(false)} />
+          <aside className="relative w-60 bg-gray-950 border-r border-gray-800 flex flex-col z-10">
+            <div className="h-14 flex items-center justify-between px-4 border-b border-gray-800">
+              <span className="text-xs font-bold text-teal-400 tracking-widest">GUANAGO</span>
+              <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded hover:bg-gray-800 text-gray-400 hover:text-white">
+                <Menu size={18} />
+              </button>
+            </div>
+            <nav className="flex-1 overflow-y-auto py-3 space-y-4">
+              {SIDEBAR_ITEMS.map(group => (
+                <div key={group.label}>
+                  <p className="px-4 mb-1 text-[9px] font-bold text-gray-600 tracking-widest">{group.label}</p>
+                  {group.items.map(item => (
+                    <button
+                      key={item.label}
+                      onClick={() => { onNavigate(item.route); setSidebarOpen(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white hover:bg-gray-800/70 transition-colors"
+                    >
+                      <span className="shrink-0">{item.icon}</span>
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </nav>
+            <div className="px-4 py-3 border-t border-gray-800">
+              <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold w-fit ${atStatus === 'ok' ? 'bg-green-900/50 text-green-400' : atStatus === 'error' ? 'bg-red-900/50 text-red-400' : 'bg-gray-800 text-gray-500'}`}>
+                {atStatus === 'ok' ? <Wifi size={10} /> : atStatus === 'error' ? <WifiOff size={10} /> : <Loader2 size={10} className="animate-spin" />}
+                {atStatus === 'ok' ? 'Airtable OK' : atStatus === 'error' ? 'AT Error' : 'Conectando…'}
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* ── Main content ── */}
+      <div className="flex-1 min-w-0 overflow-y-auto pb-24">
+
+        {/* Header */}
+        <header className="px-6 pt-10 pb-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors">
+              <Menu size={20} />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold">Super Admin</h1>
+              <p className="text-gray-500 text-xs">GuanaGO · {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Airtable badge (mobile) */}
+            <div className={`lg:hidden flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${atStatus === 'ok' ? 'bg-green-900/50 text-green-400' : atStatus === 'error' ? 'bg-red-900/50 text-red-400' : 'bg-gray-800 text-gray-500'}`}>
+              {atStatus === 'ok' ? <Wifi size={10} /> : atStatus === 'error' ? <WifiOff size={10} /> : <Loader2 size={10} className="animate-spin" />}
+              AT
+            </div>
+            {criticas > 0 && (
+              <div className="flex items-center gap-1 bg-red-900/50 border border-red-700 px-2 py-1 rounded-full">
+                <AlertCircle size={11} className="text-red-400" />
+                <span className="text-[10px] text-red-400 font-bold">{criticas} críticas</span>
+              </div>
+            )}
+            <div className="bg-gray-800 p-2 rounded-full">
+              <Activity size={18} className="text-green-500" />
+            </div>
+          </div>
+        </header>
+
+        <div className="px-6 space-y-5 pt-2">
 
         {/* ══════════════════════════════════════════════
             AGENTE IA — Briefing automático al entrar
@@ -511,8 +642,9 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           </Section>
 
         </div>
-      </div>
-    </div>
+      </div> {/* end px-6 content */}
+      </div> {/* end main content */}
+    </div> {/* end flex root */}
   );
 };
 
