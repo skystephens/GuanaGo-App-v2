@@ -93,11 +93,11 @@ router.post('/create', async (req, res) => {
     buyerName, buyerEmail, buyerPhone,
   } = req.body;
 
-  const MERCHANT_ID = process.env.PAYU_MERCHANT_ID;
-  const ACCOUNT_ID  = process.env.PAYU_ACCOUNT_ID;
-  const API_KEY     = process.env.PAYU_API_KEY;
-  const IS_TEST     = process.env.PAYU_TEST === '0' ? '0' : '1'; // sandbox por defecto
-  const BASE_URL    = process.env.BASE_URL || 'https://www.guanago.travel';
+  const MERCHANT_ID = (process.env.PAYU_MERCHANT_ID || '').trim();
+  const ACCOUNT_ID  = (process.env.PAYU_ACCOUNT_ID  || '').trim();
+  const API_KEY     = (process.env.PAYU_API_KEY      || '').trim();
+  const IS_TEST     = (process.env.PAYU_TEST         || '').trim() === '0' ? '0' : '1';
+  const BASE_URL    = (process.env.BASE_URL          || 'https://www.guanago.travel').trim();
 
   if (!MERCHANT_ID || !API_KEY || !ACCOUNT_ID) {
     return res.status(503).json({
@@ -146,6 +146,7 @@ router.post('/create', async (req, res) => {
       cotizacionId, voucherId, amount: parsed, description, buyerName, buyerEmail,
     });
     console.log(`💳 Link de pago creado: ${referenceCode} · $${amountStr} COP · test=${IS_TEST}`);
+    console.log(`🔑 Firma: MD5("${API_KEY}~${MERCHANT_ID}~${referenceCode}~${amountStr}~${currency}") = ${signature}`);
   } catch (err) {
     console.error('❌ Error guardando pago en Airtable:', err.message);
     return res.status(500).json({ error: 'No se pudo guardar el link de pago. Intenta de nuevo.' });
