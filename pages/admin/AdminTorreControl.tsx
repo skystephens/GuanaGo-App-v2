@@ -7,9 +7,11 @@ import {
   ArrowLeft, Plus, Trash2, Edit3, X, Calendar, Save,
   Smartphone, Database, FolderPlus, GripVertical, StickyNote,
   ChevronUp, MoreVertical, Cpu,
-  Globe, TrendingUp, Coins, Link2, Target, Layers, Zap, BookOpen
+  Globe, TrendingUp, Coins, Link2, Target, Layers, Zap, BookOpen,
+  Menu, Wifi, WifiOff, Home, Settings,
 } from 'lucide-react';
 import PanelEstadoSistema from './PanelEstadoSistema';
+import { getTareas } from '../../services/airtableService';
 import PanelIAAsistente from './PanelIAAsistente';
 import { AppRoute } from '../../types';
 
@@ -375,6 +377,29 @@ const saveData = (data: SeccionControl[]) =>
 
 const genId = () => `t-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
+// ─── Sidebar navigation items ────────────────────────────────────────────────
+type SidebarItem = { header?: string; icon?: React.ReactNode; label?: string; route?: any };
+const SIDEBAR_ITEMS: SidebarItem[] = [
+  { icon: <Home size={17} />, label: 'Dashboard', route: AppRoute.ADMIN_DASHBOARD },
+  { header: 'OPERACIONES' },
+  { icon: <Calendar size={17} />, label: 'Reservas', route: AppRoute.ADMIN_RESERVATIONS },
+  { icon: <CreditCard size={17} />, label: 'Pagos & Vouchers', route: AppRoute.ADMIN_VOUCHERS },
+  { icon: <FileText size={17} />, label: 'Cotizaciones', route: AppRoute.ADMIN_QUOTES },
+  { header: 'SOCIOS & ALIADOS' },
+  { icon: <Users size={17} />, label: 'Socios', route: AppRoute.ADMIN_SOCIOS },
+  { icon: <Megaphone size={17} />, label: 'Operaciones', route: AppRoute.ADMIN_OPERACIONES },
+  { header: 'AGENCIAS B2B' },
+  { icon: <TrendingUp size={17} />, label: 'Cowork IA', route: AppRoute.ADMIN_COWORK },
+  { icon: <Globe size={17} />, label: 'Civitatis', route: AppRoute.ADMIN_CIVITATIS },
+  { header: 'TRABAJO' },
+  { icon: <TowerControl size={17} />, label: 'Proyectos', route: AppRoute.ADMIN_TORRE_CONTROL },
+  { icon: <BarChart2 size={17} />, label: 'Mapa Mental', route: AppRoute.ADMIN_MAPA_MENTAL },
+  { icon: <Cpu size={17} />, label: 'RAG & SOPs', route: AppRoute.ADMIN_PROCEDIMIENTOS_RAG },
+  { header: 'CONFIG' },
+  { icon: <Database size={17} />, label: 'Backend', route: AppRoute.ADMIN_BACKEND },
+  { icon: <Settings size={17} />, label: 'Panel Ctrl', route: AppRoute.ADMIN_CONTROL_PANEL },
+];
+
 // ─── Config visual ───────────────────────────────────────────────────────────
 const PRIORIDAD_CFG: Record<Prioridad, { label: string; color: string; dot: string; badge: string }> = {
   critica: { label: 'CRÍTICA', color: 'text-red-400',    dot: 'bg-red-500',    badge: 'bg-red-900/60 text-red-300 border-red-700' },
@@ -668,6 +693,39 @@ const AdminTorreControl: React.FC<Props> = ({ onBack, onNavigate }) => {
   // Persistir
   useEffect(() => { saveData(secciones); }, [secciones]);
 
+  // Sidebar state
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarOpen, setSidebarOpen]         = useState(false);
+
+  // Airtable connection status
+  const [atStatus, setAtStatus] = useState<'checking' | 'ok' | 'error'>('checking');
+
+  // Launch countdown (May 31, 2026 10am Colombia = 15:00 UTC)
+  const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
+
+  useEffect(() => {
+    const target = new Date('2026-05-31T15:00:00Z');
+    const tick = () => {
+      const diff = target.getTime() - Date.now();
+      if (diff <= 0) { setCountdown({ d: 0, h: 0, m: 0, s: 0 }); return; }
+      setCountdown({
+        d: Math.floor(diff / 86400000),
+        h: Math.floor((diff % 86400000) / 3600000),
+        m: Math.floor((diff % 3600000) / 60000),
+        s: Math.floor((diff % 60000) / 1000),
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    getTareas()
+      .then(() => setAtStatus('ok'))
+      .catch(() => setAtStatus('error'));
+  }, []);
+
   // Cerrar menus al click afuera
   useEffect(() => {
     const close = () => { setMenuTarea(null); setMenuSeccion(null); };
@@ -820,18 +878,99 @@ ${secLines}
 
   // ──────────────────────────────────────────────────────────────────────────
   return (
-    <div className="bg-gray-950 min-h-screen text-white pb-28 font-sans">
+    <div className="bg-gray-950 min-h-screen text-white font-sans lg:flex">
+
+      {/* ── Sidebar Desktop ── */}
+      <aside className={`hidden lg:flex flex-col bg-gray-900 border-r border-gray-700 transition-all duration-200 flex-shrink-0 ${sidebarExpanded ? 'w-56' : 'w-16'}`}>
+        <button onClick={() => setSidebarExpanded(p => !p)} className="p-4 flex items-center gap-3 hover:bg-gray-800 border-b border-gray-800 min-h-[56px]">
+          <TowerControl size={18} className="text-cyan-400 flex-shrink-0" />
+          {sidebarExpanded && <span className="text-xs font-bold text-white truncate">Torre de Control</span>}
+        </button>
+        <nav className="flex-1 py-2 overflow-y-auto">
+          {SIDEBAR_ITEMS.map((item, i) =>
+            item.header ? (
+              sidebarExpanded
+                ? <p key={i} className="px-4 pt-3 pb-1 text-[9px] font-bold uppercase text-gray-600 tracking-widest">{item.header}</p>
+                : <div key={i} className="my-1 mx-3 h-px bg-gray-800" />
+            ) : (
+              <button key={i} onClick={() => item.route && onNavigate(item.route)}
+                title={!sidebarExpanded ? item.label : undefined}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+                <span className="flex-shrink-0">{item.icon}</span>
+                {sidebarExpanded && <span className="text-xs truncate">{item.label}</span>}
+              </button>
+            )
+          )}
+        </nav>
+        <div className="p-4 border-t border-gray-800 flex items-center gap-2">
+          {atStatus === 'ok'
+            ? <Wifi size={14} className="text-green-400 flex-shrink-0" />
+            : <WifiOff size={14} className={`flex-shrink-0 ${atStatus === 'checking' ? 'text-yellow-400' : 'text-red-400'}`} />}
+          {sidebarExpanded && (
+            <span className={`text-xs font-bold ${atStatus === 'ok' ? 'text-green-400' : atStatus === 'checking' ? 'text-yellow-400' : 'text-red-400'}`}>
+              {atStatus === 'ok' ? 'Airtable OK' : atStatus === 'checking' ? 'Verificando...' : 'Desconectado'}
+            </span>
+          )}
+        </div>
+      </aside>
+
+      {/* ── Mobile overlay ── */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* ── Mobile drawer ── */}
+      <aside className={`fixed top-0 left-0 h-full w-56 bg-gray-900 border-r border-gray-700 z-50 lg:hidden flex flex-col transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-4 flex items-center justify-between border-b border-gray-800">
+          <div className="flex items-center gap-2">
+            <TowerControl size={16} className="text-cyan-400" />
+            <span className="text-xs font-bold">Torre de Control</span>
+          </div>
+          <button onClick={() => setSidebarOpen(false)} className="p-1 rounded-lg hover:bg-gray-800 text-gray-400">
+            <X size={16} />
+          </button>
+        </div>
+        <nav className="flex-1 py-2 overflow-y-auto">
+          {SIDEBAR_ITEMS.map((item, i) =>
+            item.header ? (
+              <p key={i} className="px-4 pt-3 pb-1 text-[9px] font-bold uppercase text-gray-600 tracking-widest">{item.header}</p>
+            ) : (
+              <button key={i} onClick={() => { item.route && onNavigate(item.route); setSidebarOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+                <span className="flex-shrink-0">{item.icon}</span>
+                <span className="text-xs">{item.label}</span>
+              </button>
+            )
+          )}
+        </nav>
+        <div className="p-4 border-t border-gray-800 flex items-center gap-2">
+          {atStatus === 'ok' ? <Wifi size={14} className="text-green-400" /> : <WifiOff size={14} className={atStatus === 'checking' ? 'text-yellow-400' : 'text-red-400'} />}
+          <span className={`text-xs font-bold ${atStatus === 'ok' ? 'text-green-400' : atStatus === 'checking' ? 'text-yellow-400' : 'text-red-400'}`}>
+            AIRTABLE: {atStatus === 'ok' ? 'CONECTADO' : atStatus === 'checking' ? 'VERIFICANDO' : 'DESCONECTADO'}
+          </span>
+        </div>
+      </aside>
+
+      {/* ── Main content ── */}
+      <div className="flex-1 min-w-0 overflow-y-auto pb-24">
 
       {/* ── Header ── */}
       <header className="sticky top-0 z-30 bg-gray-900 border-b border-gray-700">
         <div className="px-4 py-3 flex items-center gap-3">
-          <button onClick={onBack} className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700">
+          <button onClick={() => setSidebarOpen(p => !p)} className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 lg:hidden">
+            <Menu size={18} />
+          </button>
+          <button onClick={onBack} className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 hidden lg:flex items-center justify-center">
             <ArrowLeft size={18} />
           </button>
           <TowerControl size={20} className="text-cyan-400" />
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h1 className="text-sm font-bold leading-none">Torre de Control</h1>
             <p className="text-gray-500 text-xs">{secciones.length} proyectos · {total} tareas · {progresoPct}% avance</p>
+          </div>
+          <div className={`hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full border text-[10px] font-bold ${atStatus === 'ok' ? 'border-green-700 bg-green-950/50 text-green-400' : atStatus === 'checking' ? 'border-yellow-700 bg-yellow-950/50 text-yellow-400' : 'border-red-700 bg-red-950/50 text-red-400'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${atStatus === 'ok' ? 'bg-green-400 animate-pulse' : atStatus === 'checking' ? 'bg-yellow-400 animate-pulse' : 'bg-red-500'}`} />
+            {atStatus === 'ok' ? 'AIRTABLE' : atStatus === 'checking' ? 'CHECKING...' : 'OFFLINE'}
           </div>
           <button onClick={exportarClaude} className="p-2 rounded-lg bg-gray-800 hover:bg-violet-900 hover:border-violet-700 border border-transparent" title="Exportar CLAUDE.md para Claude Code">
             <FileText size={15} className="text-gray-400 hover:text-violet-300" />
@@ -839,7 +978,7 @@ ${secLines}
           <button onClick={exportar} className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700" title="Exportar JSON">
             <Download size={15} className="text-gray-400" />
           </button>
-          <button onClick={() => setMostrarResumen(p => !p)} className="px-3 py-1.5 rounded-lg bg-cyan-900 hover:bg-cyan-800 text-cyan-300 text-xs font-bold flex items-center gap-1">
+          <button onClick={() => setMostrarResumen(p => !p)} className="hidden sm:flex px-3 py-1.5 rounded-lg bg-cyan-900 hover:bg-cyan-800 text-cyan-300 text-xs font-bold items-center gap-1">
             <BarChart2 size={13} /> Resumen
           </button>
         </div>
@@ -861,6 +1000,26 @@ ${secLines}
           </button>
         </div>
       </header>
+
+      {/* ── KPI Strip ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-4 pt-3 pb-1">
+        <div className="bg-gray-900 border border-gray-700 rounded-xl p-3 text-center">
+          <p className="text-xl font-bold text-white">{total}</p>
+          <p className="text-[10px] text-gray-500 uppercase font-bold mt-0.5">Tareas</p>
+        </div>
+        <div className="bg-red-950/40 border border-red-800/50 rounded-xl p-3 text-center">
+          <p className="text-xl font-bold text-red-400">{criticas}</p>
+          <p className="text-[10px] text-red-600 uppercase font-bold mt-0.5">Críticas</p>
+        </div>
+        <div className="bg-cyan-950/40 border border-cyan-800/50 rounded-xl p-3 text-center">
+          <p className="text-xl font-bold text-cyan-300">{countdown.d}<span className="text-xs ml-1">d {String(countdown.h).padStart(2,'0')}h</span></p>
+          <p className="text-[10px] text-cyan-600 uppercase font-bold mt-0.5">Lanzamiento</p>
+        </div>
+        <div className={`rounded-xl p-3 text-center border ${progresoPct >= 80 ? 'bg-green-950/40 border-green-800/50' : 'bg-gray-900 border-gray-700'}`}>
+          <p className={`text-xl font-bold ${progresoPct >= 80 ? 'text-green-400' : 'text-yellow-400'}`}>{progresoPct}%</p>
+          <p className="text-[10px] text-gray-500 uppercase font-bold mt-0.5">Avance</p>
+        </div>
+      </div>
 
       {/* ── Vista: Asistente IA ── */}
       {vistaActual === 'ia' && (
@@ -963,6 +1122,28 @@ ${secLines}
              f === 'completado' ? `Completados (${completadas})` : `Bloqueados (${bloqueadas})`}
           </button>
         ))}
+      </div>
+
+      {/* ── Cuenta regresiva al lanzamiento ── */}
+      <div className="px-4 pb-2">
+        <div className="bg-gradient-to-r from-cyan-950 to-blue-950 rounded-xl border border-cyan-800/50 px-4 py-3 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] text-cyan-500 uppercase font-bold tracking-widest truncate">
+              {countdown.d > 30 ? '🚀 Preparación activa' : countdown.d > 15 ? '⚡ Fase de activación' : countdown.d > 7 ? '🔥 Semana crítica' : '🎯 ¡Lanzamiento inminente!'}
+            </p>
+            <p className="text-xs text-cyan-400 mt-0.5">Soft launch · 31 Mayo 2026</p>
+          </div>
+          <div className="flex items-center gap-1 font-mono flex-shrink-0">
+            <span className="bg-gray-900 px-2 py-1 rounded text-sm font-bold text-white">{String(countdown.d).padStart(2,'0')}</span>
+            <span className="text-gray-600 text-xs">d</span>
+            <span className="bg-gray-900 px-2 py-1 rounded text-sm font-bold text-white">{String(countdown.h).padStart(2,'0')}</span>
+            <span className="text-gray-600 text-xs">h</span>
+            <span className="bg-gray-900 px-2 py-1 rounded text-sm font-bold text-white">{String(countdown.m).padStart(2,'0')}</span>
+            <span className="text-gray-600 text-xs">m</span>
+            <span className="bg-gray-900 px-2 py-1 rounded text-sm font-bold text-cyan-300">{String(countdown.s).padStart(2,'0')}</span>
+            <span className="text-gray-600 text-xs">s</span>
+          </div>
+        </div>
       </div>
 
       {/* ── Secciones ── */}
@@ -1245,6 +1426,7 @@ ${secLines}
           </div>
         </div>
       )}
+      </div> {/* end flex-1 main content */}
     </div>
   );
 };
