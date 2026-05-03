@@ -594,9 +594,9 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           </Section>
 
         </div>
-      </div> {/* end px-6 content */}
-      </div> {/* end main content */}
-    </div> {/* end flex root */}
+      </div>
+      </div>
+    </div>
   );
 };
 
