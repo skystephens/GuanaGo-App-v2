@@ -101,8 +101,8 @@ router.post('/create', async (req, res) => {
   const IS_TEST      = (process.env.PAYU_TEST          || '').trim() === '0' ? '0' : '1';
   // BACKEND_URL → URL del servicio Render (donde viven /pagar y /api/payments/webhook)
   // FRONTEND_URL → URL del frontend para redirección post-pago (opcional)
-  const BACKEND_URL  = (process.env.BACKEND_URL  || process.env.BASE_URL || 'https://www.guanago.travel').trim();
-  const FRONTEND_URL = (process.env.FRONTEND_URL || process.env.BASE_URL || 'https://www.guanago.travel').trim();
+  const BACKEND_URL  = (process.env.BACKEND_URL  || process.env.BASE_URL || 'https://www.guanago.travel').trim().replace(/\/$/, '');
+  const FRONTEND_URL = (process.env.FRONTEND_URL || process.env.BASE_URL || 'https://www.guanago.travel').trim().replace(/\/$/, '');
 
   if (!MERCHANT_ID || !API_KEY || !ACCOUNT_ID) {
     return res.status(503).json({
