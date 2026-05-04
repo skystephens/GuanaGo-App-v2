@@ -13,7 +13,9 @@
  *   PAYU_API_KEY=4Vj8eK4rloUd272L48hsrarnUA  ← sandbox
  *   PAYU_TEST=1 (sandbox) | PAYU_TEST=0 (producción)
  *   AIRTABLE_API_KEY, AIRTABLE_BASE_ID
- *   BASE_URL=https://www.guanago.travel
+ *   BACKEND_URL=https://guanago-backend.onrender.com  ← URL del servicio Render
+ *   FRONTEND_URL=https://www.guanago.travel            ← URL del frontend (botón "volver")
+ *   BASE_URL=https://www.guanago.travel                ← fallback si no se definen los anteriores
  */
 
 import express from 'express';
@@ -93,11 +95,14 @@ router.post('/create', async (req, res) => {
     buyerName, buyerEmail, buyerPhone,
   } = req.body;
 
-  const MERCHANT_ID = (process.env.PAYU_MERCHANT_ID || '').trim();
-  const ACCOUNT_ID  = (process.env.PAYU_ACCOUNT_ID  || '').trim();
-  const API_KEY     = (process.env.PAYU_API_KEY      || '').trim();
-  const IS_TEST     = (process.env.PAYU_TEST         || '').trim() === '0' ? '0' : '1';
-  const BASE_URL    = (process.env.BASE_URL          || 'https://www.guanago.travel').trim();
+  const MERCHANT_ID  = (process.env.PAYU_MERCHANT_ID  || '').trim();
+  const ACCOUNT_ID   = (process.env.PAYU_ACCOUNT_ID   || '').trim();
+  const API_KEY      = (process.env.PAYU_API_KEY       || '').trim();
+  const IS_TEST      = (process.env.PAYU_TEST          || '').trim() === '0' ? '0' : '1';
+  // BACKEND_URL → URL del servicio Render (donde viven /pagar y /api/payments/webhook)
+  // FRONTEND_URL → URL del frontend para redirección post-pago (opcional)
+  const BACKEND_URL  = (process.env.BACKEND_URL  || process.env.BASE_URL || 'https://www.guanago.travel').trim();
+  const FRONTEND_URL = (process.env.FRONTEND_URL || process.env.BASE_URL || 'https://www.guanago.travel').trim();
 
   if (!MERCHANT_ID || !API_KEY || !ACCOUNT_ID) {
     return res.status(503).json({
@@ -117,7 +122,8 @@ router.post('/create', async (req, res) => {
 
   const sourceId      = cotizacionId || voucherId || 'VENTA';
   const referenceCode = `GG-${sourceId}-${Date.now()}`;
-  const amountStr     = parsed.toFixed(2);
+  // COP requires integer amount (no decimals) for PayU signature and form
+  const amountStr     = String(Math.round(parsed));
   const currency      = 'COP';
   const payuUrl       = IS_TEST === '1' ? PAYU_CHECKOUT.sandbox : PAYU_CHECKOUT.prod;
 
@@ -137,8 +143,8 @@ router.post('/create', async (req, res) => {
     buyerEmail:      buyerEmail    || '',
     buyerFullName:   buyerName     || '',
     mobilePhone:     (buyerPhone   || '').replace(/\s/g, ''),
-    responseUrl:     `${BASE_URL}/pago-resultado`,
-    confirmationUrl: `${BASE_URL}/api/payments/webhook`,
+    responseUrl:     `${BACKEND_URL}/pago-resultado`,
+    confirmationUrl: `${BACKEND_URL}/api/payments/webhook`,
   };
 
   try {
@@ -154,7 +160,7 @@ router.post('/create', async (req, res) => {
 
   res.json({
     success: true,
-    pagoUrl: `${BASE_URL}/pagar/${referenceCode}`,
+    pagoUrl: `${BACKEND_URL}/pagar/${referenceCode}`,
     referenceCode,
     test: IS_TEST === '1',
   });
@@ -334,7 +340,7 @@ export function resultadoPago(req, res) {
   const estado   = STATE_MAP[transactionState] || STATE_MAP['104'];
   const monto    = TX_VALUE ? parseFloat(TX_VALUE).toLocaleString('es-CO', { minimumFractionDigits: 0 }) : '—';
   const aprobado = transactionState === '4';
-  const homeUrl  = (process.env.BASE_URL || 'https://www.guanago.travel');
+  const homeUrl  = (process.env.FRONTEND_URL || process.env.BASE_URL || 'https://www.guanago.travel');
   const whatsapp = 'https://wa.me/573153836043';
 
   res.send(`<!DOCTYPE html>
