@@ -102,7 +102,6 @@ router.post('/create', async (req, res) => {
   // BACKEND_URL → URL del servicio Render (donde viven /pagar y /api/payments/webhook)
   // FRONTEND_URL → URL del frontend para redirección post-pago (opcional)
   const BACKEND_URL  = (process.env.BACKEND_URL  || process.env.BASE_URL || 'https://www.guanago.travel').trim().replace(/\/$/, '');
-  const FRONTEND_URL = (process.env.FRONTEND_URL || process.env.BASE_URL || 'https://www.guanago.travel').trim().replace(/\/$/, '');
 
   if (!MERCHANT_ID || !API_KEY || !ACCOUNT_ID) {
     return res.status(503).json({
@@ -257,7 +256,7 @@ router.get('/:referenceCode', async (req, res) => {
 // ─── POST /api/payments/webhook — confirmación de PayU ────────────────────────
 router.post('/webhook', express.urlencoded({ extended: true }), async (req, res) => {
   const {
-    merchant_id, reference_sale, value, currency,
+    reference_sale, value, currency,
     state_pol, sign, transaction_id,
   } = req.body;
 
@@ -312,6 +311,33 @@ router.post('/webhook', express.urlencoded({ extended: true }), async (req, res)
 // ─── GET /pago-resultado — página de resultado post-pago ──────────────────────
 // PayU redirige aquí con query params después de que el usuario paga (o falla)
 // Exportado como named export para montarlo en server.js en /pago-resultado
+// ─── GET /api/payments/debug-sign — diagnóstico de firma (solo sandbox) ───────
+router.get('/debug-sign', (req, res) => {
+  const MERCHANT_ID = (process.env.PAYU_MERCHANT_ID || '').trim();
+  const API_KEY     = (process.env.PAYU_API_KEY     || '').trim();
+  const IS_TEST     = (process.env.PAYU_TEST        || '1').trim();
+
+  if (IS_TEST === '0') return res.status(403).json({ error: 'Solo disponible en sandbox' });
+
+  const { amount = '100000', ref = 'TEST-REF' } = req.query;
+  const amountStr = String(Math.round(parseFloat(amount)));
+  const currency  = 'COP';
+  const input     = `${API_KEY}~${MERCHANT_ID}~${ref}~${amountStr}~${currency}`;
+  const signature = md5(input);
+
+  res.json({
+    vars: {
+      PAYU_MERCHANT_ID: MERCHANT_ID || '❌ NO CONFIGURADO',
+      PAYU_API_KEY:     API_KEY ? `${API_KEY.slice(0, 6)}...${API_KEY.slice(-4)}` : '❌ NO CONFIGURADO',
+      PAYU_TEST:        IS_TEST,
+    },
+    formula: `MD5("${input}")`,
+    signature,
+    expected_for_sandbox: md5(`4Vj8eK4rloUd272L48hsrarnUA~508029~${ref}~${amountStr}~${currency}`),
+    match: signature === md5(`4Vj8eK4rloUd272L48hsrarnUA~508029~${ref}~${amountStr}~${currency}`),
+  });
+});
+
 export function resultadoPago(req, res) {
   const {
     transactionState, referenceCode, TX_VALUE, currency,
