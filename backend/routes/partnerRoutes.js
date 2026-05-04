@@ -2,7 +2,7 @@
  * Partner Routes
  */
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // Mock data para desarrollo
@@ -291,4 +291,4 @@ router.get('/:partnerId/payouts', (req, res) => {
   ]);
 });
 
-module.exports = router;
+export default router;

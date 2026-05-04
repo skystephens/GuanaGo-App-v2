@@ -303,4 +303,88 @@ router.post('/webhook', express.urlencoded({ extended: true }), async (req, res)
   res.status(200).send('OK');
 });
 
+// ─── GET /pago-resultado — página de resultado post-pago ──────────────────────
+// PayU redirige aquí con query params después de que el usuario paga (o falla)
+// Exportado como named export para montarlo en server.js en /pago-resultado
+export function resultadoPago(req, res) {
+  const {
+    transactionState, referenceCode, TX_VALUE, currency,
+    description, buyerFullName, message, sign,
+    transactionId, authorizationCode,
+  } = req.query;
+
+  const API_KEY     = (process.env.PAYU_API_KEY     || '').trim();
+  const MERCHANT_ID = (process.env.PAYU_MERCHANT_ID || '').trim();
+
+  // Validar firma
+  let firmaValida = true;
+  if (API_KEY && MERCHANT_ID && sign && referenceCode && TX_VALUE && currency && transactionState) {
+    const expected = md5(`${API_KEY}~${MERCHANT_ID}~${referenceCode}~${parseFloat(TX_VALUE).toFixed(1)}~${currency}~${transactionState}`);
+    firmaValida = sign === expected;
+    if (!firmaValida) console.warn('⚠️ /pago-resultado firma inválida:', { sign, expected });
+  }
+
+  const STATE_MAP = {
+    '4':   { emoji: '✅', titulo: '¡Pago aprobado!',  color: '#16a34a', bg: '#dcfce7', msg: 'Tu pago fue procesado exitosamente.' },
+    '6':   { emoji: '❌', titulo: 'Pago rechazado',    color: '#dc2626', bg: '#fee2e2', msg: message || 'El pago no pudo procesarse. Intenta con otro método.' },
+    '7':   { emoji: '⏳', titulo: 'Pago pendiente',    color: '#d97706', bg: '#fef3c7', msg: 'Tu pago está siendo validado. Te notificaremos pronto.' },
+    '104': { emoji: '⚠️', titulo: 'Error en el pago', color: '#7c3aed', bg: '#ede9fe', msg: message || 'Ocurrió un error. Contacta a tu asesor.' },
+  };
+
+  const estado   = STATE_MAP[transactionState] || STATE_MAP['104'];
+  const monto    = TX_VALUE ? parseFloat(TX_VALUE).toLocaleString('es-CO', { minimumFractionDigits: 0 }) : '—';
+  const aprobado = transactionState === '4';
+  const homeUrl  = (process.env.BASE_URL || 'https://www.guanago.travel');
+  const whatsapp = 'https://wa.me/573153836043';
+
+  res.send(`<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>${estado.titulo} · GuíaSAI</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#003D5C,#00A8A0);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .card{background:white;border-radius:20px;padding:36px 32px;max-width:440px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+    .badge{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:99px;font-weight:700;font-size:15px;margin-bottom:20px;background:${estado.bg};color:${estado.color};}
+    h2{font-size:22px;color:#1e293b;margin-bottom:8px;}
+    .msg{color:#64748b;font-size:14px;line-height:1.6;margin-bottom:24px;}
+    .details{background:#f8fafc;border-radius:12px;padding:16px;margin-bottom:24px;text-align:left;}
+    .details dt{font-size:10px;text-transform:uppercase;color:#94a3b8;font-weight:700;margin-bottom:2px;}
+    .details dd{font-size:13px;color:#334155;margin-bottom:10px;font-weight:600;}
+    .details dd:last-child{margin-bottom:0;}
+    .btn{display:block;padding:14px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:10px;transition:opacity .2s;}
+    .btn:hover{opacity:.85}
+    .btn-primary{background:linear-gradient(135deg,#003D5C,#00A8A0);color:white;}
+    .btn-wa{background:#25D366;color:white;}
+    .logo{color:#FF6600;font-size:22px;font-weight:800;margin-bottom:4px;}
+    .sub{color:#94a3b8;font-size:11px;margin-bottom:28px;}
+    .ref{font-size:10px;color:#cbd5e1;margin-top:16px;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">GuíaSAI</div>
+    <div class="sub">San Andrés Isla · Especialistas en Turismo</div>
+    <div class="badge">${estado.emoji} ${estado.titulo}</div>
+    <h2>${buyerFullName ? `Hola, ${String(buyerFullName).split(' ')[0]}` : 'Resultado de tu pago'}</h2>
+    <p class="msg">${estado.msg}</p>
+    <dl class="details">
+      ${description ? `<dt>Servicio</dt><dd>${description}</dd>` : ''}
+      ${TX_VALUE    ? `<dt>Monto</dt><dd>$${monto} ${currency || 'COP'}</dd>` : ''}
+      ${authorizationCode && aprobado ? `<dt>Autorización</dt><dd>${authorizationCode}</dd>` : ''}
+      ${referenceCode ? `<dt>Referencia</dt><dd>${referenceCode}</dd>` : ''}
+    </dl>
+    ${aprobado
+      ? `<a class="btn btn-primary" href="${homeUrl}">🌴 Volver a GuanaGO</a>`
+      : `<a class="btn btn-wa" href="${whatsapp}" target="_blank">💬 Hablar con un asesor</a>
+         <a class="btn btn-primary" href="${homeUrl}">← Volver al inicio</a>`
+    }
+    <p class="ref">${transactionId ? `TX: ${transactionId}` : ''}${!firmaValida ? ' · ⚠️ Firma no verificada' : ''}</p>
+  </div>
+</body>
+</html>`);
+}
+
 export default router;

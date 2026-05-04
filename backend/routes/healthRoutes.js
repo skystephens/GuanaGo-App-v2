@@ -2,7 +2,7 @@
  * Health Check Routes
  */
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 /**
@@ -27,4 +27,4 @@ router.get('/ping', (req, res) => {
   res.json({ pong: true });
 });
 
-module.exports = router;
+export default router;
