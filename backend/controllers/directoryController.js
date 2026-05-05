@@ -34,11 +34,11 @@ function normalizeRecord(r) {
     category:    f.Categoria    ?? f.Category    ?? 'General',
     latitude:    lat,
     longitude:   lng,
-    // aliases que usa el frontend (DirectoryMapbox.tsx usa lat/lng y también latitude/longitude)
     lat,
     lng,
     address:     f.Direccion    ?? f.Address     ?? '',
     phone:       f.Telefono     ?? f.Phone       ?? '',
+    email:       f.Email        ?? f.Correo      ?? '',
     hours:       f.Horario      ?? f.Hours       ?? '',
     description: f.Descripcion  ?? f.Description ?? '',
     website:     f.Website      ?? '',
@@ -46,6 +46,10 @@ function normalizeRecord(r) {
     image,
     price:       Number(f.Precio ?? f.Price ?? 0),
     featured:    f.Destacado    === true || f.Featured === true,
+    estado:      f.Estado       ?? f.Estado_Aliado ?? 'activo',
+    plan:        f.Plan         ?? f.Membresia   ?? '',
+    rnt:         f.RNT          ?? '',
+    responsable: f.Responsable  ?? f.Contacto    ?? '',
   };
 }
 
@@ -101,7 +105,7 @@ export const getDirectory = async (req, res, next) => {
       return res.status(503).json({ success: false, error: 'Airtable no configurado' });
     }
 
-    const { category, search, featured } = req.query;
+    const { category, search, featured, email, estado } = req.query;
     const { data, source } = await getAll(apiKey, baseId);
 
     let result = data;
@@ -122,6 +126,14 @@ export const getDirectory = async (req, res, next) => {
 
     if (featured === 'true') {
       result = result.filter(p => p.featured);
+    }
+
+    if (email) {
+      result = result.filter(p => p.email?.toLowerCase() === email.toLowerCase());
+    }
+
+    if (estado) {
+      result = result.filter(p => (p.estado ?? '').toLowerCase() === estado.toLowerCase());
     }
 
     res.json({ success: true, data: result, total: result.length, source });
@@ -170,7 +182,6 @@ export const getPlaceById = async (req, res, next) => {
 };
 
 // ── GET /api/directory/categories ────────────────────────────────────────────
-// Devuelve las categorías únicas que existen en la tabla
 
 export const getCategories = async (req, res, next) => {
   try {
@@ -185,6 +196,112 @@ export const getCategories = async (req, res, next) => {
     );
 
     res.json({ success: true, data: cats });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── POST /api/directory — crear nuevo negocio ─────────────────────────────────
+
+export const createPlace = async (req, res, next) => {
+  try {
+    const { apiKey, baseId } = config.airtable;
+    if (!apiKey || !baseId) {
+      return res.status(503).json({ success: false, error: 'Airtable no configurado' });
+    }
+
+    const { name, category, address, phone, email, description, website, hours, estado, plan, rnt, responsable } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ success: false, error: 'El campo "name" es requerido' });
+    }
+
+    const fields = {
+      Nombre:      name,
+      Categoria:   category    || 'General',
+      Direccion:   address     || '',
+      Telefono:    phone       || '',
+      Email:       email       || '',
+      Descripcion: description || '',
+      Website:     website     || '',
+      Horario:     hours       || '',
+      Estado:      estado      || 'activo',
+      Plan:        plan        || '',
+      RNT:         rnt         || '',
+      Responsable: responsable || '',
+    };
+
+    const atRes = await fetch(`${AT_URL}/${baseId}/${encodeURIComponent(TABLE)}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ records: [{ fields }] }),
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!atRes.ok) {
+      const err = await atRes.text().catch(() => '');
+      return res.status(502).json({ success: false, error: `Airtable ${atRes.status}`, detail: err.slice(0, 200) });
+    }
+
+    const data = await atRes.json();
+    const newRecord = data.records?.[0];
+
+    // Invalidar cache para que el próximo GET traiga los datos frescos
+    memCache = { data: null, ts: 0 };
+
+    res.status(201).json({ success: true, data: newRecord ? normalizeRecord(newRecord) : null });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── PATCH /api/directory/:id — actualizar negocio ────────────────────────────
+
+export const updatePlace = async (req, res, next) => {
+  try {
+    const { apiKey, baseId } = config.airtable;
+    if (!apiKey || !baseId) {
+      return res.status(503).json({ success: false, error: 'Airtable no configurado' });
+    }
+
+    const { id } = req.params;
+    const { name, category, address, phone, email, description, website, hours, estado, plan, rnt, responsable } = req.body;
+
+    const fields = {};
+    if (name        !== undefined) fields.Nombre      = name;
+    if (category    !== undefined) fields.Categoria   = category;
+    if (address     !== undefined) fields.Direccion   = address;
+    if (phone       !== undefined) fields.Telefono    = phone;
+    if (email       !== undefined) fields.Email       = email;
+    if (description !== undefined) fields.Descripcion = description;
+    if (website     !== undefined) fields.Website     = website;
+    if (hours       !== undefined) fields.Horario     = hours;
+    if (estado      !== undefined) fields.Estado      = estado;
+    if (plan        !== undefined) fields.Plan        = plan;
+    if (rnt         !== undefined) fields.RNT         = rnt;
+    if (responsable !== undefined) fields.Responsable = responsable;
+
+    const atRes = await fetch(`${AT_URL}/${baseId}/${encodeURIComponent(TABLE)}/${id}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields }),
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (atRes.status === 404) {
+      return res.status(404).json({ success: false, error: 'Negocio no encontrado' });
+    }
+    if (!atRes.ok) {
+      const err = await atRes.text().catch(() => '');
+      return res.status(502).json({ success: false, error: `Airtable ${atRes.status}`, detail: err.slice(0, 200) });
+    }
+
+    const record = await atRes.json();
+
+    // Invalidar cache
+    memCache = { data: null, ts: 0 };
+
+    res.json({ success: true, data: normalizeRecord(record) });
   } catch (err) {
     next(err);
   }

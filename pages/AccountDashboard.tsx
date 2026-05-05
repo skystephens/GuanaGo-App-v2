@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { User, Award, ShieldCheck, Copy, ExternalLink, Settings, MessageCircle, LogOut, ChevronRight, Mail, Trophy, CreditCard, Ticket, Gift, Zap, Tag, Star, Briefcase, Shield, Loader2, Target, Sparkles, QrCode, Phone, MapPin, X, Globe, UserCheck, IdCard, ArrowLeft, Music } from 'lucide-react';
+import { User, Award, ShieldCheck, Copy, ExternalLink, Settings, MessageCircle, LogOut, ChevronRight, Mail, Trophy, CreditCard, Ticket, Gift, Zap, Tag, Star, Briefcase, Shield, Loader2, Target, Sparkles, QrCode, Phone, MapPin, X, Globe, UserCheck, IdCard, ArrowLeft, Music, Clock } from 'lucide-react';
 import { PARTNER_CLIENTS } from '../constants';
 import { AppRoute, UserRole, Client, Campaign, GuanaUser } from '../types';
 import UnifiedPanel from '../components/UnifiedPanel';
@@ -18,7 +18,7 @@ interface AccountDashboardProps {
 }
 
 const AccountDashboard: React.FC<AccountDashboardProps> = ({ onLogout, onSwitchRole, onNavigate, onBack }) => {
-  const { isAuthenticated, userRole, isLoading } = useAuth();
+  const { isAuthenticated, userRole, isLoading, firebaseUser } = useAuth();
   const [showSupportChat, setShowSupportChat] = useState(false);
   const [showDigitalId, setShowDigitalId] = useState(false);
   const [activeCampaigns, setActiveCampaigns] = useState<Campaign[]>([]);
@@ -28,8 +28,9 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ onLogout, onSwitchR
   const [showAdminPin, setShowAdminPin] = useState(false);
   const [adminUser, setAdminUser] = useState<any>(null);
   const [showAuthGate, setShowAuthGate] = useState(!isAuthenticated);
-  
-  // ID de usuario de prueba persistente (Mateo Vargas)
+  const [negocio, setNegocio] = useState<any>(null);
+  const [loadingNegocio, setLoadingNegocio] = useState(false);
+
   const TEST_USER_ID = 'c1';
 
   useEffect(() => {
@@ -60,6 +61,20 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ onLogout, onSwitchR
       setShowAuthGate(false);
     }
   }, [isAuthenticated]);
+
+  // Cargar ficha del negocio desde Directorio_Mapa cuando rol es Socio
+  useEffect(() => {
+    const isPartner = ['Socio', 'Aliado', 'Operador'].includes(userRole as string);
+    if (!isPartner || !isAuthenticated) return;
+    const email = firebaseUser?.email;
+    if (!email) return;
+    setLoadingNegocio(true);
+    fetch(`/api/directory?email=${encodeURIComponent(email)}`)
+      .then(r => r.json())
+      .then(d => { if (d.success && d.data?.length > 0) setNegocio(d.data[0]); })
+      .catch(() => {})
+      .finally(() => setLoadingNegocio(false));
+  }, [isAuthenticated, userRole, firebaseUser]);
 
   const fetchInitialData = async () => {
       setLoadingUser(true);
@@ -318,7 +333,7 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ onLogout, onSwitchR
                 <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-blue-500 shadow-sm group-hover:bg-blue-500 group-hover:text-white transition-colors">
                   <Briefcase size={20} />
                 </div>
-                <span className="text-[9px] font-black text-gray-800 uppercase tracking-tighter">Socio Operador</span>
+                <span className="text-[9px] font-black text-gray-800 uppercase tracking-tighter">Negocio Local</span>
               </button>
               
               <button 
@@ -347,6 +362,142 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ onLogout, onSwitchR
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Vista específica para Negocio Local (Socio / Aliado / Operador)
+  const isPartnerRole = ['Socio', 'Aliado', 'Operador'].includes(userRole as string);
+  if (isPartnerRole && isAuthenticated) {
+    const userEmail = firebaseUser?.email || '';
+    const userName  = firebaseUser?.displayName || userEmail.split('@')[0] || 'Negocio';
+    return (
+      <div className="min-h-screen bg-gray-900 text-white pb-28">
+        {/* Header */}
+        <div className="bg-gradient-to-b from-gray-800 to-gray-900 px-5 pt-8 pb-6">
+          {onBack && (
+            <button onClick={onBack} className="mb-4 p-2 hover:bg-gray-700 rounded-lg text-gray-400">
+              <ArrowLeft size={20} />
+            </button>
+          )}
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-2xl font-black text-white shadow-lg">
+              {userName.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p className="text-xs text-teal-400 font-bold uppercase tracking-widest">Negocio Local</p>
+              <h1 className="text-xl font-black">{userName}</h1>
+              <p className="text-xs text-gray-500">{userEmail}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-5 space-y-4 mt-4">
+          {/* Ficha del negocio */}
+          {loadingNegocio ? (
+            <div className="bg-gray-800 rounded-2xl p-6 flex items-center justify-center gap-3 text-gray-500">
+              <Loader2 size={18} className="animate-spin" />
+              <span className="text-sm">Cargando tu ficha en GuanaGO...</span>
+            </div>
+          ) : negocio ? (
+            <div className="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden">
+              {negocio.image && (
+                <img src={negocio.image} alt={negocio.name} className="w-full h-40 object-cover" />
+              )}
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h2 className="text-lg font-black text-white">{negocio.name}</h2>
+                    <p className="text-xs text-teal-400 font-semibold">{negocio.category}</p>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-[10px] font-bold flex-shrink-0 ${
+                    negocio.estado === 'activo'
+                      ? 'bg-emerald-900/50 text-emerald-400'
+                      : 'bg-red-900/50 text-red-400'
+                  }`}>
+                    {negocio.estado || 'activo'}
+                  </span>
+                </div>
+                {negocio.description && (
+                  <p className="text-sm text-gray-400 mb-4 leading-relaxed">{negocio.description}</p>
+                )}
+                <div className="grid grid-cols-1 gap-2 text-xs text-gray-400">
+                  {negocio.address && (
+                    <div className="flex items-center gap-2">
+                      <MapPin size={12} className="text-teal-400 flex-shrink-0" />
+                      {negocio.address}
+                    </div>
+                  )}
+                  {negocio.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone size={12} className="text-teal-400 flex-shrink-0" />
+                      {negocio.phone}
+                    </div>
+                  )}
+                  {negocio.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail size={12} className="text-teal-400 flex-shrink-0" />
+                      {negocio.email}
+                    </div>
+                  )}
+                  {negocio.website && (
+                    <div className="flex items-center gap-2">
+                      <Globe size={12} className="text-teal-400 flex-shrink-0" />
+                      <a href={negocio.website} target="_blank" rel="noreferrer" className="text-teal-400 underline truncate">
+                        {negocio.website}
+                      </a>
+                    </div>
+                  )}
+                  {negocio.hours && (
+                    <div className="flex items-center gap-2">
+                      <Clock size={12} className="text-teal-400 flex-shrink-0" />
+                      {negocio.hours}
+                    </div>
+                  )}
+                </div>
+                {(negocio.plan || negocio.rnt) && (
+                  <div className="mt-4 pt-4 border-t border-gray-700 flex gap-4 text-xs">
+                    {negocio.plan && (
+                      <div>
+                        <p className="text-gray-600 uppercase tracking-wide">Plan</p>
+                        <p className="text-white font-bold">{negocio.plan}</p>
+                      </div>
+                    )}
+                    {negocio.rnt && (
+                      <div>
+                        <p className="text-gray-600 uppercase tracking-wide">RNT</p>
+                        <p className="text-white font-bold">{negocio.rnt}</p>
+                      </div>
+                    )}
+                    {negocio.rating > 0 && (
+                      <div>
+                        <p className="text-gray-600 uppercase tracking-wide">Rating</p>
+                        <p className="text-yellow-400 font-bold">★ {negocio.rating}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <p className="mt-4 text-[10px] text-gray-600 text-center">
+                  Para actualizar tu ficha contacta al admin de GuanaGO
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 text-center">
+              <MapPin size={32} className="mx-auto mb-3 text-gray-600" />
+              <p className="text-sm font-semibold text-gray-400 mb-1">Tu negocio no está en el directorio</p>
+              <p className="text-xs text-gray-600">Contacta al administrador de GuanaGO para que agregue tu ficha.</p>
+            </div>
+          )}
+
+          {/* Cerrar sesión */}
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center justify-center gap-2 py-4 bg-red-900/20 border border-red-800 hover:bg-red-900/40 text-red-400 rounded-xl text-sm font-bold transition-colors"
+          >
+            <LogOut size={16} /> Cerrar Sesión
+          </button>
         </div>
       </div>
     );

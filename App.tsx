@@ -56,6 +56,7 @@ import AdminBackend from './pages/admin/AdminBackend';
 import AdminCaribbeanNight from './pages/admin/AdminCaribbeanNight';
 import AdminArtistas from './pages/admin/AdminArtistas';
 import AdminSocios from './pages/admin/AdminSocios';
+import AdminNegociosLocales from './pages/admin/AdminNegociosLocales';
 import AdminTasks from './pages/admin/AdminTasks';
 import AdminQuotes from './pages/admin/AdminQuotes';
 import AdminVouchers from './pages/admin/AdminVouchers';
@@ -125,7 +126,7 @@ const App: React.FC = () => {
       setHistory((prev) => prev.slice(0, -1));
     } else {
       if (userRole === 'Turista') setCurrentRoute(AppRoute.HOME);
-      else if (userRole === 'Socio' || userRole === 'Aliado' || userRole === 'Operador' || userRole === 'Artista') setCurrentRoute(AppRoute.PARTNER_DASHBOARD_PRO);
+      else if (userRole === 'Socio' || userRole === 'Aliado' || userRole === 'Operador' || userRole === 'Artista') setCurrentRoute(AppRoute.PROFILE);
       else setCurrentRoute(AppRoute.ADMIN_DASHBOARD);
     }
   };
@@ -135,7 +136,7 @@ const App: React.FC = () => {
     if (newRole === 'Turista' || newRole === 'Local') {
       setCurrentRoute(AppRoute.HOME);
     } else if (newRole === 'Socio' || newRole === 'Aliado' || newRole === 'Operador' || newRole === 'Artista') {
-      setCurrentRoute(AppRoute.PARTNER_DASHBOARD_PRO);
+      setCurrentRoute(AppRoute.PROFILE);
     } else if (newRole === 'SuperAdmin') {
       setCurrentRoute(AppRoute.ADMIN_DASHBOARD);
     }
@@ -185,7 +186,7 @@ const App: React.FC = () => {
             if (role === 'SuperAdmin') {
               navigateTo(AppRoute.ADMIN_DASHBOARD);
             } else if (['Socio', 'Aliado', 'Operador', 'Artista'].includes(role)) {
-              navigateTo(AppRoute.PARTNER_DASHBOARD_PRO);
+              navigateTo(AppRoute.PROFILE);
             } else {
               navigateTo(AppRoute.HOME);
             }
@@ -222,6 +223,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_ARTISTAS: return <AdminArtistas onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ARTISTA_PORTAL: return <ArtistaPortal onBack={goBack} onNavigate={navigateTo} artistaId={detailData?.artistaId} />;
       case AppRoute.ADMIN_SOCIOS: return <AdminSocios onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_NEGOCIOS_LOCALES: return <AdminNegociosLocales onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_TASKS: return <AdminTasks onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_QUOTES: return <AdminQuotes onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_VOUCHERS: return <AdminVouchers onBack={goBack} onNavigate={navigateTo} />;

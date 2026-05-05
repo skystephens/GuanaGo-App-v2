@@ -11,10 +11,11 @@ import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
-import partnerRoutes  from './routes/partnerRoutes.js';
-import healthRoutes   from './routes/healthRoutes.js';
-import tasksRoutes    from './routes/tasks.js';
+import partnerRoutes   from './routes/partnerRoutes.js';
+import healthRoutes    from './routes/healthRoutes.js';
+import tasksRoutes     from './routes/tasks.js';
 import paymentsRoutes, { resultadoPago } from './routes/payments.js';
+import directoryRoutes from './routes/directory.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -40,9 +41,10 @@ app.use((req, res, next) => {
 
 // ── Rutas ─────────────────────────────────────────────────────────────────────
 
-app.use('/api/health',   healthRoutes);
-app.use('/api/partners', partnerRoutes);
-app.use('/api/tasks',    tasksRoutes);
+app.use('/api/health',    healthRoutes);
+app.use('/api/partners',  partnerRoutes);
+app.use('/api/tasks',     tasksRoutes);
+app.use('/api/directory', directoryRoutes);
 
 // Pagos: /api/payments/create  /api/payments/webhook
 //        /pagar/:ref            /pago-resultado

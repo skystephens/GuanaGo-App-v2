@@ -70,8 +70,8 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
       role: 'Local' as UserRole,
     },
     socio: {
-      label: 'Socio Operador',
-      description: 'Gestiona tu negocio turístico',
+      label: 'Negocio Local',
+      description: 'Gestiona tu ficha en GuanaGO',
       icon: <Briefcase size={32} />,
       color: 'indigo',
       role: 'Socio' as UserRole,

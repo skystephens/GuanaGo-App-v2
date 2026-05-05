@@ -32,13 +32,9 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
     { route: AppRoute.AUTH_GATE, icon: <UserCircle size={22} />, label: 'Ingresar' },
   ];
 
-  // MENU SOCIO/ALIADO: 5 Items
+  // MENU NEGOCIO LOCAL: solo Perfil (ficha en Directorio_Mapa)
   const partnerNavItems = [
-    { route: AppRoute.UNIFIED_PANEL, icon: <Grid3x3 size={22} />, label: 'Panel' },
-    { route: AppRoute.PARTNER_DASHBOARD_PRO, icon: <LayoutDashboard size={22} />, label: 'Dashboard' },
-    { route: AppRoute.PARTNER_RESERVATIONS, icon: <CalendarDays size={22} />, label: 'Reservas' },
-    { route: AppRoute.PARTNER_WALLET, icon: <Wallet size={22} />, label: 'Caja' },
-    { route: AppRoute.PROFILE, icon: <UserCircle size={22} />, label: 'Perfil' },
+    { route: AppRoute.PROFILE, icon: <UserCircle size={22} />, label: 'Mi Negocio' },
   ];
 
   // MENU ADMIN: Panel, Dashboard, Aprobaciones, Reservas, Perfil (Cotizaciones solo en Dashboard y UnifiedPanel)

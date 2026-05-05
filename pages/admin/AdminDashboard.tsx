@@ -309,6 +309,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       { icon: <TrendingUp size={18} />, label: 'Finanzas', route: AppRoute.ADMIN_FINANCE },
     ]},
     { label: 'SOCIOS & ALIADOS', items: [
+      { icon: <Map size={18} />, label: 'Negocios Locales', route: AppRoute.ADMIN_NEGOCIOS_LOCALES },
       { icon: <Handshake size={18} />, label: 'Socios', route: AppRoute.ADMIN_SOCIOS },
       { icon: <Users size={18} />, label: 'Usuarios', route: AppRoute.ADMIN_USERS },
       { icon: <PackageIcon size={18} />, label: 'Servicios', route: AppRoute.ADMIN_SERVICES },
