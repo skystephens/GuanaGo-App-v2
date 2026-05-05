@@ -57,6 +57,7 @@ import AdminCaribbeanNight from './pages/admin/AdminCaribbeanNight';
 import AdminArtistas from './pages/admin/AdminArtistas';
 import AdminSocios from './pages/admin/AdminSocios';
 import AdminNegociosLocales from './pages/admin/AdminNegociosLocales';
+import NegocioLocalPerfil from './pages/partner/NegocioLocalPerfil';
 import AdminTasks from './pages/admin/AdminTasks';
 import AdminQuotes from './pages/admin/AdminQuotes';
 import AdminVouchers from './pages/admin/AdminVouchers';
@@ -157,14 +158,18 @@ const App: React.FC = () => {
       case AppRoute.UNIFIED_PANEL: return <UnifiedPanel userRole={userRole} onNavigate={navigateTo} onBack={goBack} isAuthenticated={isAuthenticated} onLogout={handleLogout} />;
       case AppRoute.DYNAMIC_ITINERARY: return <Planner onNavigate={navigateTo} onBack={goBack} initialCategory={detailData?.category} />;
       case AppRoute.MY_ITINERARY: return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
-      case AppRoute.PROFILE: return (
-        <AccountDashboard
-          onLogout={handleLogout}
-          onSwitchRole={switchRole}
-          onNavigate={navigateTo}
-          onBack={goBack}
-        />
-      );
+      case AppRoute.PROFILE:
+        if (['Socio', 'Aliado', 'Operador'].includes(userRole as string)) {
+          return <NegocioLocalPerfil onLogout={handleLogout} onBack={goBack} />;
+        }
+        return (
+          <AccountDashboard
+            onLogout={handleLogout}
+            onSwitchRole={switchRole}
+            onNavigate={navigateTo}
+            onBack={goBack}
+          />
+        );
       case AppRoute.CHECKOUT: return <Checkout onBack={goBack} onNavigate={navigateTo} isAuthenticated={isAuthenticated} />;
       case AppRoute.WALLET: return <Wallet onNavigate={navigateTo} isAuthenticated={isAuthenticated} onLogin={() => navigateTo(AppRoute.PROFILE)} />;
       case AppRoute.INTERACTIVE_MAP: return <InteractiveMap onBack={goBack} />;
