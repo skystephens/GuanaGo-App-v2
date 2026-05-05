@@ -121,8 +121,11 @@ router.post('/create', async (req, res) => {
 
   const sourceId      = cotizacionId || voucherId || 'VENTA';
   const referenceCode = `GG-${sourceId}-${Date.now()}`;
-  // COP requires integer amount (no decimals) for PayU signature and form
-  const amountStr     = String(Math.round(parsed));
+  // COP requires integer amount (no decimals). 8% added to cover gateway processing cost.
+  const subtotal  = Math.round(parsed);
+  const fee       = Math.round(parsed * 0.08);
+  const total     = subtotal + fee;
+  const amountStr = String(total);
   const currency      = 'COP';
   const payuUrl       = IS_TEST === '1' ? PAYU_CHECKOUT.sandbox : PAYU_CHECKOUT.prod;
 
@@ -150,7 +153,7 @@ router.post('/create', async (req, res) => {
     await savePagoTemporal(referenceCode, fields, payuUrl, {
       cotizacionId, voucherId, amount: parsed, description, buyerName, buyerEmail,
     });
-    console.log(`💳 Link de pago creado: ${referenceCode} · $${amountStr} COP · test=${IS_TEST}`);
+    console.log(`💳 Link de pago creado: ${referenceCode} · $${subtotal} + $${fee} fee = $${amountStr} COP · test=${IS_TEST}`);
     console.log(`🔑 Firma: MD5("${API_KEY}~${MERCHANT_ID}~${referenceCode}~${amountStr}~${currency}") = ${signature}`);
   } catch (err) {
     console.error('❌ Error guardando pago en Airtable:', err.message);
@@ -162,6 +165,9 @@ router.post('/create', async (req, res) => {
     pagoUrl: `${BACKEND_URL}/pagar/${referenceCode}`,
     referenceCode,
     test: IS_TEST === '1',
+    subtotal,
+    feeAmount: fee,
+    totalAmount: total,
   });
 });
 
