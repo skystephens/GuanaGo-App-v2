@@ -267,7 +267,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                 <p className="text-[10px] text-gray-400 mt-0.5">Dónde quedarte en San Andrés</p>
               </div>
               <button
-                onClick={() => onNavigate(AppRoute.HOTEL_LIST)}
+                onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'hotel' })}
                 className="text-emerald-600 text-xs md:text-sm font-bold hover:underline"
               >
                 Ver todos →
