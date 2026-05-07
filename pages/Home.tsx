@@ -15,6 +15,7 @@ interface HomeProps {
 
 const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   const [services, setServices] = useState<Tour[]>([]);
+  const [alojamientos, setAlojamientos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,13 +32,17 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Usar sistema de caché - carga instantánea desde local
-      const data = await cachedApi.getServices();
-      // Solo mostramos los servicios que están activos
+      const [data, alojs] = await Promise.all([
+        cachedApi.getServices(),
+        cachedApi.getAlojamientos(),
+      ]);
       setServices(data?.filter(s => s.active) || []);
+      const shuffled = [...(alojs || [])].sort(() => Math.random() - 0.5);
+      setAlojamientos(shuffled.slice(0, 8));
     } catch (error) {
       console.error("Error al cargar servicios", error);
       setServices([]);
+      setAlojamientos([]);
     } finally {
       setLoading(false);
     }
@@ -249,6 +254,72 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             </div>
           )}
         </div>
+
+        {/* Alojamientos — 8 aleatorios, 2 filas de 4 */}
+        {(loading || alojamientos.length > 0) && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-black text-gray-800">Alojamientos</h3>
+                <p className="text-[10px] text-gray-400 mt-0.5">Dónde quedarte en San Andrés</p>
+              </div>
+              <button
+                onClick={() => onNavigate(AppRoute.HOTEL_LIST)}
+                className="text-emerald-600 text-xs md:text-sm font-bold hover:underline"
+              >
+                Ver todos →
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                {[1,2,3,4,5,6,7,8].map(i => (
+                  <div key={i} className="bg-white rounded-3xl h-52 md:h-64 animate-pulse border border-gray-100"></div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                {alojamientos.map(item => (
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col cursor-pointer border border-gray-100 hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95 group"
+                    onClick={() => onNavigate(AppRoute.HOTEL_DETAIL, item)}
+                  >
+                    <div className="w-full aspect-square relative overflow-hidden">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80';
+                        }}
+                      />
+                      <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
+                        <Bed size={10} />
+                        <span className="text-[8px] md:text-[10px] font-black uppercase">Hotel</span>
+                      </div>
+                    </div>
+                    <div className="p-4 md:p-5 flex flex-col flex-1">
+                      <h4 className="font-bold text-gray-800 text-xs md:text-sm leading-tight line-clamp-2 mb-2">{item.title}</h4>
+                      <div className="mt-auto">
+                        {item.price > 0 ? (
+                          <>
+                            <span className="text-emerald-600 font-black text-sm md:text-base">
+                              ${item.price.toLocaleString()}
+                            </span>
+                            <span className="block text-[9px] text-gray-400">COP / noche</span>
+                          </>
+                        ) : (
+                          <span className="text-emerald-600 font-black text-sm md:text-base">Consultar</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -14,7 +14,7 @@
 import { Tour, GuanaLocation, TaxiZone } from '../types';
 
 // Tipos de datos que se pueden cachear
-export type CacheKey = 
+export type CacheKey =
   | 'services_turisticos'    // Tours, hoteles, paquetes
   | 'directory_map'          // Puntos del mapa (farmacias, cajeros, restaurantes, etc.)
   | 'artistas_rimm'          // Artistas de Caribbean Night
@@ -22,7 +22,8 @@ export type CacheKey =
   | 'user_profile'           // Perfil del usuario
   | 'reservations'           // Reservaciones del usuario
   | 'caribbean_events'       // Eventos Caribbean Night
-  | 'rimm_packages';         // Paquetes RIMM
+  | 'rimm_packages'          // Paquetes RIMM
+  | 'alojamientos_sai';      // Alojamientos AlojamientosTuristicos_SAI
 
 interface CacheEntry<T> {
   data: T;
@@ -52,7 +53,8 @@ const MAX_AGE: Record<CacheKey, number> = {
   user_profile: 1000 * 60 * 30,              // 30 minutos
   reservations: 1000 * 60 * 5,               // 5 minutos (cambian frecuente)
   caribbean_events: 1000 * 60 * 55,           // 55 min
-  rimm_packages: 1000 * 60 * 55              // 55 min
+  rimm_packages: 1000 * 60 * 55,             // 55 min
+  alojamientos_sai: 1000 * 60 * 55,          // 55 min — URLs Airtable expiran ~1h
 };
 
 // =========================================================

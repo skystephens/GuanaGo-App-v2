@@ -173,7 +173,7 @@ export const cachedApi = {
   getAlojamientos: async (options?: { forceRefresh?: boolean }): Promise<any[]> => {
     try {
       const result = await getDataWithFallback<any[]>(
-        'alojamientos_sai' as CacheKey,
+        'alojamientos_sai',
         async () => {
           const data = await getAlojamientosSAI();
           return data.length > 0 ? data : null;
@@ -183,7 +183,7 @@ export const cachedApi = {
       return result.data;
     } catch (error) {
       console.warn('⚠️ Error obteniendo alojamientos:', error);
-      const cached = getFromCache<any[]>('alojamientos_sai' as CacheKey);
+      const cached = getFromCache<any[]>('alojamientos_sai');
       return cached ?? [];
     }
   },

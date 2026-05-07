@@ -1073,7 +1073,6 @@ export async function getHotels() {
 export async function getAlojamientosSAI(): Promise<any[]> {
   try {
     const records = await fetchTable('AlojamientosTuristicos_SAI', {
-      filterByFormula: '{Publicado} = TRUE()',
       maxRecords: 100,
     });
 
