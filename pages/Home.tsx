@@ -176,23 +176,26 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
 
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
-             <div>
-               <h3 className="text-lg font-black text-gray-800">Recomendados para ti</h3>
-               <p className="text-[10px] text-gray-400 mt-0.5">Precio incluye concierge + coordinación logística</p>
-             </div>
+            <h3 className="text-lg font-black text-gray-800">Tours</h3>
+            <button
+              onClick={() => onNavigate(AppRoute.TOUR_LIST)}
+              className="text-emerald-600 text-xs md:text-sm font-bold hover:underline"
+            >
+              Ver todos →
+            </button>
           </div>
-          
+
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-               {[1, 2, 3, 4, 5, 6].map(i => (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+               {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
                   <div key={i} className="bg-white rounded-3xl h-52 md:h-64 animate-pulse border border-gray-100"></div>
                ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 pb-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 pb-4">
               {services.length > 0 ? (services.filter(s => s.destacado).length > 0
-                ? services.filter(s => s.destacado)
-                : services.slice(0, 4)
+                ? services.filter(s => s.destacado).slice(0, 8)
+                : services.slice(0, 8)
               ).map((item) => (
                 <div 
                   key={`${item.id}-${item.image || 'no-img'}`}
