@@ -578,6 +578,9 @@ function mapRecordToCotizacionItem(record: any): CotizacionItem {
     precioEditado: undefined,
     subtotal,
     esPersonalizado: f['Es Personalizado'] === true,
+    images: (() => {
+      try { return f['Imagenes'] ? JSON.parse(f['Imagenes']) : []; } catch { return []; }
+    })(),
     status: 'disponible' as QuoteItemStatus,
     conflictos: []
   };
@@ -597,6 +600,9 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
 
   // Ítem libre (no vinculado al catálogo)
   if (item.esPersonalizado !== undefined) fields['Es Personalizado'] = item.esPersonalizado;
+
+  // Imágenes adjuntas (solo ítems libres) — guardadas como JSON en campo de texto
+  if (item.images && item.images.length > 0) fields['Imagenes'] = JSON.stringify(item.images);
 
   // Links (solo si existen)
   if (item.cotizacionId?.trim()) fields['ID CotizacionGG'] = [item.cotizacionId];

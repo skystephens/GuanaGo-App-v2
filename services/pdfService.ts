@@ -180,11 +180,13 @@ export function generateQuoteHTML(
 
           // ── Servicios con foto-grid (tours, hoteles, etc.) ──────────────────
           const { images: catalogImages, description } = getServiceMeta(item);
+          // Ítems libres con fotos adjuntas usan sus propias imágenes
+          const freeItemImages: string[] = item.images && item.images.length > 0 ? item.images : [];
+          const activeImages = item.esPersonalizado ? freeItemImages : catalogImages;
           const fallbackUrl = categoryFallback[item.servicioTipo] || categoryFallback['tour'];
-          // Items libres (esPersonalizado=true) nunca muestran fotos
-          const showPhotoGrid = !item.esPersonalizado && catalogImages.length > 0;
+          const showPhotoGrid = activeImages.length > 0;
           // gridImages: 4 slots rellenos con la última imagen real disponible
-          const gridImages: string[] = [...catalogImages];
+          const gridImages: string[] = [...activeImages];
           while (gridImages.length < 4) gridImages.push(gridImages[gridImages.length - 1] || fallbackUrl);
           const images = gridImages;
           const allImages = catalogImages.length > 0 ? catalogImages : [fallbackUrl];

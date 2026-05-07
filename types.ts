@@ -445,6 +445,7 @@ export interface CotizacionItem {
   precioEditado?: number;             // Precio editado manualmente (legacy)
   subtotal: number;                   // valorUnitario × personas × cantidad
   esPersonalizado: boolean;           // true = ítem libre (tiquete, seguro, etc.)
+  images?: string[];                  // Imágenes adjuntas en ítems libres (base64 o URLs)
   status: QuoteItemStatus;
   conflictos?: string[];
   incluyeHuespedes?: number;

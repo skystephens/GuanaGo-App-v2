@@ -355,8 +355,11 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [freeItemForm, setFreeItemForm] = useState<{
     nombre: string; tipo: CotizacionItem['servicioTipo']; valorUnitario: string; personas: string; cantidad: string;
     aerolinea: string; origen: string; destino: string; tipoVuelo: string; notasTiquete: string;
+    images: string[];
   }>({ nombre: '', tipo: 'tiquete', valorUnitario: '', personas: '2', cantidad: '1',
-       aerolinea: 'JetSmart', origen: '', destino: 'ADZ', tipoVuelo: 'Ida y vuelta', notasTiquete: '' });
+       aerolinea: 'JetSmart', origen: '', destino: 'ADZ', tipoVuelo: 'Ida y vuelta', notasTiquete: '',
+       images: [] });
+  const freeItemFileRef = useRef<HTMLInputElement>(null);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -603,6 +606,29 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     }
   };
 
+  const handleFreeItemImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const remaining = 4 - freeItemForm.images.length;
+    if (remaining <= 0) return;
+    files.slice(0, remaining).forEach(file => {
+      const img = new Image();
+      const blobUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const MAX = 800;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+        URL.revokeObjectURL(blobUrl);
+        setFreeItemForm(prev => ({ ...prev, images: [...prev.images, dataUrl].slice(0, 4) }));
+      };
+      img.src = blobUrl;
+    });
+    e.target.value = '';
+  };
+
   const handleAddFreeItem = async () => {
     if (!selectedCotizacion) return;
     let nombre = freeItemForm.nombre.trim();
@@ -639,6 +665,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       precioUnitario: valorUnitario,
       subtotal,
       esPersonalizado: true,
+      images: freeItemForm.images.length > 0 ? freeItemForm.images : undefined,
       status: 'disponible',
       conflictos: []
     };
@@ -650,7 +677,8 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       const newTotal = updatedItems.reduce((sum, i) => sum + i.subtotal, 0);
       await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
       setSelectedCotizacion(prev => prev ? { ...prev, precioTotal: newTotal } : prev);
-      setFreeItemForm({ nombre: '', tipo: 'tour', valorUnitario: '', personas: String(formData.adultos + formData.ninos || 2), cantidad: '1' });
+      setFreeItemForm({ nombre: '', tipo: 'tour', valorUnitario: '', personas: String(formData.adultos + formData.ninos || 2), cantidad: '1',
+        aerolinea: 'JetSmart', origen: '', destino: 'ADZ', tipoVuelo: 'Ida y vuelta', notasTiquete: '', images: [] });
     } else {
       alert('❌ Error al agregar el ítem');
     }
@@ -1836,6 +1864,52 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                           placeholder={freeItemForm.tipo === 'gestion' ? 'Ej: Costos de gestión tiquetes' : 'Ej: Seguro de viaje Assist Card'}
                           className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
+                      </div>
+                    )}
+
+                    {/* Imágenes adjuntas (solo para ítems no-tiquete) */}
+                    {freeItemForm.tipo !== 'tiquete' && (
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1.5 font-semibold">
+                          Imágenes del lugar <span className="text-gray-600 font-normal">(opcional · máx. 4)</span>
+                        </label>
+                        <input
+                          ref={freeItemFileRef}
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={handleFreeItemImageUpload}
+                        />
+                        <div className="grid grid-cols-4 gap-2">
+                          {freeItemForm.images.map((src, i) => (
+                            <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-gray-700 group">
+                              <img src={src} alt="" className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => setFreeItemForm(prev => ({ ...prev, images: prev.images.filter((_, j) => j !== i) }))}
+                                className="absolute top-1 right-1 bg-black/70 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X size={12} className="text-white" />
+                              </button>
+                            </div>
+                          ))}
+                          {freeItemForm.images.length < 4 && (
+                            <button
+                              type="button"
+                              onClick={() => freeItemFileRef.current?.click()}
+                              className="aspect-square rounded-lg border border-dashed border-gray-600 hover:border-purple-500 flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-purple-400 transition-colors"
+                            >
+                              <Plus size={18} />
+                              <span className="text-[10px]">Agregar</span>
+                            </button>
+                          )}
+                        </div>
+                        {freeItemForm.images.length > 0 && (
+                          <p className="text-[10px] text-gray-600 mt-1">
+                            {freeItemForm.images.length}/4 — aparecerán en el PDF de cotización
+                          </p>
+                        )}
                       </div>
                     )}
 
