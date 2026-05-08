@@ -127,7 +127,7 @@ const VincularComercio: React.FC<Props> = ({ onBack, onNavigate }) => {
 
   const handleWhatsApp = () => {
     window.open(
-      'https://wa.me/573012345678?text=Hola%20GuanaGO%2C%20quiero%20vincular%20mi%20negocio%20a%20la%20plataforma',
+      'https://wa.me/573153836043?text=Hola%20GuanaGO%2C%20quiero%20vincular%20mi%20negocio%20a%20la%20plataforma',
       '_blank',
     );
   };

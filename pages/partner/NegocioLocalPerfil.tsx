@@ -331,7 +331,7 @@ const NegocioLocalPerfil: React.FC<NegocioLocalPerfilProps> = ({ onLogout, onBac
                   {/* CTA upgrade */}
                   {!isPremium && (
                     <button
-                      onClick={() => window.open('https://wa.me/573012345678?text=Quiero%20mejorar%20mi%20plan%20en%20GuanaGO', '_blank')}
+                      onClick={() => window.open('https://wa.me/573153836043?text=Quiero%20mejorar%20mi%20plan%20en%20GuanaGO', '_blank')}
                       className="w-full py-3 rounded-xl bg-teal-700 hover:bg-teal-600 text-white font-bold text-sm transition-colors active:scale-95 flex items-center justify-center gap-2"
                     >
                       <MessageCircle size={15} />
