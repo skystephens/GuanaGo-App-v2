@@ -89,11 +89,26 @@ router.post('/verify', verifyFirebaseToken, async (req, res) => {
 /**
  * GET /api/firebase-auth/profile
  *
- * Obtener perfil Airtable del usuario autenticado con Firebase
+ * Obtener perfil del usuario autenticado con Firebase.
+ * Llamado por onAuthStateChanged — debe retornar el rol correcto sin importar
+ * si Airtable está disponible, usando el mismo fast-path que /verify.
  */
 router.get('/profile', verifyFirebaseToken, async (req, res) => {
   try {
     const { uid, email, name } = req.firebaseUser;
+
+    // Fast-path: misma lógica que /verify para admins locales
+    const localUser = getLocalUserByEmail(email);
+    if (localUser) {
+      const localRole = normalizeTokenRole(localUser.rol) || localUser.rol;
+      if (VERIFY_ADMIN_ROLES.includes(localRole)) {
+        console.log(`✅ Admin LOCAL fast-path (profile): ${email} → role=${localRole}`);
+        return res.json({
+          success: true,
+          user: { id: uid, email, nombre: localUser.nombre, role: localRole, saldo: 0, verificado: true, accesos: [], firebaseUid: uid }
+        });
+      }
+    }
 
     const result = await findOrCreateLeadUser({
       firebaseUid: uid,
