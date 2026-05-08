@@ -327,6 +327,7 @@ export enum AppRoute {
   VINCULAR_COMERCIO = 'VINCULAR_COMERCIO',
   ADMIN_ALIADOS = 'ADMIN_ALIADOS',
   ADMIN_APP_ARQUITECTURA = 'ADMIN_APP_ARQUITECTURA',
+  ADMIN_PREVIEW_ROLES = 'ADMIN_PREVIEW_ROLES',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';

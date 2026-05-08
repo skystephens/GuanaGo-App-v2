@@ -91,6 +91,7 @@ import VincularComercio from './pages/VincularComercio';
 // Admin — Aliados & Arquitectura
 import AdminAliados from './pages/admin/AdminAliados';
 import AdminAppArquitectura from './pages/admin/AdminAppArquitectura';
+import AdminPreviewRoles from './pages/admin/AdminPreviewRoles';
 
 // Unified Panel
 import UnifiedPanel from './components/UnifiedPanel';
@@ -110,10 +111,14 @@ import { initializeCachedApi } from './services/cachedApi';
 const App: React.FC = () => {
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(AppRoute.HOME);
   const [history, setHistory] = useState<AppRoute[]>([]);
-  
+
   // Auth State (from Firebase AuthContext)
   const { isAuthenticated, userRole, userName, logout, switchRole: authSwitchRole } = useAuth();
   const [detailData, setDetailData] = useState<any>(null);
+
+  // Preview mode — admin simulates another role without logging out
+  const [previewMode, setPreviewMode] = useState(false);
+  const [previewOriginalRole, setPreviewOriginalRole] = useState<UserRole | null>(null);
 
   // Inicializar sistema de caché al arrancar la app
   useEffect(() => {
@@ -149,6 +154,28 @@ const App: React.FC = () => {
       setCurrentRoute(AppRoute.ADMIN_DASHBOARD);
     }
     setHistory([]);
+    window.scrollTo(0, 0);
+  };
+
+  const startPreview = (role: UserRole) => {
+    setPreviewOriginalRole(userRole as UserRole);
+    setPreviewMode(true);
+    authSwitchRole(role);
+    if (role === 'Turista' || role === 'Local') {
+      setCurrentRoute(AppRoute.HOME);
+    } else {
+      setCurrentRoute(AppRoute.PROFILE);
+    }
+    setHistory([]);
+    window.scrollTo(0, 0);
+  };
+
+  const exitPreview = () => {
+    setPreviewMode(false);
+    if (previewOriginalRole) authSwitchRole(previewOriginalRole);
+    setCurrentRoute(AppRoute.ADMIN_DASHBOARD);
+    setHistory([]);
+    setPreviewOriginalRole(null);
     window.scrollTo(0, 0);
   };
 
@@ -254,6 +281,7 @@ const App: React.FC = () => {
       case AppRoute.VINCULAR_COMERCIO: return <VincularComercio onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_ALIADOS: return <AdminAliados onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_APP_ARQUITECTURA: return <AdminAppArquitectura onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_PREVIEW_ROLES: return <AdminPreviewRoles onBack={goBack} onNavigate={navigateTo} onPreview={startPreview} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };
@@ -297,6 +325,25 @@ const App: React.FC = () => {
             <CartFloatingBar onNavigate={navigateTo} isAuthenticated={isAuthenticated} />
             <GuanaChatbot />
           </>
+        )}
+
+        {/* Preview mode floating bar */}
+        {previewMode && (
+          <div className="fixed bottom-20 left-0 right-0 z-50 flex justify-center pointer-events-none">
+            <div className="pointer-events-auto mx-4 max-w-sm w-full">
+              <div className="flex items-center gap-3 bg-indigo-900 border border-indigo-500 rounded-2xl shadow-2xl px-4 py-3">
+                <span className="text-xs font-medium text-indigo-200 flex-1">
+                  Vista previa: <span className="text-white font-bold">{userRole}</span>
+                </span>
+                <button
+                  onClick={exitPreview}
+                  className="text-xs font-semibold bg-indigo-500 hover:bg-indigo-400 text-white px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                >
+                  Volver al Admin
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
