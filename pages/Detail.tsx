@@ -737,6 +737,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                         return;
                       }
                       setShowDateModal(false);
+                      handleAddToCart();
                     }}
                     className="flex-1 bg-emerald-600 text-white font-black py-4 rounded-2xl hover:bg-emerald-700 transition-all"
                   >
