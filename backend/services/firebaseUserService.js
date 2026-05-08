@@ -82,7 +82,7 @@ export async function findOrCreateLeadUser({ firebaseUid, email, nombre, photoUr
             Email: email,
             ID_Usuario: firebaseUid,
             Role: role,
-            Estado_del_Lead: autoActive ? 'Activo' : 'Pendiente',
+            Estado_del_Lead: 'Nuevo',
             Fecha_de_Registro: new Date().toISOString(),
             'Última_Interacción': new Date().toISOString(),
             Metodo_de_Auth: 'Firebase',
