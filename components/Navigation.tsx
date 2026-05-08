@@ -57,7 +57,10 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
   if (isAdmin) navItems = adminNavItems;
   if (isTourist && !isAuthenticated) navItems = touristNavItemsGuest;
 
-  const isDark = isPartner || isAdmin;
+  // Partners have their own built-in tab nav inside NegocioLocalPerfil
+  if (isPartner) return null;
+
+  const isDark = isAdmin;
   const activeLightClasses = isLocal ? 'text-yellow-600 md:bg-yellow-50' : 'text-emerald-600 md:bg-emerald-50';
   const indicatorLightClass = isLocal ? 'bg-yellow-600' : 'bg-emerald-600';
 
