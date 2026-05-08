@@ -324,6 +324,9 @@ export enum AppRoute {
   ADMIN_CIVITATIS = 'ADMIN_CIVITATIS',
   ADMIN_COWORK = 'ADMIN_COWORK',
   COCO_ART_HISTORIA = 'COCO_ART_HISTORIA',
+  VINCULAR_COMERCIO = 'VINCULAR_COMERCIO',
+  ADMIN_ALIADOS = 'ADMIN_ALIADOS',
+  ADMIN_APP_ARQUITECTURA = 'ADMIN_APP_ARQUITECTURA',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';

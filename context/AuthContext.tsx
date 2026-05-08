@@ -12,6 +12,9 @@ export interface AirtableProfile {
   nivel?: string;
   puntos?: number;
   verificado?: boolean;
+  estado?: string;
+  tipoCliente?: string | null;
+  accesos?: string[];    // módulos admin autorizados
   firebaseUid?: string;
 }
 
@@ -22,9 +25,16 @@ interface AuthContextType {
   isLoading: boolean;
   userRole: UserRole;
   userName: string;
+  accesos: string[];
   setProfile: (profile: AirtableProfile) => void;
   logout: () => Promise<void>;
   switchRole: (role: UserRole) => void;
+}
+
+// El backend usa 'Super_Admin' pero el frontend histórico usa 'SuperAdmin'
+function normalizeRole(role: string): UserRole {
+  if (role === 'Super_Admin' || role === 'superadmin' || role === 'super_admin') return 'SuperAdmin' as UserRole;
+  return role as UserRole;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,13 +45,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<UserRole>('Turista' as UserRole);
 
-  // Escuchar cambios de autenticacion Firebase
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
 
       if (user) {
-        // Usuario autenticado → obtener perfil de Airtable
         try {
           const idToken = await user.getIdToken();
           const response = await fetch('/api/firebase-auth/profile', {
@@ -49,14 +57,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           });
           const data = await response.json();
           if (data.success && data.user) {
-            setUserProfile(data.user);
-            setUserRole(data.user.role as UserRole);
+            const profile: AirtableProfile = {
+              ...data.user,
+              role: normalizeRole(data.user.role),
+            };
+            setUserProfile(profile);
+            setUserRole(profile.role);
           }
         } catch (err) {
           console.error('Error obteniendo perfil:', err);
         }
       } else {
-        // No autenticado
         setUserProfile(null);
         setUserRole('Turista' as UserRole);
       }
@@ -68,23 +79,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const setProfile = useCallback((profile: AirtableProfile) => {
-    setUserProfile(profile);
-    setUserRole(profile.role as UserRole);
+    const normalized: AirtableProfile = {
+      ...profile,
+      role: normalizeRole(profile.role as string),
+    };
+    setUserProfile(normalized);
+    setUserRole(normalized.role);
   }, []);
 
   const logout = useCallback(async () => {
     await signOut(auth);
     setUserProfile(null);
     setUserRole('Turista' as UserRole);
-    // Limpiar localStorage legacy
-    localStorage.removeItem('admin_session');
-    localStorage.removeItem('user_session');
-    localStorage.removeItem('partner_session');
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('partner_data');
-    localStorage.removeItem('partnerToken');
-    localStorage.removeItem('partnerData');
-    localStorage.removeItem('admin_authenticated');
+    // Limpiar sesiones legacy
+    ['admin_session', 'user_session', 'partner_session', 'auth_token',
+      'partner_data', 'partnerToken', 'partnerData', 'admin_authenticated'
+    ].forEach(k => localStorage.removeItem(k));
   }, []);
 
   const switchRole = useCallback((role: UserRole) => {
@@ -99,6 +109,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       isLoading,
       userRole,
       userName: userProfile?.nombre || firebaseUser?.displayName || 'Usuario',
+      accesos: userProfile?.accesos || [],
       setProfile,
       logout,
       switchRole,

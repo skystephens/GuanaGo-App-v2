@@ -6,7 +6,7 @@ import {
   LayoutGrid, Route, Map, Network, ExternalLink,
   Bot, Send, Loader2, ChevronDown, ChevronUp,
   CheckCircle2, AlertCircle, Receipt, Briefcase, ListChecks,
-  Menu, Wifi, WifiOff, Home, Settings,
+  Menu, Wifi, WifiOff, Home, Settings, Globe, Layers,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { api } from '../../services/api';
@@ -285,7 +285,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   useEffect(() => {
     getTareas().then(tareas => {
       const total = tareas.length;
-      const criticas = tareas.filter(t => t.prioridad === 'critica' && t.status !== 'completado').length;
+      const criticas = tareas.filter(t => t.prioridad === 'critica' && t.status !== 'terminado').length;
       setAtStats({ total, criticas });
       setAtStatus('ok');
     }).catch(() => setAtStatus('error'));
@@ -541,6 +541,29 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             </div>
           </Section>
 
+          {/* ── 2b. Aliados & Red ── */}
+          <Section label="Aliados & Red" color="orange">
+            <BigButton
+              label="Estrategia Aliados"
+              sub="Planes Básico · Activo · Premium · GuanaPoints · WiFi Captivo · Embudos"
+              icon={<Handshake size={20} className="text-orange-400" />}
+              gradient="from-orange-950 via-teal-950 to-orange-950"
+              border="border-orange-600 hover:border-orange-400"
+              pulse="bg-orange-400"
+              onClick={() => onNavigate(AppRoute.ADMIN_ALIADOS)}
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <MiniButton
+                icon={<Map size={18} className="text-teal-400" />} label="Negocios Locales"
+                onClick={() => onNavigate(AppRoute.ADMIN_NEGOCIOS_LOCALES)}
+                pulse="bg-teal-500" gradient="from-teal-900/60 to-emerald-900/60" border="border-teal-800 hover:border-teal-500" />
+              <MiniButton
+                icon={<Globe size={18} className="text-cyan-400" />} label="Ver página pública"
+                onClick={() => onNavigate(AppRoute.VINCULAR_COMERCIO)}
+                gradient="from-cyan-900/60 to-teal-900/60" border="border-cyan-800 hover:border-cyan-500" />
+            </div>
+          </Section>
+
           {/* ── 3. Contenido & Cultura ── */}
           <Section label="Contenido & Cultura" color="orange">
             <div className="grid grid-cols-3 gap-2">
@@ -592,6 +615,11 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 badge={criticas > 0 ? String(criticas) : undefined}
                 pulse="bg-green-400" gradient="from-green-900/50 to-teal-900/50" border="border-green-800 hover:border-green-500" />
             </div>
+            <MiniButton
+              icon={<Layers size={18} className="text-indigo-400" />} label="Arquitectura de la App"
+              onClick={() => onNavigate(AppRoute.ADMIN_APP_ARQUITECTURA)}
+              pulse="bg-indigo-500" gradient="from-indigo-900/50 to-violet-900/50" border="border-indigo-700 hover:border-indigo-500"
+            />
           </Section>
 
         </div>

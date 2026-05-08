@@ -1,19 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import {
   MapPin, Phone, Mail, Globe, Clock, LogOut, Loader2, RefreshCw,
+  QrCode, Zap, Crown, Check, X, ChevronDown, ChevronUp, MessageCircle, ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { AppRoute } from '../../types';
 
 interface NegocioLocalPerfilProps {
   onLogout: () => void;
   onBack?: () => void;
+  onNavigate?: (route: AppRoute) => void;
 }
 
-const NegocioLocalPerfil: React.FC<NegocioLocalPerfilProps> = ({ onLogout, onBack }) => {
+const PLANES_INFO = [
+  {
+    id: 'Básico',
+    icon: QrCode,
+    precio: 'Gratis',
+    color: 'teal',
+    features: ['Ficha en directorio', 'Código QR personalizado', 'Visibilidad digital básica'],
+    missing: ['Pin en mapa interactivo', 'GuanaPoints para clientes'],
+  },
+  {
+    id: 'Activo',
+    icon: Zap,
+    precio: '$49.900/mes',
+    color: 'orange',
+    features: ['Todo lo de Básico', 'Pin en mapa interactivo', 'GuanaPoints para clientes', 'Prioridad en búsquedas', 'Insignia Aliado Verificado'],
+    missing: ['Creación de contenido', 'Analytics avanzados'],
+  },
+  {
+    id: 'Premium',
+    icon: Crown,
+    precio: '$129.900/mes',
+    color: 'indigo',
+    features: ['Todo lo de Activo', 'Posición destacada', 'Creación de contenido mensual', 'Analytics de visitas', 'Gestor de cuenta dedicado'],
+    missing: [],
+  },
+] as const;
+
+const planColorMap = {
+  teal:   { border: 'border-teal-600/60',   text: 'text-teal-400',   bg: 'bg-teal-900/30',   badge: 'bg-teal-600' },
+  orange: { border: 'border-orange-500/70', text: 'text-orange-400', bg: 'bg-orange-900/30', badge: 'bg-orange-500' },
+  indigo: { border: 'border-indigo-600/60', text: 'text-indigo-400', bg: 'bg-indigo-900/30', badge: 'bg-indigo-600' },
+};
+
+const NegocioLocalPerfil: React.FC<NegocioLocalPerfilProps> = ({ onLogout, onBack, onNavigate }) => {
   const { firebaseUser } = useAuth();
-  const [negocio, setNegocio]       = useState<any>(null);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState('');
+  const [negocio, setNegocio]         = useState<any>(null);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState('');
+  const [planesOpen, setPlanesOpen]   = useState(false);
 
   const userEmail = firebaseUser?.email || '';
   const userName  = firebaseUser?.displayName || userEmail.split('@')[0] || 'Negocio';
@@ -193,6 +230,127 @@ const NegocioLocalPerfil: React.FC<NegocioLocalPerfilProps> = ({ onLogout, onBac
             </p>
           </div>
         )}
+
+        {/* Mi Plan */}
+        {(() => {
+          const planActual = negocio?.plan || 'Básico';
+          // Normalize: "Aliado Activo" → "Activo", "Aliado Premium" → "Premium"
+          const planKey = planActual.replace('Aliado ', '') as 'Básico' | 'Activo' | 'Premium';
+          const planInfo = PLANES_INFO.find(p => p.id === planKey) || PLANES_INFO[0];
+          const c = planColorMap[planInfo.color];
+          const isPremium = planKey === 'Premium';
+          const isBasico = planKey === 'Básico';
+
+          return (
+            <div className="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden">
+              {/* Plan actual header */}
+              <button
+                className="w-full px-5 py-4 flex items-center gap-3 text-left"
+                onClick={() => setPlanesOpen(!planesOpen)}
+              >
+                <div className={`w-10 h-10 rounded-xl ${c.bg} ${c.border} border flex items-center justify-center`}>
+                  <planInfo.icon size={18} className={c.text} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-0.5">Mi Plan Actual</p>
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-sm text-white">{planActual}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black text-white ${c.badge}`}>
+                      {planInfo.precio}
+                    </span>
+                  </div>
+                </div>
+                {planesOpen ? (
+                  <ChevronUp size={16} className="text-gray-500 shrink-0" />
+                ) : (
+                  <ChevronDown size={16} className="text-gray-500 shrink-0" />
+                )}
+              </button>
+
+              {/* Plan features summary */}
+              <div className="px-5 pb-4 border-t border-gray-700/50">
+                <ul className="mt-3 space-y-2">
+                  {planInfo.features.slice(0, 3).map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-xs text-gray-400">
+                      <Check size={12} className={c.text} />
+                      {f}
+                    </li>
+                  ))}
+                  {planInfo.missing.length > 0 && !planesOpen && (
+                    <li className="text-xs text-gray-600 pl-4 italic">
+                      + {planInfo.missing.length} beneficio{planInfo.missing.length > 1 ? 's' : ''} disponible{planInfo.missing.length > 1 ? 's' : ''} en planes superiores
+                    </li>
+                  )}
+                </ul>
+              </div>
+
+              {/* Expanded: all plans comparison */}
+              {planesOpen && (
+                <div className="border-t border-gray-700/50 px-5 py-5 space-y-4">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Todos los planes</p>
+                  {PLANES_INFO.map((plan) => {
+                    const pc = planColorMap[plan.color];
+                    const esCurrent = plan.id === planKey;
+                    return (
+                      <div
+                        key={plan.id}
+                        className={`rounded-xl p-4 border ${esCurrent ? `${pc.border} ${pc.bg}` : 'border-gray-700/40 bg-gray-900/40'}`}
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <plan.icon size={14} className={esCurrent ? pc.text : 'text-gray-500'} />
+                          <span className={`text-xs font-black ${esCurrent ? 'text-white' : 'text-gray-400'}`}>
+                            {plan.id === 'Básico' ? 'Básico' : `Aliado ${plan.id}`}
+                          </span>
+                          <span className={`ml-auto text-[10px] font-bold ${esCurrent ? pc.text : 'text-gray-600'}`}>
+                            {plan.precio}
+                          </span>
+                          {esCurrent && (
+                            <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-black text-white ${pc.badge}`}>
+                              Activo
+                            </span>
+                          )}
+                        </div>
+                        <ul className="space-y-1.5">
+                          {plan.features.map((f) => (
+                            <li key={f} className="flex items-start gap-1.5 text-[11px]">
+                              <Check size={11} className={`${esCurrent ? pc.text : 'text-gray-600'} shrink-0 mt-0.5`} />
+                              <span className={esCurrent ? 'text-gray-300' : 'text-gray-500'}>{f}</span>
+                            </li>
+                          ))}
+                          {plan.missing.map((f) => (
+                            <li key={f} className="flex items-start gap-1.5 text-[11px]">
+                              <X size={11} className="text-gray-700 shrink-0 mt-0.5" />
+                              <span className="text-gray-700">{f}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
+
+                  {/* CTA upgrade */}
+                  {!isPremium && (
+                    <button
+                      onClick={() => window.open('https://wa.me/573012345678?text=Quiero%20mejorar%20mi%20plan%20en%20GuanaGO', '_blank')}
+                      className="w-full py-3 rounded-xl bg-teal-700 hover:bg-teal-600 text-white font-bold text-sm transition-colors active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      <MessageCircle size={15} />
+                      Mejorar mi plan
+                    </button>
+                  )}
+                  {onNavigate && (
+                    <button
+                      onClick={() => onNavigate(AppRoute.VINCULAR_COMERCIO)}
+                      className="w-full py-3 rounded-xl bg-gray-700 hover:bg-gray-600 text-gray-300 font-semibold text-sm transition-colors active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      Ver detalles de planes <ArrowRight size={14} />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Cerrar sesión */}
         <button

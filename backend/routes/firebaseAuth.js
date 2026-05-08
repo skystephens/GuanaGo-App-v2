@@ -1,6 +1,6 @@
 import express from 'express';
 import { verifyFirebaseToken } from '../middleware/firebaseAuth.js';
-import { findOrCreateAirtableUser } from '../services/firebaseUserService.js';
+import { findOrCreateLeadUser } from '../services/firebaseUserService.js';
 import { loginUser } from '../services/userAuthService.js';
 import admin, { firebaseInitialized } from '../firebaseAdmin.js';
 
@@ -22,7 +22,7 @@ router.post('/verify', verifyFirebaseToken, async (req, res) => {
 
     console.log(`🔥 Firebase verify: ${email} (${uid}) tipo: ${userType || 'turista'}`);
 
-    const result = await findOrCreateAirtableUser({
+    const result = await findOrCreateLeadUser({
       firebaseUid: uid,
       email,
       nombre: name || email.split('@')[0],
@@ -34,15 +34,17 @@ router.post('/verify', verifyFirebaseToken, async (req, res) => {
       return res.status(400).json(result);
     }
 
-    // Asignar Custom Claims en Firebase según el rol de Airtable.
-    // Esto permite que las Firestore Security Rules funcionen con request.auth.token.role
+    // Setear Custom Claims: role + accesos quedan embebidos en el ID token.
+    // verifyFirebaseToken los leerá en requests futuros sin consultar Airtable.
     if (firebaseInitialized && result.user?.role) {
-      const role = result.user.role; // 'SuperAdmin', 'admin', 'Socio', 'Turista', etc.
       try {
-        await admin.auth().setCustomUserClaims(uid, { role });
-        console.log(`✅ Custom claim [role=${role}] asignado a ${email}`);
+        await admin.auth().setCustomUserClaims(uid, {
+          role: result.user.role,
+          accesos: result.user.accesos || []
+        });
+        console.log(`✅ Custom claims seteados [role=${result.user.role}, accesos=${result.user.accesos?.length || 0}] → ${email}`);
       } catch (claimErr) {
-        console.warn('⚠️ No se pudo asignar custom claim:', claimErr.message);
+        console.warn('⚠️ No se pudo setear custom claims:', claimErr.message);
       }
     }
 
@@ -62,7 +64,7 @@ router.get('/profile', verifyFirebaseToken, async (req, res) => {
   try {
     const { uid, email, name } = req.firebaseUser;
 
-    const result = await findOrCreateAirtableUser({
+    const result = await findOrCreateLeadUser({
       firebaseUid: uid,
       email,
       nombre: name || email.split('@')[0],

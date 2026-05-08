@@ -1,98 +1,92 @@
 /**
  * Firebase-Airtable Bridge Service
- * Busca o crea usuarios en Airtable vinculados a Firebase UID
+ * Fuente de verdad para usuarios: tabla Leads (B2C + B2B + Admin).
+ * Para usuarios con rol admin, también carga Accesos_Modulos desde Usuarios_Admins.
  */
 
-const USUARIOS_TABLE = 'Usuarios_Admins';
+const LEADS_TABLE = 'Leads';
+const ADMINS_TABLE = 'Usuarios_Admins';
 
-// Obtener config dinámicamente (evita problemas de carga de módulos ES)
-const getAirtableHeaders = () => ({
+// Roles que tienen acceso al backend admin
+const ADMIN_ROLES = ['Super_Admin', 'Admin', 'Junior', 'Asesor', 'Socio operador'];
+
+const getHeaders = () => ({
   'Authorization': `Bearer ${process.env.AIRTABLE_API_KEY}`,
   'Content-Type': 'application/json'
 });
 
-const baseUrl = () => `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${encodeURIComponent(USUARIOS_TABLE)}`;
+const leadsUrl = () =>
+  `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${encodeURIComponent(LEADS_TABLE)}`;
+
+const adminsUrl = () =>
+  `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${encodeURIComponent(ADMINS_TABLE)}`;
 
 /**
- * Busca usuario en Airtable por email. Si no existe, lo crea.
+ * Busca usuario en Leads por Firebase UID. Si no existe, lo crea.
+ * Para roles admin, también carga Accesos_Modulos desde Usuarios_Admins.
  */
-export async function findOrCreateAirtableUser({ firebaseUid, email, nombre, photoUrl, userType }) {
-  const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
-  const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
-    console.warn('⚠️ Airtable no configurado, retornando perfil basico');
+export async function findOrCreateLeadUser({ firebaseUid, email, nombre, photoUrl, userType = 'turista' }) {
+  if (!process.env.AIRTABLE_API_KEY || !process.env.AIRTABLE_BASE_ID) {
+    console.warn('⚠️ Airtable no configurado, retornando perfil básico');
     return {
       success: true,
-      user: {
-        id: firebaseUid,
-        email,
-        nombre: nombre || email.split('@')[0],
-        role: mapUserType(userType),
-        saldo: 0,
-        nivel: 'Bronce',
-        verificado: true,
-        firebaseUid
-      }
+      user: buildFallbackProfile({ firebaseUid, email, nombre, userType })
     };
   }
 
   try {
-    // 1. Buscar por email en Airtable
-    const escapedEmail = String(email || '').replace(/'/g, "''");
-    const searchUrl = `${baseUrl()}?filterByFormula=${encodeURIComponent(`{Email}='${escapedEmail}'`)}`;
+    // 1. Buscar en Leads por ID_Usuario (Firebase UID)
+    const escapedUid = String(firebaseUid || '').replace(/'/g, "''");
+    const byUidUrl = `${leadsUrl()}?filterByFormula=${encodeURIComponent(`{ID_Usuario}='${escapedUid}'`)}`;
 
-    const searchRes = await fetch(searchUrl, { headers: getAirtableHeaders() });
-    if (!searchRes.ok) {
-      throw new Error(`Airtable search error: ${searchRes.status}`);
-    }
+    const uidRes = await fetch(byUidUrl, { headers: getHeaders() });
+    if (!uidRes.ok) throw new Error(`Leads UID search error: ${uidRes.status}`);
+    const uidData = await uidRes.json();
 
-    const searchData = await searchRes.json();
+    let leadsRecord = uidData.records?.[0] || null;
 
-    // 2a. Usuario encontrado → actualizar Firebase_UID y retornar perfil
-    if (searchData.records && searchData.records.length > 0) {
-      const record = searchData.records[0];
-      const fields = record.fields;
-
-      // Intentar actualizar ultimo acceso (ignorar si falla)
-      try {
-        await fetch(`${baseUrl()}/${record.id}`, {
-          method: 'PATCH',
-          headers: getAirtableHeaders(),
-          body: JSON.stringify({
-            fields: {
-              'Ultimo acceso': new Date().toISOString()
-            }
-          })
-        });
-      } catch (e) {
-        // Silenciar - el campo puede no existir
+    // 2. Fallback: buscar por email (usuario registrado antes de tener Firebase_UID)
+    if (!leadsRecord && email) {
+      const escapedEmail = String(email).replace(/'/g, "''");
+      const byEmailUrl = `${leadsUrl()}?filterByFormula=${encodeURIComponent(`{Email}='${escapedEmail}'`)}`;
+      const emailRes = await fetch(byEmailUrl, { headers: getHeaders() });
+      if (emailRes.ok) {
+        const emailData = await emailRes.json();
+        leadsRecord = emailData.records?.[0] || null;
+        // Vincular Firebase UID al registro existente
+        if (leadsRecord) {
+          await patchLead(leadsRecord.id, { ID_Usuario: firebaseUid });
+        }
       }
-
-      return {
-        success: true,
-        user: extractProfile(record, firebaseUid)
-      };
     }
 
-    // 2b. Usuario no encontrado → crear nuevo registro
-    console.log('📝 Creando nuevo usuario en Airtable:', email);
-    const rol = mapUserType(userType);
-    const autoApprove = userType === 'turista' || userType === 'local';
+    // 3. Encontrado → actualizar última interacción y retornar perfil
+    if (leadsRecord) {
+      await patchLead(leadsRecord.id, { 'Última_Interacción': new Date().toISOString() });
+      const profile = await buildProfile(leadsRecord, firebaseUid);
+      return { success: true, user: profile };
+    }
 
-    // Crear con campos básicos que existen en la tabla
-    const createRes = await fetch(baseUrl(), {
+    // 4. No existe → crear nuevo Lead
+    console.log('📝 Creando nuevo Lead en Airtable:', email);
+    const role = mapUserTypeToRole(userType);
+    const autoActive = !['socio', 'aliado', 'operador'].includes(userType);
+
+    const createRes = await fetch(leadsUrl(), {
       method: 'POST',
-      headers: getAirtableHeaders(),
+      headers: getHeaders(),
       body: JSON.stringify({
         records: [{
           fields: {
-            Email: email,
             Nombre: nombre || email.split('@')[0],
-            Rol: rol,
-            Activo: autoApprove,
-            'Fecha_de_Creacion': new Date().toISOString(),
-            'Ultimo acceso': new Date().toISOString()
+            Email: email,
+            ID_Usuario: firebaseUid,
+            Role: role,
+            Estado_del_Lead: autoActive ? 'Activo' : 'Pendiente',
+            Fecha_de_Registro: new Date().toISOString(),
+            'Última_Interacción': new Date().toISOString(),
+            Metodo_de_Auth: 'Firebase',
+            Saldo_GUANA: 0
           }
         }]
       })
@@ -100,46 +94,84 @@ export async function findOrCreateAirtableUser({ firebaseUid, email, nombre, pho
 
     if (!createRes.ok) {
       const errText = await createRes.text();
-      console.error('❌ Error creando usuario:', errText);
-      throw new Error(`Airtable create error: ${createRes.status}`);
+      console.error('❌ Error creando Lead:', errText);
+      throw new Error(`Lead create error: ${createRes.status}`);
     }
 
     const createData = await createRes.json();
     const newRecord = createData.records[0];
-
-    const requiresApproval = !autoApprove;
+    const profile = await buildProfile(newRecord, firebaseUid);
 
     return {
       success: true,
-      user: extractProfile(newRecord, firebaseUid),
+      user: profile,
       isNew: true,
-      requiresApproval,
-      message: requiresApproval
-        ? '¡Solicitud enviada! Un administrador revisará tu solicitud pronto.'
-        : '¡Bienvenido a GuanaGO!'
+      requiresApproval: !autoActive,
+      message: autoActive
+        ? '¡Bienvenido a GuanaGO!'
+        : '¡Solicitud enviada! Un administrador revisará tu cuenta pronto.'
     };
 
   } catch (error) {
-    console.error('❌ Error en findOrCreateAirtableUser:', error);
+    console.error('❌ Error en findOrCreateLeadUser:', error);
     return { success: false, error: 'Error al buscar/crear perfil de usuario' };
   }
 }
 
-function mapUserType(userType) {
-  switch (userType) {
-    case 'turista': return 'Turista';
-    case 'local': return 'Local';
-    case 'socio': return 'Socio';
-    case 'admin': return 'SuperAdmin';
-    default: return 'Turista';
+/**
+ * Para usuarios admin, carga sus módulos autorizados desde Usuarios_Admins.
+ * @returns {Promise<string[]>} array de nombres de módulos
+ */
+async function fetchAdminAccesos(firebaseUid) {
+  try {
+    const escapedUid = String(firebaseUid || '').replace(/'/g, "''");
+    const url = `${adminsUrl()}?filterByFormula=${encodeURIComponent(`{Firebase_UID}='${escapedUid}'`)}`;
+    const res = await fetch(url, { headers: getHeaders() });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    if (!data.records?.length) return [];
+
+    const record = data.records[0];
+
+    // Actualizar Ultimo acceso sin bloquear
+    fetch(`${adminsUrl()}/${record.id}`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify({ fields: { 'Ultimo acceso': new Date().toISOString() } })
+    }).catch(() => {});
+
+    const accesos = record.fields.Accesos_Modulos;
+    if (!Array.isArray(accesos)) return [];
+    // Airtable devuelve multipleSelects como [{id, name, color}]
+    return accesos.map(a => (typeof a === 'object' ? a.name : a));
+
+  } catch (e) {
+    console.warn('⚠️ No se pudo cargar Accesos_Modulos:', e.message);
+    return [];
   }
 }
 
-function extractProfile(record, firebaseUid) {
+async function patchLead(recordId, fields) {
+  try {
+    await fetch(`${leadsUrl()}/${recordId}`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify({ fields })
+    });
+  } catch (e) {
+    console.warn('⚠️ No se pudo actualizar Lead:', e.message);
+  }
+}
+
+async function buildProfile(record, firebaseUid) {
   const f = record.fields;
-  // Normalizar rol (la tabla puede tener "Super Admin" con espacio)
-  let role = f.Rol || f.Role || 'Turista';
-  if (role === 'Super Admin') role = 'SuperAdmin';
+  const role = normalizeRole(f.Role || f.Rol || 'Turista');
+
+  let accesos = [];
+  if (ADMIN_ROLES.includes(role)) {
+    accesos = await fetchAdminAccesos(firebaseUid);
+  }
 
   return {
     id: record.id,
@@ -147,9 +179,51 @@ function extractProfile(record, firebaseUid) {
     nombre: f.Nombre || '',
     role,
     saldo: f.Saldo_GUANA || 0,
-    nivel: f.Nivel || 'Bronce',
-    puntos: f.Puntos_Acumulados || 0,
-    verificado: f.Activo === true,
+    verificado: f.Verificado === true,
+    estado: f.Estado_del_Lead?.name || f.Estado_del_Lead || 'Activo',
+    tipoCliente: f.Tipo_Cliente?.name || f.Tipo_Cliente || null,
+    accesos,
     firebaseUid
   };
 }
+
+function buildFallbackProfile({ firebaseUid, email, nombre, userType }) {
+  return {
+    id: firebaseUid,
+    email: email || '',
+    nombre: nombre || email?.split('@')[0] || '',
+    role: mapUserTypeToRole(userType),
+    saldo: 0,
+    verificado: true,
+    estado: 'Activo',
+    accesos: [],
+    firebaseUid
+  };
+}
+
+function mapUserTypeToRole(userType) {
+  const map = {
+    turista: 'Turista',
+    local: 'Raizal_Residente',
+    residente: 'Raizal_Residente',
+    socio: 'Aliado',
+    aliado: 'Aliado',
+    operador: 'Operador',
+    agencia: 'Aliado',
+    admin: 'Super_Admin'
+  };
+  return map[userType] || 'Turista';
+}
+
+function normalizeRole(role) {
+  const normalize = {
+    'Super Admin': 'Super_Admin',
+    'SuperAdmin': 'Super_Admin',
+    'superadmin': 'Super_Admin',
+    'super_admin': 'Super_Admin'
+  };
+  return normalize[role] || role;
+}
+
+/** @deprecated Usar findOrCreateLeadUser */
+export const findOrCreateAirtableUser = findOrCreateLeadUser;

@@ -85,6 +85,13 @@ import CatalogPublico from './pages/CatalogPublico';
 // Coco Art Historia
 import CocoArtHistoria from './pages/CocoArtHistoria';
 
+// Vincular Comercio
+import VincularComercio from './pages/VincularComercio';
+
+// Admin — Aliados & Arquitectura
+import AdminAliados from './pages/admin/AdminAliados';
+import AdminAppArquitectura from './pages/admin/AdminAppArquitectura';
+
 // Unified Panel
 import UnifiedPanel from './components/UnifiedPanel';
 import UserProfileButton from './components/UserProfileButton';
@@ -160,7 +167,7 @@ const App: React.FC = () => {
       case AppRoute.MY_ITINERARY: return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.PROFILE:
         if (['Socio', 'Aliado', 'Operador'].includes(userRole as string)) {
-          return <NegocioLocalPerfil onLogout={handleLogout} onBack={goBack} />;
+          return <NegocioLocalPerfil onLogout={handleLogout} onBack={goBack} onNavigate={navigateTo} />;
         }
         return (
           <AccountDashboard
@@ -188,7 +195,7 @@ const App: React.FC = () => {
       case AppRoute.AUTH_GATE: return (
         <AuthGate
           onAuthenticated={(role) => {
-            if (role === 'SuperAdmin') {
+            if (role === 'SuperAdmin' || role === ('Super_Admin' as any)) {
               navigateTo(AppRoute.ADMIN_DASHBOARD);
             } else if (['Socio', 'Aliado', 'Operador', 'Artista'].includes(role)) {
               navigateTo(AppRoute.PROFILE);
@@ -244,6 +251,9 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_COWORK: return <AdminCowork onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.CATALOG_PUBLICO: return <CatalogPublico onNavigate={navigateTo} onBack={goBack} />;
       case AppRoute.COCO_ART_HISTORIA: return <CocoArtHistoria onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.VINCULAR_COMERCIO: return <VincularComercio onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_ALIADOS: return <AdminAliados onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_APP_ARQUITECTURA: return <AdminAppArquitectura onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };
