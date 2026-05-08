@@ -30,6 +30,14 @@ const LOCAL_USERS = [
     activo: true
   },
   {
+    id: 'local-admin-3',
+    nombre: 'GuiaSAI Admin',
+    email: 'info@guiasai.com',
+    pin: '166400',
+    rol: 'SuperAdmin',
+    activo: true
+  },
+  {
     id: 'local-turista-1',
     nombre: 'Turista Demo',
     email: 'turista@demo.com',

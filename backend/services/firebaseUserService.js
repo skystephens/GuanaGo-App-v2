@@ -69,7 +69,9 @@ export async function findOrCreateLeadUser({ firebaseUid, email, nombre, photoUr
 
     // 4. No existe → crear nuevo Lead
     console.log('📝 Creando nuevo Lead en Airtable:', email);
-    const role = mapUserTypeToRole(userType);
+    // Verificar si el email ya tiene rol en Usuarios_Admins (ej: info@guiasai.com)
+    const adminRole = email ? await fetchAdminRoleByEmail(email) : null;
+    const role = (adminRole && ADMIN_ROLES.includes(adminRole)) ? adminRole : mapUserTypeToRole(userType);
     const autoActive = !['socio', 'aliado', 'operador'].includes(userType);
 
     const createRes = await fetch(leadsUrl(), {
@@ -149,6 +151,28 @@ async function fetchAdminAccesos(firebaseUid) {
   } catch (e) {
     console.warn('⚠️ No se pudo cargar Accesos_Modulos:', e.message);
     return [];
+  }
+}
+
+/**
+ * Si el email existe en Usuarios_Admins, retorna su rol normalizado.
+ * Permite asignar el rol correcto al crear un Lead para un admin existente.
+ */
+async function fetchAdminRoleByEmail(email) {
+  try {
+    const escapedEmail = String(email).replace(/'/g, "''");
+    const url = `${adminsUrl()}?filterByFormula=${encodeURIComponent(`{Email}='${escapedEmail}'`)}`;
+    const res = await fetch(url, { headers: getHeaders() });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.records?.length) return null;
+    const record = data.records[0];
+    const rol = record.fields.Rol || record.fields.Role;
+    if (!rol) return null;
+    const name = typeof rol === 'object' ? rol.name : rol;
+    return normalizeRole(name);
+  } catch {
+    return null;
   }
 }
 

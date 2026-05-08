@@ -18,7 +18,9 @@ interface AuthGateProps {
 type Step = 'login' | 'select-type';
 
 async function verifyWithBackend(firebaseUser: any, userType = 'turista') {
-  const idToken = await firebaseUser.getIdToken();
+  // Refrescar token ANTES de enviar al backend para incluir claims de migrate-login
+  let idToken: string;
+  try { idToken = await firebaseUser.getIdToken(true); } catch { idToken = await firebaseUser.getIdToken(); }
   const res = await fetch('/api/firebase-auth/verify', {
     method: 'POST',
     headers: {
@@ -29,8 +31,6 @@ async function verifyWithBackend(firebaseUser: any, userType = 'turista') {
   });
   const data = await res.json();
   if (!data.success) throw new Error(data.error || 'Error verificando perfil');
-  // Force refresh: nuevos Custom Claims (role + accesos) quedan activos
-  try { await firebaseUser.getIdToken(true); } catch { /* no-op */ }
   return data;
 }
 

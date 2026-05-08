@@ -15,6 +15,14 @@ const router = express.Router();
  * Header: Authorization: Bearer <firebase-id-token>
  * Body: { userType?: 'turista' | 'local' | 'socio' }
  */
+const VERIFY_ADMIN_ROLES = ['Super_Admin', 'Admin', 'Junior', 'Asesor', 'Socio operador'];
+
+function normalizeTokenRole(r) {
+  if (!r) return null;
+  const map = { 'Super Admin': 'Super_Admin', 'SuperAdmin': 'Super_Admin', 'superadmin': 'Super_Admin', 'super_admin': 'Super_Admin' };
+  return map[r] || r;
+}
+
 router.post('/verify', verifyFirebaseToken, async (req, res) => {
   try {
     const { uid, email, name, picture } = req.firebaseUser;
@@ -34,8 +42,15 @@ router.post('/verify', verifyFirebaseToken, async (req, res) => {
       return res.status(400).json(result);
     }
 
+    // Si Airtable devolvió Turista pero el token ya tiene rol admin (seteado en migrate-login),
+    // confiar en el token para no degradar el rol en el primer login
+    const tokenRole = normalizeTokenRole(req.user?.role);
+    if (result.user?.role === 'Turista' && tokenRole && VERIFY_ADMIN_ROLES.includes(tokenRole)) {
+      console.log(`🔧 Role override: Airtable→Turista, token→${tokenRole} para ${email}`);
+      result.user.role = tokenRole;
+    }
+
     // Setear Custom Claims: role + accesos quedan embebidos en el ID token.
-    // verifyFirebaseToken los leerá en requests futuros sin consultar Airtable.
     if (firebaseInitialized && result.user?.role) {
       try {
         await admin.auth().setCustomUserClaims(uid, {
