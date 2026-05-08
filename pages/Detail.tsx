@@ -128,8 +128,8 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
      totalPrice = pricePerNightForPax * nights;
   } else {
      unitPriceDisplay = safeData.price;
-     // Casa/Apartamentos: precio fijo por noche (no multiplica por cantidad de personas)
-     totalPrice = isPricePerUnit ? safeData.price * nights : safeData.price * quantity;
+     // Casa/Apartamentos: precio fijo × noches. Hotel/Habitacion/etc: precio × noches × personas
+     totalPrice = isPricePerUnit ? safeData.price * nights : safeData.price * nights * quantity;
   }
 
   const handleAddToCart = () => {
