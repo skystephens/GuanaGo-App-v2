@@ -45,8 +45,8 @@ const ServiceCatalogCard: React.FC<ServiceCatalogCardProps> = ({
   const title    = service.title || (service as any).nombre || 'Servicio turístico';
   const location = (service as any).location || 'San Andrés Isla';
   const price    = service.price || 0;
-  const UNIT_PRICE_TYPES = ['Casa', 'Apartamentos'];
-  const isPricePerUnit = category === 'hotel' && UNIT_PRICE_TYPES.includes(service.accommodationType || '');
+  const _accType = ((service.accommodationType || (service as any).tipo || '') as string).toLowerCase();
+  const isPricePerUnit = category === 'hotel' && ['casa', 'apartamento', 'apartamentos', 'villa', 'finca'].some(k => _accType.includes(k));
   const rating   = service.rating || 4.5;
 
   return (
