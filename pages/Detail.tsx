@@ -101,6 +101,10 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
   };
   
   const hotel = safeData as Hotel;
+  // Tipos donde el precio es por unidad completa (no por persona)
+  const UNIT_PRICE_TYPES = ['Casa', 'Apartamentos'];
+  const isPricePerUnit = isHotel && UNIT_PRICE_TYPES.includes(hotel.accommodationType || '');
+
   const maxAllowed = availableSlots !== null ? availableSlots : (isHotel && hotel.maxGuests ? hotel.maxGuests : 10);
   
   const isExceeding = quantity > maxAllowed && !isDateBlocked && availableSlots !== 0;
@@ -119,14 +123,13 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
   let unitPriceDisplay = 0;
 
   if (isHotel && hotel.pricePerNight) {
-     // pricePerNight[quantity] ya es el precio POR NOCHE para esa cantidad de personas
      const pricePerNightForPax = hotel.pricePerNight[quantity] || hotel.pricePerNight[Object.keys(hotel.pricePerNight).length] || safeData.price;
      unitPriceDisplay = pricePerNightForPax;
-     // Solo multiplicar por noches (pricePerNightForPax ya incluye la cantidad de personas)
      totalPrice = pricePerNightForPax * nights;
   } else {
      unitPriceDisplay = safeData.price;
-     totalPrice = safeData.price * quantity;
+     // Casa/Apartamentos: precio fijo por noche (no multiplica por cantidad de personas)
+     totalPrice = isPricePerUnit ? safeData.price * nights : safeData.price * quantity;
   }
 
   const handleAddToCart = () => {
@@ -257,7 +260,13 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Precio actual</p>
                  <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-black text-emerald-600">${unitPriceDisplay.toLocaleString()}</span>
-                    <span className="text-[10px] text-gray-400 font-bold uppercase">{isHotel ? `por noche` : 'por persona'}</span>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase">
+                      {isHotel
+                        ? isPricePerUnit
+                          ? `por noche · hasta ${hotel.maxGuests || ''} personas`
+                          : 'por noche · por persona'
+                        : 'por persona'}
+                    </span>
                  </div>
               </div>
               <div className="text-right">

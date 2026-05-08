@@ -22,6 +22,8 @@ interface ServiceCatalogCardProps {
     tipo?: string;
     location?: string;
     images?: string[];
+    accommodationType?: string;
+    maxGuests?: number;
   };
   onViewDetails: () => void;
   /** Mostrar precio en COP (true) o USD (false). Default false */
@@ -43,6 +45,8 @@ const ServiceCatalogCard: React.FC<ServiceCatalogCardProps> = ({
   const title    = service.title || (service as any).nombre || 'Servicio turístico';
   const location = (service as any).location || 'San Andrés Isla';
   const price    = service.price || 0;
+  const UNIT_PRICE_TYPES = ['Casa', 'Apartamentos'];
+  const isPricePerUnit = category === 'hotel' && UNIT_PRICE_TYPES.includes(service.accommodationType || '');
   const rating   = service.rating || 4.5;
 
   return (
@@ -94,7 +98,7 @@ const ServiceCatalogCard: React.FC<ServiceCatalogCardProps> = ({
                   ${priceCOP ? price.toLocaleString('es-CO') : price.toLocaleString()}
                 </span>
                 <span className="text-[10px] text-gray-400 ml-1">
-                  {priceCOP ? 'COP' : 'USD'} {category === 'hotel' ? '/ noche' : '/ persona'}
+                  {priceCOP ? 'COP' : 'USD'} {category !== 'hotel' ? '/ persona' : isPricePerUnit ? '/ noche' : '/ noche · persona'}
                 </span>
               </>
             ) : (
