@@ -3,8 +3,31 @@ import {
   ArrowLeft, QrCode, Zap, Crown, Check, X, Users, TrendingUp,
   Wifi, Star, Gift, ChevronDown, ChevronUp, MessageCircle,
   Calendar, Camera, FileText, BarChart3, Smartphone, Globe,
+  Pencil, Save, Plus, Trash2,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
+
+type BeneficioRow = { id: string; label: string; basico: boolean; activo: boolean; premium: boolean };
+
+const BENEFICIOS_DEFAULT: BeneficioRow[] = [
+  { id: 'b1',  label: 'Ficha en directorio GuanaGO',       basico: true,  activo: true,  premium: true  },
+  { id: 'b2',  label: 'QR personalizado (sticker incluido)',basico: true,  activo: true,  premium: true  },
+  { id: 'b3',  label: 'Visibilidad digital básica',         basico: true,  activo: true,  premium: true  },
+  { id: 'b4',  label: 'Panel de negocio',                   basico: true,  activo: true,  premium: true  },
+  { id: 'b5',  label: 'Aparece en búsquedas generales',     basico: true,  activo: true,  premium: true  },
+  { id: 'b6',  label: 'Pin en mapa interactivo',            basico: false, activo: true,  premium: true  },
+  { id: 'b7',  label: 'GuanaPoints para clientes',          basico: false, activo: true,  premium: true  },
+  { id: 'b8',  label: 'Prioridad en búsquedas',             basico: false, activo: true,  premium: true  },
+  { id: 'b9',  label: 'Insignia Aliado Verificado',         basico: false, activo: true,  premium: true  },
+  { id: 'b10', label: 'Notificaciones en tiempo real',      basico: false, activo: true,  premium: true  },
+  { id: 'b11', label: 'Soporte WhatsApp prioritario',       basico: false, activo: true,  premium: true  },
+  { id: 'b12', label: 'Posición destacada en categoría',    basico: false, activo: false, premium: true  },
+  { id: 'b13', label: 'Contenido mensual (2 piezas)',        basico: false, activo: false, premium: true  },
+  { id: 'b14', label: 'Analytics de visitas',               basico: false, activo: false, premium: true  },
+  { id: 'b15', label: 'Gestor de cuenta dedicado',          basico: false, activo: false, premium: true  },
+  { id: 'b16', label: 'Badge Premium en perfil',            basico: false, activo: false, premium: true  },
+  { id: 'b17', label: 'Material impreso adicional',         basico: false, activo: false, premium: true  },
+];
 
 interface Props {
   onBack: () => void;
@@ -253,6 +276,27 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
   const [planOpen, setPlanOpen] = useState<string | null>('Activo');
   const [tierOpen, setTierOpen] = useState<string | null>('Turista');
 
+  // ── Editor de beneficios ───────────────────────────────────────────────────
+  const [beneficios, setBeneficios] = useState<BeneficioRow[]>(BENEFICIOS_DEFAULT);
+  const [editMode, setEditMode] = useState(false);
+  const [editDraft, setEditDraft] = useState<BeneficioRow[]>([]);
+  const [newLabel, setNewLabel] = useState('');
+
+  const startEdit = () => { setEditDraft(JSON.parse(JSON.stringify(beneficios))); setEditMode(true); };
+  const cancelEdit = () => { setEditMode(false); setNewLabel(''); };
+  const saveEdit = () => { setBeneficios(editDraft); setEditMode(false); setNewLabel(''); };
+
+  const toggleCheck = (id: string, plan: 'basico' | 'activo' | 'premium') => {
+    setEditDraft(prev => prev.map(r => r.id === id ? { ...r, [plan]: !r[plan] } : r));
+  };
+  const removeRow = (id: string) => setEditDraft(prev => prev.filter(r => r.id !== id));
+  const addRow = () => {
+    const label = newLabel.trim();
+    if (!label) return;
+    setEditDraft(prev => [...prev, { id: `b${Date.now()}`, label, basico: false, activo: false, premium: false }]);
+    setNewLabel('');
+  };
+
   const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: 'planes', label: 'Planes', icon: Crown },
     { id: 'estrategia', label: 'Estrategia', icon: BarChart3 },
@@ -410,42 +454,146 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               );
             })}
 
-            {/* Tabla comparativa rápida */}
+            {/* Tabla comparativa editable */}
             <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-800">
-                <p className="font-black text-sm">Comparativa rápida</p>
+              {/* Header con botón editar */}
+              <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+                <p className="font-black text-sm">Beneficios por plan</p>
+                {!editMode ? (
+                  <button
+                    onClick={startEdit}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs font-bold text-gray-300 transition-colors"
+                  >
+                    <Pencil size={12} /> Editar
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={cancelEdit}
+                      className="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs font-bold text-gray-400 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={saveEdit}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-600 text-xs font-bold text-white transition-colors"
+                    >
+                      <Save size={12} /> Guardar
+                    </button>
+                  </div>
+                )}
               </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-gray-800">
-                      <th className="text-left px-4 py-2 text-gray-500 font-semibold">Función</th>
-                      <th className="text-center px-3 py-2 text-teal-400 font-black">Básico</th>
-                      <th className="text-center px-3 py-2 font-black" style={{ color: '#F5831F' }}>Activo</th>
-                      <th className="text-center px-3 py-2 text-indigo-400 font-black">Premium</th>
+                      {editMode && <th className="w-8" />}
+                      <th className="text-left px-4 py-2.5 text-gray-500 font-semibold">Función / Beneficio</th>
+                      <th className="text-center px-3 py-2.5 text-teal-400 font-black">Básico</th>
+                      <th className="text-center px-3 py-2.5 font-black" style={{ color: '#F5831F' }}>Activo</th>
+                      <th className="text-center px-3 py-2.5 text-indigo-400 font-black">Premium</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-800/50">
-                    {[
-                      ['Ficha en directorio', true, true, true],
-                      ['Pin en mapa', false, true, true],
-                      ['GuanaPoints', false, true, true],
-                      ['Prioridad búsquedas', false, true, true],
-                      ['Posición destacada', false, false, true],
-                      ['Creación contenido', false, false, true],
-                      ['Analytics', false, false, true],
-                      ['Gestor dedicado', false, false, true],
-                    ].map(([feat, b, a, p]) => (
-                      <tr key={String(feat)}>
-                        <td className="px-4 py-2 text-gray-400">{feat as string}</td>
-                        <td className="text-center px-3 py-2">{b ? <Check size={12} className="mx-auto text-teal-400" /> : <X size={12} className="mx-auto text-gray-700" />}</td>
-                        <td className="text-center px-3 py-2">{a ? <Check size={12} className="mx-auto" style={{ color: '#F5831F' }} /> : <X size={12} className="mx-auto text-gray-700" />}</td>
-                        <td className="text-center px-3 py-2">{p ? <Check size={12} className="mx-auto text-indigo-400" /> : <X size={12} className="mx-auto text-gray-700" />}</td>
+                  <tbody className="divide-y divide-gray-800/40">
+                    {(editMode ? editDraft : beneficios).map((row) => (
+                      <tr key={row.id} className={editMode ? 'hover:bg-gray-800/40' : ''}>
+
+                        {/* Botón eliminar (solo en modo edición) */}
+                        {editMode && (
+                          <td className="pl-2 pr-0 py-2">
+                            <button
+                              onClick={() => removeRow(row.id)}
+                              className="p-1 rounded hover:bg-red-900/40 text-gray-700 hover:text-red-400 transition-colors"
+                            >
+                              <Trash2 size={11} />
+                            </button>
+                          </td>
+                        )}
+
+                        {/* Nombre de la función */}
+                        <td className="px-4 py-2.5 text-gray-300 leading-snug">{row.label}</td>
+
+                        {/* Plan Básico */}
+                        <td className="text-center px-3 py-2.5">
+                          {editMode ? (
+                            <input
+                              type="checkbox"
+                              checked={row.basico}
+                              onChange={() => toggleCheck(row.id, 'basico')}
+                              className="w-4 h-4 rounded accent-teal-500 cursor-pointer"
+                            />
+                          ) : row.basico
+                            ? <Check size={13} className="mx-auto text-teal-400" />
+                            : <X size={13} className="mx-auto text-gray-700" />
+                          }
+                        </td>
+
+                        {/* Plan Activo */}
+                        <td className="text-center px-3 py-2.5">
+                          {editMode ? (
+                            <input
+                              type="checkbox"
+                              checked={row.activo}
+                              onChange={() => toggleCheck(row.id, 'activo')}
+                              className="w-4 h-4 rounded cursor-pointer"
+                              style={{ accentColor: '#F5831F' }}
+                            />
+                          ) : row.activo
+                            ? <Check size={13} className="mx-auto" style={{ color: '#F5831F' }} />
+                            : <X size={13} className="mx-auto text-gray-700" />
+                          }
+                        </td>
+
+                        {/* Plan Premium */}
+                        <td className="text-center px-3 py-2.5">
+                          {editMode ? (
+                            <input
+                              type="checkbox"
+                              checked={row.premium}
+                              onChange={() => toggleCheck(row.id, 'premium')}
+                              className="w-4 h-4 rounded accent-indigo-500 cursor-pointer"
+                            />
+                          ) : row.premium
+                            ? <Check size={13} className="mx-auto text-indigo-400" />
+                            : <X size={13} className="mx-auto text-gray-700" />
+                          }
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+
+              {/* Agregar nueva fila (solo en modo edición) */}
+              {editMode && (
+                <div className="px-4 py-3 border-t border-gray-800 flex gap-2">
+                  <input
+                    type="text"
+                    value={newLabel}
+                    onChange={(e) => setNewLabel(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addRow()}
+                    placeholder="Nueva función o beneficio..."
+                    className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 placeholder-gray-600 outline-none focus:border-teal-600 transition-colors"
+                  />
+                  <button
+                    onClick={addRow}
+                    disabled={!newLabel.trim()}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-teal-800 hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors"
+                  >
+                    <Plus size={12} /> Agregar
+                  </button>
+                </div>
+              )}
+
+              {/* Nota en modo vista */}
+              {!editMode && (
+                <div className="px-4 py-2.5 border-t border-gray-800/50">
+                  <p className="text-[10px] text-gray-600">
+                    {beneficios.length} beneficios configurados · Toca <span className="text-gray-500">Editar</span> para modificar
+                  </p>
+                </div>
+              )}
             </div>
           </>
         )}
