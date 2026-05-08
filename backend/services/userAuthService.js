@@ -64,6 +64,14 @@ const LOCAL_USERS = [
 ];
 
 /**
+ * Retorna el usuario local por email (sin validar contraseña).
+ * Usado por /verify para asignar rol admin sin consultar Airtable.
+ */
+export function getLocalUserByEmail(email) {
+  return LOCAL_USERS.find(u => u.email.toLowerCase() === email.toLowerCase() && u.activo) || null;
+}
+
+/**
  * Validar credenciales contra usuarios locales
  */
 function validateLocalUser(email, password) {

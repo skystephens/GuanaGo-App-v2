@@ -1,7 +1,7 @@
 import express from 'express';
 import { verifyFirebaseToken } from '../middleware/firebaseAuth.js';
 import { findOrCreateLeadUser } from '../services/firebaseUserService.js';
-import { loginUser } from '../services/userAuthService.js';
+import { loginUser, getLocalUserByEmail } from '../services/userAuthService.js';
 import admin, { firebaseInitialized } from '../firebaseAdmin.js';
 
 const router = express.Router();
@@ -30,6 +30,23 @@ router.post('/verify', verifyFirebaseToken, async (req, res) => {
 
     console.log(`🔥 Firebase verify: ${email} (${uid}) tipo: ${userType || 'turista'}`);
 
+    // Fast-path: si el email está en LOCAL_USERS con rol admin, retornar sin consultar Airtable.
+    // Esto garantiza que admins funcionen aunque Airtable no esté configurado en el entorno.
+    const localUser = getLocalUserByEmail(email);
+    if (localUser) {
+      const localRole = normalizeTokenRole(localUser.rol) || localUser.rol;
+      if (VERIFY_ADMIN_ROLES.includes(localRole)) {
+        console.log(`✅ Admin LOCAL fast-path: ${email} → role=${localRole}`);
+        if (firebaseInitialized) {
+          try { await admin.auth().setCustomUserClaims(uid, { role: localRole, accesos: [] }); } catch {}
+        }
+        return res.json({
+          success: true,
+          user: { id: uid, email, nombre: localUser.nombre, role: localRole, saldo: 0, verificado: true, accesos: [], firebaseUid: uid }
+        });
+      }
+    }
+
     const result = await findOrCreateLeadUser({
       firebaseUid: uid,
       email,
@@ -42,8 +59,7 @@ router.post('/verify', verifyFirebaseToken, async (req, res) => {
       return res.status(400).json(result);
     }
 
-    // Si Airtable devolvió Turista pero el token ya tiene rol admin (seteado en migrate-login),
-    // confiar en el token para no degradar el rol en el primer login
+    // Si Airtable devolvió Turista pero el token ya tiene rol admin, confiar en el token
     const tokenRole = normalizeTokenRole(req.user?.role);
     if (result.user?.role === 'Turista' && tokenRole && VERIFY_ADMIN_ROLES.includes(tokenRole)) {
       console.log(`🔧 Role override: Airtable→Turista, token→${tokenRole} para ${email}`);
