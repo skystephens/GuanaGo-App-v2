@@ -62,6 +62,13 @@ router.get('/:token/estrategia', (req, res) => {
   res.sendFile(join(DOCS_DIR, 'estrategia.html'));
 });
 
+// ── GET /hub/:token/agentes ───────────────────────────────────────────────────
+
+router.get('/:token/agentes', (req, res) => {
+  if (!validToken(req.params.token)) return res.redirect('/hub?error=1');
+  res.sendFile(join(DOCS_DIR, 'agentes.html'));
+});
+
 export default router;
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -121,12 +128,15 @@ button:hover{opacity:.9}
 
 function hubHtml(token, activeDoc) {
   const docs = [
-    { id: 'estrategia', label: '📊 Estrategia Mayo 2026', src: `/hub/${token}/estrategia` },
+    { id: 'estrategia', label: '📊 Estrategia May 2026', src: `/hub/${token}/estrategia` },
+    { id: 'agentes',    label: '🤖 Agentes & Eventos',   src: `/hub/${token}/agentes`    },
   ];
 
   const navButtons = docs.map(d =>
     `<button class="nb${d.id === activeDoc ? ' on' : ''}" onclick="loadDoc('${d.src}','${d.id}',this)">${d.label}</button>`
   ).join('');
+
+  const defaultSrc = docs.find(d => d.id === activeDoc)?.src || docs[0].src;
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -138,32 +148,68 @@ function hubHtml(token, activeDoc) {
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Outfit',sans-serif;background:#060E18;color:#F0F4F8;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-.topbar{display:flex;align-items:center;gap:0;background:rgba(6,14,24,.97);border-bottom:1px solid rgba(0,229,204,.14);flex-shrink:0;padding:0 12px}
-.brand{font-size:15px;font-weight:800;color:#F0F4F8;padding:12px 16px 12px 4px;border-right:1px solid rgba(255,255,255,.08);margin-right:8px;white-space:nowrap}
+
+/* ── Topbar ── */
+.topbar{background:rgba(6,14,24,.97);border-bottom:1px solid rgba(0,229,204,.14);flex-shrink:0;display:flex;align-items:stretch;overflow:hidden}
+
+/* Brand */
+.brand{font-size:15px;font-weight:800;color:#F0F4F8;padding:0 16px;display:flex;align-items:center;border-right:1px solid rgba(255,255,255,.07);white-space:nowrap;flex-shrink:0}
 .brand span{color:#00E5CC}
-.nav-scroll{display:flex;gap:0;overflow-x:auto;flex:1;scrollbar-width:none}
+
+/* Section label inside topbar */
+.sec-lbl{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(0,229,204,.45);padding:0 10px 0 14px;display:flex;align-items:center;white-space:nowrap;flex-shrink:0}
+
+/* Doc nav tabs */
+.nav-scroll{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
 .nav-scroll::-webkit-scrollbar{display:none}
-.nb{font-size:13px;font-weight:600;color:#6B8A9E;padding:14px 14px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;font-family:'Outfit',sans-serif}
+.nb{font-size:13px;font-weight:600;color:#6B8A9E;padding:15px 14px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;font-family:'Outfit',sans-serif}
 .nb:hover,.nb.on{color:#00E5CC;border-bottom-color:#00E5CC}
+
+/* Divider */
+.vdiv{width:1px;background:rgba(255,255,255,.07);margin:8px 4px;flex-shrink:0}
+
+/* Tool links (open externally) */
+.tool-strip{display:flex;gap:4px;align-items:center;padding:0 6px;flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.tool-strip::-webkit-scrollbar{display:none}
+.tl{font-size:11px;font-weight:600;color:#4A6880;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:5px 10px;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.tl:hover{color:#00E5CC;border-color:rgba(0,229,204,.25);background:rgba(0,229,204,.05)}
+
+/* Spacer + action buttons */
 .spacer{flex:1}
-.ext-btn{font-size:12px;font-weight:600;color:#6B8A9E;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:6px 12px;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;margin-left:8px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.action-group{display:flex;align-items:center;gap:6px;padding:0 12px;flex-shrink:0}
+.ext-btn{font-size:12px;font-weight:600;color:#6B8A9E;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:6px 12px;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
 .ext-btn:hover{color:#00E5CC;border-color:rgba(0,229,204,.3)}
-.lock-btn{font-size:12px;font-weight:600;color:#FF6B6B;background:rgba(255,107,107,.07);border:1px solid rgba(255,107,107,.15);border-radius:8px;padding:6px 12px;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;margin-left:6px;text-decoration:none;transition:all .15s}
+.lock-btn{font-size:12px;font-weight:600;color:#FF6B6B;background:rgba(255,107,107,.07);border:1px solid rgba(255,107,107,.15);border-radius:8px;padding:6px 12px;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;text-decoration:none;transition:all .15s}
 .lock-btn:hover{background:rgba(255,107,107,.12)}
+
 iframe{flex:1;border:none;width:100%}
 </style>
 </head>
 <body>
 <div class="topbar">
   <div class="brand">Guana<span>Hub</span></div>
+
+  <div class="sec-lbl">DOCS</div>
   <div class="nav-scroll">
     ${navButtons}
   </div>
+
+  <div class="vdiv"></div>
+  <div class="sec-lbl">ACCESO RÁPIDO</div>
+  <div class="tool-strip">
+    <a href="https://airtable.com/appiReH55Qhrbv4Lk" target="_blank" class="tl">📋 Tareas ↗</a>
+    <a href="https://airtable.com/appiReH55Qhrbv4Lk" target="_blank" class="tl">⚡ Cola Agentes ↗</a>
+    <a href="https://airtable.com/appiReH55Qhrbv4Lk" target="_blank" class="tl">🗄️ Airtable ↗</a>
+  </div>
+
   <div class="spacer"></div>
-  <a id="ext-link" href="/hub/${token}/estrategia" target="_blank" class="ext-btn">↗ Pantalla completa</a>
-  <a href="/hub" class="lock-btn">🔒 Salir</a>
+  <div class="action-group">
+    <a id="ext-link" href="${defaultSrc}" target="_blank" class="ext-btn">↗ Pantalla completa</a>
+    <a href="/hub" class="lock-btn">🔒 Salir</a>
+  </div>
 </div>
-<iframe id="frame" src="/hub/${token}/estrategia" title="GuanaGO Hub"></iframe>
+
+<iframe id="frame" src="${defaultSrc}" title="GuanaGO Hub"></iframe>
 
 <script>
 function loadDoc(src, id, btn) {

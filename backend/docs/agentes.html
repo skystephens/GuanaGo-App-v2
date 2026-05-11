@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO — Mapa Mental: Agentes IA + Eventos Deportivos</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Epilogue:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F4F0E8;
+  --dark: #0F1E14;
+  --teal: #00C896;
+  --teal-d: #007A5A;
+  --gold: #E8A020;
+  --coral: #E84820;
+  --sky: #2080C8;
+  --purple: #7840C8;
+  --rose: #C82060;
+  --sand: #E8D8B0;
+  --white: #FEFCF8;
+  --ink: #1A2E1F;
+  --muted: #6A7A6A;
+  --border: #D4C8A8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Epilogue',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+
+/* TOP */
+.top{background:var(--dark);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.top-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--teal)}
+.top-logo span{color:#fff}
+.top-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px}
+.top-right{display:flex;gap:8px;flex-wrap:wrap}
+.tb{font-size:10px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:100px;cursor:pointer;border:none;font-family:'Epilogue',sans-serif;transition:all .15s}
+.tb.on{background:var(--teal);color:var(--dark)}
+.tb.off{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)}
+.tb:hover{opacity:.85}
+
+/* SECTIONS */
+.sec{display:none;padding:28px 20px;max-width:860px;margin:0 auto}
+.sec.on{display:block}
+
+/* SECTION HEADER */
+.sh{margin-bottom:24px}
+.sh-eye{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--teal-d);font-weight:700;margin-bottom:6px}
+.sh-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--ink);margin-bottom:4px}
+.sh-sub{font-size:14px;color:var(--muted);font-weight:300}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:14px}
+.card-eye{font-size:9px;letter-spacing:3px;text-transform:uppercase;font-weight:700;margin-bottom:8px}
+.card h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:10px}
+
+/* MIND MAP SVG CONTAINER */
+.mm-wrap{width:100%;overflow-x:auto;background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px}
+svg.mm{min-width:700px;width:100%;height:auto}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:580px){.g2,.g3{grid-template-columns:1fr}}
+
+/* MINI CARDS */
+.mc{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px}
+.mc-icon{font-size:22px;margin-bottom:8px}
+.mc-t{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:4px}
+.mc-d{font-size:12px;color:var(--muted);line-height:1.55}
+.mc-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-top:6px}
+
+/* FLOW */
+.flow{display:flex;flex-direction:column;gap:0}
+.fs{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.fs:last-child{border:none}
+.fn{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:rgba(0,200,150,.2);width:32px;flex-shrink:0;line-height:1}
+.fb{}
+.ft{font-size:13px;font-weight:600;margin-bottom:3px}
+.fd{font-size:12px;color:var(--muted);line-height:1.55}
+.ftag{display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;margin-top:5px;letter-spacing:.5px}
+
+/* AGENT BOXES */
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.ag{border-radius:12px;padding:16px;border:1px solid transparent}
+.ag-icon{font-size:20px;margin-bottom:8px}
+.ag-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:4px}
+.ag-desc{font-size:11px;line-height:1.5;opacity:.75}
+.ag-tool{font-size:10px;font-weight:700;margin-top:6px;opacity:.8}
+
+/* PIPELINE */
+.pipe{display:flex;gap:0;margin:14px 0;flex-wrap:wrap}
+.ps{flex:1;min-width:110px;background:var(--white);border:1px solid var(--border);border-right:none;padding:14px 12px;position:relative}
+.ps:last-child{border-right:1px solid var(--border);border-radius:0 10px 10px 0}
+.ps:first-child{border-radius:10px 0 0 10px}
+.ps::after{content:'→';position:absolute;right:-11px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--teal);font-weight:700;z-index:1;background:var(--bg);padding:0 2px}
+.ps:last-child::after{display:none}
+.ps-n{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:4px}
+.ps-t{font-family:'Syne',sans-serif;font-size:12px;font-weight:700}
+.ps-d{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
+
+/* HIGHLIGHT */
+.hl{border-radius:12px;padding:16px 18px;margin-bottom:12px;font-size:13px;line-height:1.7;border-left:4px solid}
+.hl-t{border-color:var(--teal);background:rgba(0,200,150,.08)}
+.hl-g{border-color:var(--gold);background:rgba(232,160,32,.08)}
+.hl-c{border-color:var(--coral);background:rgba(232,72,32,.08)}
+.hl-s{border-color:var(--sky);background:rgba(32,128,200,.08)}
+
+/* TAGS */
+.tag{display:inline-block;font-size:9px;font-weight:700;padding:3px 9px;border-radius:100px;margin:2px}
+.tag-t{background:rgba(0,200,150,.12);color:var(--teal-d)}
+.tag-g{background:rgba(232,160,32,.12);color:#7A5000}
+.tag-c{background:rgba(232,72,32,.12);color:#8A2000}
+.tag-s{background:rgba(32,128,200,.12);color:#0A4080}
+.tag-p{background:rgba(120,64,200,.12);color:#3A0880}
+.tag-d{background:rgba(26,46,31,.08);color:var(--ink)}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:8px 10px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--border);font-weight:700}
+.tbl td{padding:10px;border-bottom:1px solid rgba(0,0,0,.04);vertical-align:top}
+.tbl tr:last-child td{border:none}
+.tbl .bold{font-weight:600}
+.tbl .num{font-family:'Syne',sans-serif;font-weight:700;font-size:14px}
+
+/* ACCORDION */
+.acc{margin-bottom:8px}
+.acc-h{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:13px;transition:all .15s}
+.acc-h:hover{border-color:var(--teal);color:var(--teal-d)}
+.acc-h .arr{font-size:12px;color:var(--muted);transition:transform .2s}
+.acc-h.open .arr{transform:rotate(180deg)}
+.acc-b{display:none;background:rgba(255,255,255,.5);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:16px;font-size:13px;color:var(--muted);line-height:1.7}
+.acc-b.open{display:block}
+
+.footer{text-align:center;padding:28px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);margin-top:16px}
+.footer strong{color:var(--teal-d)}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div>
+    <div class="top-logo">Guana<span>GO</span> 🌴</div>
+    <div class="top-sub">Mapa mental · Agentes IA + Estrategia de Eventos Deportivos · Mayo 2026</div>
+  </div>
+  <div class="top-right">
+    <button class="tb on" onclick="sw('agentes',this)">🤖 Agentes IA</button>
+    <button class="tb off" onclick="sw('voley',this)">🏐 Voley + Eventos</button>
+    <button class="tb off" onclick="sw('oferta',this)">📦 Oferta deportistas</button>
+    <button class="tb off" onclick="sw('pipeline',this)">💰 Pipeline ingresos</button>
+    <button class="tb off" onclick="sw('acciones',this)">⚡ Acciones ya</button>
+  </div>
+</div>
+
+<!-- ══════ AGENTES ══════ -->
+<div class="sec on" id="s-agentes">
+  <div class="sh">
+    <div class="sh-eye">Los 6 conceptos del curso aplicados a GuanaGO</div>
+    <div class="sh-title">Sistema de Agentes IA</div>
+    <div class="sh-sub">Cada concepto del curso ya tiene un equivalente real en tu stack. No empiezas de cero.</div>
+  </div>
+
+  <div class="mm-wrap">
+    <svg class="mm" viewBox="0 0 720 420" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#00C896" opacity=".6"/>
+        </marker>
+      </defs>
+      <!-- Centro -->
+      <rect x="270" y="175" width="180" height="70" rx="12" fill="#0F1E14"/>
+      <text x="360" y="203" text-anchor="middle" fill="#00C896" font-family="Syne" font-size="13" font-weight="800">GuanaGO</text>
+      <text x="360" y="220" text-anchor="middle" fill="white" font-family="Epilogue" font-size="10">Sistema de Agentes</text>
+      <text x="360" y="234" text-anchor="middle" fill="rgba(255,255,255,.4)" font-family="Epilogue" font-size="9">adminCerebro.tsx</text>
+
+      <!-- 1. Configuración -->
+      <line x1="270" y1="195" x2="160" y2="80" stroke="#00C896" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)" opacity=".5"/>
+      <rect x="20" y="42" width="145" height="52" rx="10" fill="white" stroke="#D4C8A8" stroke-width="1"/>
+      <text x="92" y="63" text-anchor="middle" fill="#007A5A" font-family="Syne" font-size="10" font-weight="700">1. CONFIGURACIÓN</text>
+      <text x="92" y="77" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">CLAUDE.md + Procedimientos</text>
+      <text x="92" y="89" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">_RAG + API keys en .env</text>
+
+      <!-- 2. Subagentes -->
+      <line x1="270" y1="200" x2="140" y2="200" stroke="#E8A020" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)" opacity=".5"/>
+      <rect x="0" y="170" width="145" height="52" rx="10" fill="white" stroke="#D4C8A8" stroke-width="1"/>
+      <text x="72" y="191" text-anchor="middle" fill="#7A5000" font-family="Syne" font-size="10" font-weight="700">2. SUBAGENTES</text>
+      <text x="72" y="205" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Vouchers · Contenido · Promos</text>
+      <text x="72" y="217" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">GuanaPoints · Notificaciones</text>
+
+      <!-- 3. Equipo -->
+      <line x1="270" y1="230" x2="160" y2="330" stroke="#7840C8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)" opacity=".5"/>
+      <rect x="20" y="300" width="145" height="52" rx="10" fill="white" stroke="#D4C8A8" stroke-width="1"/>
+      <text x="92" y="321" text-anchor="middle" fill="#3A0880" font-family="Syne" font-size="10" font-weight="700">3. EQUIPO AGENTES</text>
+      <text x="92" y="335" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Cola_Agentes en Airtable</text>
+      <text x="92" y="347" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Orquestador → delega</text>
+
+      <!-- 4. Contexto -->
+      <line x1="360" y1="175" x2="360" y2="70" stroke="#2080C8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)" opacity=".5"/>
+      <rect x="278" y="20" width="165" height="52" rx="10" fill="white" stroke="#D4C8A8" stroke-width="1"/>
+      <text x="360" y="41" text-anchor="middle" fill="#0A4080" font-family="Syne" font-size="10" font-weight="700">4. CONTEXTO / MEMORY</text>
+      <text x="360" y="55" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Leads.Memoria_Contexto</text>
+      <text x="360" y="67" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Procedimientos_RAG</text>
+
+      <!-- 5. Competencias/Tools -->
+      <line x1="450" y1="200" x2="575" y2="200" stroke="#E84820" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)" opacity=".5"/>
+      <rect x="572" y="170" width="148" height="52" rx="10" fill="white" stroke="#D4C8A8" stroke-width="1"/>
+      <text x="646" y="191" text-anchor="middle" fill="#8A2000" font-family="Syne" font-size="10" font-weight="700">5. TOOLS</text>
+      <text x="646" y="205" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Airtable · Firebase · PayU</text>
+      <text x="646" y="217" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Claude API · Make.com · WA</text>
+
+      <!-- 6. MCP -->
+      <line x1="450" y1="195" x2="565" y2="80" stroke="#C82060" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)" opacity=".5"/>
+      <rect x="555" y="42" width="148" height="52" rx="10" fill="white" stroke="#D4C8A8" stroke-width="1"/>
+      <text x="629" y="63" text-anchor="middle" fill="#700030" font-family="Syne" font-size="10" font-weight="700">6. MCP</text>
+      <text x="629" y="77" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">MCP Airtable conectado</text>
+      <text x="629" y="89" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Claude Code lo usa directo</text>
+
+      <!-- Make.com abajo -->
+      <line x1="360" y1="245" x2="360" y2="340" stroke="#00C896" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)" opacity=".5"/>
+      <rect x="278" y="338" width="165" height="52" rx="10" fill="#0F1E14"/>
+      <text x="360" y="359" text-anchor="middle" fill="#00C896" font-family="Syne" font-size="10" font-weight="700">MAKE.COM</text>
+      <text x="360" y="373" text-anchor="middle" fill="rgba(255,255,255,.5)" font-family="Epilogue" font-size="9">Ejecutor de subagentes</text>
+      <text x="360" y="385" text-anchor="middle" fill="rgba(255,255,255,.5)" font-family="Epilogue" font-size="9">Detecta Cola_Agentes → actúa</text>
+    </svg>
+  </div>
+
+  <div class="agent-grid">
+    <div class="ag" style="background:rgba(0,200,150,.08);border-color:rgba(0,200,150,.25)">
+      <div class="ag-icon">🎟️</div>
+      <div class="ag-name" style="color:var(--teal-d)">Agente Vouchers</div>
+      <div class="ag-desc" style="color:var(--teal-d)">Reserva confirmada → genera PDF → envía al cliente + operador por WhatsApp</div>
+      <div class="ag-tool" style="color:var(--teal-d)">Tool: PayU webhook + Firebase Storage</div>
+    </div>
+    <div class="ag" style="background:rgba(232,160,32,.08);border-color:rgba(232,160,32,.25)">
+      <div class="ag-icon">🎬</div>
+      <div class="ag-name" style="color:#7A5000">Agente Contenido</div>
+      <div class="ag-desc" style="color:#7A5000">Ficha aliado en Airtable → Claude genera 4 posts/mes en ES/EN → cola de publicación</div>
+      <div class="ag-tool" style="color:#7A5000">Tool: Claude API + Contenido_Redes</div>
+    </div>
+    <div class="ag" style="background:rgba(32,128,200,.08);border-color:rgba(32,128,200,.25)">
+      <div class="ag-icon">🪙</div>
+      <div class="ag-name" style="color:#0A4080">Agente GuanaPoints</div>
+      <div class="ag-desc" style="color:#0A4080">Acción del turista → suma puntos → notifica → desbloquea reto si aplica</div>
+      <div class="ag-tool" style="color:#0A4080">Tool: GUANA_Transacciones + Retos_GUANA</div>
+    </div>
+    <div class="ag" style="background:rgba(232,72,32,.08);border-color:rgba(232,72,32,.25)">
+      <div class="ag-icon">📣</div>
+      <div class="ag-name" style="color:#8A2000">Agente Promociones</div>
+      <div class="ag-desc" style="color:#8A2000">Promo_Activa = true → genera notificación push + story IG + mensaje WA aliados</div>
+      <div class="ag-tool" style="color:#8A2000">Tool: FCM + Meta API + WA Business</div>
+    </div>
+    <div class="ag" style="background:rgba(120,64,200,.08);border-color:rgba(120,64,200,.25)">
+      <div class="ag-icon">💬</div>
+      <div class="ag-name" style="color:#3A0880">Agente CRM</div>
+      <div class="ag-desc" style="color:#3A0880">Mensaje entra a WhatsApp → busca en Leads → crea/actualiza Conversaciones_CRM → notifica a Sky</div>
+      <div class="ag-tool" style="color:#3A0880">Tool: WA Business API + Airtable</div>
+    </div>
+    <div class="ag" style="background:rgba(26,46,31,.06);border-color:rgba(26,46,31,.15)">
+      <div class="ag-icon">🧠</div>
+      <div class="ag-name">Agente Orquestador</div>
+      <div class="ag-desc">Sky habla en lenguaje natural → el agente decide qué subagente activar + guarda contexto en Leads</div>
+      <div class="ag-tool">Tool: Claude API + Tareas_To_do + Procedimientos_RAG</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-eye" style="color:var(--teal-d)">Cómo se activan — el ciclo completo</div>
+    <div class="pipe">
+      <div class="ps"><div class="ps-n">Trigger</div><div class="ps-t">Sky escribe o Make detecta cambio en Airtable</div></div>
+      <div class="ps"><div class="ps-n">Orquestador</div><div class="ps-t">Lee Cola_Agentes, decide qué subagente usar</div></div>
+      <div class="ps"><div class="ps-n">Subagente</div><div class="ps-t">Ejecuta su tarea con sus Tools específicos</div></div>
+      <div class="ps"><div class="ps-n">Resultado</div><div class="ps-t">Escribe en Airtable + envía notificación</div></div>
+      <div class="ps"><div class="ps-n">Memoria</div><div class="ps-t">Guarda resumen en Leads.Memoria_Contexto</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ VOLEY + EVENTOS ══════ -->
+<div class="sec" id="s-voley">
+  <div class="sh">
+    <div class="sh-eye">Oportunidad real ahora mismo</div>
+    <div class="sh-title">Eventos deportivos como canal de lanzamiento</div>
+    <div class="sh-sub">El torneo de volley no es el único. Maratón, otras competencias. Llegas gratis ofreciendo el servicio, vendes tours, y consigues 600 usuarios de golpe.</div>
+  </div>
+
+  <div class="hl hl-g">
+    <strong>El insight clave:</strong> Un evento deportivo no es publicidad — es un <strong>canal de distribución masivo con confianza previa</strong>. Los deportistas ya vienen con intención de gastar. Solo necesitan alguien de confianza que les organice todo. GuanaGO puede ser ese alguien.
+  </div>
+
+  <div class="g3">
+    <div class="mc">
+      <div class="mc-icon">🏐</div>
+      <div class="mc-t">Torneo Volley</div>
+      <div class="mc-d">Cotizaciones activas en CotizacionesGG. 80 viajeros ya cotizados. Esperados: 600.</div>
+      <div class="mc-val" style="color:var(--teal-d)">600 pax</div>
+    </div>
+    <div class="mc">
+      <div class="mc-icon">🏃</div>
+      <div class="mc-t">Maratón SAI</div>
+      <div class="mc-d">Próxima competencia en la isla. Participantes de todo el país. Perfil: adultos activos con gasto medio-alto.</div>
+      <div class="mc-val" style="color:var(--gold)">Por definir</div>
+    </div>
+    <div class="mc">
+      <div class="mc-icon">🎾</div>
+      <div class="mc-t">Otras competencias</div>
+      <div class="mc-d">Natación, ciclismo de montaña, pádel, surf. San Andrés tiene condiciones únicas para deporte acuático.</div>
+      <div class="mc-val" style="color:var(--sky)">Pipeline</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-eye" style="color:var(--coral)">El estado real del torneo de volley — CotizacionesGG</div>
+    <h3>Lo que hay en Airtable ahora mismo</h3>
+    <table class="tbl">
+      <thead><tr><th>Dato</th><th>Actual</th><th>Potencial</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">Viajeros cotizados</td><td><span class="num" style="color:var(--teal-d)">80</span></td><td><span class="num" style="color:var(--gold)">600</span> esperados</td></tr>
+        <tr><td class="bold">Ticket alojamiento estimado</td><td>$150k–$400k COP/noche</td><td>4–7 noches promedio</td></tr>
+        <tr><td class="bold">Ticket transporte</td><td>$30k–$80k COP/traslado</td><td>Aeropuerto + interno</td></tr>
+        <tr><td class="bold">Alimentación estimada</td><td>$40k–$80k COP/día</td><td>Paquete desayuno + cena</td></tr>
+        <tr><td class="bold">Tours opcionales</td><td>Johnny Cay, Acuario, Caimán</td><td>+$80k–$200k/persona</td></tr>
+        <tr><td class="bold">Ingreso estimado 80 pax</td><td colspan="2"><span class="num" style="color:var(--teal-d)">~$48M–$120M COP</span> según servicios</td></tr>
+        <tr><td class="bold">Ingreso estimado 600 pax</td><td colspan="2"><span class="num" style="color:var(--gold)">~$360M–$900M COP</span> si se cierra todo</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-eye" style="color:var(--purple)">Mapa mental — Tipos de eventos deportivos en SAI</div>
+    <div class="mm-wrap" style="border:none;padding:0;margin:0">
+      <svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" style="min-width:500px">
+        <!-- Centro -->
+        <rect x="270" y="120" width="140" height="50" rx="10" fill="#0F1E14"/>
+        <text x="340" y="141" text-anchor="middle" fill="#00C896" font-family="Syne" font-size="11" font-weight="800">EVENTOS SAI</text>
+        <text x="340" y="157" text-anchor="middle" fill="rgba(255,255,255,.5)" font-family="Epilogue" font-size="9">Canal de distribución</text>
+        <!-- Volley -->
+        <line x1="270" y1="135" x2="155" y2="60" stroke="#00C896" stroke-width="1.5" opacity=".5"/>
+        <rect x="10" y="28" width="150" height="48" rx="8" fill="white" stroke="#D4C8A8"/>
+        <text x="85" y="46" text-anchor="middle" fill="#007A5A" font-family="Syne" font-size="10" font-weight="700">🏐 VOLLEY</text>
+        <text x="85" y="58" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">600 viajeros esperados</text>
+        <text x="85" y="70" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Cotizaciones YA en Airtable</text>
+        <!-- Maratón -->
+        <line x1="270" y1="145" x2="155" y2="145" stroke="#E8A020" stroke-width="1.5" opacity=".5"/>
+        <rect x="10" y="118" width="150" height="48" rx="8" fill="white" stroke="#D4C8A8"/>
+        <text x="85" y="136" text-anchor="middle" fill="#7A5000" font-family="Syne" font-size="10" font-weight="700">🏃 MARATÓN</text>
+        <text x="85" y="148" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Pronto en la isla</text>
+        <text x="85" y="160" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Perfil gasto medio-alto</text>
+        <!-- Náutico -->
+        <line x1="270" y1="155" x2="155" y2="228" stroke="#2080C8" stroke-width="1.5" opacity=".5"/>
+        <rect x="10" y="204" width="150" height="48" rx="8" fill="white" stroke="#D4C8A8"/>
+        <text x="85" y="222" text-anchor="middle" fill="#0A4080" font-family="Syne" font-size="10" font-weight="700">🚣 NÁUTICO</text>
+        <text x="85" y="234" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Regata, windsurf, kite</text>
+        <text x="85" y="246" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Chamey como aliado</text>
+        <!-- Ciclismo -->
+        <line x1="410" y1="135" x2="525" y2="60" stroke="#C82060" stroke-width="1.5" opacity=".5"/>
+        <rect x="520" y="28" width="150" height="48" rx="8" fill="white" stroke="#D4C8A8"/>
+        <text x="595" y="46" text-anchor="middle" fill="#700030" font-family="Syne" font-size="10" font-weight="700">🚴 CICLISMO</text>
+        <text x="595" y="58" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Montaña y ruta</text>
+        <text x="595" y="70" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Potencial alto en SAI</text>
+        <!-- Pádel -->
+        <line x1="410" y1="145" x2="525" y2="145" stroke="#7840C8" stroke-width="1.5" opacity=".5"/>
+        <rect x="520" y="118" width="150" height="48" rx="8" fill="white" stroke="#D4C8A8"/>
+        <text x="595" y="136" text-anchor="middle" fill="#3A0880" font-family="Syne" font-size="10" font-weight="700">🎾 PÁDEL / TENIS</text>
+        <text x="595" y="148" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Torneo interclubs</text>
+        <text x="595" y="160" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Perfil ejecutivo / corporativo</text>
+        <!-- CrossFit -->
+        <line x1="410" y1="155" x2="525" y2="228" stroke="#E84820" stroke-width="1.5" opacity=".5"/>
+        <rect x="520" y="204" width="150" height="48" rx="8" fill="white" stroke="#D4C8A8"/>
+        <text x="595" y="222" text-anchor="middle" fill="#8A2000" font-family="Syne" font-size="10" font-weight="700">💪 CROSSFIT / OTROS</text>
+        <text x="595" y="234" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Campeonatos fitness</text>
+        <text x="595" y="246" text-anchor="middle" fill="#6A7A6A" font-family="Epilogue" font-size="9">Comunidad grande en Colombia</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ OFERTA ══════ -->
+<div class="sec" id="s-oferta">
+  <div class="sh">
+    <div class="sh-eye">Propuesta de valor para el organizador y el deportista</div>
+    <div class="sh-title">Paquete oficial del evento</div>
+    <div class="sh-sub">Llegar como aliado oficial es más poderoso que llegar como proveedor. El organizador recibe una herramienta gratis. GuanaGO recibe acceso a 600 turistas con contexto.</div>
+  </div>
+
+  <div class="hl hl-t">
+    <strong>La propuesta al organizador:</strong> "Nosotros manejamos la logística de alojamiento, transporte y actividades para todos los participantes. Usamos GuanaGO como plataforma oficial del evento. Tú te enfocas en el torneo, nosotros nos encargamos del resto. Sin costo para la organización — nos pagamos con el margen de los servicios."
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-eye" style="color:var(--teal-d)">Lo que recibe el organizador (gratis)</div>
+      <div class="flow">
+        <div class="fs"><div class="fn">✓</div><div class="fb"><div class="ft">Plataforma oficial del evento en GuanaGO</div><div class="fd">Página dedicada con agenda, resultados, mapa de sedes</div></div></div>
+        <div class="fs"><div class="fn">✓</div><div class="fb"><div class="ft">Central de reservas para todos los participantes</div><div class="fd">Los jugadores reservan alojamiento y transporte desde la app sin llamar a nadie</div></div></div>
+        <div class="fs"><div class="fn">✓</div><div class="fb"><div class="ft">Concierge para los deportistas</div><div class="fd">Notificaciones de horarios, puntos de encuentro, recordatorios de partidos</div></div></div>
+        <div class="fs"><div class="fn">✓</div><div class="fb"><div class="ft">Contenido del evento en redes</div><div class="fd">GuanaGO cubre el evento con fotos/videos — alcance de la marca</div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-eye" style="color:var(--gold)">Lo que recibe GuanaGO del acuerdo</div>
+      <div class="flow">
+        <div class="fs"><div class="fn">→</div><div class="fb"><div class="ft">600 usuarios instalando la app de golpe</div><div class="fd">Todos los participantes pasan por GuanaGO para reservar. Descarga masiva validada.</div></div></div>
+        <div class="fs"><div class="fn">→</div><div class="fb"><div class="ft">Ingreso real por servicios</div><div class="fd">Margen en alojamiento, transporte y alimentación. Comisión en tours adicionales.</div></div></div>
+        <div class="fs"><div class="fn">→</div><div class="fb"><div class="ft">Datos de Leads reales en Airtable</div><div class="fd">600 perfiles con: nombre, WhatsApp, tipo de viajero, intereses, gasto real.</div></div></div>
+        <div class="fs"><div class="fn">→</div><div class="fb"><div class="ft">Prueba social para otros eventos</div><div class="fd">"GuanaGO fue el operador oficial del Torneo Nacional de Volley en SAI 2026"</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-eye" style="color:var(--sky)">Paquete para el deportista — lo que ve en la App</div>
+    <h3>Paquete Deportista GuanaGO — Torneo Volley</h3>
+    <table class="tbl">
+      <thead><tr><th>Servicio</th><th>Descripción</th><th>Precio estimado</th><th>Utilidad GuanaGO</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">Alojamiento</td><td>Posada o apartamento 4–7 noches según equipo</td><td>$150k–$350k/noche</td><td>15–20% margen</td></tr>
+        <tr><td class="bold">Transfer aeropuerto</td><td>Ida + vuelta, por persona o por equipo</td><td>$40k–$80k/persona</td><td>$15k–$30k/persona</td></tr>
+        <tr><td class="bold">Alimentación</td><td>Paquete desayuno + cena en aliados de la red</td><td>$60k–$100k/día</td><td>10–15% comisión</td></tr>
+        <tr><td class="bold">Tour libre (opcional)</td><td>Johnny Cay, Acuario, Caribbean Night</td><td>$80k–$200k/persona</td><td>12–15% comisión</td></tr>
+        <tr><td class="bold">GuanaPoints bonus</td><td>Por reservar el paquete completo del evento</td><td>+200 puntos</td><td>Fidelización</td></tr>
+      </tbody>
+    </table>
+    <div class="hl hl-g" style="margin-top:12px">
+      <strong>Paquete todo incluido 80 pax ya cotizados:</strong> Si se cierran con alojamiento 5 noches + transfer + alimentación, el ingreso estimado es <strong>$48M–$120M COP</strong>. Con 600 pax: <strong>$360M–$900M COP</strong>. GuanaGO no tiene que ganar todo — con el 10–15% de margen sobre el flujo total ya es una operación rentable desde el primer evento.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-eye" style="color:var(--purple)">Cómo se maneja en la App — flujo técnico</div>
+    <div class="pipe">
+      <div class="ps"><div class="ps-n">Registro</div><div class="ps-t">Deportista descarga GuanaGO con link del evento</div><div class="ps-d">UTM: utm_source=volley2026</div></div>
+      <div class="ps"><div class="ps-n">Paquete</div><div class="ps-t">Ve paquete oficial del evento en la app</div><div class="ps-d">Precio especial + badge "Participante oficial"</div></div>
+      <div class="ps"><div class="ps-n">Reserva</div><div class="ps-t">Selecciona fechas, habitación, extras</div><div class="ps-d">Cotización → Link PayU → pago</div></div>
+      <div class="ps"><div class="ps-n">Concierge</div><div class="ps-t">Recibe notificaciones del torneo + logística</div><div class="ps-d">Horarios, sedes, recordatorios de partidos</div></div>
+      <div class="ps"><div class="ps-n">Post-evento</div><div class="ps-t">Invitación a próximo evento + GuanaPoints</div><div class="ps-d">Se convierte en usuario recurrente</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PIPELINE ══════ -->
+<div class="sec" id="s-pipeline">
+  <div class="sh">
+    <div class="sh-eye">Dónde está el dinero — esta semana y los próximos 90 días</div>
+    <div class="sh-title">Pipeline de ingresos</div>
+    <div class="sh-sub">Ordenado de mayor a menor probabilidad de cierre en el corto plazo.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-eye" style="color:var(--coral)">Pipeline activo — ordenado por urgencia</div>
+    <table class="tbl">
+      <thead><tr><th>Oportunidad</th><th>Estado</th><th>Ingresos estimados</th><th>Próxima acción</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="bold">Torneo Volley — 80 pax cotizados</td>
+          <td><span class="tag tag-g">EN AIRTABLE</span></td>
+          <td class="num" style="color:var(--teal-d)">$48M–$120M COP</td>
+          <td>Cerrar cotizaciones + activar pago PayU</td>
+        </tr>
+        <tr>
+          <td class="bold">Torneo Volley — 520 pax adicionales</td>
+          <td><span class="tag tag-d">POTENCIAL</span></td>
+          <td class="num" style="color:var(--gold)">$312M–$780M COP</td>
+          <td>Acuerdo con organizador como aliado oficial</td>
+        </tr>
+        <tr>
+          <td class="bold">Civitatis — turistas internacionales</td>
+          <td><span class="tag tag-t">ACTIVO</span></td>
+          <td class="num" style="color:var(--teal-d)">500+ reservas/año</td>
+          <td>Make.com voucher automático (Capa 4 Jarvis)</td>
+        </tr>
+        <tr>
+          <td class="bold">Membresías aliados (primeros 10)</td>
+          <td><span class="tag tag-d">POR ABRIR</span></td>
+          <td class="num">$499k–$1.3M COP/mes</td>
+          <td>Formulario Tally + visitar 10 negocios esta semana</td>
+        </tr>
+        <tr>
+          <td class="bold">Maratón SAI — operador oficial</td>
+          <td><span class="tag tag-d">POTENCIAL</span></td>
+          <td class="num">Por definir</td>
+          <td>Contactar organizador esta semana</td>
+        </tr>
+        <tr>
+          <td class="bold">Agencias B2B — cotizador GuíaSAI</td>
+          <td><span class="tag tag-t">ACTIVO</span></td>
+          <td class="num">12–15% por cotización</td>
+          <td>Enviar acceso a 10 agencias vía comercial@guanago.travel</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-eye" style="color:var(--teal-d)">Por qué el torneo cierra primero</div>
+      <div class="flow">
+        <div class="fs"><div class="fn">1</div><div class="fb"><div class="ft">Los 80 pax ya están cotizados — solo falta el pago</div><div class="fd">Las cotizaciones están en CotizacionesGG. El link de pago PayU ya funciona. Solo hay que enviarlo.</div></div></div>
+        <div class="fs"><div class="fn">2</div><div class="fb"><div class="ft">Hay urgencia del evento — fecha fija</div><div class="fd">Los deportistas necesitan confirmar alojamiento. La fecha del torneo crea presión natural de cierre.</div></div></div>
+        <div class="fs"><div class="fn">3</div><div class="fb"><div class="ft">El organizador tiene el canal a 600 pax</div><div class="fd">Un acuerdo con el organizador multiplica x7.5 el negocio sin trabajo adicional de ventas.</div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-eye" style="color:var(--gold)">La estrategia de los eventos como negocio</div>
+      <div class="flow">
+        <div class="fs"><div class="fn">A</div><div class="fb"><div class="ft">Ofrecerse gratis como plataforma oficial</div><div class="fd">El organizador no paga nada. GuanaGO gana acceso masivo y el margen de los servicios.</div></div></div>
+        <div class="fs"><div class="fn">B</div><div class="fb"><div class="ft">Crear un paquete estándar para eventos</div><div class="fd">Alojamiento + transfer + alimentación + tours = paquete cerrado que GuanaGO coordina end-to-end.</div></div></div>
+        <div class="fs"><div class="fn">C</div><div class="fb"><div class="ft">Usar cada evento como caso de éxito</div><div class="fd">"GuanaGO fue el operador del Torneo SAI 2026" → próximo organizador ya tiene referencia.</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ ACCIONES ══════ -->
+<div class="sec" id="s-acciones">
+  <div class="sh">
+    <div class="sh-eye">Esta semana — sin excusas</div>
+    <div class="sh-title">Acciones inmediatas</div>
+    <div class="sh-sub">Ordenadas por impacto. Las primeras dos no requieren código, solo conversaciones.</div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-h" onclick="tog(this)">
+      <span>🏆 HOY — Contactar al organizador del torneo de volley</span>
+      <span class="arr">▼</span>
+    </div>
+    <div class="acc-b">
+      <strong>El mensaje para WhatsApp:</strong><br><br>
+      "Hola [nombre], soy Sky de GuanaGO — la app de turismo de San Andrés. Sé que están organizando el torneo de volley con 600 deportistas. Queremos ser el aliado oficial de logística del evento: alojamiento, transfers y actividades para todos los participantes. Sin costo para la organización — nos pagamos con los servicios. ¿Tienes 20 minutos esta semana para que te cuente cómo funciona?"<br><br>
+      <strong>Lo que propones:</strong> GuanaGO como operador oficial de logística. La organización se enfoca en el deporte, GuanaGO se encarga del resto. Sin costo para ellos. GuanaGO gana el margen de los servicios y acceso a 600 usuarios.
+    </div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-h" onclick="tog(this)">
+      <span>🏃 HOY — Contactar organizador de la maratón</span>
+      <span class="arr">▼</span>
+    </div>
+    <div class="acc-b">
+      Misma propuesta que el volley. Buscar quién organiza la maratón de San Andrés y llegar antes de que contraten a otra operadora. La ventaja de GuanaGO: somos locales, conocemos la isla, y ya tenemos el sistema de reservas activo.
+    </div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-h" onclick="tog(this)">
+      <span>💳 ESTA SEMANA — Enviar links de pago a los 80 pax cotizados</span>
+      <span class="arr">▼</span>
+    </div>
+    <div class="acc-b">
+      Las cotizaciones ya están en CotizacionesGG. PayU ya funciona. El paso siguiente es generar el link de pago para cada cotización y enviarlo por WhatsApp. Eso convierte una cotización en dinero real esta semana.<br><br>
+      <strong>En Claude Code:</strong> "Lee la tabla CotizacionesGG de Airtable, filtra las que tienen Estado = 'Cotizada' o similar, genera el link de pago PayU para cada una y actualiza el campo con el link generado."
+    </div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-h" onclick="tog(this)">
+      <span>🤖 SEMANA 2 — Bot interno: agente orquestador en adminCerebro.tsx</span>
+      <span class="arr">▼</span>
+    </div>
+    <div class="acc-b">
+      El endpoint POST /api/agentes/admin-chat ya está en la tarea de Tareas_To_do. Dale esta instrucción a Claude Code:<br><br>
+      "En backend/routes/agentes.js, crear endpoint POST /api/agentes/admin-chat. El agente tiene acceso a: leer/crear/actualizar Tareas_To_do en Airtable, buscar en Procedimientos_RAG, guardar resumen en Leads.Memoria_Contexto del usuario con ID de Sky. Responde en español, es conciso, y lista qué acciones ejecutó al final de cada respuesta."
+    </div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-h" onclick="tog(this)">
+      <span>📌 SEMANA 2 — Stickers con QR + kit para primeros aliados</span>
+      <span class="arr">▼</span>
+    </div>
+    <div class="acc-b">
+      Diseñar en Canva el sticker circular 5cm. QR apuntando a guanago.travel?utm_source=sticker. Cotizar en imprenta local: mínimo 100 unidades de cada versión. Llevar el kit cuando vayas a hablar con el organizador del torneo — si acepta el acuerdo, sus sedes reciben los stickers de "Evento oficial GuanaGO".
+    </div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-h" onclick="tog(this)">
+      <span>🌐 MCP en Claude Code — conectar Airtable directo</span>
+      <span class="arr">▼</span>
+    </div>
+    <div class="acc-b">
+      Instalar el MCP de Airtable en Claude Code para que el bot pueda leer y escribir directamente en tus tablas desde VS Code. En la terminal de la carpeta del proyecto:<br><br>
+      <code style="background:#f0f0f0;padding:4px 8px;border-radius:4px;font-size:12px">claude mcp add airtable</code><br><br>
+      Pegar tu token PAT de Airtable cuando lo pida. Desde ese momento puedes decirle: "Lee las tareas críticas de hoy" y él las lee directamente sin que copies nada.
+    </div>
+  </div>
+
+  <div class="hl hl-c" style="margin-top:16px">
+    <strong>La regla de esta semana:</strong> Las dos primeras conversaciones — con el organizador del volley y con el de la maratón — valen más que cualquier línea de código que escribas. Si cierras el acuerdo de operador oficial del torneo con 600 pax, GuanaGO tiene su primer caso de uso masivo real, ingresos significativos, y 600 usuarios de golpe. Todo lo demás viene después.
+  </div>
+</div>
+
+<div class="footer">
+  <strong>GuanaGO × GuíaSAI S.A.S.</strong> · RNT 48674 · San Andrés Islas<br>
+  Mapa mental generado con Claude · Mayo 2026
+</div>
+
+<script>
+function sw(id, btn) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.tb').forEach(b => { b.classList.remove('on'); b.classList.add('off'); });
+  document.getElementById('s-' + id).classList.add('on');
+  btn.classList.add('on'); btn.classList.remove('off');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function tog(h) {
+  h.classList.toggle('open');
+  const b = h.nextElementSibling;
+  b.classList.toggle('open');
+}
+</script>
+</body>
+</html>
