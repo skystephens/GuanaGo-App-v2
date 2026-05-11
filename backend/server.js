@@ -16,6 +16,7 @@ import healthRoutes    from './routes/healthRoutes.js';
 import tasksRoutes     from './routes/tasks.js';
 import paymentsRoutes, { resultadoPago } from './routes/payments.js';
 import directoryRoutes from './routes/directory.js';
+import hubRoutes       from './routes/hub.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -70,6 +71,9 @@ app.get('/api', (req, res) => {
     },
   });
 });
+
+// ── Hub interno ───────────────────────────────────────────────────────────────
+app.use('/hub', hubRoutes);
 
 // ── Frontend React (SPA) ──────────────────────────────────────────────────────
 // Sirve el build de Vite. /pagar y /api/* ya están manejados arriba.

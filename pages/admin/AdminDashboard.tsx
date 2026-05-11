@@ -625,6 +625,11 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               onClick={() => onNavigate(AppRoute.ADMIN_PREVIEW_ROLES)}
               pulse="bg-cyan-400" gradient="from-cyan-900/50 to-blue-900/50" border="border-cyan-700 hover:border-cyan-500"
             />
+            <MiniButton
+              icon={<FileText size={18} className="text-emerald-400" />} label="Documento Estratégico"
+              onClick={() => onNavigate(AppRoute.ADMIN_ESTRATEGIA)}
+              pulse="bg-emerald-400" gradient="from-emerald-900/50 to-teal-900/50" border="border-emerald-700 hover:border-emerald-500"
+            />
           </Section>
 
         </div>

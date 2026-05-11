@@ -92,6 +92,7 @@ import VincularComercio from './pages/VincularComercio';
 import AdminAliados from './pages/admin/AdminAliados';
 import AdminAppArquitectura from './pages/admin/AdminAppArquitectura';
 import AdminPreviewRoles from './pages/admin/AdminPreviewRoles';
+import AdminEstrategia from './pages/admin/AdminEstrategia';
 
 // Unified Panel
 import UnifiedPanel from './components/UnifiedPanel';
@@ -282,6 +283,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_ALIADOS: return <AdminAliados onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_APP_ARQUITECTURA: return <AdminAppArquitectura onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_PREVIEW_ROLES: return <AdminPreviewRoles onBack={goBack} onNavigate={navigateTo} onPreview={startPreview} />;
+      case AppRoute.ADMIN_ESTRATEGIA: return <AdminEstrategia onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };

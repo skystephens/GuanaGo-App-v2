@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO — Documento Maestro · Mayo 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#00E5CC; --teal2:#00C9B1; --ocean:#004060; --deep:#060E18;
+  --bg:#0B1622; --card:#101E2C; --card2:#0D1928;
+  --border:rgba(0,229,204,0.14); --border2:rgba(255,255,255,0.07);
+  --gold:#FFB74D; --coral:#FF6B6B; --mint:#52E3C2; --purple:#A78BFA;
+  --orange:#F5831F; --green:#4ADE80; --sky:#38BDF8; --rose:#F472B6;
+  --cream:#F0F4F8; --muted:#6B8A9E;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--cream);line-height:1.5}
+.nav{background:rgba(6,14,24,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:0;overflow-x:auto;position:sticky;top:0;z-index:100;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nb{font-size:13px;font-weight:700;letter-spacing:.4px;color:var(--muted);padding:14px 14px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;font-family:'Outfit',sans-serif}
+.nb.on,.nb:hover{color:var(--teal);border-bottom-color:var(--teal)}
+.s{display:none;padding:28px 18px 80px;max-width:960px;margin:0 auto}
+.s.on{display:block}
+.hero{background:linear-gradient(135deg,var(--ocean) 0%,var(--deep) 70%);padding:52px 24px 44px;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+.hero::before{content:'';position:absolute;top:-120px;right:-80px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(0,229,204,.08) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-80px;left:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(245,131,31,.06) 0%,transparent 70%);pointer-events:none}
+.h-eye{font-size:12px;letter-spacing:4px;color:var(--teal);text-transform:uppercase;margin-bottom:10px;font-weight:700}
+.h-h1{font-size:clamp(28px,5vw,52px);font-weight:800;line-height:1.1;margin-bottom:10px}
+.h-h1 span{color:var(--teal)}
+.h-sub{font-size:15px;color:var(--muted);max-width:540px;font-weight:300;line-height:1.7}
+.h-date{display:inline-block;font-size:13px;font-weight:700;color:var(--orange);background:rgba(245,131,31,.1);border:1px solid rgba(245,131,31,.2);padding:4px 14px;border-radius:100px;margin-top:16px}
+.card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:22px;margin-bottom:14px}
+.card.acc{border-color:var(--border);background:var(--card2)}
+.card.g-b{border-color:rgba(74,222,128,.2)}
+.card.c-b{border-color:rgba(255,107,107,.2)}
+.card.o-b{border-color:rgba(245,131,31,.2)}
+.card.p-b{border-color:rgba(167,139,250,.2)}
+.card.t-b{border-color:var(--border)}
+.eye{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:8px;display:block}
+.eye.gold{color:var(--gold)}.eye.coral{color:var(--coral)}.eye.or{color:var(--orange)}.eye.gr{color:var(--green)}.eye.pu{color:var(--purple)}
+.stitle{font-size:26px;font-weight:800;margin-bottom:4px}
+.ssub{font-size:14px;color:var(--muted);margin-bottom:24px;font-weight:300}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:100px}
+.badge.ok{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.badge.pend{background:rgba(255,183,77,.12);color:var(--gold);border:1px solid rgba(255,183,77,.2)}
+.badge.next{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.badge.crit{background:rgba(255,107,107,.12);color:var(--coral);border:1px solid rgba(255,107,107,.2)}
+.hl{background:rgba(0,229,204,.06);border-left:3px solid var(--teal);border-radius:0 10px 10px 0;padding:14px 18px;margin:12px 0;font-size:15px;color:var(--cream);line-height:1.7}
+.hl.gold{background:rgba(255,183,77,.06);border-left-color:var(--gold)}
+.hl.coral{background:rgba(255,107,107,.06);border-left-color:var(--coral)}
+.hl.or{background:rgba(245,131,31,.07);border-left-color:var(--orange)}
+.hl.pu{background:rgba(167,139,250,.06);border-left-color:var(--purple)}
+.hl.gr{background:rgba(74,222,128,.06);border-left-color:var(--green)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+.tbl th{text-align:left;padding:9px 10px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border2);font-weight:600}
+.tbl td{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--muted);vertical-align:top}
+.tbl tr:last-child td{border:none}
+.tbl .bold{font-weight:700;color:var(--cream)}
+.tbl .tg{color:var(--teal);font-weight:700}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+ul.lst{list-style:none}
+ul.lst li{font-size:14px;color:var(--muted);padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:8px;align-items:flex-start}
+ul.lst li:last-child{border:none}
+ul.lst li::before{content:'→';color:var(--teal);flex-shrink:0}
+ul.lst li strong{color:var(--cream)}
+.chip{font-size:12px;font-weight:600;padding:3px 11px;border-radius:100px;background:rgba(255,255,255,.06);color:var(--cream);display:inline-block}
+.chip.t{background:rgba(0,229,204,.12);color:var(--teal)}
+.chip.g{background:rgba(255,183,77,.12);color:var(--gold)}
+.chip.p{background:rgba(167,139,250,.12);color:var(--purple)}
+.chip.c{background:rgba(255,107,107,.12);color:var(--coral)}
+.chip.o{background:rgba(245,131,31,.12);color:var(--orange)}
+.chip.gr{background:rgba(74,222,128,.12);color:var(--green)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.step{display:grid;grid-template-columns:36px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:start}
+.step:last-child{border:none}
+.step-num{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;color:rgba(0,229,204,.25);line-height:1}
+.step-title{font-size:15px;font-weight:700;margin-bottom:3px}
+.step-desc{font-size:14px;color:var(--muted);line-height:1.6}
+.step-tag{display:inline-block;font-size:12px;font-weight:700;color:var(--teal);background:rgba(0,229,204,.1);padding:3px 10px;border-radius:100px;margin-top:5px}
+.step-tag.gold{color:var(--gold);background:rgba(255,183,77,.1)}
+.step-tag.pu{color:var(--purple);background:rgba(167,139,250,.1)}
+.m-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:18px}
+.mbox{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:14px 10px;text-align:center}
+.mval{font-size:26px;font-weight:800;display:block}
+.mlbl{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.3}
+.chk-group{display:flex;flex-direction:column;gap:7px}
+.chk-item{display:flex;align-items:flex-start;gap:11px;padding:10px 13px;border-radius:10px;background:var(--card2);border:1px solid var(--border2);cursor:pointer;transition:all .15s}
+.chk-item:hover{border-color:var(--border)}
+.chk-item.done{opacity:.5}
+.chk-item.done .chk-label{text-decoration:line-through;color:var(--muted)}
+.chk-box{width:17px;height:17px;border-radius:5px;border:2px solid var(--muted);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.chk-item.done .chk-box{background:var(--teal);border-color:var(--teal)}
+.chk-ck{display:none;font-size:10px;font-weight:900;color:#000}
+.chk-item.done .chk-ck{display:block}
+.chk-label{font-size:15px;font-weight:500;color:var(--cream);flex:1}
+.chk-sub{font-size:13px;color:var(--muted);margin-top:3px}
+.week-lbl{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:10px;margin-top:22px;display:flex;align-items:center;gap:10px}
+.week-lbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.week-lbl.gold{color:var(--gold)}.week-lbl.gold::after{background:linear-gradient(90deg,rgba(255,183,77,.2),transparent)}
+.week-lbl.pu{color:var(--purple)}.week-lbl.pu::after{background:linear-gradient(90deg,rgba(167,139,250,.2),transparent)}
+.week-lbl.or{color:var(--orange)}.week-lbl.or::after{background:linear-gradient(90deg,rgba(245,131,31,.2),transparent)}
+.code{font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.7;background:#060E18;border:1px solid var(--border2);border-radius:10px;padding:16px;overflow-x:auto;white-space:pre;color:#B0C8D8;margin:10px 0}
+.code .kw{color:var(--teal)}.code .str{color:var(--gold)}.code .cm{color:rgba(107,138,158,.5)}
+.prog-wrap{margin-bottom:12px}
+.prog-label{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}
+.prog-bg{background:rgba(255,255,255,.08);border-radius:100px;height:6px}
+.prog-fill{height:6px;border-radius:100px}
+.flow-dot{width:9px;height:9px;border-radius:50%;border:2px solid var(--teal);background:var(--bg);flex-shrink:0;margin-top:5px}
+.flow-line{width:2px;flex:1;background:linear-gradient(180deg,rgba(0,229,204,.3),rgba(0,229,204,.05));min-height:20px}
+.flow-item{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start}
+.flow-lw{display:flex;flex-direction:column;align-items:center}
+.flow-body{padding-bottom:18px}
+.flow-title{font-size:15px;font-weight:700;margin-bottom:3px}
+.flow-desc{font-size:14px;color:var(--muted);line-height:1.6}
+.plan-card{background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:20px;margin-bottom:12px}
+.plan-card.activo{border-color:rgba(0,229,204,.3)}
+.plan-card.premium{border-color:rgba(255,183,77,.3)}
+.plan-price{font-size:24px;font-weight:800;margin:6px 0 4px}
+.plan-feature{font-size:14px;color:var(--muted);padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:6px}
+.plan-feature:last-child{border:none}
+.plan-feature::before{content:'·';color:var(--teal);flex-shrink:0}
+.funnel-step{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:flex-start}
+.funnel-step:last-child{border:none}
+.funnel-num{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:rgba(0,229,204,.2);line-height:1;flex-shrink:0;width:24px}
+.funnel-title{font-size:15px;font-weight:700;margin-bottom:3px}
+.funnel-desc{font-size:14px;color:var(--muted);line-height:1.6}
+.roi-label{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}
+.roi-label span:last-child{font-weight:700;color:var(--teal)}
+.roi-bg{background:rgba(255,255,255,.08);border-radius:100px;height:7px;margin-bottom:10px}
+.roi-bar{height:7px;border-radius:100px;background:linear-gradient(90deg,var(--teal2),var(--teal))}
+.pillar{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:16px}
+.pillar-icon{font-size:22px;margin-bottom:8px}
+.pillar-name{font-size:13px;font-weight:700;margin-bottom:4px}
+.pillar-desc{font-size:13px;color:var(--muted);line-height:1.5}
+.pillar-freq{font-size:12px;color:var(--teal);font-weight:700;margin-top:8px}
+.capa{background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:18px;margin-bottom:12px}
+.capa.ready{border-color:rgba(74,222,128,.25)}
+.capa.pend{border-color:rgba(255,183,77,.2)}
+.capa-num{font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:700;color:var(--teal);margin-bottom:4px}
+.capa-title{font-size:17px;font-weight:700;margin-bottom:6px}
+.capa-desc{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.kit-item{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:16px}
+.kit-icon{font-size:22px;margin-bottom:8px}
+.kit-name{font-size:15px;font-weight:700;margin-bottom:5px}
+.kit-desc{font-size:13px;color:var(--muted);line-height:1.5}
+.kit-spec{font-size:12px;color:var(--teal);font-weight:600;margin-top:8px}
+.tier{background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:18px;margin-bottom:12px;position:relative}
+.tier-badge{position:absolute;top:-8px;right:14px;font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 12px;border-radius:100px}
+.tier-name{font-size:17px;font-weight:800;margin-bottom:3px}
+.tier-desc{font-size:14px;color:var(--muted);margin-bottom:12px;line-height:1.6}
+.tier-r{font-size:14px;color:var(--muted);padding:5px 0;display:flex;gap:7px}
+.tier-r::before{content:'🪙';font-size:11px;flex-shrink:0}
+.arch-layer{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:16px 18px;margin-bottom:4px}
+.arch-layer.active{border-color:var(--border)}
+.arch-conn{width:2px;height:12px;background:linear-gradient(180deg,var(--teal),rgba(0,229,204,.1));margin:0 auto;display:block}
+.arch-lbl{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:5px}
+.arch-title{font-size:15px;font-weight:700;margin-bottom:8px}
+.canvas-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:9px}
+.canvas-wide{grid-column:span 2}
+.canvas-full{grid-column:span 3}
+.c-block{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:14px}
+.c-block-lbl{font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:700;color:var(--teal);margin-bottom:8px}
+.c-item{font-size:14px;color:var(--muted);padding:4px 0;display:flex;gap:5px}
+.c-item::before{content:'·';color:var(--teal);flex-shrink:0}
+@media(max-width:640px){.canvas-grid{grid-template-columns:1fr}.canvas-wide,.canvas-full{grid-column:span 1}}
+.crm-grid{display:grid;grid-template-columns:160px 90px 1fr}
+.crm-hdr>div,.crm-row>div{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.04);font-size:14px}
+.crm-hdr>div{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.crm-hdr{display:contents}
+.crm-row{display:contents}
+.crm-row>div:first-child{color:var(--teal);font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600}
+.crm-row>div:nth-child(2){color:var(--purple);font-size:13px}
+.crm-row>div:last-child{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="h-eye">GuanaGO · Documento Maestro — guanago.travel</div>
+  <h1 class="h-h1">Sistema Operativo<br><span>de Destino</span></h1>
+  <p class="h-sub">Todo el ecosistema en un solo documento: estado del producto, roadmap, aliados, CRM, Cowork IA, arquitectura y lean canvas.</p>
+  <div class="h-date">📅 Mayo 2026 · Sky Stephens · GuíaSAI S.A.S. RNT 48674</div>
+</div>
+
+<nav class="nav">
+  <button class="nb on" onclick="show('estado')">📊 Estado</button>
+  <button class="nb" onclick="show('roadmap')">🗺️ Roadmap</button>
+  <button class="nb" onclick="show('acceso')">🔑 Acceso</button>
+  <button class="nb" onclick="show('promos')">🎁 Promociones</button>
+  <button class="nb" onclick="show('ecosistema')">🌐 Ecosistema</button>
+  <button class="nb" onclick="show('crm')">💬 WhatsApp CRM</button>
+  <button class="nb" onclick="show('cowork')">🤖 Cowork IA</button>
+  <button class="nb" onclick="show('aliados')">🤝 Aliados</button>
+  <button class="nb" onclick="show('contenido')">🎬 Contenido</button>
+  <button class="nb" onclick="show('arquitectura')">⚙️ Arquitectura</button>
+  <button class="nb" onclick="show('recompensas')">🪙 Recompensas</button>
+  <button class="nb" onclick="show('canvas')">📋 Canvas</button>
+  <button class="nb" onclick="show('freemium')">📱 Freemium</button>
+  <button class="nb" onclick="show('eventos')">🏀 Eventos</button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     ESTADO
+═══════════════════════════════════════════════ -->
+<section class="s on" id="estado">
+  <p class="eye">Overview · Mayo 2026</p>
+  <h2 class="stitle">Estado del Producto</h2>
+  <p class="ssub">Snapshot consolidado — lo que está activo, lo que está pendiente, métricas clave.</p>
+
+  <div class="m-grid">
+    <div class="mbox"><span class="mval" style="color:var(--green)">14</span><div class="mlbl">Features en producción</div></div>
+    <div class="mbox"><span class="mval" style="color:var(--gold)">6</span><div class="mlbl">Módulos pendientes</div></div>
+    <div class="mbox"><span class="mval" style="color:var(--teal)">18+</span><div class="mlbl">Vistas admin panel</div></div>
+    <div class="mbox"><span class="mval" style="color:var(--purple)">25+</span><div class="mlbl">Endpoints backend</div></div>
+    <div class="mbox"><span class="mval" style="color:var(--orange)">15</span><div class="mlbl">Tablas Airtable</div></div>
+    <div class="mbox"><span class="mval" style="color:var(--rose)">500M</span><div class="mlbl">COP potencial 2026</div></div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <span class="eye gr">Activo en producción</span>
+      <ul class="lst">
+        <li><strong>App frontend B2C turista</strong> — alojamientos + cotizador</li>
+        <li><strong>Backend reservas</strong> — Render.com</li>
+        <li><strong>Panel SuperAdmin</strong> — 18+ vistas, roles, preview por rol</li>
+        <li><strong>Cotizaciones PDF GuíaSAI</strong> — foto-grid, branding</li>
+        <li><strong>Dashboard Aliados</strong> — 4 tabs: Negocio, Planes, Promos, Soporte</li>
+        <li><strong>Mapa Mapbox</strong> — 31 puntos de interés</li>
+        <li><strong>Chatbot Groq AI</strong> — llama-3.3-70b activo</li>
+        <li><strong>Centro Reservas + Vouchers</strong> — CRUD, estados, WhatsApp share</li>
+        <li><strong>Guana Wallet</strong> — puntos activos</li>
+        <li><strong>Firebase Auth</strong> — Google + email</li>
+        <li><strong>Carrito + Checkout</strong> — CartContext</li>
+        <li><strong>Caribbean Night</strong> — 3 paquetes, analytics</li>
+        <li><strong>Cotizador Grupal</strong> — margen 20%</li>
+        <li><strong>AdminBackend Panel</strong> — datos Airtable</li>
+      </ul>
+    </div>
+    <div>
+      <div class="card c-b" style="margin-bottom:12px">
+        <span class="eye coral">Pendientes críticos</span>
+        <ul class="lst">
+          <li><strong>Pasarela Wompi/PayU</strong> — mock actual, sin pagos reales</li>
+          <li><strong>Notificación al operador</strong> — WhatsApp Business API</li>
+          <li><strong>Firestore runtime</strong> — Airtable tiene rate limits</li>
+          <li><strong>WhatsApp CRM</strong> — cero trazabilidad hoy</li>
+          <li><strong>Cowork IA capas 2–6</strong> — solo capa 1 lista</li>
+        </ul>
+      </div>
+      <div class="card p-b">
+        <span class="eye pu">Alta prioridad</span>
+        <ul class="lst">
+          <li><strong>Portal B2B agencias</strong> — catálogo tarifas netas</li>
+          <li><strong>Punto entrada único /acceso</strong> — flujo unificado</li>
+          <li><strong>Módulo Promociones público</strong> — turista ve ofertas</li>
+          <li><strong>PlayStore / AppStore</strong> — migración PWA</li>
+          <li><strong>FCM Push Notifications</strong> — SDK instalado</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="eye">Decisiones de arquitectura — no revertir sin discutir</span>
+    <div class="g2" style="margin-bottom:0">
+      <ul class="lst">
+        <li>Airtable = back-office, NO runtime</li>
+        <li>Firestore = runtime de la app</li>
+        <li>Make.com sincroniza Airtable → Firestore</li>
+        <li>Dos canales (B2C + B2B), un backend</li>
+      </ul>
+      <ul class="lst">
+        <li>Motor precios 4 canales (pricingService)</li>
+        <li>Nunca llamar Airtable desde el frontend</li>
+        <li>JWT 15min + Refresh 7 días</li>
+        <li>Rate limiting: 5 auth/15min, 100 API/15min</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     ROADMAP
+═══════════════════════════════════════════════ -->
+<section class="s" id="roadmap">
+  <p class="eye">Ejecución</p>
+  <h2 class="stitle">Roadmap Mayo 2026</h2>
+  <p class="ssub">Los items manuales (Airtable) van primero — Claude Code necesita la data para conectar.</p>
+
+  <div class="week-lbl">Esta semana · Airtable manual — sin código</div>
+  <div class="chk-group" id="chk1">
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Crear tabla <code>Promociones</code> en Airtable</div><div class="chk-sub">Campos: Titulo, Tipo, Descuento%, Vencimiento, AliadoID, Estado — 5 min</div></div></div>
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Crear tabla <code>Conversaciones_CRM</code> en Airtable</div><div class="chk-sub">14 campos — ver sección WhatsApp CRM para el detalle completo</div></div></div>
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Agregar 7 campos B2B en <code>ServiciosTuristicos_SAI</code></div><div class="chk-sub">Descripcion_B2B, Descripcion_Marketing, Precio_Neto_Agencia, Comision%, Condiciones_B2B, Estado_Portafolio, Destacado_Agencias</div></div></div>
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Revisar texto de los 20 servicios principales — versión B2B</div><div class="chk-sub">Descripcion_B2B + Descripcion_Marketing — texto diferente al que ve el turista</div></div></div>
+  </div>
+
+  <div class="week-lbl gold">Próxima semana · Claude Code</div>
+  <div class="chk-group" id="chk2">
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Botón "Consultar por WhatsApp" con REF tracking en Detail.tsx</div><div class="chk-sub">URL dinámica: nombre servicio + fecha + personas + REF:APP-uid-servicioId</div></div></div>
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Página pública /promociones para turistas</div><div class="chk-sub">Lee Promociones de Airtable — sin login requerido, filtros por categoría</div></div></div>
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Vista AdminCRM.tsx básica en Torre de Control</div><div class="chk-sub">Lee Conversaciones_CRM, muestra canal, estado, último mensaje</div></div></div>
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Migrar Promociones de localStorage → Airtable</div><div class="chk-sub">NegocioLocalPerfil.tsx — reemplazar persistencia local por API call</div></div></div>
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Punto de entrada único /acceso</div><div class="chk-sub">Una pantalla, detección de sesión, 4 perfiles para usuario nuevo</div></div></div>
+  </div>
+
+  <div class="week-lbl pu">2–3 semanas · Integraciones</div>
+  <div class="chk-group" id="chk3">
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Make.com: WhatsApp → Airtable CRM → notificación a Sky</div><div class="chk-sub">Webhook WA Business, clasificación de canal, alerta al número de Sky</div></div></div>
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Pines dorados en mapa — negocios con promo activa</div><div class="chk-sub">InteractiveMap.tsx — leer estado Promo de Airtable, cambiar color del pin</div></div></div>
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Portal B2B básico /portafolio-agencias</div><div class="chk-sub">Lee Descripcion_B2B de Airtable — acceso restringido a agencias registradas</div></div></div>
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Cowork IA — Capa 2 Backend B2B (endpoint /api/cowork/catalogo-b2b)</div><div class="chk-sub">Ver sección Cowork IA para el detalle completo de las capas</div></div></div>
+  </div>
+
+  <div class="week-lbl or">1 mes · Escala y monetización</div>
+  <div class="chk-group" id="chk4">
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Pasarela Wompi / PayU — reemplazar mock</div><div class="chk-sub">Crítico para cobrar reservas reales en producción</div></div></div>
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Agente de contenido Make.com + Claude API</div><div class="chk-sub">Lee Descripcion_Marketing → genera copy TikTok/IG/Meta → tabla Contenido_Redes</div></div></div>
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Preparar app para PlayStore / AppStore</div><div class="chk-sub">PWA → íconos, splash screens, política de privacidad, cuentas dev</div></div></div>
+    <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Cowork IA — Capa 3 Frontend AdminCowork.tsx</div><div class="chk-sub">4 tabs: Catálogo B2B, Cotizador IA, Grupos, Asistente</div></div></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     ACCESO ÚNICO
+═══════════════════════════════════════════════ -->
+<section class="s" id="acceso">
+  <p class="eye">Autenticación</p>
+  <h2 class="stitle">Punto de Entrada Único · /acceso</h2>
+  <p class="ssub">Hoy hay múltiples flujos dispersos — PIN admin, Google turista, roles separados. Un solo funnel inteligente lo reemplaza todo.</p>
+
+  <div class="hl coral"><strong>Problema actual:</strong> login de admin por PIN separado, login de turista por otro lado, roles dispersos. El usuario nuevo no sabe por dónde entrar.</div>
+
+  <div class="card acc">
+    <span class="eye">Flujo de la nueva pantalla /acceso</span>
+    <div class="step">
+      <div class="step-num">01</div>
+      <div><div class="step-title">Detección de sesión Firebase activa</div><div class="step-desc">Si el usuario ya tiene sesión → redirigir directamente a su vista según rol. Sin mostrar nada.</div><span class="step-tag">Auth check instantáneo</span></div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div><div class="step-title">Sin sesión → opciones de ingreso</div><div class="step-desc">Google OAuth + email/contraseña. Pantalla limpia, sin mencionar roles ni PIN.</div></div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div><div class="step-title">Usuario nuevo → selección de perfil</div><div class="step-desc">4 tarjetas visuales. Guarda el rol en Airtable tabla Leads.</div>
+        <div class="chips"><span class="chip t">🧳 Turista</span><span class="chip">🏝 Residente</span><span class="chip o">🏪 Negocio local</span><span class="chip g">✈️ Agencia</span></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div><div class="step-title">Redirección automática según rol del token JWT</div><div class="step-desc">Turista → Home · Aliado → Dashboard · Admin → Panel · Agencia → Portal B2B</div></div>
+    </div>
+  </div>
+
+  <div class="card g-b">
+    <span class="eye gr">Checklist de implementación</span>
+    <div class="chk-group" id="chk-acc">
+      <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Diseñar pantalla /acceso con dos estados: sesión activa / sin sesión</div></div></div>
+      <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Agregar AppRoute.AUTH_GATE como único punto de login</div></div></div>
+      <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Formulario de selección de perfil para usuarios nuevos — guarda en Leads</div></div></div>
+      <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Lógica de redirección automática post-login en App.tsx</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     PROMOCIONES
+═══════════════════════════════════════════════ -->
+<section class="s" id="promos">
+  <p class="eye">Módulo</p>
+  <h2 class="stitle">Promociones y Descuentos</h2>
+  <p class="ssub">Puente entre el aliado que quiere atraer clientes y el turista que busca descuentos. Motor de retención de la plataforma.</p>
+
+  <div class="hl gold"><strong>Ciclo de valor:</strong> Aliado crea promo → turista ve en mapa/catálogo → visita el negocio → negocio ve retorno real → renueva membresía.</div>
+
+  <div class="card">
+    <span class="eye">Componentes · Estado</span>
+    <table class="tbl">
+      <tr><th>Componente</th><th>Archivo</th><th>Estado</th></tr>
+      <tr><td class="bold">Crear promo (aliado)</td><td>NegocioLocalPerfil.tsx tab Promociones</td><td><span class="badge ok">✓ Implementado</span></td></tr>
+      <tr><td class="bold">Persistencia localStorage</td><td>NegocioLocalPerfil.tsx</td><td><span class="badge ok">✓ Implementado</span></td></tr>
+      <tr><td class="bold">Tabla Promociones Airtable</td><td>Airtable back-office</td><td><span class="badge crit">Crear manual</span></td></tr>
+      <tr><td class="bold">Migrar localStorage → Airtable</td><td>NegocioLocalPerfil.tsx</td><td><span class="badge pend">Pendiente</span></td></tr>
+      <tr><td class="bold">Página pública /promociones</td><td>Nueva página turista</td><td><span class="badge pend">Pendiente</span></td></tr>
+      <tr><td class="bold">Pines dorados en mapa</td><td>InteractiveMap.tsx</td><td><span class="badge pend">Pendiente</span></td></tr>
+      <tr><td class="bold">Toggle "Solo ofertas activas"</td><td>Filtros del mapa</td><td><span class="badge pend">Pendiente</span></td></tr>
+      <tr><td class="bold">Sistema de canje + GuanaPoints</td><td>Backend + Wallet</td><td><span class="badge next">Fase 2</span></td></tr>
+    </table>
+  </div>
+
+  <div class="hl or"><strong>Acción inmediata:</strong> Crear tabla <code>Promociones</code> en Airtable. Campos mínimos: Titulo, Descripcion, Tipo (Select: descuento/premio/oferta), Descuento%, Vencimiento, AliadoID (Link→Aliados_Beta), Estado (Activa/Vencida/Pausada), CreadaEn.</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     ECOSISTEMA
+═══════════════════════════════════════════════ -->
+<section class="s" id="ecosistema">
+  <p class="eye">Arquitectura de datos</p>
+  <h2 class="stitle">Las 5 Capas del Ecosistema</h2>
+  <p class="ssub">El mismo registro de Airtable alimenta 3 canales con textos diferentes. La clave para escalar sin duplicar trabajo.</p>
+
+  <div class="g3" style="margin-bottom:20px">
+    <div style="text-align:center;padding:14px;background:var(--card);border-radius:10px;border:1px solid var(--border2)">
+      <div style="font-size:18px;margin-bottom:6px">🧳</div>
+      <div style="font-size:10px;font-weight:700;color:var(--teal)">CAPAS 1</div>
+      <div style="font-size:12px;font-weight:600;margin-top:4px">App GuanaGO</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Texto conversacional para turista B2C</div>
+    </div>
+    <div style="text-align:center;padding:14px;background:var(--card);border-radius:10px;border:1px solid rgba(255,183,77,.15)">
+      <div style="font-size:18px;margin-bottom:6px">✈️</div>
+      <div style="font-size:10px;font-weight:700;color:var(--gold)">CAPAS 2–3</div>
+      <div style="font-size:12px;font-weight:600;margin-top:4px">Portafolio B2B</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Texto formal + tarifas netas para agencias</div>
+    </div>
+    <div style="text-align:center;padding:14px;background:var(--card);border-radius:10px;border:1px solid rgba(167,139,250,.15)">
+      <div style="font-size:18px;margin-bottom:6px">📣</div>
+      <div style="font-size:10px;font-weight:700;color:var(--purple)">CAPAS 4–5</div>
+      <div style="font-size:12px;font-weight:600;margin-top:4px">Marketing + CRM</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Copy para anuncios + trazabilidad clientes</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="eye gold">Campos B2B a agregar en ServiciosTuristicos_SAI — esta semana</span>
+    <table class="tbl">
+      <tr><th>Campo</th><th>Tipo Airtable</th><th>Para qué</th></tr>
+      <tr><td class="tg">Descripcion_B2B</td><td>Long text</td><td>Texto formal para agencias — diferente al B2C</td></tr>
+      <tr><td class="tg">Descripcion_Marketing</td><td>Long text</td><td>Copy corto para TikTok / IG / Meta Ads</td></tr>
+      <tr><td class="tg">Precio_Neto_Agencia</td><td>Currency</td><td>Sin markup para que la agencia aplique el suyo</td></tr>
+      <tr><td class="tg">Comision_Agencia_Pct</td><td>Number</td><td>% comisión estándar (ej: 12%)</td></tr>
+      <tr><td class="tg">Condiciones_B2B</td><td>Long text</td><td>Políticas cancelación y pago para agencias</td></tr>
+      <tr><td class="tg">Estado_Portafolio</td><td>Single select</td><td>Activo_B2C / Activo_B2B / Activo_Ambos / Borrador</td></tr>
+      <tr><td class="tg">Destacado_Agencias</td><td>Checkbox</td><td>Aparece primero en el portafolio B2B</td></tr>
+    </table>
+  </div>
+
+  <div class="g2">
+    <div class="card p-b">
+      <span class="eye pu">Portal B2B Agencias</span>
+      <ul class="lst">
+        <li>URL limpia que envías a agencias por WhatsApp/email</li>
+        <li>Catálogo con precios netos — autenticado, solo agencias</li>
+        <li>Endpoint: <code style="color:var(--teal)">GET /api/cowork/catalogo-b2b</code></li>
+        <li>Frontend: <code style="color:var(--teal)">AdminCowork.tsx</code></li>
+      </ul>
+      <div style="margin-top:10px"><span class="badge pend">Pendiente · Alta prioridad</span></div>
+    </div>
+    <div class="card" style="border-color:rgba(167,139,250,.2)">
+      <span class="eye pu">Automatización Marketing</span>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6">Una vez que exista <code style="color:var(--teal)">Descripcion_Marketing</code> en Airtable:</p>
+      <ul class="lst">
+        <li>Sky aprueba texto en Airtable</li>
+        <li>Make.com detecta cambio de estado</li>
+        <li>Claude API genera TikTok 60s / IG Reel / Meta Ad</li>
+        <li>Tabla Contenido_Redes → Buffer publica</li>
+      </ul>
+      <div style="margin-top:10px"><span class="badge next">Fase 2 — depende de campos B2B</span></div>
+    </div>
+  </div>
+
+  <!-- 3 CANALES + WHITE LABEL -->
+  <p class="eye" style="margin-top:28px">Arquitectura comercial</p>
+  <h3 style="font-size:19px;font-weight:800;margin-bottom:6px">Los 3 Canales del Ecosistema</h3>
+  <p style="font-size:14px;color:var(--muted);margin-bottom:18px">GuanaGO es B2C, GuíaSAI es B2B, y el tercer canal es White Label. Esa separación evita conflictos futuros con agencias que podrían reclamar "ese era mi cliente".</p>
+
+  <div class="g3">
+    <div class="card t-b" style="border-color:rgba(0,168,160,.3)">
+      <div style="font-size:22px;margin-bottom:8px">🧳</div>
+      <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:5px">Canal 1 · B2C</div>
+      <div style="font-size:16px;font-weight:800;margin-bottom:8px">GuanaGO Público</div>
+      <ul class="lst">
+        <li>App y web pública — marca GuanaGO visible</li>
+        <li>Turista compra directo sin intermediario</li>
+        <li>GuanaPoints propios, freemium, concierge</li>
+        <li>100% ingresos de GuanaGO</li>
+      </ul>
+    </div>
+    <div class="card t-b" style="border-color:rgba(255,183,77,.3)">
+      <div style="font-size:22px;margin-bottom:8px">✈️</div>
+      <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:5px">Canal 2 · B2B</div>
+      <div style="font-size:16px;font-weight:800;margin-bottom:8px">GuíaSAI Agencias</div>
+      <ul class="lst">
+        <li>Portal privado — solo agencias registradas</li>
+        <li>Precios netos, cotizador PDF, vouchers</li>
+        <li>Comisión 12% a GuanaGO por venta</li>
+        <li>Gestión en GuiaSAI — sin mezclar con B2C</li>
+      </ul>
+    </div>
+    <div class="card t-b" style="border-color:rgba(167,139,250,.3)">
+      <div style="font-size:22px;margin-bottom:8px">🏷️</div>
+      <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--purple);font-weight:700;margin-bottom:5px">Canal 3 · White Label</div>
+      <div style="font-size:16px;font-weight:800;margin-bottom:8px">App Privada Agencia</div>
+      <ul class="lst">
+        <li>Colores y nombre de la agencia — sin marca GuanaGO</li>
+        <li>Turista cree que es el app de su agencia</li>
+        <li>Infraestructura GuanaGO por debajo</li>
+        <li>Tarifa plana mensual: $500k–$2M COP/mes</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card acc" style="margin-top:4px">
+    <span class="eye gold">Política de comisiones — protección de canales</span>
+    <div class="g2" style="margin-top:12px;gap:10px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--cream);margin-bottom:6px">Regla 1 — Ventana de 90 días</div>
+        <p style="font-size:14px;color:var(--muted);line-height:1.6">Si un cliente llegó originalmente por una agencia, cualquier compra directa en GuanaGO dentro de los 90 días siguientes genera comisión reducida del <strong style="color:var(--gold)">5%</strong> (vs 12% normal) para la agencia. Después de 90 días: el cliente es de GuanaGO.</p>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--cream);margin-bottom:6px">Regla 2 — Servicios adicionales en destino</div>
+        <p style="font-size:14px;color:var(--muted);line-height:1.6">Si el paquete de la agencia está confirmado y pagado, los tours adicionales que el turista compra en la isla desde la app son <strong style="color:var(--green)">100% ingresos de GuanaGO</strong>, sin comisión a nadie. La agencia ya cobró su margen en el paquete principal.</p>
+      </div>
+    </div>
+    <div class="hl gold" style="margin-top:10px">Campo clave en Airtable: <code>CanalOrigen</code> en tabla <code>Reservas</code> — registra si la primera compra fue Agencia_X, OTA, o directo B2C.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CRM
+═══════════════════════════════════════════════ -->
+<section class="s" id="crm">
+  <p class="eye">CRM</p>
+  <h2 class="stitle">WhatsApp CRM · +57 315 383 6043</h2>
+  <p class="ssub">Dos canales de entrada, cero trazabilidad hoy. La solución es Make.com como puente entre WhatsApp y Airtable.</p>
+
+  <div class="hl coral"><strong>El problema:</strong> 500 conversaciones al año — nadie queda registrado. Sin historial del cliente, sin saber qué servicio consultó, sin asignación de conversaciones.</div>
+
+  <div class="card">
+    <span class="eye">Tabla Conversaciones_CRM — crear en Airtable</span>
+    <div class="crm-grid">
+      <div class="crm-hdr"><div>Campo</div><div>Tipo</div><div>Descripción</div></div>
+      <div class="crm-row"><div>ContactoID</div><div>Link→Leads</div><div>El cliente si existe en el sistema</div></div>
+      <div class="crm-row"><div>NumeroWhatsApp</div><div>Phone</div><div>Número del remitente</div></div>
+      <div class="crm-row"><div>NombreContacto</div><div>Text</div><div>Nombre si disponible</div></div>
+      <div class="crm-row"><div>FechaPrimerMensaje</div><div>DateTime</div><div>Inicio de conversación</div></div>
+      <div class="crm-row"><div>UltimoMensaje</div><div>DateTime</div><div>Última actividad</div></div>
+      <div class="crm-row"><div>Canal</div><div>Select</div><div>App_GuanaGO / WhatsApp_Directo / Instagram / Email</div></div>
+      <div class="crm-row"><div>ServicioConsultado</div><div>Link→Servicios</div><div>Qué servicio consultó (si viene de la app)</div></div>
+      <div class="crm-row"><div>TextoPrimerMensaje</div><div>Long text</div><div>Mensaje de apertura</div></div>
+      <div class="crm-row"><div>Estado</div><div>Select</div><div>Nuevo / En_atención / Cotizado / Cerrado_Ganado / Cerrado_Perdido</div></div>
+      <div class="crm-row"><div>ValorCotizacion</div><div>Currency</div><div>Si se generó cotización</div></div>
+      <div class="crm-row"><div>CotizacionID</div><div>Link→CotizGG</div><div>Si existe cotización enlazada</div></div>
+      <div class="crm-row"><div>Notas</div><div>Long text</div><div>Notas internas</div></div>
+      <div class="crm-row"><div>ReferenciaTrazabilidad</div><div>Text</div><div>El REF: del mensaje preformateado</div></div>
+      <div class="crm-row"><div>TiempoRespuesta_min</div><div>Number</div><div>Min entre mensaje y primera respuesta</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="eye">Código REF tracking — botón WhatsApp en Detail.tsx</span>
+    <div class="code"><span class="kw">const</span> abrirWhatsApp = (servicio: Servicio, usuario: Usuario) => {
+  <span class="kw">const</span> ref = usuario?.uid
+    ? <span class="str">`REF:APP-${usuario.uid}-${servicio.id}`</span>
+    : <span class="str">`REF:APP-anonimo-${servicio.id}`</span>;
+  <span class="kw">const</span> mensaje = encodeURIComponent(
+    <span class="str">`Hola GuanaGO 👋 Me interesa *${servicio.nombre}* `</span> +
+    <span class="str">`para ${fechaSeleccionada} con ${personas} personas.\n¿Está disponible?\n\n${ref}`</span>
+  );
+  window.open(<span class="str">`https://wa.me/573153836043?text=${mensaje}`</span>, <span class="str">'_blank'</span>);
+};</div>
+    <p style="font-size:11px;color:var(--muted);margin-top:6px">Make.com extrae el REF al recibirlo y enlaza la conversación al usuario de Firebase. No requiere backend nuevo.</p>
+  </div>
+
+  <div class="card g-b">
+    <span class="eye gr">Costo total para arrancar: $0</span>
+    <table class="tbl">
+      <tr><th>Componente</th><th>Costo</th><th>Nota</th></tr>
+      <tr><td class="bold">Make.com escenario</td><td style="color:var(--green);font-weight:700">$0</td><td>Hasta 1.000 ops/mes en capa gratuita</td></tr>
+      <tr><td class="bold">Tabla Airtable CRM</td><td style="color:var(--green);font-weight:700">$0</td><td>Plan activo lo cubre</td></tr>
+      <tr><td class="bold">Botón WhatsApp en app</td><td style="color:var(--green);font-weight:700">$0</td><td>Solo frontend — Detail.tsx</td></tr>
+      <tr><td class="bold">WA Business API (enviar)</td><td>~$0.05 USD/msg</td><td>Recibir mensajes es gratis</td></tr>
+      <tr><td class="bold" style="color:var(--green)">Escala a Make Core</td><td>$9 USD/mes</td><td>Cuando pases de ~300 msg/mes entrantes</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     COWORK IA
+═══════════════════════════════════════════════ -->
+<section class="s" id="cowork">
+  <p class="eye">Jarvis Cowork</p>
+  <h2 class="stitle">Cowork IA — 6 Capas</h2>
+  <p class="ssub">Asistente especializado en el negocio turístico de San Andrés. Acceso a tarifas, reservas, catálogo, clientes. No es un chatbot genérico.</p>
+
+  <div class="capa ready">
+    <div class="capa-num">CAPA 1 · Lista</div>
+    <div class="capa-title">📊 Datos Airtable</div>
+    <div class="capa-desc">La base de datos ya tiene todo. ServiciosTuristicos_SAI con precio neto OTA, 80+ servicios catalogados, categorías, capacidad, imágenes.</div>
+    <span class="badge ok">✓ Lista — 0 trabajo adicional</span>
+  </div>
+
+  <div class="capa pend">
+    <div class="capa-num">CAPA 2 · Claude Code ejecuta</div>
+    <div class="capa-title">⚙️ Backend B2B</div>
+    <div class="capa-desc">Endpoints nuevos + modo B2B en agentService. Nuevo archivo <code style="color:var(--teal)">backend/routes/cowork.js</code></div>
+    <ul class="lst">
+      <li>Añadir <code style="color:var(--teal)">Precio actualizado</code> a <code style="color:var(--teal)">loadCatalogContext()</code></li>
+      <li>Crear modo <code style="color:var(--teal)">b2b</code> en <code style="color:var(--teal)">agentService.js</code></li>
+      <li>Endpoint <code style="color:var(--teal)">GET /api/cowork/catalogo-b2b</code></li>
+      <li>Endpoint <code style="color:var(--teal)">POST /api/cowork/chat</code></li>
+    </ul>
+    <div style="margin-top:10px"><span class="badge pend">Pendiente · Próxima semana</span></div>
+  </div>
+
+  <div class="capa pend">
+    <div class="capa-num">CAPA 3 · Claude Code ejecuta</div>
+    <div class="capa-title">🖥️ Frontend AdminCowork.tsx</div>
+    <div class="capa-desc">Nueva vista dentro del admin con 4 tabs.</div>
+    <ul class="lst">
+      <li>Tab <strong>Catálogo B2B</strong> — tabla precio neto + markup OTA</li>
+      <li>Tab <strong>Cotizador</strong> — chat IA modo b2b con Claude API</li>
+      <li>Tab <strong>Grupos</strong> — formulario 150+ pax con descuento escalonado</li>
+      <li>Tab <strong>Asistente</strong> — chat libre con contexto del negocio</li>
+    </ul>
+    <div style="margin-top:10px"><span class="badge pend">Pendiente · 1 mes</span></div>
+  </div>
+
+  <div class="g2">
+    <div class="capa pend" style="margin-bottom:0">
+      <div class="capa-num">CAPA 4 · Sky ejecuta en Make.com</div>
+      <div class="capa-title">⚡ Automatización Make.com</div>
+      <div class="capa-desc">Escenario A: Gmail Civitatis → Voucher automático.<br>Escenario B: OTA escribe → Cotización generada.</div>
+      <span class="badge next">Post capa 2</span>
+    </div>
+    <div class="capa pend" style="margin-bottom:0">
+      <div class="capa-num">CAPA 5</div>
+      <div class="capa-title">👥 Cotizador Grupos 150+ pax</div>
+      <div class="capa-desc">Paquete optimizado: tours + alojamiento + traslados. Descuento escalonado: >50 pax −10%, >100 −15%, >150 −20%. Output: PDF ejecutivo.</div>
+      <span class="badge next">Pendiente</span>
+    </div>
+  </div>
+
+  <div class="capa" style="border-color:rgba(244,114,182,.2)">
+    <div class="capa-num">CAPA 6</div>
+    <div class="capa-title">📊 Dashboard de Rentabilidad</div>
+    <div class="capa-desc">Ingresos por canal (B2C/OTA/grupo/promotor), occupancy rate por servicio, top servicios por revenue, alertas de servicios sin reservas en 7 días.</div>
+    <span class="badge next">Largo plazo</span>
+  </div>
+
+  <!-- SISTEMA DE AGENTES -->
+  <p class="eye pu" style="margin-top:28px">Orquestación IA</p>
+  <h3 style="font-size:19px;font-weight:800;margin-bottom:6px">Sistema de Agentes — Arquitectura</h3>
+  <p style="font-size:14px;color:var(--muted);margin-bottom:14px">El admin del proyecto habla con un agente orquestador que gestiona tareas, delega a subagentes especializados (vía Make.com) y recuerda el contexto de sesión a sesión en Airtable.</p>
+
+  <div class="card p-b">
+    <span class="eye pu">Tablas Airtable descubiertas — el sistema ya existe</span>
+    <div class="g2" style="margin-top:12px;gap:8px">
+      <div>
+        <table class="tbl">
+          <tr><th>Tabla</th><th>Función</th></tr>
+          <tr><td class="tg">Cola_Agentes</td><td>Cola de trabajo para agentes IA</td></tr>
+          <tr><td class="tg">Procedimientos_RAG</td><td>SOPs y contexto para que el bot sepa quién eres</td></tr>
+          <tr><td class="tg">Tareas_To_do</td><td>Gestión de tareas con prioridad y fecha</td></tr>
+          <tr><td class="tg">Logs_Trazabilidad</td><td>Auditoría de acciones del bot</td></tr>
+          <tr><td class="tg">Retos_GUANA</td><td>Gamificación — RETO-001 a RETO-006</td></tr>
+        </table>
+      </div>
+      <div>
+        <table class="tbl">
+          <tr><th>Tabla</th><th>Función</th></tr>
+          <tr><td class="tg">Notificaciones_Queue</td><td>Cola central de envíos</td></tr>
+          <tr><td class="tg">Onboarding_Aliados</td><td>Campo Contexto_IA — la IA sabe el estado de cada aliado</td></tr>
+          <tr><td class="tg">Contenido_Redes</td><td>Copy aprobado listo para Buffer</td></tr>
+          <tr><td class="tg">Conversaciones_CRM</td><td>Trazabilidad WhatsApp (ya creada)</td></tr>
+          <tr><td class="tg">Promociones</td><td>Ofertas de aliados (ya creada)</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="hl pu" style="margin-top:10px"><strong>Lo que falta no es infraestructura — es conectar los cables.</strong> El sistema nervioso central ya está diseñado en Airtable.</div>
+  </div>
+
+  <div class="card" style="border-color:rgba(167,139,250,.2);margin-top:4px">
+    <span class="eye pu">Flujo del agente orquestador</span>
+    <div style="display:flex;flex-direction:column;gap:0;margin-top:10px">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div><div class="step-title">Sky escribe en el chat del admin → Agente Orquestador</div><div class="step-desc">El endpoint <code style="color:var(--teal)">POST /api/agentes/admin-chat</code> recibe el mensaje. El agente lee el contexto desde <code style="color:var(--teal)">Memoria_Contexto</code> en el Lead de Sky en Airtable.</div></div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div><div class="step-title">El orquestador decide qué hacer con tools reales</div><div class="step-desc">read_tasks, create_task, update_task, search_rag, save_memory — herramientas que leen y escriben en Airtable directamente.</div></div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div><div class="step-title">Subagentes via Make.com — Cola_Agentes</div><div class="step-desc">El orquestador escribe en <code style="color:var(--teal)">Cola_Agentes</code>. Make.com detecta el nuevo registro y ejecuta el subagente correcto: contenido → Claude API, whatsapp → WA Business, voucher → backend, puntos → GUANA_Transacciones.</div><span class="step-tag pu">Make.com como ejecutor</span></div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div><div class="step-title">Memoria persistente — nunca olvida</div><div class="step-desc">Al final de cada conversación, el campo <code style="color:var(--teal)">Memoria_Contexto</code> en el registro de Sky (tabla Leads) se actualiza con los puntos clave. El próximo mensaje lo incluye en el system prompt.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card g-b" style="margin-top:4px">
+    <span class="eye gr">Instrucción para activar el MCP de Airtable en Claude Code</span>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:10px">Con esto activo, Claude Code puede leer y escribir en las tablas de Airtable directamente desde VS Code — sin abrir Airtable manualmente.</p>
+    <div class="code"># En la carpeta del proyecto GuanaGO:
+claude mcp add airtable
+# Pegar el token PAT de Airtable cuando lo solicite
+
+# Luego puedes decirle a Claude Code:
+# "Lee las tareas críticas de Tareas_To_do y dime cuál atacar primero hoy"</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     ALIADOS
+═══════════════════════════════════════════════ -->
+<section class="s" id="aliados">
+  <p class="eye">Red de Aliados</p>
+  <h2 class="stitle">Planes + Análisis Financiero</h2>
+  <p class="ssub">Cuánto cuesta, qué se entrega, cómo se sostiene. La base para cerrar negocios con empresarios locales de San Andrés.</p>
+
+  <div class="m-grid">
+    <div class="mbox"><span class="mval" style="color:var(--teal)">$20K</span><div class="mlbl">COP inversión mín/mes</div></div>
+    <div class="mbox"><span class="mval" style="color:var(--gold)">10K+</span><div class="mlbl">personas alcanzadas</div></div>
+    <div class="mbox"><span class="mval" style="color:var(--green)">$2</span><div class="mlbl">COP por alcance</div></div>
+    <div class="mbox"><span class="mval" style="color:var(--coral)">52x</span><div class="mlbl">ROI mínimo estimado</div></div>
+  </div>
+
+  <div class="g3">
+    <div class="plan-card">
+      <span class="eye">Plan básico</span>
+      <div style="font-size:15px;font-weight:800">🌴 Presencia Local</div>
+      <div class="plan-price">$0 <span style="font-size:12px;font-weight:400;color:var(--muted)">/ siempre · 15% comisión</span></div>
+      <div class="plan-feature">Pin verificado en mapa interactivo</div>
+      <div class="plan-feature">Ficha con fotos, descripción, WhatsApp</div>
+      <div class="plan-feature">Badge "Negocio verificado GuanaGO"</div>
+      <div class="plan-feature">QR personalizado para el negocio</div>
+      <div class="plan-feature">200 GuanaPoints de bienvenida</div>
+      <div class="plan-feature">Sticker vinilo para vitrina</div>
+    </div>
+    <div class="plan-card activo">
+      <span class="eye" style="color:var(--mint)">Plan activo — más popular</span>
+      <div style="font-size:15px;font-weight:800">🐠 Aliado Activo</div>
+      <div class="plan-price" style="color:var(--mint)">$49.900 <span style="font-size:12px;font-weight:400;color:var(--muted)">/ mes · 10% comisión</span></div>
+      <div class="plan-feature">Todo el plan Básico</div>
+      <div class="plan-feature">Perfil destacado (aparece primero en su categoría)</div>
+      <div class="plan-feature">Dashboard métricas: vistas, QR, clics WhatsApp</div>
+      <div class="plan-feature">Anuncio combinado en mapa (texto+imagen+botón)</div>
+      <div class="plan-feature">Carrusel de inicio (rotativo)</div>
+      <div class="plan-feature">Reporte mensual por WhatsApp</div>
+      <div class="plan-feature">20 tarjetones A6 plastificados</div>
+    </div>
+    <div class="plan-card premium">
+      <span class="eye gold">Plan premium</span>
+      <div style="font-size:15px;font-weight:800">🦀 Aliado Premium</div>
+      <div class="plan-price" style="color:var(--gold)">$129.900 <span style="font-size:12px;font-weight:400;color:var(--muted)">/ mes · 10% comisión</span></div>
+      <div class="plan-feature">Todo el plan Activo</div>
+      <div class="plan-feature">IA genera 4 posts/mes para sus redes</div>
+      <div class="plan-feature">$20.000 COP pauta Meta Ads incluida (+10K personas)</div>
+      <div class="plan-feature">Posición fija — primero en toda la app</div>
+      <div class="plan-feature">Video 30–45s TikTok/Reels producido</div>
+      <div class="plan-feature">Mención en redes GuanaGO + GuíaSAI</div>
+      <div class="plan-feature">Kit completo impreso: sticker+tarjetones+QR+HV PDF</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="eye">Escalabilidad — a medida que entran aliados Premium</span>
+    <table class="tbl">
+      <tr><th>Aliados Premium</th><th>Membresías/mes</th><th>Pauta total</th><th>Alcance</th><th>Ingresos GuanaGO</th></tr>
+      <tr><td class="bold">1</td><td>$129.900</td><td>$20.000</td><td>~10.000</td><td>$129.900</td></tr>
+      <tr><td class="bold">5</td><td>$649.500</td><td>$100.000</td><td>~50.000</td><td>$649.500</td></tr>
+      <tr><td class="bold" style="color:var(--teal)">10</td><td style="color:var(--teal);font-weight:700">$1.299.000</td><td>$200.000</td><td>~100.000</td><td style="color:var(--teal);font-weight:700">$1.299.000</td></tr>
+      <tr><td class="bold">20</td><td>$2.598.000</td><td>$400.000</td><td>~200.000</td><td>$2.598.000</td></tr>
+      <tr><td class="bold" style="color:var(--gold)">40</td><td style="color:var(--gold);font-weight:700">$5.196.000</td><td>$800.000</td><td>~400.000</td><td style="color:var(--gold);font-weight:700">$5.196.000/mes</td></tr>
+    </table>
+    <div class="hl gold">A 40 aliados Premium los ingresos cubren 1 dev junior ($2.5M) + 1 community manager ($1.5M) + infraestructura ($500k) con margen positivo. Ese es el umbral de autosostenibilidad.</div>
+  </div>
+
+  <div class="card">
+    <span class="eye">Embudos de venta por tipo de negocio</span>
+    <div class="g2">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--coral);margin-bottom:10px">🍽️ Restaurante / Tienda local</div>
+        <div class="funnel-step"><div class="funnel-num">1</div><div><div class="funnel-title">Visita presencial — "¿Tu negocio está en el mapa?"</div><div class="funnel-desc">Mostrar el mapa en el celular con pin hipotético. El empresario ve en 10 segundos lo que se está perdiendo.</div></div></div>
+        <div class="funnel-step"><div class="funnel-num">2</div><div><div class="funnel-title">Video 60s por WhatsApp — "Así verán tu negocio"</div><div class="funnel-desc">Demo real de GuanaGO mostrando cómo el turista busca, ve la ficha y hace clic en WhatsApp del negocio.</div></div></div>
+        <div class="funnel-step"><div class="funnel-num">3</div><div><div class="funnel-title">Ficha preview generada por Claude — enviada como PDF</div><div class="funnel-desc">Tally → Make.com → Claude API → PDF → WhatsApp. El PDF es la "muestra gratis" del servicio.</div></div></div>
+        <div class="funnel-step"><div class="funnel-num">4</div><div><div class="funnel-title">Propuesta personalizada con ROI claro</div><div class="funnel-desc">"1 turista/semana × $50.000 gasto × 4 semanas = $200.000 ingreso. La membresía cuesta $49.900." La matemática cierra sola.</div></div></div>
+        <div class="funnel-step"><div class="funnel-num">5</div><div><div class="funnel-title">Activación + kit físico entregado en 48h</div><div class="funnel-desc">Sticker + tarjetones + QR personalizado impreso. El empresario ve valor antes de que llegue el primer cliente.</div></div></div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--mint);margin-bottom:10px">🚕 Taxis / Transporte</div>
+        <div class="funnel-step"><div class="funnel-num">1</div><div><div class="funnel-title">Reunión con cooperativa — propuesta colectiva</div><div class="funnel-desc">Un solo punto de entrada. La cooperativa acepta y distribuye entre todos sus afiliados.</div></div></div>
+        <div class="funnel-step"><div class="funnel-num">2</div><div><div class="funnel-title">Tarjeta de promotor personalizada por taxista</div><div class="funnel-desc">10 tarjetas con código de referido único. Turista descarga → taxista gana comisión en Nequi quincenalmente.</div></div></div>
+        <div class="funnel-step"><div class="funnel-num">3</div><div><div class="funnel-title">Script de 30 segundos</div><div class="funnel-desc">"¿Ya tiene GuanaGO? Escanee este código y gana descuento en su primer tour." El taxista no vende — informa. El QR hace el resto.</div></div></div>
+        <div style="font-size:12px;font-weight:700;color:var(--sky);margin:16px 0 10px">✈️ Agencias B2B</div>
+        <div class="funnel-step"><div class="funnel-num">1</div><div><div class="funnel-title">Email desde comercial@guanago.travel</div><div class="funnel-desc">"Acceso gratuito al cotizador de San Andrés — 80+ servicios, precios netos, vouchers digitales automáticos."</div></div></div>
+        <div class="funnel-step"><div class="funnel-num">2</div><div><div class="funnel-title">Demo Loom 3 minutos — cotizador en vivo</div><div class="funnel-desc">Arma paquete en 5 minutos, genera PDF con fotos y precios, envía voucher al cliente. Sin llamadas manuales.</div></div></div>
+        <div class="funnel-step"><div class="funnel-num">3</div><div><div class="funnel-title">Seguimiento automático — Make.com + Airtable pipeline</div><div class="funnel-desc">Follow-up automático a los 3 días si no respondió. Segundo a los 7 días. El sistema trabaja solo.</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CONTENIDO
+═══════════════════════════════════════════════ -->
+<section class="s" id="contenido">
+  <p class="eye">Sistema de Contenido</p>
+  <h2 class="stitle">Marketing + Pilares + Calendario</h2>
+  <p class="ssub">Cómo producir contenido de forma sistemática sin un equipo grande. Todo pasa por Airtable y Make.com.</p>
+
+  <div class="card">
+    <span class="eye">6 Pilares de Contenido</span>
+    <div class="g3">
+      <div class="pillar">
+        <div class="pillar-icon">🌊</div>
+        <div class="pillar-name" style="color:var(--sky)">El Mar de San Andrés</div>
+        <div class="pillar-desc">Buceo, Sea Flower, aguas turquesas, vida marina. El gancho visual más poderoso.</div>
+        <div class="pillar-freq">2× por semana</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">🌴</div>
+        <div class="pillar-name" style="color:var(--purple)">Cultura Kriol</div>
+        <div class="pillar-desc">Palma de coco, creole, RIMM, Breda Sky, Miss Trinie. Lo que ninguna OTA tiene.</div>
+        <div class="pillar-freq">2× por semana</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">🗺️</div>
+        <div class="pillar-name" style="color:var(--gold)">Guía del Viajero</div>
+        <div class="pillar-desc">Tips, cómo llegar, temporadas, qué evitar. SEO orgánico en TikTok.</div>
+        <div class="pillar-freq">1× por semana</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">🍽️</div>
+        <div class="pillar-name" style="color:var(--coral)">Aliados en Acción</div>
+        <div class="pillar-desc">Restaurantes, tiendas, taxis, posadas. Muestra negocios reales, genera tráfico físico.</div>
+        <div class="pillar-freq">2× por semana</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">✨</div>
+        <div class="pillar-name" style="color:var(--mint)">Experiencias Vivas</div>
+        <div class="pillar-desc">Caribbean Night, Coco ART, Rondon Tour, Eco Fiwi. Emocional. "Quiero estar ahí."</div>
+        <div class="pillar-freq">1× por semana</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">🔄</div>
+        <div class="pillar-name" style="color:var(--teal)">Economía Circular</div>
+        <div class="pillar-desc">Cuando usas GuanaGO el dinero se queda en la isla. El diferenciador de marca.</div>
+        <div class="pillar-freq">1× por semana</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="eye">Tipos de video — estructura mínima viable</span>
+    <table class="tbl">
+      <tr><th>Tipo</th><th>Duración</th><th>Herramienta</th><th>Quién filma</th><th>Canal</th></tr>
+      <tr><td class="bold">Reel de presentación</td><td>30–45s</td><td>Celular + CapCut</td><td>Sky o colaborador</td><td>Feed + Pauta aliado</td></tr>
+      <tr><td class="bold">Story del producto</td><td>15s</td><td>Celular nativo</td><td>El aliado mismo</td><td>Stories diarias</td></tr>
+      <tr><td class="bold">Mini-documental Kriol</td><td>60–90s</td><td>Celular + Breda Sky</td><td>Sky + artesano</td><td>YouTube + TikTok SEO</td></tr>
+      <tr><td class="bold">Testimonial turista</td><td>20–30s</td><td>Celular en destino</td><td>Turista guiado</td><td>Prueba social máxima</td></tr>
+      <tr><td class="bold">Tour virtual del lugar</td><td>45s</td><td>Celular panorámico</td><td>Sky o colaborador</td><td>Ficha del aliado en app</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <span class="eye">Flujo de producción aliado nuevo — 30 minutos</span>
+    <div class="step"><div class="step-num">01</div><div><div class="step-title">Aliado llena formulario Tally.so</div><div class="step-desc">Nombre, fotos, descripción, categoría, GPS, RNT, WhatsApp. Desde el celular en 3 minutos.</div></div></div>
+    <div class="step"><div class="step-num">02</div><div><div class="step-title">Make.com → Claude API genera texto</div><div class="step-desc">Descripción en ES/EN + copy de 4 posts del mes. Se envía como PDF al WhatsApp del aliado.</div></div></div>
+    <div class="step"><div class="step-num">03</div><div><div class="step-title">Sky abre plantilla Canva del plan correspondiente</div><div class="step-desc">Cambia foto, nombre y texto. 2 minutos por pieza. Exporta: PDF para HV, PNG para Stories, MP4 para Reel.</div></div></div>
+    <div class="step"><div class="step-num">04</div><div><div class="step-title">Sube a Airtable tabla Contenido_Redes</div><div class="step-desc">Con fecha de publicación → Make.com publica automáticamente en el canal programado.</div></div></div>
+    <div class="step"><div class="step-num">05</div><div><div class="step-title">Sticker + tarjetón a imprenta local</div><div class="step-desc">Entrega en 48h. El aliado ve valor físico antes de que llegue el primer cliente digital.</div></div></div>
+  </div>
+
+  <div class="card">
+    <span class="eye">ROI por campaña de $20.000 COP</span>
+    <div class="roi-label"><span>Alcance orgánico (sin pauta)</span><span>800–1.200 personas</span></div>
+    <div class="roi-bg"><div class="roi-bar" style="width:12%"></div></div>
+    <div class="roi-label"><span>Con $20k pauta — alcance pagado</span><span>10.000–15.000 personas</span></div>
+    <div class="roi-bg"><div class="roi-bar" style="width:55%"></div></div>
+    <div class="roi-label"><span>Tasa de clic (CTR 1.5%)</span><span>150–225 clics</span></div>
+    <div class="roi-bg"><div class="roi-bar" style="width:20%"></div></div>
+    <div class="roi-label"><span>Conversiones a consulta (5%)</span><span>7–11 consultas calificadas</span></div>
+    <div class="roi-bg"><div class="roi-bar" style="width:8%"></div></div>
+    <div class="roi-label"><span>Cierre de ventas (40% de consultas)</span><span>3–5 ventas/mes</span></div>
+    <div class="roi-bg"><div class="roi-bar" style="width:5%"></div></div>
+    <div class="hl gold" style="margin-top:14px">Ticket promedio $350.000–$800.000 COP. Con 3–5 ventas → retorno $1,05M–$4M COP vs inversión $20k. <strong>ROI mínimo: 52x.</strong></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     ARQUITECTURA
+═══════════════════════════════════════════════ -->
+<section class="s" id="arquitectura">
+  <p class="eye">Stack Técnico</p>
+  <h2 class="stitle">Arquitectura del Ecosistema</h2>
+  <p class="ssub">Cómo se conectan todas las piezas: frontend, backend, datos, IA, físico y canales de distribución.</p>
+
+  <div class="arch-layer active">
+    <div class="arch-lbl">Capa de acceso — el turista llega</div>
+    <div class="arch-title">🌐 Puntos de entrada al ecosistema</div>
+    <div class="chips">
+      <span class="chip t">guanago.travel (PWA)</span>
+      <span class="chip t">QR físico en negocios</span>
+      <span class="chip t">WiFi captivo aliado</span>
+      <span class="chip g">WhatsApp Business</span>
+      <span class="chip g">Instagram/TikTok</span>
+      <span class="chip">Free Tour Kriol (físico)</span>
+      <span class="chip">Sticker "Verificado"</span>
+    </div>
+  </div>
+  <span class="arch-conn"></span>
+  <div class="arch-layer active">
+    <div class="arch-lbl">Capa frontend — la app que ve el usuario</div>
+    <div class="arch-title">📱 React 19 + TypeScript + Vite + Tailwind — guanago.travel</div>
+    <div class="chips">
+      <span class="chip t">B2C: turista</span>
+      <span class="chip t">B2B: aliados + agencias</span>
+      <span class="chip t">Admin: Torre de Control</span>
+      <span class="chip">Mapbox (31 POIs)</span>
+      <span class="chip">Groq Chatbot</span>
+      <span class="chip">Guana Wallet</span>
+      <span class="chip p">FCM push (pendiente)</span>
+      <span class="chip">jsPDF generator</span>
+    </div>
+  </div>
+  <span class="arch-conn"></span>
+  <div class="arch-layer active">
+    <div class="arch-lbl">Capa backend — el cerebro operativo</div>
+    <div class="arch-title">⚙️ Node.js + Express en Render.com</div>
+    <div class="chips">
+      <span class="chip t">API REST autenticada</span>
+      <span class="chip t">Firebase Admin SDK</span>
+      <span class="chip gr">Claude API (contenido)</span>
+      <span class="chip gr">Webhooks Make.com</span>
+      <span class="chip">Pricing dinámico 4 canales</span>
+      <span class="chip">JWT + rate limiting</span>
+      <span class="chip c">Hedera audit (preparado)</span>
+    </div>
+  </div>
+  <span class="arch-conn"></span>
+  <div class="arch-layer active">
+    <div class="arch-lbl">Capa de datos — tres bases coordinadas</div>
+    <div class="arch-title">🗄️ Airtable → Firestore → Claude</div>
+    <div class="chips">
+      <span class="chip t">Airtable: CRM + back-office</span>
+      <span class="chip t">Firestore: app en tiempo real</span>
+      <span class="chip gr">Claude API: análisis + generación</span>
+      <span class="chip">Make.com: sync automático</span>
+      <span class="chip">Firebase Storage: fotos</span>
+      <span class="chip">Firebase Auth: login</span>
+    </div>
+  </div>
+  <span class="arch-conn"></span>
+  <div class="arch-layer">
+    <div class="arch-lbl">Capa de distribución — cómo llega a más gente</div>
+    <div class="arch-title">📣 Canales de adquisición y retención</div>
+    <div class="chips">
+      <span class="chip t">Meta Ads ($20k/campaña)</span>
+      <span class="chip t">WhatsApp Business (push)</span>
+      <span class="chip t">WiFi captivo aliados</span>
+      <span class="chip gr">FCM push notifications</span>
+      <span class="chip gr">GuanaToken: recompensas</span>
+      <span class="chip">QR físicos en la isla</span>
+      <span class="chip">Free Tour ancla</span>
+      <span class="chip p">PlayStore / AppStore</span>
+    </div>
+  </div>
+
+  <div class="hl" style="margin-top:18px"><strong>Principio de diseño:</strong> todo debe funcionar offline en la isla (señal irregular) y sincronizar al recuperar conexión. Firestore SDK tiene caché local nativo — eso hace que el mapa, fichas e itinerario funcionen sin datos móviles.</div>
+
+  <!-- APP ARQUITECTURA POR ROL -->
+  <div class="card" style="margin-top:24px">
+    <span class="eye">Mapa de rutas de la app — por rol de usuario</span>
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:4px">Árbol de Navegación GuanaGO</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Cada rol accede a una vista diferente del mismo sistema. Fuente: <code style="font-size:11px;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px">AdminAppArquitectura.tsx</code></p>
+
+    <div class="g2" style="gap:14px">
+
+      <!-- TURISTA -->
+      <div style="background:rgba(0,168,160,.06);border:1px solid rgba(0,168,160,.25);border-radius:12px;padding:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <span style="font-size:22px">🏄</span>
+          <div>
+            <div style="font-weight:700;color:#00A8A0;font-size:15px">Turista / Local</div>
+            <div style="font-size:11px;color:var(--muted)">Usuario visitante de la isla o residente</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(0,168,160,.1);border-radius:6px">🏠 Home</div>
+          <div style="padding-left:12px;display:flex;flex-direction:column;gap:3px">
+            <div style="font-size:12px;color:var(--muted)">→ 🤿 Tours · 🏨 Hoteles · 🎁 Paquetes · 🚖 Taxis · 🛍️ Marketplace</div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(0,168,160,.1);border-radius:6px">🗺️ Explorar isla</div>
+          <div style="padding-left:12px;display:flex;flex-direction:column;gap:3px">
+            <div style="font-size:12px;color:var(--muted)">→ Mapa Interactivo · Directorio Negocios · Mapa Restaurantes · <span style="color:#4ADE80">CocoART Historia ✦Nuevo</span></div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(0,168,160,.1);border-radius:6px">🎶 Caribbean Night</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Detalle Evento · Perfil Artista</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(0,168,160,.1);border-radius:6px">📋 Planificar viaje</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Mi Itinerario · Planificador Dinámico · Tour Privado · Cotizador Grupal · Catálogo Público</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(0,168,160,.1);border-radius:6px">👤 Mi cuenta</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Dashboard · GuanaWallet · Checkout · Reseñas</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(0,168,160,.1);border-radius:6px">🤝 Negocios aliados</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ <span style="color:#4ADE80">Vincular Comercio ✦Nuevo</span></div></div>
+        </div>
+      </div>
+
+      <!-- ALIADO -->
+      <div style="background:rgba(245,131,31,.06);border:1px solid rgba(245,131,31,.25);border-radius:12px;padding:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <span style="font-size:22px">🏪</span>
+          <div>
+            <div style="font-weight:700;color:#F5831F;font-size:15px">Aliado / Socio / Operador</div>
+            <div style="font-size:11px;color:var(--muted)">Negocio local registrado como partner</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(245,131,31,.1);border-radius:6px">🏪 Perfil del Negocio</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Mi Plan (Básico/Activo/Premium) · <span style="color:#4ADE80">Vincular Comercio ✦Nuevo</span></div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(245,131,31,.1);border-radius:6px">📊 Panel Pro (GuíaSAI)</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Gestión Alojamientos · Restaurante · Tours · Traslados · Mi Perfil Partner</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(245,131,31,.1);border-radius:6px">📦 Mis Servicios</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Crear Servicio · Detalle Servicio · Alojamientos</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(245,131,31,.1);border-radius:6px">⚙️ Operaciones</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Reservaciones Partner · Scanner QR · Operaciones · Wallet Partner</div></div>
+        </div>
+      </div>
+
+      <!-- ARTISTA -->
+      <div style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.25);border-radius:12px;padding:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <span style="font-size:22px">🎵</span>
+          <div>
+            <div style="font-weight:700;color:#a78bfa;font-size:15px">Artista</div>
+            <div style="font-size:11px;color:var(--muted)">Músico del ecosistema Caribbean Night</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(167,139,250,.1);border-radius:6px">🎤 Portal Artista</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Mi Perfil Artístico · Mis Eventos Programados · Métricas de Reproducciones · Contacto con Organizadores</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(167,139,250,.1);border-radius:6px">🌐 Secciones públicas</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Página pública del artista · Caribbean Night</div></div>
+        </div>
+      </div>
+
+      <!-- SUPERADMIN -->
+      <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.25);border-radius:12px;padding:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <span style="font-size:22px">🔐</span>
+          <div>
+            <div style="font-weight:700;color:#818cf8;font-size:15px">Super Admin</div>
+            <div style="font-size:11px;color:var(--muted)">Acceso completo al sistema GuanaGO</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(99,102,241,.1);border-radius:6px">📊 Dashboard Admin</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ <span style="color:#A78BFA">Agente IA Briefing ✦IA</span> · Métricas · Tareas críticas</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(99,102,241,.1);border-radius:6px">👥 Gestión usuarios</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Usuarios · Aprobaciones · Socios · Negocios Locales · Artistas</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(99,102,241,.1);border-radius:6px">⚙️ Operaciones</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Reservaciones · Servicios/Catálogo · Operaciones Admin · Tareas</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(99,102,241,.1);border-radius:6px">💰 Financiero</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Finanzas · Cotizaciones · Vouchers · Civitatis/OTAs</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(99,102,241,.1);border-radius:6px">🎶 Caribbean Night · 🤝 Aliados</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Gestión CN · Artistas Admin · <span style="color:#4ADE80">Estrategia Aliados ✦Nuevo</span> · Vincular Comercio</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(99,102,241,.1);border-radius:6px">🧠 Inteligencia / IA</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ <span style="color:#A78BFA">Cerebro IA ✦IA</span> · <span style="color:#A78BFA">Procedimientos RAG ✦IA</span> · <span style="color:#A78BFA">Cowork IA ✦IA</span> · Torre de Control</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--cream);padding:5px 10px;background:rgba(99,102,241,.1);border-radius:6px">🔧 Infraestructura / Dev</div>
+          <div style="padding-left:12px"><div style="font-size:12px;color:var(--muted)">→ Panel de Control · Estructura Backend · Backend/Datos · Sky Panel · Mapa Mental · <span style="color:#4ADE80">App Arquitectura ✦Nuevo</span></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <span class="eye">Kit físico de marketing — lo que hace que el digital funcione</span>
+    <div class="g3">
+      <div class="kit-item">
+        <div class="kit-icon">📌</div>
+        <div class="kit-name">Sticker "Negocio Verificado"</div>
+        <div class="kit-desc">Circular 5cm, vinilo resistente al agua. Logo GuanaGO + ícono Sea Flower. QR central a la ficha del negocio.</div>
+        <div class="kit-spec">~$800 COP/unidad · 50 mínimo · Entregar al activar cualquier plan</div>
+      </div>
+      <div class="kit-item">
+        <div class="kit-icon">🪧</div>
+        <div class="kit-name">Tarjetón A6 mesa/mostrador</div>
+        <div class="kit-desc">Doble cara plastificado. Frente: "Descarga GuanaGO y acumula tokens." Reverso: QR + beneficios.</div>
+        <div class="kit-spec">~$1.200 COP/unidad · 20 por aliado</div>
+      </div>
+      <div class="kit-item">
+        <div class="kit-icon">🎴</div>
+        <div class="kit-name">Tarjeta de Promotor</div>
+        <div class="kit-desc">Tamaño crédito. Nombre + código referido único + QR. El turista escanea y el colaborador acumula comisión en tiempo real.</div>
+        <div class="kit-spec">~$500 COP/unidad · 10 por colaborador</div>
+      </div>
+      <div class="kit-item">
+        <div class="kit-icon">🌴</div>
+        <div class="kit-name">Kit Bienvenida Free Tour Kriol</div>
+        <div class="kit-desc">Sobre con: artesanía Breda Sky + tarjetón Free Tour + código QR de GuanaPoints. Alto impacto emocional.</div>
+        <div class="kit-spec">$3.000–8.000 COP · Breda Sky produce 10+ diarios</div>
+      </div>
+      <div class="kit-item">
+        <div class="kit-icon">🖼️</div>
+        <div class="kit-name">Roll-up para eventos</div>
+        <div class="kit-desc">60×150cm para Caribbean Night, ferias, aeropuerto. Mapa de la isla con pins de aliados + QR descarga grande.</div>
+        <div class="kit-spec">~$120.000 COP una sola vez · Evento = 100+ descargas/noche</div>
+      </div>
+      <div class="kit-item">
+        <div class="kit-icon">🎞️</div>
+        <div class="kit-name">HV del negocio PDF</div>
+        <div class="kit-desc">2 páginas generadas por IA: historia del negocio, fotos curadas, servicios y precios, QR de reserva directa, badge de plan.</div>
+        <div class="kit-spec">Claude API + datos Airtable · Actualizable mensualmente</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     RECOMPENSAS
+═══════════════════════════════════════════════ -->
+<section class="s" id="recompensas">
+  <p class="eye">Sistema de Recompensas</p>
+  <h2 class="stitle">Multinivel — 4 tipos de participante</h2>
+  <p class="ssub">Turistas, colaboradores, aliados y agencias B2B — cada uno gana algo diferente. Sin esto el canal se muere en cuanto alguien deja de empujarlo.</p>
+
+  <div class="m-grid">
+    <div class="mbox"><span class="mval" style="color:var(--teal)">4</span><div class="mlbl">tipos que ganan</div></div>
+    <div class="mbox"><span class="mval" style="color:var(--gold)">3</span><div class="mlbl">monedas: COP, GuanaPoints, GuanaToken</div></div>
+    <div class="mbox"><span class="mval" style="color:var(--green)">∞</span><div class="mlbl">ciclos de economía circular</div></div>
+  </div>
+
+  <div class="tier">
+    <div class="tier-badge" style="background:rgba(0,229,204,.15);color:var(--teal);border:1px solid var(--border)">TURISTA</div>
+    <div class="tier-name">🧳 El Viajero</div>
+    <div class="tier-desc">Llega sin conocer la isla. GuanaGO le da contexto, recomendaciones y lo conecta con negocios reales. Gana por usar la plataforma.</div>
+    <div class="tier-r">50 GuanaPoints al descargar y completar perfil</div>
+    <div class="tier-r">100 puntos por cada reserva confirmada desde GuanaGO</div>
+    <div class="tier-r">25 puntos por dejar una reseña verificada</div>
+    <div class="tier-r">30 puntos al hacer check-in en el Free Tour Kriol</div>
+    <div class="tier-r">75 puntos por referir un amigo que descarga la app</div>
+    <div class="tier-r">Canjea puntos por descuentos, artesanías Breda Sky, entrada Caribbean Night</div>
+  </div>
+
+  <div class="tier" style="border-color:var(--border)">
+    <div class="tier-badge" style="background:var(--teal);color:var(--deep)">COLABORADOR LOCAL</div>
+    <div class="tier-name">🤝 El Promotor Raizal</div>
+    <div class="tier-desc">Taxista, recepcionista, guía, estudiante. Recomienda GuanaGO y gana comisión real en efectivo. Sin inversión inicial.</div>
+    <div class="tier-r">Código de referido único generado en la app</div>
+    <div class="tier-r"><strong style="color:var(--cream)">5–10% de la primera membresía</strong> de cada aliado que activa por su código</div>
+    <div class="tier-r"><strong style="color:var(--cream)">$2.000–5.000 COP</strong> por cada turista que descarga usando su QR</div>
+    <div class="tier-r">GuanaPoints adicionales por volumen mensual (ranking visible en la app)</div>
+    <div class="tier-r">Liquidación quincenal vía Nequi — sin papeleos</div>
+  </div>
+
+  <div class="tier">
+    <div class="tier-badge" style="background:rgba(255,183,77,.15);color:var(--gold);border:1px solid rgba(255,183,77,.3)">ALIADO LOCAL</div>
+    <div class="tier-name">🏪 El Empresario Raizal</div>
+    <div class="tier-desc">Restaurante, posada, operador, artesano. Paga membresía y recibe clientes, contenido y tokens.</div>
+    <div class="tier-r">200 GuanaPoints al activar membresía</div>
+    <div class="tier-r">50 puntos por cada venta confirmada desde GuanaGO</div>
+    <div class="tier-r"><strong style="color:var(--cream)">Upgrade gratuito 1 mes</strong> si refiere 3 aliados que activan plan pagado</div>
+    <div class="tier-r">Panel de métricas: visitas, escaneos QR, conversiones</div>
+    <div class="tier-r">Aparece en "Aliados del mes" según actividad</div>
+  </div>
+
+  <div class="tier">
+    <div class="tier-badge" style="background:rgba(167,139,250,.15);color:var(--purple);border:1px solid rgba(167,139,250,.3)">AGENCIA B2B</div>
+    <div class="tier-name">✈️ La Agencia de Viajes</div>
+    <div class="tier-desc">Agencia nacional o internacional que usa GuíaSAI para cotizar y vender paquetes en San Andrés. Inventario en tiempo real sin llamar a nadie.</div>
+    <div class="tier-r">Acceso al cotizador GuíaSAI (markup propio sobre precios base)</div>
+    <div class="tier-r">Vouchers digitales automáticos en PDF — sin confirmación manual</div>
+    <div class="tier-r">Pipeline en Airtable con seguimiento Make.com automático</div>
+    <div class="tier-r">Materiales descargables: fotos HD, descripciones, tarifas netas</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     LEAN CANVAS
+═══════════════════════════════════════════════ -->
+<section class="s" id="canvas">
+  <p class="eye">Estrategia de Marca</p>
+  <h2 class="stitle">Lean Canvas · GuanaGO</h2>
+  <p class="ssub">Revisión mayo 2026 — actualizar con estado real del producto y estrategia de distribución PlayStore/AppStore/Web.</p>
+
+  <div class="canvas-grid">
+    <div class="c-block">
+      <div class="c-block-lbl" style="color:var(--coral)">Problema</div>
+      <div class="c-item">Turistas no conectan con operadores Raizales certificados</div>
+      <div class="c-item">Operadores pierden reservas por falta de presencia digital</div>
+      <div class="c-item">Agencias sin catálogo digital con tarifas netas</div>
+      <div class="c-item">Cero trazabilidad de conversaciones WhatsApp</div>
+    </div>
+    <div class="c-block">
+      <div class="c-block-lbl">Solución</div>
+      <div class="c-item">App PWA que conecta turistas con operadores locales</div>
+      <div class="c-item">Panel aliados con membresía y kit físico</div>
+      <div class="c-item">Portal B2B para agencias con tarifas netas</div>
+      <div class="c-item">CRM WhatsApp integrado con Airtable + Make.com</div>
+    </div>
+    <div class="c-block">
+      <div class="c-block-lbl" style="color:var(--gold)">Métricas clave</div>
+      <div class="c-item">Reservas completadas / mes</div>
+      <div class="c-item">Aliados activos con membresía</div>
+      <div class="c-item">Conversiones WhatsApp → cotización</div>
+      <div class="c-item">Retención mensual de turistas</div>
+      <div class="c-item">GuanaPoints canjeados</div>
+    </div>
+    <div class="c-block canvas-wide">
+      <div class="c-block-lbl" style="color:var(--teal)">Propuesta de Valor Única</div>
+      <div style="font-size:14px;font-weight:700;color:var(--cream);line-height:1.5;padding:8px 0">La única plataforma <span style="color:var(--teal)">Raizal-owned</span> que conecta directamente con operadores certificados, distribuye a agencias y construye trazabilidad desde el primer mensaje de WhatsApp.</div>
+      <div class="chips"><span class="chip t">Raizal-owned</span><span class="chip">Comunitario</span><span class="chip o">B2C + B2B</span><span class="chip g">CRM integrado</span></div>
+    </div>
+    <div class="c-block">
+      <div class="c-block-lbl" style="color:var(--purple)">Ventaja Injusta</div>
+      <div class="c-item">Empresa Raizal — confianza de la comunidad local</div>
+      <div class="c-item">RNT 48674 — operador certificado</div>
+      <div class="c-item">Red de aliados construida desde adentro</div>
+      <div class="c-item">Airtable + Make.com ya operativo</div>
+    </div>
+    <div class="c-block">
+      <div class="c-block-lbl" style="color:var(--gold)">Canales</div>
+      <div class="c-item">Web App — guanago.travel (activo)</div>
+      <div class="c-item">PlayStore Android (próximo)</div>
+      <div class="c-item">AppStore iOS (próximo)</div>
+      <div class="c-item">TikTok / Instagram / Meta Ads</div>
+      <div class="c-item">WhatsApp +57 315 383 6043</div>
+      <div class="c-item">Portal B2B agencias (en desarrollo)</div>
+    </div>
+    <div class="c-block">
+      <div class="c-block-lbl" style="color:var(--coral)">Segmentos</div>
+      <div class="c-item"><strong style="color:var(--cream)">Turistas</strong> — nacionales e internacionales</div>
+      <div class="c-item"><strong style="color:var(--cream)">Residentes</strong> — locales que usan servicios</div>
+      <div class="c-item"><strong style="color:var(--cream)">Operadores Raizales</strong> — negocios certificados</div>
+      <div class="c-item"><strong style="color:var(--cream)">Agencias/OTAs</strong> — Civitatis, tur.com</div>
+    </div>
+    <div class="c-block">
+      <div class="c-block-lbl" style="color:var(--muted)">Costos</div>
+      <div class="c-item">Render.com backend (plan gratuito)</div>
+      <div class="c-item">Airtable (plan activo)</div>
+      <div class="c-item">Make.com ($0 → $9 USD/mes)</div>
+      <div class="c-item">Mapbox GL (plan gratuito)</div>
+      <div class="c-item">Firebase Auth + Hosting</div>
+      <div class="c-item">WA Business API (~$0.05/msg)</div>
+    </div>
+    <div class="c-block canvas-wide">
+      <div class="c-block-lbl" style="color:var(--gold)">Fuentes de Ingreso</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;color:var(--gold);font-weight:700;margin-bottom:6px">Activas</div>
+          <div class="c-item">Comisión por reserva B2C (10–15%)</div>
+          <div class="c-item">Membresía aliados Básico/Activo/Premium</div>
+          <div class="c-item">Cotizaciones B2B GuíaSAI</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:6px">Futuras</div>
+          <div class="c-item">Comisión agencias OTA (12%)</div>
+          <div class="c-item">Membresía turista premium</div>
+          <div class="c-item">KRIOL Token — Hedera blockchain</div>
+          <div class="c-item">Fontur / MinInterior / Coralina GEF</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card g-b" style="margin-top:14px">
+    <span class="eye gr">Pendientes de definir</span>
+    <div class="chk-group" id="chk-cv">
+      <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Estrategia de redes sociales por canal</div><div class="chk-sub">TikTok / Instagram / Meta Ads — frecuencia, tipo de contenido, responsable</div></div></div>
+      <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">PlayStore / AppStore — fecha objetivo y ajustes técnicos</div><div class="chk-sub">Política de privacidad, cuentas de dev, splash screens, íconos</div></div></div>
+      <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Precio definitivo de membresía de aliados en COP</div><div class="chk-sub">Básico vs Activo vs Premium — qué incluye cada plan</div></div></div>
+      <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-ck">✓</span></div><div><div class="chk-label">Actualizar canvas con métricas reales (reservas, aliados activos)</div><div class="chk-sub">Cuando tengamos los primeros 30 días de datos reales</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     FREEMIUM
+═══════════════════════════════════════════════ -->
+<section class="s" id="freemium">
+  <p class="eye">Embudo de Conversión</p>
+  <h2 class="stitle">Sistema Freemium · 3 Niveles</h2>
+  <p class="ssub">El turista que solo mira ve suficiente para desear, pero no suficiente para planificar sin registrarse. El que se registra ve todo menos el calendario exacto y el itinerario. El que paga accede al concierge completo.</p>
+
+  <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+    <!-- NIVEL 0 -->
+    <div class="tier" style="border-color:rgba(107,138,158,.25)">
+      <div class="tier-badge" style="background:rgba(107,138,158,.15);color:var(--muted);border:1px solid rgba(107,138,158,.2)">SIN REGISTRO</div>
+      <div class="tier-name" style="color:var(--muted)">Nivel 0 — Solo mirando</div>
+      <div class="tier-desc">Descubre la isla. No hay barrera de entrada para explorar.</div>
+      <div class="g2" style="gap:8px;margin-top:8px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:2px;margin-bottom:6px">✓ DISPONIBLE</div>
+          <div class="tier-r" style="color:var(--muted)">Catálogo de tours y alojamientos (fotos + precios base)</div>
+          <div class="tier-r" style="color:var(--muted)">Mapa interactivo con 31 POIs</div>
+          <div class="tier-r" style="color:var(--muted)">Promociones de aliados — restaurantes, bares</div>
+          <div class="tier-r" style="color:var(--muted)">Compartir link de cualquier servicio</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--coral);letter-spacing:2px;margin-bottom:6px">✗ BLOQUEADO</div>
+          <div class="tier-r" style="color:var(--coral)">Reservar o pagar</div>
+          <div class="tier-r" style="color:var(--coral)">Precio exacto alojamientos por fecha/huéspedes</div>
+          <div class="tier-r" style="color:var(--coral)">Audio-guías del destino</div>
+          <div class="tier-r" style="color:var(--coral)">Acumular GuanaPoints</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NIVEL 1 -->
+    <div class="tier" style="border-color:rgba(0,229,204,.2)">
+      <div class="tier-badge" style="background:rgba(0,229,204,.12);color:var(--teal);border:1px solid rgba(0,229,204,.2)">REGISTRADO</div>
+      <div class="tier-name">Nivel 1 — Registrado sin pago</div>
+      <div class="tier-desc">El regalo de bienvenida desbloquea este nivel. Conversión: explorador → prospecto con intención.</div>
+      <div class="g2" style="gap:8px;margin-top:8px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:2px;margin-bottom:6px">✓ DISPONIBLE</div>
+          <div class="tier-r" style="color:var(--muted)">Todo lo del nivel 0</div>
+          <div class="tier-r" style="color:var(--muted)">Precio exacto por fecha y número de huéspedes</div>
+          <div class="tier-r" style="color:var(--muted)">Cotizar sin confirmar</div>
+          <div class="tier-r" style="color:var(--muted)">1 audio-guía gratuita — Johnny Cay</div>
+          <div class="tier-r" style="color:var(--muted)">3 promociones de aliados desbloqueadas</div>
+          <div class="tier-r" style="color:var(--green)">🌴 Regalo de bienvenida activado — artesanía en punto aliado</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--coral);letter-spacing:2px;margin-bottom:6px">✗ BLOQUEADO</div>
+          <div class="tier-r" style="color:var(--coral)">Reservar y pagar</div>
+          <div class="tier-r" style="color:var(--coral)">GuanaPoints</div>
+          <div class="tier-r" style="color:var(--coral)">Itinerario de conciergería</div>
+          <div class="tier-r" style="color:var(--coral)">Todas las audio-guías</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NIVEL 2 -->
+    <div class="tier" style="border-color:rgba(255,183,77,.3)">
+      <div class="tier-badge" style="background:rgba(255,183,77,.15);color:var(--gold);border:1px solid rgba(255,183,77,.25)">CON RESERVA</div>
+      <div class="tier-name" style="color:var(--gold)">Nivel 2 — Con reserva confirmada</div>
+      <div class="tier-desc">El concierge completo se activa. Cada compra adicional desbloquea un nuevo regalo físico.</div>
+      <div class="tier-r">TODO abierto — acceso completo al ecosistema</div>
+      <div class="tier-r">Conciergería: itinerario, notificaciones, punto de encuentro, hora de regreso</div>
+      <div class="tier-r">Todas las audio-guías del destino</div>
+      <div class="tier-r">Todas las promociones de aliados</div>
+      <div class="tier-r">GuanaPoints activos — se acumulan en cada compra</div>
+      <div class="tier-r">Código de referido activo — invita y gana</div>
+      <div class="tier-r" style="color:var(--gold)">🎁 Regalos por volumen de compra desbloqueados (ver tabla abajo)</div>
+    </div>
+  </div>
+
+  <!-- MODELO TEMU -->
+  <p class="eye or" style="margin-top:8px">Modelo de activación</p>
+  <h3 style="font-size:18px;font-weight:800;margin-bottom:6px">El Modelo Temu · Breda Sky &amp; la Palma de Coco</h3>
+  <p style="font-size:14px;color:var(--muted);margin-bottom:14px;line-height:1.6">Temu da regalos que solo se concretan si compras. GuanaGO hace lo mismo con más elegancia cultural. El regalo existe y es real — Breda Sky puede hacer 10+ piezas al día. El turista se registra para reclamarlo. Cuando llega a la isla, está en el punto de un aliado, interactuando con la red, con la app ya instalada.</p>
+
+  <div class="card o-b">
+    <span class="eye or">Regalo de bienvenida — Nivel 1 · solo por registrarse</span>
+    <div class="hl or" style="margin-bottom:14px">"🌴 Artesanía de palma de coco esperándote en San Andrés. Hecha por Breda Sky, artesano Raizal con 60 años de experiencia. Recógela en [punto aliado] cuando llegues a la isla."</div>
+    <div class="g2">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--cream);margin-bottom:8px">Por qué funciona</div>
+        <ul class="lst">
+          <li>El regalo es <strong>real y tangible</strong> — no un descuento virtual</li>
+          <li>Obliga al turista a ir a <strong>un punto aliado</strong> físico</li>
+          <li>El turista llega con la app instalada y el contexto activo</li>
+          <li>Costo de adquisición = costo de la artesanía ($3k–$8k COP)</li>
+          <li>Breda Sky: promotor natural con historia Raizal auténtica</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--cream);margin-bottom:8px">Escala de regalos por compra</div>
+        <table class="tbl">
+          <tr><th>Gasto en GuanaGO</th><th>Regalo</th></tr>
+          <tr><td style="color:var(--muted)">$0 — solo registro</td><td style="color:var(--green)">Artesanía pequeña de palma de coco</td></tr>
+          <tr><td style="color:var(--muted)">$150k – $299k</td><td style="color:var(--teal)">+ Foto profesional archipiélago (digital)</td></tr>
+          <tr><td style="color:var(--muted)">$300k – $499k</td><td style="color:var(--gold)">+ Kit completo (artesanía + foto + souvenirs)</td></tr>
+          <tr><td class="bold">$500k+</td><td style="color:var(--orange);font-weight:700">+ Exp. VIP: 30 min con Breda Sky en su taller</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MATERIAL IMPRESO -->
+  <p class="eye gr" style="margin-top:22px">Presencia física</p>
+  <h3 style="font-size:18px;font-weight:800;margin-bottom:6px">Material Impreso · Stack Mínimo</h3>
+  <p style="font-size:14px;color:var(--muted);margin-bottom:14px">Para el canal físico necesitas exactamente esto, nada más. El turista lo ve en la vitrina del aliado o lo recibe del taxista, escanea, descarga la app.</p>
+
+  <div class="g3">
+    <div class="kit-item">
+      <div class="kit-icon">🏷️</div>
+      <div class="kit-name">Sticker / Calcomanía QR</div>
+      <div class="kit-desc">Circular 5cm, vinilo resistente al agua. QR → guanago.travel. En: vitrina de aliados, mesas, taxis, aeropuerto.</div>
+      <div class="kit-spec">~$800 COP/unidad · 100 uds = $80.000 COP</div>
+    </div>
+    <div class="kit-item">
+      <div class="kit-icon">🎁</div>
+      <div class="kit-name">Tarjeta Regalo Física</div>
+      <div class="kit-desc">Tamaño tarjeta crédito, cartulina premium. Frente: "Tienes un regalo de bienvenida en GuanaGO 🌴". Reverso: QR de registro + cómo reclamar. La entrega el taxista aliado o recepcionista del hotel.</div>
+      <div class="kit-spec">~$500 COP/unidad</div>
+    </div>
+    <div class="kit-item">
+      <div class="kit-icon">👤</div>
+      <div class="kit-name">Tarjeta de Promotor</div>
+      <div class="kit-desc">Para colaboradores locales que refieren clientes. Código de referido único + QR. Genera comisión rastreable en tabla <code style="color:var(--teal)">Promotores_GG</code> de Airtable.</div>
+      <div class="kit-spec">Código único por aliado · comisión automática</div>
+    </div>
+  </div>
+
+  <div class="hl gr" style="margin-top:8px">El logo en el sticker debe decir: <strong>GuanaGO.Travel | App + Teléfono: +57 315 383 6043</strong>. Los aliados que acepten ser puntos de distribución pueden dejar los stickers en sus negocios.</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     EVENTOS
+═══════════════════════════════════════════════ -->
+<section class="s" id="eventos">
+  <p class="eye">Canal de distribución</p>
+  <h2 class="stitle">Eventos Deportivos</h2>
+  <p class="ssub">Los participantes ya vienen con intención de gastar, con fecha fija que crea urgencia. Convences a un solo organizador y él te conecta con cientos de participantes de golpe.</p>
+
+  <div class="hl gr"><strong>El insight clave:</strong> No tienes que convencer a 600 personas una por una. Convences a una sola (el organizador) y él te conecta con todas. Costo de adquisición de cada usuario: $0.</div>
+
+  <!-- TORNEO VOLLEY -->
+  <div class="card acc" style="margin-bottom:14px">
+    <span class="eye gr">Oportunidad inmediata</span>
+    <div style="font-size:18px;font-weight:800;margin-bottom:6px">🏐 Torneo de Volleyball</div>
+
+    <div class="m-grid" style="margin-bottom:16px">
+      <div class="mbox"><span class="mval" style="color:var(--green)">80</span><div class="mlbl">Deportistas cotizados en CotizacionesGG</div></div>
+      <div class="mbox"><span class="mval" style="color:var(--gold)">600</span><div class="mlbl">Deportistas esperados en el torneo</div></div>
+      <div class="mbox"><span class="mval" style="color:var(--teal)">$150k–$400k</span><div class="mlbl">COP por paquete básico/deportista</div></div>
+      <div class="mbox"><span class="mval" style="color:var(--orange)">$0</span><div class="mlbl">Costo de entrada como operador oficial</div></div>
+    </div>
+
+    <div class="g2">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--cream);margin-bottom:8px">Lo que ya está listo</div>
+        <ul class="lst">
+          <li><strong>80 cotizaciones</strong> ya existen en <code style="color:var(--teal)">CotizacionesGG</code></li>
+          <li><strong>PayU ya funciona</strong> — links de pago listos para enviar</li>
+          <li>Hay dinero real esperando — acción número 1: enviar los links</li>
+          <li>Alojamiento + transporte + alimentación en catálogo</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--cream);margin-bottom:8px">La propuesta al organizador</div>
+        <ul class="lst">
+          <li>GuanaGO llega <strong>gratis como operador oficial de logística</strong></li>
+          <li>El organizador no paga nada — GuanaGO cobra en el margen</li>
+          <li>600 deportistas instalan la app con contexto real de compra</li>
+          <li>GuanaGO consigue su primer evento de validación a escala</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="hl gold" style="margin-top:12px">Mensaje para el organizador ya escrito en la sesión de Claude.ai — texto listo para enviar por WhatsApp. El acuerdo: GuanaGO = operador oficial del torneo, el organizador = canal a 600 participantes.</div>
+
+    <div class="g3" style="margin-top:14px">
+      <div style="background:var(--card);border:1px solid rgba(74,222,128,.15);border-radius:10px;padding:14px">
+        <div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">ALOJAMIENTO</div>
+        <p style="font-size:13px;color:var(--muted)">Hoteles + hostales + apartamentos aliados. Capacidad para grupos, descuento por volumen.</p>
+      </div>
+      <div style="background:var(--card);border:1px solid rgba(0,229,204,.15);border-radius:10px;padding:14px">
+        <div style="font-size:11px;color:var(--teal);font-weight:700;letter-spacing:2px;margin-bottom:6px">TRANSPORTE</div>
+        <p style="font-size:13px;color:var(--muted)">Taxis aliados aeropuerto ↔ hotel. Alianza Cooperativa de Taxistas activa.</p>
+      </div>
+      <div style="background:var(--card);border:1px solid rgba(245,131,31,.15);border-radius:10px;padding:14px">
+        <div style="font-size:11px;color:var(--orange);font-weight:700;letter-spacing:2px;margin-bottom:6px">ALIMENTACIÓN</div>
+        <p style="font-size:13px;color:var(--muted)">Restaurantes aliados del mapa. Paquetes de alimentación para deportistas por día.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- OTROS EVENTOS -->
+  <p class="eye gold">Más eventos en el radar</p>
+  <div class="g2">
+    <div class="card">
+      <span class="eye pu">Regata San Andrés</span>
+      <ul class="lst">
+        <li>Participantes nacionales e internacionales con alto poder adquisitivo</li>
+        <li>Logística: alojamiento, traslados, tours de acompañantes</li>
+        <li>Oportunidad de co-branding con la organización</li>
+      </ul>
+      <div class="chips"><span class="chip p">Alta prioridad</span><span class="chip">Contactar organizador</span></div>
+    </div>
+    <div class="card">
+      <span class="eye or">Maratón de la Isla</span>
+      <ul class="lst">
+        <li>Corredores acompañados por familiares → clientes para tours</li>
+        <li>Mapa de la ruta con puntos de hidratación como POIs en la app</li>
+        <li>Stickers GuanaGO en los paquetes de bienvenida del evento</li>
+      </ul>
+      <div class="chips"><span class="chip o">Media prioridad</span><span class="chip">Co-branding</span></div>
+    </div>
+    <div class="card">
+      <span class="eye">Coco ART — Festival Cultural</span>
+      <ul class="lst">
+        <li>Artistas locales + turistas con interés cultural</li>
+        <li>Conectar con tabla <code style="color:var(--teal)">Rimm_musicos</code> de artistas ya en sistema</li>
+        <li>Caribbean Night como evento âncla dentro del festival</li>
+      </ul>
+      <div class="chips"><span class="chip gr">Aliado natural</span></div>
+    </div>
+    <div class="card">
+      <span class="eye coral">Club de Volleyball Local</span>
+      <ul class="lst">
+        <li>Jugadores locales = promotores naturales — costo de adquisición $0</li>
+        <li>Entrenamientos y partidos como agenda de eventos en la app</li>
+        <li>Visitantes asisten y descargan GuanaGO para ver la agenda</li>
+      </ul>
+      <div class="chips"><span class="chip gr">Promotores activos</span></div>
+    </div>
+  </div>
+
+  <!-- ESTRATEGIA EVENTOS -->
+  <div class="card g-b" style="margin-top:4px">
+    <span class="eye gr">Estrategia de eventos — el proceso</span>
+    <div style="display:flex;flex-direction:column;gap:0">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div><div class="step-title">Identificar al organizador único</div><div class="step-desc">Cada evento tiene una persona que comunica con todos los participantes. Esa persona es el canal. Un mensaje suyo vale 600 installs.</div></div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div><div class="step-title">Proponer GuanaGO como operador de logística oficial — sin costo</div><div class="step-desc">El organizador no paga nada. GuanaGO se paga con el margen de alojamiento, transporte y alimentación. El organizador gana: infraestructura profesional para sus participantes.</div></div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div><div class="step-title">El organizador incluye GuanaGO en su comunicación oficial</div><div class="step-desc">"Para alojamiento y tours durante el torneo, usa GuanaGO: guanago.travel" — en el grupo de WhatsApp del evento.</div></div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div><div class="step-title">600 participantes instalan la app con contexto real de compra</div><div class="step-desc">No son usuarios de métricas de vanidad — tienen fecha fija, itinerario, y necesitan servicios reales. Retention alta desde el día 1.</div></div>
+      </div>
+      <div class="step">
+        <div class="step-num">05</div>
+        <div><div class="step-title">Stickers GuanaGO en el kit de bienvenida del evento</div><div class="step-desc">Pulsera del torneo con QR de GuanaGO, tarjeta de regalo en el sobre de bienvenida. Costo: $80k–$150k COP por evento.</div><span class="step-tag gold">Material físico</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+function show(id){
+  document.querySelectorAll('.s').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  event.target.classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function toggleChk(el){
+  el.classList.toggle('done');
+  const state={};
+  document.querySelectorAll('.chk-item').forEach((e,i)=>{state[i]=e.classList.contains('done')});
+  try{localStorage.setItem('gg_doc_chk',JSON.stringify(state))}catch(e){}
+}
+(function loadChks(){
+  try{
+    const state=JSON.parse(localStorage.getItem('gg_doc_chk')||'{}');
+    document.querySelectorAll('.chk-item').forEach((e,i)=>{if(state[i])e.classList.add('done')});
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
