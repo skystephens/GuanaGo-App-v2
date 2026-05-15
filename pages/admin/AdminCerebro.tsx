@@ -198,7 +198,7 @@ interface Props {
 type Tab = 'notas' | 'oportunidades' | 'trazabilidad' | 'exportar' | 'jarvis';
 
 export default function AdminCerebro({ onBack }: Props) {
-  const [tab, setTab] = useState<Tab>('notas');
+  const [tab, setTab] = useState<Tab>('jarvis');
 
   // Notas
   const [notas, setNotas] = useState<Nota[]>(() => {
