@@ -18,6 +18,7 @@ import paymentsRoutes, { resultadoPago } from './routes/payments.js';
 import directoryRoutes from './routes/directory.js';
 import hubRoutes       from './routes/hub.js';
 import leadsRoutes     from './routes/leads.js';
+import agentesRoutes   from './routes/agentes.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -74,7 +75,10 @@ app.get('/api', (req, res) => {
 });
 
 // ── Leads — formulario público de captura ─────────────────────────────────────
-app.use('/api/leads', leadsRoutes);
+app.use('/api/leads',   leadsRoutes);
+
+// ── Agentes — Jarvis comercial ────────────────────────────────────────────────
+app.use('/api/agentes', agentesRoutes);
 
 // ── Formulario de cotización pública ──────────────────────────────────────────
 const docsPath = join(__dirname, 'docs');

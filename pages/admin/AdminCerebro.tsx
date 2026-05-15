@@ -6,10 +6,27 @@ import {
   Building2, Smartphone, Globe, Coins, Users, Zap,
   Copy, Check, MoreVertical, Filter,
   Activity, Calendar, MessageCircle, Package, Server,
+  Send, Loader2,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+interface JarvisMsg {
+  role: 'user' | 'assistant';
+  content: string;
+  tools_used?: { tool: string; input: Record<string, unknown> }[];
+  ts: string;
+}
+
+const JARVIS_QUICK: string[] = [
+  'Ver leads nuevos',
+  'Tareas de alta prioridad',
+  '¿Qué hay en Cola_Agentes?',
+  'Resumir el pipeline comercial',
+];
+
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 type NotaCategoria = 'reunión' | 'idea' | 'dev' | 'oportunidad' | 'contexto' | 'general';
 type OportunidadEstado = 'identificada' | 'contactada' | 'negociación' | 'cerrada' | 'descartada';
@@ -178,7 +195,7 @@ interface Props {
   onNavigate: (route: AppRoute) => void;
 }
 
-type Tab = 'notas' | 'oportunidades' | 'trazabilidad' | 'exportar';
+type Tab = 'notas' | 'oportunidades' | 'trazabilidad' | 'exportar' | 'jarvis';
 
 export default function AdminCerebro({ onBack }: Props) {
   const [tab, setTab] = useState<Tab>('notas');
@@ -210,6 +227,41 @@ export default function AdminCerebro({ onBack }: Props) {
   const [editandoEvento, setEditandoEvento] = useState<EventoTrazabilidad | null>(null);
   const [nuevoEvento, setNuevoEvento] = useState(false);
   const [filtroTipo, setFiltroTipo]   = useState<EventoTipo | 'todos'>('todos');
+
+  // Jarvis
+  const [jMsgs, setJMsgs]       = useState<JarvisMsg[]>([]);
+  const [jInput, setJInput]     = useState('');
+  const [jLoading, setJLoading] = useState(false);
+  const jEndRef = useRef<HTMLDivElement>(null);
+
+  const sendJarvis = async (text: string) => {
+    if (!text.trim() || jLoading) return;
+    const userMsg: JarvisMsg = { role: 'user', content: text, ts: new Date().toISOString() };
+    const history = [...jMsgs, userMsg];
+    setJMsgs(history);
+    setJInput('');
+    setJLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/agentes/admin-chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history.map(m => ({ role: m.role, content: m.content })) }),
+      });
+      const data = await res.json();
+      setJMsgs(prev => [...prev, {
+        role: 'assistant',
+        content: data.reply || data.error || 'Sin respuesta',
+        tools_used: data.tools_used,
+        ts: new Date().toISOString(),
+      }]);
+    } catch {
+      setJMsgs(prev => [...prev, { role: 'assistant', content: '⚠️ Error conectando con el servidor.', ts: new Date().toISOString() }]);
+    } finally {
+      setJLoading(false);
+    }
+  };
+
+  useEffect(() => { jEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [jMsgs]);
 
   // Export
   const [copiado, setCopiado] = useState(false);
@@ -427,6 +479,7 @@ _Fin del contexto. Cargar este archivo en Claude Code para continuar con context
         {/* Tabs */}
         <div className="flex gap-1 bg-gray-900 p-1 rounded-xl overflow-x-auto">
           {([
+            { key: 'jarvis',         label: 'Jarvis',   icon: Zap },
             { key: 'notas',          label: 'Notas',    icon: StickyNote },
             { key: 'oportunidades',  label: 'Pipeline', icon: TrendingUp },
             { key: 'trazabilidad',   label: 'Traza',    icon: Activity },
@@ -445,6 +498,101 @@ _Fin del contexto. Cargar este archivo en Claude Code para continuar con context
       </header>
 
       <div className="flex-1 overflow-y-auto">
+
+        {/* ── TAB: JARVIS ── */}
+        {tab === 'jarvis' && (
+          <div className="flex flex-col h-full">
+
+            {/* Intro + quick cmds */}
+            {jMsgs.length === 0 && (
+              <div className="px-4 pt-6 pb-4 space-y-4">
+                <div className="bg-indigo-950 border border-indigo-700 rounded-2xl p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Zap size={14} className="text-indigo-300" />
+                    <span className="text-sm font-bold text-indigo-200">Jarvis — Asistente comercial</span>
+                  </div>
+                  <p className="text-xs text-indigo-300 leading-relaxed">
+                    Accede a Leads, Tareas y Cola_Agentes en Airtable. Puedo leer datos, crear tareas y redactar mensajes.
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-600 font-bold uppercase mb-2">Comandos rápidos</p>
+                  <div className="space-y-2">
+                    {JARVIS_QUICK.map(q => (
+                      <button key={q} onClick={() => sendJarvis(q)}
+                        className="w-full text-left text-xs text-gray-400 bg-gray-900 border border-gray-800 rounded-xl px-3 py-2.5 hover:border-indigo-700 hover:text-indigo-300 transition-colors">
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+              {jMsgs.map((m, i) => (
+                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap
+                    ${m.role === 'user'
+                      ? 'bg-indigo-700 text-white rounded-tr-sm'
+                      : 'bg-gray-900 border border-gray-700 text-gray-200 rounded-tl-sm'}`}>
+                    {m.content}
+                    {m.tools_used && m.tools_used.length > 0 && (
+                      <div className="mt-2 pt-2 border-t border-gray-700">
+                        {m.tools_used.map((t, ti) => (
+                          <span key={ti} className="inline-flex items-center gap-1 text-[10px] text-indigo-400 bg-indigo-950 border border-indigo-800 rounded-full px-2 py-0.5 mr-1 mb-1">
+                            ⚡ {t.tool}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {jLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-900 border border-gray-700 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2 text-gray-500">
+                    <Loader2 size={13} className="animate-spin" />
+                    <span className="text-xs">Jarvis pensando...</span>
+                  </div>
+                </div>
+              )}
+              <div ref={jEndRef} />
+            </div>
+
+            {/* Input */}
+            <div className="px-4 pb-4 pt-2 border-t border-gray-800">
+              {jMsgs.length > 0 && (
+                <div className="flex gap-1.5 mb-2 overflow-x-auto scrollbar-hide pb-1">
+                  {JARVIS_QUICK.map(q => (
+                    <button key={q} onClick={() => sendJarvis(q)}
+                      className="flex-shrink-0 text-[10px] text-gray-500 border border-gray-700 rounded-full px-2.5 py-1 hover:border-indigo-600 hover:text-indigo-300 transition-colors whitespace-nowrap">
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={jInput}
+                  onChange={e => setJInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendJarvis(jInput); } }}
+                  placeholder="Pregunta algo a Jarvis..."
+                  className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+                />
+                <button
+                  onClick={() => sendJarvis(jInput)}
+                  disabled={!jInput.trim() || jLoading}
+                  className="bg-indigo-700 hover:bg-indigo-600 disabled:opacity-40 text-white px-3 py-2.5 rounded-xl transition-colors"
+                >
+                  <Send size={15} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── TAB: NOTAS ── */}
         {tab === 'notas' && (
