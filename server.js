@@ -225,11 +225,14 @@ app.use('/pagar', paymentsRoutes);
 app.use('/api/leads',   leadsRoutes);
 app.use('/api/agentes', agentesRoutes);
 
-// ==================== HUB & COTIZAR ====================
+// ==================== HUB & COTIZAR & REGISTRO ==================
 // MUST be before the SPA catch-all
 app.use('/hub', hubRoutes);
 app.get('/cotizar', (req, res) =>
   res.sendFile(path.join(__dirname, 'backend', 'docs', 'cotizar.html'))
+);
+app.get('/registro-alojamiento', (req, res) =>
+  res.sendFile(path.join(__dirname, 'backend', 'docs', 'alojamiento-registro.html'))
 );
 
 // ==================== SPA FALLBACK ====================

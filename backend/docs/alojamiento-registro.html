@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Alojamiento · GuanaGO</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --navy:#003D5C;
+    --teal:#00A8A0;
+    --orange:#F5831F;
+    --bg:#F8FAFB;
+    --card:#FFFFFF;
+    --text:#1A2E3B;
+    --muted:#6B8A9E;
+    --border:#DDE6EC;
+    --error:#E53E3E;
+    --success:#38A169;
+  }
+  body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+  /* Header */
+  .header{background:var(--navy);color:#fff;padding:20px 24px;display:flex;align-items:center;gap:12px}
+  .logo-dot{width:36px;height:36px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .logo-text{font-size:18px;font-weight:800}
+  .logo-text span{color:var(--teal)}
+  .logo-sub{font-size:12px;opacity:.6;margin-top:1px}
+
+  /* Progress */
+  .progress-bar{background:var(--navy);padding:0 24px 16px}
+  .steps{display:flex;gap:0;counter-reset:step}
+  .step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;cursor:pointer}
+  .step:not(:last-child)::after{content:'';position:absolute;top:14px;left:50%;width:100%;height:2px;background:rgba(255,255,255,.2);z-index:0}
+  .step.done::after{background:var(--teal)}
+  .step-num{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.15);color:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;position:relative;z-index:1;transition:all .2s}
+  .step.active .step-num{background:var(--teal);color:#fff}
+  .step.done .step-num{background:var(--teal);color:#fff}
+  .step-label{font-size:10px;color:rgba(255,255,255,.4);margin-top:4px;white-space:nowrap}
+  .step.active .step-label{color:rgba(255,255,255,.9)}
+  .step.done .step-label{color:rgba(255,255,255,.7)}
+
+  /* Container */
+  .container{max-width:600px;margin:0 auto;padding:24px 16px 40px}
+
+  /* Section card */
+  .section{background:var(--card);border-radius:16px;padding:24px;margin-bottom:16px;border:1px solid var(--border);display:none}
+  .section.active{display:block}
+  .section-title{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .section-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+
+  /* Form fields */
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+  .field label .req{color:var(--orange);margin-left:2px}
+  .field label .hint{font-weight:400;color:var(--muted);font-size:11px;margin-left:4px}
+  input,select,textarea{
+    width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;
+    font-family:'Outfit',sans-serif;font-size:14px;color:var(--text);
+    background:#fff;outline:none;transition:border-color .15s;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--teal)}
+  input.error,select.error,textarea.error{border-color:var(--error)}
+  textarea{resize:vertical;min-height:90px}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:480px){.field-row{grid-template-columns:1fr}}
+
+  /* Image URLs */
+  .img-list{margin-bottom:8px;display:flex;flex-direction:column;gap:8px}
+  .img-item{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px}
+  .img-item .img-url{flex:1;font-size:12px;color:var(--muted);word-break:break-all}
+  .img-item .img-del{width:24px;height:24px;border-radius:50%;background:#FEE2E2;color:var(--error);border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .img-add-row{display:flex;gap:8px}
+  .img-add-row input{flex:1}
+  .btn-add{padding:10px 16px;background:var(--bg);border:1.5px dashed var(--teal);border-radius:10px;color:var(--teal);font-weight:600;font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;transition:all .15s}
+  .btn-add:hover{background:rgba(0,168,160,.08)}
+
+  /* Tipo chips */
+  .tipo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .tipo-chip{display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;background:#fff}
+  .tipo-chip input{display:none}
+  .tipo-chip.selected{border-color:var(--teal);background:rgba(0,168,160,.06)}
+  .tipo-chip .chip-icon{font-size:20px}
+  .tipo-chip .chip-label{font-size:13px;font-weight:600;color:var(--muted)}
+  .tipo-chip.selected .chip-label{color:var(--teal)}
+
+  /* Buttons */
+  .btn-primary{width:100%;padding:14px;background:var(--teal);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn-primary:hover{background:#009690}
+  .btn-primary:disabled{background:#ccc;cursor:not-allowed}
+  .btn-secondary{width:100%;padding:12px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .15s;margin-top:10px}
+  .btn-secondary:hover{border-color:var(--navy);color:var(--navy)}
+  .btn-row{display:flex;gap:10px;margin-top:8px}
+  .btn-row .btn-secondary{margin-top:0}
+
+  /* Info badge */
+  .info-badge{background:rgba(0,168,160,.08);border:1px solid rgba(0,168,160,.2);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--teal);margin-bottom:16px;line-height:1.5}
+  .info-badge strong{display:block;margin-bottom:2px}
+
+  /* Error message */
+  .error-msg{font-size:11px;color:var(--error);margin-top:4px;display:none}
+  .error-msg.show{display:block}
+
+  /* Success */
+  #success-screen{display:none;text-align:center;background:var(--card);border-radius:16px;padding:40px 24px;border:1px solid var(--border)}
+  #success-screen.show{display:block}
+  .success-icon{width:72px;height:72px;background:rgba(56,161,105,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:36px}
+  #success-screen h2{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:8px}
+  #success-screen p{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:4px}
+  #success-screen .ref{font-size:13px;color:var(--teal);font-weight:700;background:rgba(0,168,160,.08);padding:8px 16px;border-radius:8px;display:inline-block;margin-top:12px}
+
+  /* Spinner */
+  .spinner{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Footer */
+  .footer{text-align:center;font-size:11px;color:var(--muted);margin-top:24px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-dot">🏝️</div>
+  <div>
+    <div class="logo-text">Guana<span>GO</span></div>
+    <div class="logo-sub">Registro de Alojamiento · San Andrés Isla</div>
+  </div>
+</div>
+
+<div class="progress-bar">
+  <div class="steps">
+    <div class="step active" id="step-1"><div class="step-num">1</div><div class="step-label">Alojamiento</div></div>
+    <div class="step" id="step-2"><div class="step-num">2</div><div class="step-label">Fotos</div></div>
+    <div class="step" id="step-3"><div class="step-num">3</div><div class="step-label">Encargado</div></div>
+    <div class="step" id="step-4"><div class="step-num">4</div><div class="step-label">Confirmar</div></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Sección 1: Datos del alojamiento -->
+  <div class="section active" id="sec-1">
+    <div class="section-title">🏨 Datos del Alojamiento</div>
+    <div class="section-sub">Cuéntanos sobre tu propiedad en San Andrés</div>
+
+    <div class="field">
+      <label>Nombre del alojamiento <span class="req">*</span></label>
+      <input type="text" id="servicio" placeholder="Ej: Posada Nativa Mar Caribe" maxlength="100">
+      <div class="error-msg" id="err-servicio">Campo requerido</div>
+    </div>
+
+    <div class="field">
+      <label>Tipo de alojamiento <span class="req">*</span></label>
+      <div class="tipo-grid" id="tipo-grid">
+        <label class="tipo-chip">
+          <input type="radio" name="tipo" value="posada nativa">
+          <span class="chip-icon">🌴</span>
+          <span class="chip-label">Posada Nativa</span>
+        </label>
+        <label class="tipo-chip">
+          <input type="radio" name="tipo" value="Hotel">
+          <span class="chip-icon">🏨</span>
+          <span class="chip-label">Hotel</span>
+        </label>
+        <label class="tipo-chip">
+          <input type="radio" name="tipo" value="hotel boutique">
+          <span class="chip-icon">✨</span>
+          <span class="chip-label">Hotel Boutique</span>
+        </label>
+        <label class="tipo-chip">
+          <input type="radio" name="tipo" value="Aparta Hotel">
+          <span class="chip-icon">🏢</span>
+          <span class="chip-label">Aparta Hotel</span>
+        </label>
+        <label class="tipo-chip">
+          <input type="radio" name="tipo" value="Apartamento">
+          <span class="chip-icon">🛋️</span>
+          <span class="chip-label">Apartamento</span>
+        </label>
+        <label class="tipo-chip">
+          <input type="radio" name="tipo" value="Casa">
+          <span class="chip-icon">🏠</span>
+          <span class="chip-label">Casa / Villa</span>
+        </label>
+        <label class="tipo-chip">
+          <input type="radio" name="tipo" value="habitacion">
+          <span class="chip-icon">🛏️</span>
+          <span class="chip-label">Habitación</span>
+        </label>
+      </div>
+      <div class="error-msg" id="err-tipo">Selecciona un tipo</div>
+    </div>
+
+    <div class="field">
+      <label>Descripción <span class="req">*</span> <span class="hint">— servicios, ubicación, qué hace especial tu alojamiento</span></label>
+      <textarea id="descripcion" rows="4" placeholder="Ej: Posada familiar frente al mar en el sector de La Loma. Ofrecemos 4 habitaciones con aire acondicionado, desayuno típico raizal incluido y vista al mar..."></textarea>
+      <div class="error-msg" id="err-descripcion">Campo requerido</div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Capacidad máxima <span class="hint">personas</span></label>
+        <input type="number" id="capacidad" placeholder="Ej: 8" min="1" max="100">
+      </div>
+      <div class="field">
+        <label>RNT <span class="hint">Reg. Nacional de Turismo</span></label>
+        <input type="text" id="rnt" placeholder="Ej: 48901">
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="goTo(2)">Continuar → Fotos</button>
+  </div>
+
+  <!-- Sección 2: Fotos -->
+  <div class="section" id="sec-2">
+    <div class="section-title">📸 Fotos del Alojamiento</div>
+    <div class="section-sub">Agrega los enlaces de tus mejores fotos</div>
+
+    <div class="info-badge">
+      <strong>¿Cómo agregar fotos?</strong>
+      Sube tus fotos a Google Drive, Dropbox o cualquier hosting y pega el enlace directo aquí. También puedes usar enlaces de WhatsApp Web, iCloud o Google Fotos (opción "Copiar enlace").
+    </div>
+
+    <div class="field">
+      <label>URLs de imágenes <span class="hint">— agrega hasta 10</span></label>
+      <div class="img-list" id="img-list"></div>
+      <div class="img-add-row">
+        <input type="url" id="img-input" placeholder="https://drive.google.com/..." onkeydown="if(event.key==='Enter'){event.preventDefault();addImage()}">
+        <button class="btn-add" onclick="addImage()">+ Agregar</button>
+      </div>
+      <div class="error-msg" id="err-imgs">Agrega al menos una foto</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goTo(1)">← Atrás</button>
+      <button class="btn-primary" onclick="goTo(3)" style="flex:1;margin-top:0">Continuar → Encargado</button>
+    </div>
+  </div>
+
+  <!-- Sección 3: Datos del encargado -->
+  <div class="section" id="sec-3">
+    <div class="section-title">👤 Datos del Encargado</div>
+    <div class="section-sub">Información de contacto y datos legales del propietario/operador</div>
+
+    <div class="field">
+      <label>Nombre completo del encargado <span class="req">*</span></label>
+      <input type="text" id="nombreEncargado" placeholder="Ej: María Eugenia Archbold">
+      <div class="error-msg" id="err-encargado">Campo requerido</div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>NIT / Cédula <span class="req">*</span></label>
+        <input type="text" id="nit" placeholder="Ej: 900.123.456-7">
+        <div class="error-msg" id="err-nit">Campo requerido</div>
+      </div>
+      <div class="field">
+        <label>Teléfono de reservas <span class="req">*</span></label>
+        <input type="tel" id="telefono" placeholder="+57 310 123 4567">
+        <div class="error-msg" id="err-tel">Campo requerido</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Email de contacto <span class="req">*</span></label>
+      <input type="email" id="email" placeholder="contacto@mialojamiento.com">
+      <div class="error-msg" id="err-email">Email inválido</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goTo(2)">← Atrás</button>
+      <button class="btn-primary" onclick="goTo(4)" style="flex:1;margin-top:0">Revisar y enviar →</button>
+    </div>
+  </div>
+
+  <!-- Sección 4: Confirmar -->
+  <div class="section" id="sec-4">
+    <div class="section-title">✅ Confirmar Registro</div>
+    <div class="section-sub">Revisa los datos antes de enviar</div>
+
+    <div id="resumen" style="background:#F8FAFB;border-radius:12px;padding:16px;margin-bottom:16px;font-size:13px;line-height:1.8;border:1px solid var(--border)"></div>
+
+    <div class="info-badge">
+      Al enviar este formulario, tu alojamiento quedará en revisión. Nos pondremos en contacto para validar la información y activar tu perfil en la plataforma GuanaGO.
+    </div>
+
+    <button class="btn-primary" id="btn-submit" onclick="submitForm()">
+      Enviar solicitud
+    </button>
+    <button class="btn-secondary" onclick="goTo(3)">← Editar datos</button>
+  </div>
+
+  <!-- Éxito -->
+  <div id="success-screen">
+    <div class="success-icon">🎉</div>
+    <h2>¡Solicitud enviada!</h2>
+    <p>Tu alojamiento fue registrado exitosamente.<br>El equipo de GuanaGO revisará tu información y te contactará pronto.</p>
+    <p style="margin-top:12px;font-size:12px;color:var(--muted)">Número de referencia:</p>
+    <div class="ref" id="ref-display">—</div>
+    <p style="margin-top:20px;font-size:12px;color:var(--muted)">¿Tienes dudas? Escríbenos al<br><strong style="color:var(--teal)">+57 315 383 6043</strong></p>
+  </div>
+
+  <div class="footer">
+    GuanaGO · GuíaSAI S.A.S · RNT 48674 · San Andrés Isla, Colombia<br>
+    guanago.travel
+  </div>
+
+</div>
+
+<script>
+  const imageUrls = [];
+
+  // ── Navegación entre secciones ────────────────────────────────────────────
+  function goTo(n) {
+    if (n > 1 && !validateSection(currentSection)) return;
+    showSection(n);
+  }
+
+  let currentSection = 1;
+
+  function showSection(n) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('sec-' + n).classList.add('active');
+
+    for (let i = 1; i <= 4; i++) {
+      const el = document.getElementById('step-' + i);
+      el.classList.remove('active', 'done');
+      if (i < n) el.classList.add('done');
+      if (i === n) el.classList.add('active');
+    }
+
+    if (n === 4) buildResumen();
+    currentSection = n;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Validación por sección ────────────────────────────────────────────────
+  function validateSection(n) {
+    let ok = true;
+
+    if (n === 1) {
+      if (!val('servicio')) { showErr('err-servicio'); ok = false; } else hideErr('err-servicio');
+      if (!document.querySelector('input[name="tipo"]:checked')) { showErr('err-tipo'); ok = false; } else hideErr('err-tipo');
+      if (!val('descripcion')) { showErr('err-descripcion'); ok = false; } else hideErr('err-descripcion');
+    }
+
+    if (n === 2) {
+      if (imageUrls.length === 0) { showErr('err-imgs'); ok = false; } else hideErr('err-imgs');
+    }
+
+    if (n === 3) {
+      if (!val('nombreEncargado')) { showErr('err-encargado'); ok = false; } else hideErr('err-encargado');
+      if (!val('nit')) { showErr('err-nit'); ok = false; } else hideErr('err-nit');
+      if (!val('telefono')) { showErr('err-tel'); ok = false; } else hideErr('err-tel');
+      const email = val('email');
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('err-email'); ok = false; } else hideErr('err-email');
+    }
+
+    return ok;
+  }
+
+  function val(id) { return document.getElementById(id).value.trim(); }
+  function showErr(id) { const e = document.getElementById(id); if(e) e.classList.add('show'); }
+  function hideErr(id) { const e = document.getElementById(id); if(e) e.classList.remove('show'); }
+
+  // ── Imágenes ──────────────────────────────────────────────────────────────
+  function addImage() {
+    const input = document.getElementById('img-input');
+    const url = input.value.trim();
+    if (!url || imageUrls.length >= 10) return;
+    if (!url.startsWith('http')) { alert('Por favor ingresa una URL válida (debe comenzar con http)'); return; }
+    if (imageUrls.includes(url)) return;
+    imageUrls.push(url);
+    input.value = '';
+    renderImages();
+    hideErr('err-imgs');
+  }
+
+  function removeImage(idx) {
+    imageUrls.splice(idx, 1);
+    renderImages();
+  }
+
+  function renderImages() {
+    const list = document.getElementById('img-list');
+    list.innerHTML = imageUrls.map((url, i) => `
+      <div class="img-item">
+        <span class="img-url">${url.length > 60 ? url.slice(0,60) + '…' : url}</span>
+        <button class="img-del" onclick="removeImage(${i})">×</button>
+      </div>
+    `).join('');
+  }
+
+  // ── Chips tipo alojamiento ────────────────────────────────────────────────
+  document.querySelectorAll('.tipo-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.tipo-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      hideErr('err-tipo');
+    });
+  });
+
+  // ── Resumen final ─────────────────────────────────────────────────────────
+  function buildResumen() {
+    const tipo = document.querySelector('input[name="tipo"]:checked')?.value || '—';
+    const imgs = imageUrls.length;
+    document.getElementById('resumen').innerHTML = `
+      <div style="display:grid;gap:6px">
+        <div><span style="color:var(--muted)">Alojamiento:</span> <strong>${val('servicio')}</strong></div>
+        <div><span style="color:var(--muted)">Tipo:</span> <strong>${tipo}</strong></div>
+        <div><span style="color:var(--muted)">Fotos:</span> <strong>${imgs} imagen${imgs !== 1 ? 'es' : ''}</strong></div>
+        <div><span style="color:var(--muted)">RNT:</span> <strong>${val('rnt') || 'No indicado'}</strong></div>
+        <div><span style="color:var(--muted)">Encargado:</span> <strong>${val('nombreEncargado')}</strong></div>
+        <div><span style="color:var(--muted)">NIT / Cédula:</span> <strong>${val('nit')}</strong></div>
+        <div><span style="color:var(--muted)">Teléfono:</span> <strong>${val('telefono')}</strong></div>
+        <div><span style="color:var(--muted)">Email:</span> <strong>${val('email')}</strong></div>
+      </div>
+    `;
+  }
+
+  // ── Submit ────────────────────────────────────────────────────────────────
+  async function submitForm() {
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Enviando...';
+
+    const payload = {
+      servicio:         val('servicio'),
+      tipoAlojamiento:  document.querySelector('input[name="tipo"]:checked')?.value,
+      descripcion:      val('descripcion'),
+      capacidadMaxima:  parseInt(document.getElementById('capacidad').value) || null,
+      rnt:              val('rnt'),
+      nombreEncargado:  val('nombreEncargado'),
+      nit:              val('nit'),
+      telefono:         val('telefono'),
+      email:            val('email'),
+      imageUrls:        imageUrls,
+    };
+
+    try {
+      const res = await fetch('/api/accommodations/registro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al enviar');
+
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active','done'));
+      document.querySelectorAll('.step').forEach(s => s.classList.add('done'));
+
+      document.getElementById('success-screen').classList.add('show');
+      document.getElementById('ref-display').textContent = data.ref || data.id || '—';
+    } catch (err) {
+      alert('Error al enviar: ' + err.message + '\n\nIntenta de nuevo o contáctanos por WhatsApp.');
+      btn.disabled = false;
+      btn.innerHTML = 'Enviar solicitud';
+    }
+  }
+</script>
+</body>
+</html>

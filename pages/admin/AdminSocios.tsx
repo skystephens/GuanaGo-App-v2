@@ -1,12 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ArrowLeft, Users, Music, MapPin, Building2, Utensils, Car, 
+import {
+  ArrowLeft, Users, Music, MapPin, Building2, Utensils, Car,
   ShoppingBag, Waves, Calendar, Search, Plus, RefreshCw,
   CheckCircle, XCircle, Clock, Eye, Edit3, Settings,
   ChevronRight, Star, DollarSign, Package, Filter,
-  UserPlus, Shield, Wallet, FileText, X, Check
+  UserPlus, Shield, Wallet, FileText, X, Check,
+  Link, Copy, Hotel, ThumbsUp, ThumbsDown, ExternalLink
 } from 'lucide-react';
 import { AppRoute, TipoSocio, Socio, SocioConfig } from '../../types';
+
+interface AlojPendiente {
+  id: string;
+  servicio: string;
+  encargado: string;
+  tipo: string;
+  telefono: string;
+  email: string;
+  rnt: string;
+  descripcion: string;
+  imagen: string;
+  createdAt: string;
+}
 
 interface AdminSociosProps {
   onBack: () => void;
@@ -144,8 +158,10 @@ const CAMPOS_LABELS: Record<string, string> = {
   proveedores: 'Proveedores'
 };
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 const AdminSocios: React.FC<AdminSociosProps> = ({ onBack, onNavigate }) => {
-  const [activeTab, setActiveTab] = useState<'lista' | 'nuevo' | 'configuracion'>('lista');
+  const [activeTab, setActiveTab] = useState<'lista' | 'nuevo' | 'configuracion' | 'formulario'>('lista');
   const [socios, setSocios] = useState<Socio[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -153,6 +169,59 @@ const AdminSocios: React.FC<AdminSociosProps> = ({ onBack, onNavigate }) => {
   const [estadoFilter, setEstadoFilter] = useState<string>('all');
   const [showDetail, setShowDetail] = useState(false);
   const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
+
+  // ── Formulario de alojamientos ──────────────────────────────────────────
+  const [pendientes, setPendientes] = useState<AlojPendiente[]>([]);
+  const [pendientesLoading, setPendientesLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  const FORM_URL = `${window.location.origin}/registro-alojamiento`;
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(FORM_URL).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const loadPendientes = async () => {
+    setPendientesLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/accommodations/pending`);
+      const data = await res.json();
+      setPendientes(data.records || []);
+    } catch {
+      setPendientes([]);
+    } finally {
+      setPendientesLoading(false);
+    }
+  };
+
+  const handleApprove = async (id: string) => {
+    setActionLoading(id + '-approve');
+    try {
+      await fetch(`${API_BASE}/api/accommodations/pending/${id}/approve`, { method: 'PATCH' });
+      setPendientes(prev => prev.filter(p => p.id !== id));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    if (!confirm('¿Descartar esta solicitud?')) return;
+    setActionLoading(id + '-reject');
+    try {
+      await fetch(`${API_BASE}/api/accommodations/pending/${id}/reject`, { method: 'PATCH' });
+      setPendientes(prev => prev.filter(p => p.id !== id));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'formulario') loadPendientes();
+  }, [activeTab]);
   
   // Form para nuevo socio
   const [nuevoSocio, setNuevoSocio] = useState({
@@ -371,9 +440,10 @@ const AdminSocios: React.FC<AdminSociosProps> = ({ onBack, onNavigate }) => {
       {/* Tabs */}
       <div className="px-6 py-3 flex gap-2 overflow-x-auto border-b border-gray-800">
         {[
-          { id: 'lista', label: 'Socios', icon: Users },
-          { id: 'nuevo', label: 'Nuevo Socio', icon: UserPlus },
-          { id: 'configuracion', label: 'Perfiles', icon: Settings }
+          { id: 'lista',        label: 'Socios',       icon: Users },
+          { id: 'formulario',   label: 'Alojamientos', icon: Hotel },
+          { id: 'nuevo',        label: 'Nuevo Socio',  icon: UserPlus },
+          { id: 'configuracion',label: 'Perfiles',     icon: Settings }
         ].map(tab => (
           <button
             key={tab.id}
@@ -632,6 +702,136 @@ const AdminSocios: React.FC<AdminSociosProps> = ({ onBack, onNavigate }) => {
                     </>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Tab: Formulario de Alojamientos */}
+            {activeTab === 'formulario' && (
+              <div className="space-y-4">
+                {/* Enlace compartible */}
+                <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Hotel size={18} className="text-teal-400" />
+                    <h3 className="font-bold">Formulario de Registro</h3>
+                  </div>
+                  <p className="text-sm text-gray-400 mb-3">
+                    Comparte este enlace con dueños de alojamiento para que registren su propiedad.
+                    Las solicitudes aparecerán abajo pendientes de aprobación.
+                  </p>
+                  <div className="bg-gray-900 rounded-lg p-3 flex items-center gap-2 border border-gray-700">
+                    <Link size={14} className="text-teal-400 flex-shrink-0" />
+                    <span className="text-teal-400 text-sm font-medium truncate flex-1">{FORM_URL}</span>
+                    <button
+                      onClick={copyLink}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex-shrink-0 ${
+                        copied ? 'bg-green-600 text-white' : 'bg-teal-600 text-white hover:bg-teal-500'
+                      }`}
+                    >
+                      {copied ? <><CheckCircle size={12} /> Copiado</> : <><Copy size={12} /> Copiar</>}
+                    </button>
+                  </div>
+                  <a
+                    href={FORM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-teal-400 mt-2 transition-colors"
+                  >
+                    <ExternalLink size={12} /> Abrir formulario en nueva pestaña
+                  </a>
+                </div>
+
+                {/* Lista de pendientes */}
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-sm text-gray-300">
+                    Solicitudes pendientes
+                    {pendientes.length > 0 && (
+                      <span className="ml-2 bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full">
+                        {pendientes.length}
+                      </span>
+                    )}
+                  </h3>
+                  <button
+                    onClick={loadPendientes}
+                    className="p-1.5 hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    <RefreshCw size={14} className={`text-gray-400 ${pendientesLoading ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+
+                {pendientesLoading ? (
+                  <div className="flex justify-center py-8">
+                    <RefreshCw size={24} className="animate-spin text-teal-500" />
+                  </div>
+                ) : pendientes.length === 0 ? (
+                  <div className="text-center py-10 bg-gray-800/40 rounded-xl border border-gray-700">
+                    <Hotel size={36} className="mx-auto text-gray-600 mb-3" />
+                    <p className="text-gray-400 text-sm">No hay solicitudes pendientes</p>
+                    <p className="text-gray-600 text-xs mt-1">Comparte el formulario con los alojamientos</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {pendientes.map(p => (
+                      <div key={p.id} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                        <div className="flex gap-3 p-4">
+                          {p.imagen ? (
+                            <img src={p.imagen} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                          ) : (
+                            <div className="w-16 h-16 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0">
+                              <Hotel size={24} className="text-gray-500" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="font-bold text-sm truncate">{p.servicio}</h4>
+                              <span className="text-[10px] bg-orange-900/50 text-orange-400 px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+                                Pendiente
+                              </span>
+                            </div>
+                            <p className="text-xs text-teal-400 mt-0.5">{p.tipo}</p>
+                            <div className="mt-1.5 space-y-0.5">
+                              <p className="text-xs text-gray-400 truncate">👤 {p.encargado}</p>
+                              <p className="text-xs text-gray-400 truncate">📞 {p.telefono}</p>
+                              <p className="text-xs text-gray-400 truncate">✉️ {p.email}</p>
+                              {p.rnt && <p className="text-xs text-gray-400">RNT: {p.rnt}</p>}
+                            </div>
+                          </div>
+                        </div>
+                        {p.descripcion && (
+                          <div className="px-4 pb-3">
+                            <p className="text-xs text-gray-500 line-clamp-2">{p.descripcion}</p>
+                          </div>
+                        )}
+                        <div className="flex border-t border-gray-700">
+                          <button
+                            onClick={() => handleApprove(p.id)}
+                            disabled={!!actionLoading}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-bold text-green-400 hover:bg-green-900/30 transition-colors disabled:opacity-50"
+                          >
+                            {actionLoading === p.id + '-approve' ? (
+                              <RefreshCw size={14} className="animate-spin" />
+                            ) : (
+                              <ThumbsUp size={14} />
+                            )}
+                            Aprobar y publicar
+                          </button>
+                          <div className="w-px bg-gray-700" />
+                          <button
+                            onClick={() => handleReject(p.id)}
+                            disabled={!!actionLoading}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium text-gray-500 hover:bg-red-900/20 hover:text-red-400 transition-colors disabled:opacity-50"
+                          >
+                            {actionLoading === p.id + '-reject' ? (
+                              <RefreshCw size={14} className="animate-spin" />
+                            ) : (
+                              <ThumbsDown size={14} />
+                            )}
+                            Descartar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
