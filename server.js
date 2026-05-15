@@ -22,7 +22,10 @@ import storageRoutes from './backend/routes/storage.js';
 import coworkRoutes from './backend/routes/cowork.js';
 import publicQuoteRoutes from './backend/routes/publicQuote.js';
 import publicVoucherRoutes from './backend/routes/publicVoucher.js';
-import paymentsRoutes from './backend/routes/payments.js';
+import paymentsRoutes  from './backend/routes/payments.js';
+import hubRoutes      from './backend/routes/hub.js';
+import leadsRoutes    from './backend/routes/leads.js';
+import agentesRoutes  from './backend/routes/agentes.js';
 
 // Import middleware
 import { requestLogger } from './backend/middleware/logger.js';
@@ -217,6 +220,17 @@ app.use('/voucher', publicVoucherRoutes);
 // POST /api/payments/webhook  → confirmación de pago desde PayU
 app.use('/api/payments', paymentsRoutes);
 app.use('/pagar', paymentsRoutes);
+
+// ==================== LEADS & AGENTES ====================
+app.use('/api/leads',   leadsRoutes);
+app.use('/api/agentes', agentesRoutes);
+
+// ==================== HUB & COTIZAR ====================
+// MUST be before the SPA catch-all
+app.use('/hub', hubRoutes);
+app.get('/cotizar', (req, res) =>
+  res.sendFile(path.join(__dirname, 'backend', 'docs', 'cotizar.html'))
+);
 
 // ==================== SPA FALLBACK ====================
 // Servir index.html para cualquier ruta no API (GuanaGO)
