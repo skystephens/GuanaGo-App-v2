@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO — Sistema de Contenido & Marketing</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal: #00D4B8; --teal-d: #009E8A; --teal-bg: rgba(0,212,184,0.08);
+  --gold: #FFB347; --gold-bg: rgba(255,179,71,0.08);
+  --coral: #FF6B6B; --coral-bg: rgba(255,107,107,0.08);
+  --purple: #9B8AFA; --purple-bg: rgba(155,138,250,0.08);
+  --mint: #52D9A4; --sky: #3BBFEA; --rose: #F472B6;
+  --bg: #070F1A; --surface: #0D1B28; --card: #101F2E;
+  --border: rgba(255,255,255,0.07); --muted: #4A7090;
+  --cream: #E8F2FA;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--cream);line-height:1.5;overflow-x:hidden}
+
+/* ─ TOP NAV ─ */
+.nav{position:sticky;top:0;z-index:100;background:rgba(7,15,26,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;gap:0;overflow-x:auto}
+.nb{font-family:'Inter',sans-serif;font-size:11px;font-weight:600;letter-spacing:.3px;color:var(--muted);padding:14px 16px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
+.nb.on,.nb:hover{color:var(--teal);border-bottom-color:var(--teal)}
+
+/* ─ HERO ─ */
+.hero{background:linear-gradient(150deg,#003848 0%,var(--bg) 65%);padding:48px 24px 40px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:-80px;right:-60px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(0,212,184,.1) 0%,transparent 70%)}
+.h-eye{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--teal);margin-bottom:10px}
+.h-title{font-family:'Syne',sans-serif;font-size:clamp(24px,4vw,42px);font-weight:800;line-height:1.1;margin-bottom:8px}
+.h-title em{color:var(--teal);font-style:normal}
+.h-sub{font-size:13px;color:var(--muted);max-width:500px;font-weight:300}
+.h-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
+.htag{font-size:10px;font-weight:600;color:var(--teal);background:rgba(0,212,184,.1);border:1px solid rgba(0,212,184,.2);padding:4px 12px;border-radius:100px}
+
+/* ─ SECTIONS ─ */
+.s{display:none;padding:28px 20px;max-width:920px;margin:0 auto}
+.s.on{display:block}
+.stitle{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px}
+.ssub{font-size:12px;color:var(--muted);margin-bottom:24px;font-weight:300}
+
+/* ─ CARDS ─ */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:14px}
+.eye{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:8px}
+.card h3{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:12px}
+
+/* ─ GRIDS ─ */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+/* ─ CALENDAR ─ */
+.cal-wrap{overflow-x:auto;margin-bottom:14px}
+.cal{width:100%;border-collapse:collapse;min-width:560px}
+.cal th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;font-weight:500}
+.cal td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top;font-size:12px}
+.cal tr:last-child td{border:none}
+.cal .day{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--cream);white-space:nowrap}
+.cal .net{font-size:10px;color:var(--muted);margin-top:2px}
+.pill{display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;margin:2px 2px 0 0}
+.p-tk{background:rgba(155,138,250,.15);color:var(--purple)}
+.p-ig{background:rgba(244,114,182,.15);color:var(--rose)}
+.p-fb{background:rgba(59,191,234,.15);color:var(--sky)}
+.p-em{background:rgba(0,212,184,.15);color:var(--teal)}
+.p-wa{background:rgba(82,217,164,.15);color:var(--mint)}
+.col-tipo{font-size:11px;color:var(--cream);font-weight:500}
+.col-copy{font-size:11px;color:var(--muted);line-height:1.5}
+
+/* ─ FUNNEL ─ */
+.funnel-box{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.fb-head{padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+.fb-icon{font-size:18px}
+.fb-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.fb-count{font-size:10px;color:var(--muted)}
+.fb-steps{padding:0 18px 14px}
+.fbs{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);align-items:flex-start}
+.fbs:last-child{border:none}
+.fbs-num{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:rgba(0,212,184,.2);line-height:1;flex-shrink:0;width:24px}
+.fbs-body{}
+.fbs-t{font-size:12px;font-weight:600;margin-bottom:2px}
+.fbs-d{font-size:11px;color:var(--muted);line-height:1.5}
+.fbs-tag{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;margin-top:4px;background:rgba(0,212,184,.1);color:var(--teal)}
+
+/* ─ PAQUETE ALIADO ─ */
+.pak-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px}
+.pak-head{padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start}
+.pak-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800}
+.pak-price{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--teal)}
+.pak-price span{font-size:11px;font-weight:400;color:var(--muted)}
+.pak-body{padding:0 20px 16px}
+.pak-items{list-style:none}
+.pak-items li{font-size:12px;color:var(--muted);padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:8px}
+.pak-items li:last-child{border:none}
+.pak-items li::before{content:'→';color:var(--teal);flex-shrink:0}
+.pak-items li strong{color:var(--cream)}
+.pak-canva{background:rgba(0,212,184,.06);border-top:1px solid rgba(0,212,184,.15);padding:12px 20px;font-size:11px;color:var(--teal);font-weight:600}
+
+/* ─ PIEZA CARD ─ */
+.pieza{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.pz-format{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:600}
+.pz-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:6px}
+.pz-dim{font-family:'Inter',sans-serif;font-size:10px;color:var(--teal);margin-bottom:8px;font-weight:600}
+.pz-copy{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px}
+.pz-elem{display:flex;flex-wrap:wrap;gap:4px}
+.pz-e{font-size:9px;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,.06);color:rgba(232,242,250,.7)}
+.pz-link{font-size:10px;color:var(--teal);font-weight:600;text-decoration:none;margin-top:8px;display:inline-block}
+
+/* ─ HERRAMIENTAS ─ */
+.tool-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.tc-icon{font-size:22px;margin-bottom:8px}
+.tc-name{font-size:13px;font-weight:600;margin-bottom:4px}
+.tc-plan{font-size:10px;color:var(--mint);font-weight:600;margin-bottom:6px}
+.tc-desc{font-size:11px;color:var(--muted);line-height:1.55}
+.tc-uses{list-style:none;margin-top:8px}
+.tc-uses li{font-size:10px;color:var(--muted);padding:3px 0;display:flex;gap:6px}
+.tc-uses li::before{content:'·';color:var(--teal);font-weight:700}
+
+/* ─ EMAIL ─ */
+.email-preview{background:#0A1520;border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px}
+.ep-bar{background:var(--surface);padding:10px 16px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border)}
+.ep-dot{width:8px;height:8px;border-radius:50%}
+.ep-meta{padding:14px 20px;border-bottom:1px solid var(--border)}
+.ep-field{font-size:11px;color:var(--muted);margin-bottom:6px;display:flex;gap:8px}
+.ep-field strong{color:var(--cream);min-width:36px}
+.ep-body{padding:20px}
+.ep-subject{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:14px;color:var(--teal)}
+.ep-text{font-size:13px;color:var(--muted);line-height:1.75}
+.ep-text strong{color:var(--cream)}
+.ep-cta{background:var(--teal);color:var(--bg);font-family:'Syne',sans-serif;font-weight:700;font-size:12px;padding:10px 22px;border-radius:8px;display:inline-block;margin:14px 0;border:none;cursor:pointer}
+.ep-sig{font-size:11px;color:var(--muted);margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+
+/* ─ INFO BOXES ─ */
+.hl{background:rgba(0,212,184,.06);border-left:3px solid var(--teal);border-radius:0 10px 10px 0;padding:12px 16px;margin-bottom:12px;font-size:12px;color:var(--cream);line-height:1.7}
+.hl.gold{background:var(--gold-bg);border-left-color:var(--gold)}
+.hl.coral{background:var(--coral-bg);border-left-color:var(--coral)}
+
+/* ─ FLOW STEP ─ */
+.flow{display:flex;flex-direction:column;gap:0}
+.flow-step{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:flex-start}
+.flow-step:last-child{border:none}
+.fs-n{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:rgba(0,212,184,.2);line-height:1;width:30px;flex-shrink:0}
+.fs-b{}
+.fs-t{font-size:13px;font-weight:600;margin-bottom:3px}
+.fs-d{font-size:12px;color:var(--muted);line-height:1.6}
+.fs-tool{font-size:10px;color:var(--teal);font-weight:600;margin-top:4px;font-family:'Inter',sans-serif}
+
+/* ─ FOOTER ─ */
+.footer{text-align:center;padding:32px 20px;font-size:11px;color:rgba(232,242,250,.2);border-top:1px solid var(--border)}
+.footer strong{color:var(--teal)}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="h-eye">GuanaGO — Sistema de contenido & marketing operativo</div>
+  <h1 class="h-title">Contenido que<br><em>convierte visitantes</em></h1>
+  <p class="h-sub">TikTok · Instagram · email comercial@guanago.travel · paquetes aliados · embudos por tipo de negocio · flujo de producción Canva + IA</p>
+  <div class="h-tags">
+    <span class="htag">@guanago TikTok activo</span>
+    <span class="htag">comercial@guanago.travel</span>
+    <span class="htag">Canva Pro</span>
+    <span class="htag">Make.com</span>
+    <span class="htag">Claude API</span>
+    <span class="htag">Airtable Contenido_Redes</span>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nb on" onclick="sw('calendario',this)">📅 Calendario</button>
+  <button class="nb" onclick="sw('embudos',this)">🎯 Embudos</button>
+  <button class="nb" onclick="sw('paquetes',this)">📦 Paquetes aliado</button>
+  <button class="nb" onclick="sw('piezas',this)">🎨 Piezas Canva</button>
+  <button class="nb" onclick="sw('herramientas',this)">🛠️ Herramientas</button>
+  <button class="nb" onclick="sw('email',this)">📧 Email comercial</button>
+  <button class="nb" onclick="sw('flujo',this)">⚙️ Flujo producción</button>
+</nav>
+
+<!-- ═══════ CALENDARIO ═══════ -->
+<div class="s on" id="s-calendario">
+  <div class="stitle">Calendario de contenido — mayo 2026</div>
+  <div class="ssub">Primera semana de lanzamiento + plantilla mensual. Columna de antigüedad: la cuenta TikTok ya existe, publicar desde hoy aunque sea 1 post diario corto.</div>
+
+  <div class="hl gold"><strong>Regla de oro:</strong> TikTok primero. El algoritmo premia cuentas nuevas activas en sus primeras 4 semanas. Un TikTok diario de 15 segundos con el archivo de GuíaSAI + caption en español es suficiente para construir audiencia sin producción extra.</div>
+
+  <div class="cal-wrap">
+    <table class="cal">
+      <thead>
+        <tr>
+          <th>Día</th>
+          <th>Red</th>
+          <th>Tipo de pieza</th>
+          <th>Concepto / copy base</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="day">Lun</div><div class="net">Semana 1</div></td>
+          <td><span class="pill p-tk">TikTok</span><span class="pill p-ig">IG Reel</span></td>
+          <td class="col-tipo">Presentación de marca</td>
+          <td class="col-copy">"Somos GuanaGO — la isla de San Andrés hecha app. Por isleños, para el mundo." 15s con música calypso + imágenes aéreas del archipiélago. Material: disco duro / GuíaSAI.</td>
+        </tr>
+        <tr>
+          <td><div class="day">Mar</div></td>
+          <td><span class="pill p-tk">TikTok</span><span class="pill p-wa">WhatsApp</span></td>
+          <td class="col-tipo">Cultura Kriol — Breda Sky</td>
+          <td class="col-copy">"60 años tallando palma de coco en San Andrés" — retrato de 20s de Breda Sky trabajando. No necesita locución, la imagen sola habla. Enviar también a lista WhatsApp aliados.</td>
+        </tr>
+        <tr>
+          <td><div class="day">Mié</div></td>
+          <td><span class="pill p-ig">IG Feed</span><span class="pill p-fb">Facebook</span></td>
+          <td class="col-tipo">Guía del viajero</td>
+          <td class="col-copy">Carrusel 5 slides: "5 cosas que debes saber antes de viajar a San Andrés." Slide 5: CTA "Descarga GuanaGO y tenlas todas en tu bolsillo." Compartir en grupo FB "De tour por San Andrés" (23.000 miembros).</td>
+        </tr>
+        <tr>
+          <td><div class="day">Jue</div></td>
+          <td><span class="pill p-tk">TikTok</span></td>
+          <td class="col-tipo">Negocio aliado</td>
+          <td class="col-copy">"Este restaurante solo lo conocen los isleños 🤫" — 20s mostrando un plato de Rondon o Rondón con contexto de Bobby Rock. Resultado: genera tráfico físico + potencial aliado Premium.</td>
+        </tr>
+        <tr>
+          <td><div class="day">Vie</div></td>
+          <td><span class="pill p-ig">IG Story</span><span class="pill p-tk">TikTok</span></td>
+          <td class="col-tipo">Experiencia — Mar</td>
+          <td class="col-copy">"El mar más claro que verás en tu vida" — 15s caimán, arrecife, agua turquesa. Texto superpuesto: "Reserva tu tour con GuanaGO. Link en bio." Story: encuesta "¿Ya fuiste a San Andrés? Sí / No"</td>
+        </tr>
+        <tr>
+          <td><div class="day">Sáb</div></td>
+          <td><span class="pill p-tk">TikTok</span><span class="pill p-ig">IG Reel</span></td>
+          <td class="col-tipo">Behind the scenes</td>
+          <td class="col-copy">"Construimos GuanaGO desde la isla — un local haciendo tecnología Raizal." 30s mostrando la app en el celular con el mapa de San Andrés. Humaniza la marca. Alta retención.</td>
+        </tr>
+        <tr>
+          <td><div class="day">Dom</div></td>
+          <td><span class="pill p-em">Email</span><span class="pill p-wa">WhatsApp</span></td>
+          <td class="col-tipo">Newsletter semanal aliados</td>
+          <td class="col-copy">Reporte de la semana: cuántos nuevos usuarios descargaron la app, qué contenido funcionó mejor, 1 tip de marketing para el aliado. Desde comercial@guanago.travel.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="eye">Pilares de contenido — 6 tipos para GuanaGO</div>
+    <div class="g3">
+      <div style="background:rgba(0,212,184,.06);border:1px solid rgba(0,212,184,.15);border-radius:10px;padding:14px">
+        <div style="font-size:16px;margin-bottom:6px">🌊</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--teal)">Mar & naturaleza</div>
+        <div style="font-size:11px;color:var(--muted)">Buceo, Sea Flower, aguas turquesas, vida marina. El gancho visual más poderoso. 2× semana.</div>
+      </div>
+      <div style="background:rgba(155,138,250,.06);border:1px solid rgba(155,138,250,.15);border-radius:10px;padding:14px">
+        <div style="font-size:16px;margin-bottom:6px">🌴</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--purple)">Cultura Kriol</div>
+        <div style="font-size:11px;color:var(--muted)">Palma de coco, creole, RIMM, Breda Sky, Miss Trinie. Lo que ninguna OTA tiene. 2× semana.</div>
+      </div>
+      <div style="background:rgba(255,179,71,.06);border:1px solid rgba(255,179,71,.15);border-radius:10px;padding:14px">
+        <div style="font-size:16px;margin-bottom:6px">🗺️</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--gold)">Guía del viajero</div>
+        <div style="font-size:11px;color:var(--muted)">Tips, cómo llegar, temporadas, qué evitar. SEO orgánico en TikTok. 1× semana.</div>
+      </div>
+      <div style="background:rgba(255,107,107,.06);border:1px solid rgba(255,107,107,.15);border-radius:10px;padding:14px">
+        <div style="font-size:16px;margin-bottom:6px">🍽️</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--coral)">Aliados en acción</div>
+        <div style="font-size:11px;color:var(--muted)">Restaurantes, tiendas, taxis, posadas. Muestra negocios reales. Genera tráfico físico. 2× semana.</div>
+      </div>
+      <div style="background:rgba(82,217,164,.06);border:1px solid rgba(82,217,164,.15);border-radius:10px;padding:14px">
+        <div style="font-size:16px;margin-bottom:6px">✨</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--mint)">Experiencias vivas</div>
+        <div style="font-size:11px;color:var(--muted)">Caribbean Night, Coco ART, Rondon Tour, Eco Fiwi. Emocional. "Quiero estar ahí." 1× semana.</div>
+      </div>
+      <div style="background:rgba(59,191,234,.06);border:1px solid rgba(59,191,234,.15);border-radius:10px;padding:14px">
+        <div style="font-size:16px;margin-bottom:6px">🔄</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--sky)">Economía circular</div>
+        <div style="font-size:11px;color:var(--muted)">Cuando usas GuanaGO, el dinero se queda en la isla. El diferenciador de marca. 1× semana.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ EMBUDOS ═══════ -->
+<div class="s" id="s-embudos">
+  <div class="stitle">Embudos por tipo de negocio aliado</div>
+  <div class="ssub">Cada tipo de negocio tiene un viaje diferente. El embudo adapta el mensaje, el canal y la oferta a lo que más le importa a ese empresario.</div>
+
+  <div class="funnel-box">
+    <div class="fb-head" style="background:rgba(255,107,107,.06);border-bottom:1px solid rgba(255,107,107,.15)">
+      <div>
+        <div style="font-size:16px;margin-bottom:4px">🍽️</div>
+        <div class="fb-title">Restaurante / Bar / Tienda local</div>
+        <div class="fb-count">Objetivo: $49.900/mes Plan Activo · Comisión 10%</div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);text-align:right">Canal principal:<br>visita personal + WhatsApp</div>
+    </div>
+    <div class="fb-steps">
+      <div class="fbs"><div class="fbs-num">1</div><div class="fbs-body"><div class="fbs-t">Primer contacto — "¿Tu negocio está en el mapa?"</div><div class="fbs-d">Visita presencial con tarjetón en mano. Mostrar el mapa en el celular con un pin hipotético donde estaría su negocio. El empresario ve en 10 segundos lo que se está perdiendo.</div><span class="fbs-tag">Canal: calle / WhatsApp</span></div></div>
+      <div class="fbs"><div class="fbs-num">2</div><div class="fbs-body"><div class="fbs-t">Enviar video de 60s — "Así verán tu negocio los turistas"</div><div class="fbs-d">Video demo de GuanaGO mostrando cómo el turista busca restaurantes, ve la ficha con fotos, y hace clic en WhatsApp del negocio. Real, no animado. Enviar por WhatsApp mismo día de la visita.</div><span class="fbs-tag">Canal: WhatsApp · Herramienta: Loom gratuito</span></div></div>
+      <div class="fbs"><div class="fbs-num">3</div><div class="fbs-body"><div class="fbs-t">Formulario + ficha preview generada por Claude</div><div class="fbs-d">Al completar el formulario Tally, Claude genera automáticamente la descripción del negocio en español e inglés + 2 ideas de posts. Se envía como PDF al WhatsApp del empresario. Ese PDF es la "muestra gratis" del servicio.</div><span class="fbs-tag">Automatización: Tally → Make.com → Claude API → PDF → WhatsApp</span></div></div>
+      <div class="fbs"><div class="fbs-num">4</div><div class="fbs-body"><div class="fbs-t">Propuesta personalizada por categoría</div><div class="fbs-d">Restaurante: "Si un turista viene 1 vez por semana por recomendación de GuanaGO y gasta $50.000, en un mes eso es $200.000 de ingreso nuevo. La membresía cuesta $49.900." La matemática cierra sola.</div><span class="fbs-tag">Herramienta: calculadora de ROI en Canva o Airtable</span></div></div>
+      <div class="fbs"><div class="fbs-num">5</div><div class="fbs-body"><div class="fbs-t">Activación + kit físico entregado</div><div class="fbs-d">Al pagar el primer mes: sticker vinilo para la vitrina + 20 tarjetones para mesa + QR personalizado impreso + HV del negocio en PDF. Se entrega en persona o por mensajero local. El empresario ve valor inmediato antes de que llegue el primer cliente.</div><span class="fbs-tag">Tiempo: 48h desde pago hasta kit entregado</span></div></div>
+    </div>
+  </div>
+
+  <div class="funnel-box">
+    <div class="fb-head" style="background:rgba(82,217,164,.06);border-bottom:1px solid rgba(82,217,164,.15)">
+      <div>
+        <div style="font-size:16px;margin-bottom:4px">🚕</div>
+        <div class="fb-title">Taxis / Transporte local</div>
+        <div class="fb-count">Objetivo: promotores activos · Comisión por referido $2.000–5.000 COP/turista</div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);text-align:right">Canal principal:<br>cooperativas + aeropuerto</div>
+    </div>
+    <div class="fb-steps">
+      <div class="fbs"><div class="fbs-num">1</div><div class="fbs-body"><div class="fbs-t">Reunión con cooperativa de taxis — propuesta colectiva</div><div class="fbs-d">Un solo punto de entrada. La cooperativa acepta y distribuye el material entre todos sus afiliados. No hay que convencer a cada taxista individualmente.</div><span class="fbs-tag">Canal: reunión física · Material: presentación 5 slides</span></div></div>
+      <div class="fbs"><div class="fbs-num">2</div><div class="fbs-body"><div class="fbs-t">Tarjeta de promotor personalizada por taxista</div><div class="fbs-d">Cada taxista recibe 10 tarjetas con su código de referido único. Cuando el turista descarga la app usando ese código, el taxista acumula GuanaPoints canjeables + comisión en efectivo quincenal vía Nequi.</div><span class="fbs-tag">Costo: $500 COP/tarjeta · 10 por taxista · Herramienta: Make.com genera código único</span></div></div>
+      <div class="fbs"><div class="fbs-num">3</div><div class="fbs-body"><div class="fbs-t">Script de 30 segundos en el taxi</div><div class="fbs-d">"Señor/a, ¿ya tiene GuanaGO? Es la app oficial de la isla — le muestra los mejores restaurantes, tours y tiendas locales. Escanee este código y gana un descuento en su primer tour." El taxista no vende — informa. El QR hace el resto.</div><span class="fbs-tag">Material: tarjeta laminada con el script para el tablero del taxi</span></div></div>
+    </div>
+  </div>
+
+  <div class="funnel-box">
+    <div class="fb-head" style="background:rgba(155,138,250,.06);border-bottom:1px solid rgba(155,138,250,.15)">
+      <div>
+        <div style="font-size:16px;margin-bottom:4px">🏪</div>
+        <div class="fb-title">Tiendas / Negocios no turísticos</div>
+        <div class="fb-count">Objetivo: visibilidad para visitantes · Plan Básico gratis → Activo en 60 días</div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);text-align:right">Canal principal:<br>email + WhatsApp</div>
+    </div>
+    <div class="fb-steps">
+      <div class="fbs"><div class="fbs-num">1</div><div class="fbs-body"><div class="fbs-t">Email desde comercial@guanago.travel — Plan Básico GRATIS</div><div class="fbs-d">Asunto: "Tu negocio puede aparecer en el mapa que usan los turistas de San Andrés — sin costo." El correo muestra 1 captura del mapa con negocios verificados y explica que el plan básico es gratuito para empezar. No hay riesgo para el empresario.</div></div></div>
+      <div class="fbs"><div class="fbs-num">2</div><div class="fbs-body"><div class="fbs-t">Anuncio combinado en la app — texto + imagen + botón</div><div class="fbs-d">En la pantalla de mapa de GuanaGO, el negocio aparece como "Anuncio local": foto del local + nombre + categoría + descripción de 30 palabras + botón "Ver en mapa" o "Llamar". No requiere que el negocio maneje redes sociales.</div><span class="fbs-tag">Formato: tile nativa dentro del mapa · Se configura desde Airtable · $0 en plan básico</span></div></div>
+      <div class="fbs"><div class="fbs-num">3</div><div class="fbs-body"><div class="fbs-t">WiFi captivo del negocio — punto de entrada GuanaGO</div><div class="fbs-d">Si la tienda tiene WiFi, GuanaGO instala el portal captivo. El turista que se conecta ve GuanaGO primero. El negocio obtiene tráfico digital sin saber de marketing. Diferenciador que ninguna otra plataforma ofrece en la isla.</div><span class="fbs-tag">Dispositivo: router OpenWRT ~$80k COP · Sin mensualidad adicional</span></div></div>
+    </div>
+  </div>
+
+  <div class="funnel-box">
+    <div class="fb-head" style="background:rgba(59,191,234,.06);border-bottom:1px solid rgba(59,191,234,.15)">
+      <div>
+        <div style="font-size:16px;margin-bottom:4px">✈️</div>
+        <div class="fb-title">Agencias B2B — email desde comercial@guanago.travel</div>
+        <div class="fb-count">Objetivo: cotizador activo · 10–15% comisión · pipeline Airtable</div>
+      </div>
+    </div>
+    <div class="fb-steps">
+      <div class="fbs"><div class="fbs-num">1</div><div class="fbs-body"><div class="fbs-t">Email B2B con acceso al cotizador GuíaSAI</div><div class="fbs-d">Desde comercial@guanago.travel: "Acceso gratuito al cotizador de San Andrés — 80+ servicios, precios netos, vouchers digitales automáticos." El cotizador ya existe y funciona. El email es la puerta de entrada.</div></div></div>
+      <div class="fbs"><div class="fbs-num">2</div><div class="fbs-body"><div class="fbs-t">Demo en video de 3 minutos — cotizador en vivo</div><div class="fbs-d">Loom gratuito mostrando cómo la agencia arma un paquete en 5 minutos, genera el PDF de cotización con fotos y precios, y envía el voucher al cliente. Sin llamadas. Sin WhatsApp manual. Sin esperar confirmación.</div><span class="fbs-tag">Herramienta: Loom.com · Gratis hasta 5 min</span></div></div>
+      <div class="fbs"><div class="fbs-num">3</div><div class="fbs-body"><div class="fbs-t">Seguimiento automático: Make.com + Airtable pipeline</div><div class="fbs-d">Cada agencia que abre el email o hace clic en el cotizador entra al pipeline en Airtable (tabla Agencias_OTA). Make.com envía un follow-up automático a los 3 días si no respondió. Segundo follow-up a los 7 días. El sistema trabaja mientras Sky trabaja en otra cosa.</div><span class="fbs-tag">Make.com free tier: 1.000 ops/mes cubre 100+ agencias en seguimiento</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PAQUETES ═══════ -->
+<div class="s" id="s-paquetes">
+  <div class="stitle">Paquetes de aliado — lo que recibe cada negocio</div>
+  <div class="ssub">Diseñados para cerrar en una conversación. El empresario ve el valor inmediato, no una promesa futura.</div>
+
+  <div class="pak-card">
+    <div class="pak-head" style="background:rgba(74,112,144,.08)">
+      <div>
+        <div class="eye">Plan básico</div>
+        <div class="pak-name">🌴 Presencia Local</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Para negocios que no invierten en marketing — punto de entrada sin riesgo</div>
+      </div>
+      <div style="text-align:right">
+        <div class="pak-price">$0 <span>/ siempre</span></div>
+        <div style="font-size:10px;color:var(--muted)">15% comisión por venta</div>
+      </div>
+    </div>
+    <div class="pak-body">
+      <ul class="pak-items">
+        <li>Pin verificado en el mapa interactivo de GuanaGO (los turistas te encuentran)</li>
+        <li>Ficha con nombre, categoría, descripción, fotos y WhatsApp directo</li>
+        <li>Badge "Negocio verificado GuanaGO" en tu perfil</li>
+        <li>Apareces en búsquedas por categoría dentro de la app</li>
+        <li>QR personalizado para imprimir y poner en tu negocio</li>
+        <li>200 GuanaPoints de bienvenida (canjeables en el ecosistema)</li>
+        <li><strong>Sticker vinilo "Verificado GuanaGO"</strong> para pegar en vitrina o caja</li>
+      </ul>
+    </div>
+    <div class="pak-canva">Canva: ficha preview personalizada generada automáticamente al registrarse · Formato: 1080×1920px para WhatsApp/Stories</div>
+  </div>
+
+  <div class="pak-card" style="border-color:rgba(0,212,184,.25)">
+    <div class="pak-head" style="background:rgba(0,212,184,.06)">
+      <div>
+        <div class="eye" style="color:var(--mint)">Plan activo — más popular</div>
+        <div class="pak-name">🐠 Aliado Activo</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Para negocios que quieren clientes nuevos cada semana</div>
+      </div>
+      <div style="text-align:right">
+        <div class="pak-price" style="color:var(--mint)">$49.900 <span>/ mes</span></div>
+        <div style="font-size:10px;color:var(--muted)">10% comisión por venta</div>
+      </div>
+    </div>
+    <div class="pak-body">
+      <ul class="pak-items">
+        <li>Todo lo del plan Básico</li>
+        <li><strong>Perfil destacado</strong> en su categoría (aparece primero en búsquedas)</li>
+        <li>Dashboard de métricas: vistas, escaneos QR, clics al WhatsApp</li>
+        <li>Link directo a reserva o WhatsApp con tracking de conversión</li>
+        <li>Aparece en el carrusel de inicio de la app (rotativo)</li>
+        <li><strong>Anuncio combinado</strong> en mapa: texto + imagen + botón de acción</li>
+        <li>Tarjetón A6 plastificado para poner en mesa o mostrador (20 unidades)</li>
+        <li>Reporte mensual por WhatsApp: cuántos turistas te vieron y visitaron</li>
+        <li>Inclusión en newsletter semanal de GuanaGO a aliados activos</li>
+      </ul>
+    </div>
+    <div class="pak-canva" style="background:rgba(82,217,164,.06);border-top-color:rgba(82,217,164,.2);color:var(--mint)">Canva: diseño del anuncio combinado (texto+imagen+botón) · Plantilla personalizable · Formato tile nativa mapa 400×300px</div>
+  </div>
+
+  <div class="pak-card" style="border-color:rgba(255,179,71,.25)">
+    <div class="pak-head" style="background:rgba(255,179,71,.06)">
+      <div>
+        <div class="eye" style="color:var(--gold)">Plan premium</div>
+        <div class="pak-name">🦀 Aliado Premium</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Para negocios que quieren que GuanaGO haga su marketing completo</div>
+      </div>
+      <div style="text-align:right">
+        <div class="pak-price" style="color:var(--gold)">$129.900 <span>/ mes</span></div>
+        <div style="font-size:10px;color:var(--muted)">10% comisión por venta</div>
+      </div>
+    </div>
+    <div class="pak-body">
+      <ul class="pak-items">
+        <li>Todo lo del plan Activo</li>
+        <li><strong>IA genera 4 posts/mes</strong> para las redes del negocio (con sus fotos + Claude)</li>
+        <li><strong>$20.000 COP de pauta Meta Ads incluidos</strong> — alcance de +10.000 personas</li>
+        <li>Primero en su categoría en toda la app (posición fija)</li>
+        <li>Video corto del negocio producido con material propio (30–45s para TikTok/Reels)</li>
+        <li>Mención en redes de GuanaGO y GuíaSAI (+10 años de audiencia)</li>
+        <li>Inclusión en campañas temáticas (Semana de la Gastronomía, Caribbean Night, etc.)</li>
+        <li><strong>Kit completo impreso:</strong> sticker + tarjetones + tarjeta promotor + HV PDF</li>
+        <li>1 Reel producido por trimestre con el archivo Breda Sky o material propio</li>
+      </ul>
+    </div>
+    <div class="pak-canva" style="background:rgba(255,179,71,.06);border-top-color:rgba(255,179,71,.2);color:var(--gold)">Canva: plantilla HV negocio (2 páginas PDF) + 4 plantillas de posts mensuales · Todo editable desde la cuenta Canva Pro de GuanaGO</div>
+  </div>
+
+  <div class="hl">El paquete no es solo digital. El sticker en la vitrina, el tarjetón en la mesa, y el QR en la caja son el canal físico que convierte al turista que ya está en el local. Sin eso, el turista pasa sin registrar la visita y el aliado no ve el valor.</div>
+</div>
+
+<!-- ═══════ PIEZAS CANVA ═══════ -->
+<div class="s" id="s-piezas">
+  <div class="stitle">Piezas de diseño — templates Canva</div>
+  <div class="ssub">Cada pieza tiene su formato, dimensiones, y los elementos que debe incluir. Se producen una vez en Canva y se replican para cada aliado cambiando el nombre, foto y colores.</div>
+
+  <div class="g3">
+    <div class="pieza">
+      <div class="pz-format">TikTok / IG Reel</div>
+      <div class="pz-name">Video destino 15–30s</div>
+      <div class="pz-dim">1080 × 1920px · 9:16</div>
+      <div class="pz-copy">Imágenes del archipiélago con música calypso. Texto superpuesto: máximo 5 palabras por pantalla. Logo GuanaGO esquina inferior derecha. Sin locución necesaria.</div>
+      <div class="pz-elem"><span class="pz-e">Video mar</span><span class="pz-e">Música libre</span><span class="pz-e">Logo</span><span class="pz-e">Texto breve</span><span class="pz-e">CTA final</span></div>
+    </div>
+    <div class="pieza">
+      <div class="pz-format">IG Feed / Facebook</div>
+      <div class="pz-name">Carrusel guía 5 slides</div>
+      <div class="pz-dim">1080 × 1080px · 1:1 por slide</div>
+      <div class="pz-copy">Slide 1: pregunta gancho. Slides 2–4: los tips con foto de fondo. Slide 5: CTA "Descarga GuanaGO". Fuente Syne Bold, fondo oscuro con overlay de color de categoría.</div>
+      <div class="pz-elem"><span class="pz-e">5 slides</span><span class="pz-e">Foto fondo</span><span class="pz-e">Overlay teal</span><span class="pz-e">Syne Bold</span><span class="pz-e">QR último slide</span></div>
+    </div>
+    <div class="pieza">
+      <div class="pz-format">WhatsApp / Stories</div>
+      <div class="pz-name">Story oferta aliado</div>
+      <div class="pz-dim">1080 × 1920px · 9:16</div>
+      <div class="pz-copy">Foto del negocio + nombre + oferta del día + botón "Ver en GuanaGO". Zona segura: 150px arriba y abajo para no ocultar controles. Generada desde plantilla Canva con datos de Airtable.</div>
+      <div class="pz-elem"><span class="pz-e">Foto aliado</span><span class="pz-e">Zona segura</span><span class="pz-e">Oferta texto</span><span class="pz-e">Logo</span><span class="pz-e">Botón</span></div>
+    </div>
+    <div class="pieza">
+      <div class="pz-format">Mapa in-app</div>
+      <div class="pz-name">Anuncio combinado (tile)</div>
+      <div class="pz-dim">400 × 300px · 4:3</div>
+      <div class="pz-copy">Foto del negocio (izquierda 40%) + texto derecha: nombre en negrita, categoría, descripción 20 palabras, botón acción. Fondo oscuro #0D1B28. Borde teal del plan.</div>
+      <div class="pz-elem"><span class="pz-e">Foto negocio</span><span class="pz-e">Nombre</span><span class="pz-e">Descripción</span><span class="pz-e">Botón acción</span><span class="pz-e">Badge plan</span></div>
+    </div>
+    <div class="pieza">
+      <div class="pz-format">Impresión</div>
+      <div class="pz-name">Sticker vinilo redondo</div>
+      <div class="pz-dim">5cm × 5cm · circular · 300 DPI</div>
+      <div class="pz-copy">Logo GuanaGO centro. QR del negocio debajo. "Negocio verificado" texto circular. Fondo oscuro. Exportar como PDF de corte para imprenta local. Resistente al agua.</div>
+      <div class="pz-elem"><span class="pz-e">Logo central</span><span class="pz-e">QR</span><span class="pz-e">Texto circular</span><span class="pz-e">PDF corte</span><span class="pz-e">300 DPI</span></div>
+    </div>
+    <div class="pieza">
+      <div class="pz-format">Impresión</div>
+      <div class="pz-name">HV del negocio PDF</div>
+      <div class="pz-dim">A4 · 2 páginas · PDF digital</div>
+      <div class="pz-copy">Página 1: logo negocio + historia (generada por Claude) + 3 fotos. Página 2: servicios y precios (desde Airtable) + mapa de ubicación + QR reserva directa + badge plan GuanaGO.</div>
+      <div class="pz-elem"><span class="pz-e">Historia IA</span><span class="pz-e">3 fotos</span><span class="pz-e">Tabla servicios</span><span class="pz-e">Mapa pin</span><span class="pz-e">QR reserva</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="eye">Flujo de producción en Canva — un aliado nuevo en 30 minutos</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.8">
+      <strong style="color:var(--cream)">1.</strong> El aliado llena el formulario Tally con nombre, fotos y descripción.<br>
+      <strong style="color:var(--cream)">2.</strong> Make.com envía los datos a Claude API → genera texto en ES/EN + copy de 4 posts.<br>
+      <strong style="color:var(--cream)">3.</strong> Sky abre la plantilla Canva del plan correspondiente → cambia foto, nombre y texto (2 minutos por pieza).<br>
+      <strong style="color:var(--cream)">4.</strong> Exporta: PDF para HV, PNG para Stories, MP4 para Reel (si aplica).<br>
+      <strong style="color:var(--cream)">5.</strong> Sube a Airtable tabla Contenido_Redes con fecha de publicación → Make.com publica automáticamente.<br>
+      <strong style="color:var(--cream)">6.</strong> El sticker y tarjetón se envían a imprenta local → entrega en 48h.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ HERRAMIENTAS ═══════ -->
+<div class="s" id="s-herramientas">
+  <div class="stitle">Stack de herramientas — todas con capa gratuita</div>
+  <div class="ssub">Cero inversión en software para empezar. Se paga solo cuando el volumen lo justifica.</div>
+
+  <div class="g3">
+    <div class="tool-card">
+      <div class="tc-icon">🎨</div>
+      <div class="tc-name">Canva Pro</div>
+      <div class="tc-plan">Gratis básico / $12.99 USD/mes Pro</div>
+      <div class="tc-desc">Diseño de todas las piezas: Stories, carruseles, HV PDF, stickers, roll-ups. La versión Pro permite Brand Kit (colores GuanaGO) y generación con IA.</div>
+      <ul class="tc-uses">
+        <li>HV del negocio (2 páginas PDF)</li>
+        <li>Stories y carruseles aliados</li>
+        <li>Sticker vinilo (PDF de corte)</li>
+        <li>Anuncio tile in-app</li>
+        <li>Plantillas reutilizables por plan</li>
+      </ul>
+    </div>
+    <div class="tool-card">
+      <div class="tc-icon">🎬</div>
+      <div class="tc-name">CapCut / Canva Video</div>
+      <div class="tc-plan">Gratis — funciones básicas completas</div>
+      <div class="tc-desc">Edición de videos cortos para TikTok y Reels. Subtítulos automáticos, música libre de derechos, plantillas de texto animado. Desde el celular.</div>
+      <ul class="tc-uses">
+        <li>Reels destino 15–30s</li>
+        <li>Videos aliados 30–45s</li>
+        <li>Subtítulos automáticos (accesibilidad)</li>
+        <li>Música calypso libre de derechos</li>
+      </ul>
+    </div>
+    <div class="tool-card">
+      <div class="tc-icon">📹</div>
+      <div class="tc-name">Loom</div>
+      <div class="tc-plan">Gratis hasta 5 min por video</div>
+      <div class="tc-desc">Demo de GuanaGO para enviar a agencias B2B y aliados potenciales. Se graba una vez, se comparte con link. Muestra el cotizador, el mapa y la app en vivo sin reunión.</div>
+      <ul class="tc-uses">
+        <li>Demo cotizador para agencias (3 min)</li>
+        <li>Tutorial onboarding aliados</li>
+        <li>Video pitch para Radio Nacional</li>
+      </ul>
+    </div>
+    <div class="tool-card">
+      <div class="tc-icon">🤖</div>
+      <div class="tc-name">Claude API</div>
+      <div class="tc-plan">$0.003/1k tokens · ~$10–30 USD/mes</div>
+      <div class="tc-desc">Genera automáticamente: descripción del negocio, 4 copies de posts, hashtags, guión de cuña radial, copy de email. Con los datos de Airtable como input.</div>
+      <ul class="tc-uses">
+        <li>HV del negocio: historia en ES/EN</li>
+        <li>4 posts mensuales por aliado</li>
+        <li>Copy emails comerciales</li>
+        <li>Respuestas automáticas WhatsApp</li>
+      </ul>
+    </div>
+    <div class="tool-card">
+      <div class="tc-icon">⚡</div>
+      <div class="tc-name">Make.com</div>
+      <div class="tc-plan">Gratis 1.000 ops/mes · $9/mes Core</div>
+      <div class="tc-desc">Orquestador central. Conecta Tally → Airtable → Claude → WhatsApp → publicación en redes. La capa gratuita cubre los primeros 20 aliados y 300 operaciones de contenido al mes.</div>
+      <ul class="tc-uses">
+        <li>Formulario → Airtable → notificación Sky</li>
+        <li>Airtable → programar publicación redes</li>
+        <li>Civitatis email → voucher automático</li>
+        <li>Trigger: aliado inactivo → aviso WhatsApp</li>
+      </ul>
+    </div>
+    <div class="tool-card">
+      <div class="tc-icon">📊</div>
+      <div class="tc-name">Airtable + Buffer</div>
+      <div class="tc-plan">Airtable gratis · Buffer gratis 3 canales</div>
+      <div class="tc-desc">Airtable: tabla Contenido_Redes como grilla de publicación. Buffer: programar posts automáticamente en IG, FB y TikTok desde un solo lugar. Make.com conecta ambos.</div>
+      <ul class="tc-uses">
+        <li>Grilla de contenido mensual</li>
+        <li>Aprobación de Sky antes de publicar</li>
+        <li>Métricas post-publicación</li>
+        <li>Buffer: programación automática</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="hl gold"><strong>Herramienta de video con IA — Runway ML / Pika Labs:</strong> ambas tienen capas gratuitas para generar video de 5–10 segundos desde una foto. Ideal para convertir las fotos de Breda Sky en clips animados sin filmar nada nuevo. Runway: 125 créditos gratis. Pika: 250 créditos gratis. Cada clip de 5s gasta ~10–15 créditos.</div>
+</div>
+
+<!-- ═══════ EMAIL COMERCIAL ═══════ -->
+<div class="s" id="s-email">
+  <div class="stitle">Email comercial — plantillas desde comercial@guanago.travel</div>
+  <div class="ssub">3 plantillas listas para usar: captación de aliados locales, propuesta a agencias B2B, y newsletter semanal de aliados activos.</div>
+
+  <div class="email-preview">
+    <div class="ep-bar">
+      <div class="ep-dot" style="background:#FF6B6B"></div>
+      <div class="ep-dot" style="background:#FFB347"></div>
+      <div class="ep-dot" style="background:#52D9A4"></div>
+      <div style="font-size:11px;color:var(--muted);margin-left:8px">Email 1 — Captación aliado local</div>
+    </div>
+    <div class="ep-meta">
+      <div class="ep-field"><strong>De:</strong> comercial@guanago.travel</div>
+      <div class="ep-field"><strong>Para:</strong> [nombre negocio] · [email aliado]</div>
+      <div class="ep-field"><strong>Asunto:</strong> [Nombre negocio] — ¿ya apareces en el mapa oficial de San Andrés?</div>
+    </div>
+    <div class="ep-body">
+      <div class="ep-subject">Hola [nombre], tu negocio puede estar frente a miles de turistas esta semana.</div>
+      <div class="ep-text">
+        Soy Sky Stephens, fundador de <strong>GuanaGO</strong> — la primera plataforma turística hecha por isleños Raizales para los visitantes de San Andrés.<br><br>
+        Cuando un turista llega a la isla y abre GuanaGO, ve un mapa con los negocios verificados cerca de él. <strong>Ahora mismo, [nombre de tu negocio] no está en ese mapa.</strong><br><br>
+        Eso significa que cada turista que pasa frente a tu puerta podría estar buscando exactamente lo que ofreces — y no te encuentra porque no apareces.<br><br>
+        Registrarte es <strong>gratuito</strong>. En 10 minutos tu negocio aparece en el mapa, con tus fotos, tu WhatsApp y tu ubicación exacta. Sin contratos, sin complicaciones.<br><br>
+        ¿Te cuento cómo funciona? Responde este email o llámame al <strong>+57 315 383 6043</strong>.
+      </div>
+      <button class="ep-cta">→ Registrar mi negocio gratis</button>
+      <div class="ep-sig">
+        <strong style="color:var(--cream)">Sky Stephens</strong> — Fundador GuanaGO / GuíaSAI<br>
+        RNT 48674 · NIT 901013739-9 · San Andrés Islas<br>
+        comercial@guanago.travel · +57 315 383 6043<br>
+        guanago.travel · guiasanandresislas.com
+      </div>
+    </div>
+  </div>
+
+  <div class="email-preview">
+    <div class="ep-bar">
+      <div class="ep-dot" style="background:#FF6B6B"></div>
+      <div class="ep-dot" style="background:#FFB347"></div>
+      <div class="ep-dot" style="background:#52D9A4"></div>
+      <div style="font-size:11px;color:var(--muted);margin-left:8px">Email 2 — Propuesta B2B agencias</div>
+    </div>
+    <div class="ep-meta">
+      <div class="ep-field"><strong>De:</strong> comercial@guanago.travel</div>
+      <div class="ep-field"><strong>Para:</strong> [nombre agencia] · [email comercial]</div>
+      <div class="ep-field"><strong>Asunto:</strong> San Andrés en 5 minutos — cotizador gratuito para agencias</div>
+    </div>
+    <div class="ep-body">
+      <div class="ep-subject">Cotice San Andrés en 5 minutos sin llamar a nadie.</div>
+      <div class="ep-text">
+        Estimado/a [nombre],<br><br>
+        GuíaSAI (RNT 48674) opera desde San Andrés con más de 10 años de experiencia y una red de 80+ servicios turísticos verificados: tours, alojamientos, gastronomía, experiencias culturales.<br><br>
+        Hemos desarrollado un <strong>cotizador digital gratuito para agencias</strong> que le permite:<br><br>
+        · Armar paquetes a medida en menos de 5 minutos<br>
+        · Generar cotizaciones PDF con fotos y precios netos<br>
+        · Recibir vouchers digitales automáticos al confirmar una reserva<br>
+        · Definir su propio markup sin intermediarios<br><br>
+        <strong>Comisión de agencia: 12–15% sobre precio neto.</strong> Liquidación mensual. Sin mínimo de reservas.<br><br>
+        ¿Le envío acceso al cotizador y un video demo de 3 minutos?
+      </div>
+      <button class="ep-cta">→ Quiero acceso al cotizador</button>
+      <div class="ep-sig">
+        <strong style="color:var(--cream)">Sky Stephens</strong> — Gerente Comercial GuíaSAI / GuanaGO<br>
+        RNT 48674 · comercial@guanago.travel · +57 315 383 6043
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="eye">Newsletter semanal aliados — estructura fija (domingo)</div>
+    <div class="flow">
+      <div class="flow-step"><div class="fs-n">1</div><div class="fs-b"><div class="fs-t">Asunto: "GuanaGO esta semana — [número] nuevos turistas cerca de tu negocio"</div><div class="fs-d">El número real de usuarios activos en la app esa semana. Claude extrae el dato de Firebase Analytics automáticamente vía Make.com.</div></div></div>
+      <div class="flow-step"><div class="fs-n">2</div><div class="fs-b"><div class="fs-t">Bloque 1: métricas de la semana</div><div class="fs-d">Usuarios activos en GuanaGO, descargas nuevas, búsquedas por categoría. 3 números, no más. Simple y concreto.</div></div></div>
+      <div class="flow-step"><div class="fs-n">3</div><div class="fs-b"><div class="fs-t">Bloque 2: el contenido que mejor funcionó esta semana</div><div class="fs-d">El post o Reel de GuanaGO con más alcance. Por qué funcionó. 1 tip aplicable al negocio del aliado.</div></div></div>
+      <div class="flow-step"><div class="fs-n">4</div><div class="fs-b"><div class="fs-t">Bloque 3: recordatorio de actualización</div><div class="fs-d">Si el aliado lleva más de 14 días sin actualizar su ficha, el email incluye un botón "Actualizar mi negocio". Personalizado por aliado vía Make.com.</div></div></div>
+      <div class="flow-step"><div class="fs-n">5</div><div class="fs-b"><div class="fs-t">Firma + CTA: "¿Tienes fotos nuevas? Envíalas por WhatsApp y las subimos esta semana"</div><div class="fs-d">Mantiene la relación activa. El aliado siente que GuanaGO trabaja por él cada semana, no solo al activar la membresía.</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ FLUJO PRODUCCIÓN ═══════ -->
+<div class="s" id="s-flujo">
+  <div class="stitle">Flujo de producción — de idea a publicación</div>
+  <div class="ssub">Una persona (Sky) puede producir contenido para 20 aliados en un día usando este flujo. La IA hace el trabajo pesado, Sky aprueba y afina.</div>
+
+  <div class="hl">El flujo está diseñado para que <strong>una sola persona orqueste todo</strong>. Sky es el director creativo — aprueba, ajusta, publica. Claude y Make.com son los ejecutores automáticos.</div>
+
+  <div class="card">
+    <div class="eye">Flujo semanal — contenido GuanaGO propio (redes de la marca)</div>
+    <div class="flow">
+      <div class="flow-step"><div class="fs-n">1</div><div class="fs-b"><div class="fs-t">Lunes: planificación con Claude</div><div class="fs-d">Abrir Claude y pedir: "Sugiere 7 contenidos para esta semana basados en [temporada / evento / categoría del mes]." Claude propone temas, formatos y copies. Sky elige y ajusta en 20 minutos.</div><div class="fs-tool">Herramienta: Claude.ai · Insumo: calendario de temporada turística SAI</div></div></div>
+      <div class="flow-step"><div class="fs-n">2</div><div class="fs-b"><div class="fs-t">Lunes–Martes: producción de piezas en Canva</div><div class="fs-d">Abrir las plantillas de la semana. Cambiar fotos del archivo (disco duro / GuíaSAI / Breda Sky). Pegar el copy generado por Claude. Exportar PNG/MP4. 30 minutos por pieza si hay buenas fotos disponibles.</div><div class="fs-tool">Herramienta: Canva Pro · CapCut para videos · Carpeta organizada: Mar / Kriol / Experiencias / Aliados / Aéreos</div></div></div>
+      <div class="flow-step"><div class="fs-n">3</div><div class="fs-b"><div class="fs-t">Martes: subir a Airtable tabla Contenido_Redes</div><div class="fs-d">Completar fila por fila: Red, Tipo, Fecha, Estado (programado), Caption, Hashtags, link al archivo en Drive/Storage. En este punto todo está listo para publicar automáticamente.</div><div class="fs-tool">Herramienta: Airtable · Campos: Red · Tipo · Fecha · Estado · CaptionES · CaptionEN · Hashtags · MediaURL · Métricas</div></div></div>
+      <div class="flow-step"><div class="fs-n">4</div><div class="fs-b"><div class="fs-t">Make.com publica automáticamente</div><div class="fs-d">Al cambiar Estado a "programado" en Airtable, Make.com espera la fecha y hora, descarga el archivo de media, y publica en la red correspondiente vía Buffer API. Sky no tiene que estar frente al computador.</div><div class="fs-tool">Herramienta: Make.com → Buffer → Instagram / TikTok / Facebook</div></div></div>
+      <div class="flow-step"><div class="fs-n">5</div><div class="fs-b"><div class="fs-t">Viernes: métricas y ajuste</div><div class="fs-d">Revisar qué posts tuvieron más alcance, saves, y clics al link de bio. Claude analiza los datos y sugiere ajustes para la semana siguiente. El ciclo mejora solo con el tiempo.</div><div class="fs-tool">Herramienta: Buffer Analytics (gratis) + Claude análisis de datos</div></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="eye">Flujo mensual — contenido para aliados (plan Activo y Premium)</div>
+    <div class="flow">
+      <div class="flow-step"><div class="fs-n">1</div><div class="fs-b"><div class="fs-t">Día 1 del mes: Claude genera la cola de contenido de todos los aliados</div><div class="fs-d">Un solo prompt: "Lee la tabla Aliados_Beta de Airtable y genera 4 posts para cada aliado en plan Activo o Premium. Usa los datos de su ficha, sus fotos, y el tema del mes." Claude devuelve un CSV listo para subir a Airtable ContenidoIA_Queue.</div></div></div>
+      <div class="flow-step"><div class="fs-n">2</div><div class="fs-b"><div class="fs-t">Días 2–3: Sky revisa y aprueba la cola</div><div class="fs-d">En Airtable, Sky cambia Estado de "generado" a "aprobado" para cada post que esté bien. Si algo necesita ajuste, edita el copy en Airtable directamente. No toca Canva hasta que el copy esté aprobado.</div></div></div>
+      <div class="flow-step"><div class="fs-n">3</div><div class="fs-b"><div class="fs-t">Días 3–5: producción visual en Canva</div><div class="fs-d">Con el copy aprobado, abrir la plantilla del plan del aliado en Canva. Cambiar foto + nombre + texto. 10 minutos por post si la plantilla está bien armada. Con 20 aliados × 4 posts = 80 piezas en una semana.</div></div></div>
+      <div class="flow-step"><div class="fs-n">4</div><div class="fs-b"><div class="fs-t">Make.com distribuye automáticamente</div><div class="fs-d">Las piezas aprobadas en Airtable se publican en las redes del aliado (si han dado acceso) o se envían al aliado por WhatsApp en un ZIP para que él publique. En ambos casos el flujo es automático.</div></div></div>
+      <div class="flow-step"><div class="fs-n">5</div><div class="fs-b"><div class="fs-t">Día 28: reporte mensual automático al aliado</div><div class="fs-d">Make.com compila métricas de Airtable (vistas, escaneos QR, conversiones) y genera un mensaje de WhatsApp o email con el resumen del mes. Claude redacta el mensaje en tono amigable con 3 números clave.</div></div></div>
+    </div>
+  </div>
+
+  <div class="hl coral"><strong>Para las tiendas y negocios no turísticos</strong> — el anuncio combinado (texto + imagen + video corto + botón) se configura una sola vez en Airtable y aparece en el mapa de GuanaGO de forma permanente mientras el aliado tenga el plan activo. No requiere producción mensual. El turista lo ve, hace clic, y llega al negocio. Ese es el servicio mínimo que justifica el plan básico gratuito.</div>
+</div>
+
+<div class="footer">
+  <strong>GuanaGO × GuíaSAI S.A.S.</strong> · RNT 48674 · NIT 901013739-9<br>
+  comercial@guanago.travel · guanago.travel · San Andrés Islas
+</div>
+
+<script>
+function sw(id,btn){
+  document.querySelectorAll('.s').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  btn.classList.add('on');
+}
+</script>
+</body>
+</html>

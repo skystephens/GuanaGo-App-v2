@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO · Mapa del Ecosistema — Jarvis</title>
+<style>
+  :root {
+    --azul: #003D5C;
+    --turquesa: #00A8A0;
+    --naranja: #F5831F;
+    --bg: #0a0f1a;
+    --card: #111827;
+    --card2: #1a2236;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --border: #1e2d40;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, var(--azul) 0%, #005a8e 50%, var(--turquesa) 100%);
+    padding: 28px 40px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 2px solid var(--turquesa);
+  }
+  header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+  header h1 span { color: var(--naranja); }
+  header small { opacity: 0.75; font-size: 12px; display: block; margin-top: 2px; }
+  .badge-jarvis {
+    background: rgba(0,168,160,0.2);
+    border: 1px solid var(--turquesa);
+    color: var(--turquesa);
+    padding: 6px 16px; border-radius: 20px;
+    font-size: 12px; font-weight: 600; letter-spacing: 1px;
+  }
+
+  /* ── NAV TABS ── */
+  nav {
+    background: var(--card);
+    padding: 0 40px;
+    display: flex; gap: 4px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  nav button {
+    background: none; border: none; color: var(--muted);
+    padding: 14px 20px; cursor: pointer;
+    font-size: 13px; font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  nav button.active { color: var(--turquesa); border-bottom-color: var(--turquesa); }
+  nav button:hover:not(.active) { color: var(--text); }
+
+  /* ── MAIN ── */
+  main { padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── GRID ── */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  @media (max-width: 900px) {
+    .grid2,.grid3,.grid4 { grid-template-columns: 1fr; }
+    main { padding: 20px; }
+    nav { padding: 0 16px; }
+    header { padding: 20px; }
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  .card.accent-turquesa { border-left: 3px solid var(--turquesa); }
+  .card.accent-naranja  { border-left: 3px solid var(--naranja); }
+  .card.accent-azul     { border-left: 3px solid var(--azul); }
+  .card.accent-purple   { border-left: 3px solid var(--purple); }
+  .card.accent-green    { border-left: 3px solid var(--green); }
+
+  .card h3 {
+    font-size: 14px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 14px; color: var(--turquesa);
+  }
+
+  /* ── TAGS / BADGES ── */
+  .tag {
+    display: inline-block; padding: 2px 10px;
+    border-radius: 10px; font-size: 11px; font-weight: 600;
+    margin: 2px;
+  }
+  .tag.green  { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .tag.yellow { background: rgba(234,179,8,0.15); color: #facc15; }
+  .tag.red    { background: rgba(239,68,68,0.15); color: #f87171; }
+  .tag.blue   { background: rgba(0,168,160,0.15); color: var(--turquesa); }
+  .tag.orange { background: rgba(245,131,31,0.15); color: var(--naranja); }
+  .tag.purple { background: rgba(139,92,246,0.15); color: #a78bfa; }
+  .tag.gray   { background: rgba(100,116,139,0.15); color: var(--muted); }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-size: 22px; font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .section-desc { color: var(--muted); margin-bottom: 28px; font-size: 13px; }
+
+  /* ── TABLE ── */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 10px 14px;
+    background: var(--card2);
+    color: var(--muted); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── CAPA CARDS (Cowork) ── */
+  .capa-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    position: relative; overflow: hidden;
+  }
+  .capa-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .capa-card.c1::before { background: var(--green); }
+  .capa-card.c2::before { background: var(--yellow); }
+  .capa-card.c3::before { background: var(--naranja); }
+  .capa-card.c4::before { background: var(--turquesa); }
+  .capa-card.c5::before { background: var(--purple); }
+  .capa-card.c6::before { background: #ec4899; }
+
+  .capa-num {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 6px; opacity: 0.7;
+  }
+  .capa-title {
+    font-size: 16px; font-weight: 700; margin-bottom: 8px;
+  }
+  .capa-desc { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+
+  .task-list { list-style: none; padding: 0; }
+  .task-list li {
+    padding: 5px 0; font-size: 12px;
+    display: flex; align-items: center; gap: 8px;
+    color: var(--muted);
+  }
+  .task-list li::before {
+    content: '○'; font-size: 10px; flex-shrink: 0;
+  }
+  .task-list li.done { color: #4ade80; }
+  .task-list li.done::before { content: '✓'; color: #4ade80; }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow { display: flex; flex-direction: column; gap: 6px; }
+  .flow-step {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 12px; position: relative;
+  }
+  .flow-arrow {
+    text-align: center; color: var(--muted);
+    font-size: 16px; line-height: 1;
+  }
+  .flow-step b { display: block; margin-bottom: 2px; font-size: 13px; }
+
+  /* ── ENDPOINT BADGE ── */
+  .method {
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px;
+    font-family: monospace;
+  }
+  .method.get    { background: rgba(34,197,94,0.2); color: #4ade80; }
+  .method.post   { background: rgba(59,130,246,0.2); color: #93c5fd; }
+  .method.put    { background: rgba(234,179,8,0.2); color: #facc15; }
+  .method.delete { background: rgba(239,68,68,0.2); color: #f87171; }
+  .method.patch  { background: rgba(139,92,246,0.2); color: #a78bfa; }
+
+  code {
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    background: rgba(255,255,255,0.06);
+    padding: 1px 6px; border-radius: 4px;
+    font-size: 12px; color: var(--turquesa);
+  }
+
+  /* ── KPI ROW ── */
+  .kpi-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px;
+    flex: 1; min-width: 120px;
+  }
+  .kpi .val {
+    font-size: 28px; font-weight: 800;
+    line-height: 1; margin-bottom: 4px;
+  }
+  .kpi .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap { margin-bottom: 14px; }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 12px; margin-bottom: 5px;
+  }
+  .progress-bar {
+    height: 6px; background: var(--border);
+    border-radius: 3px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+
+  /* ── DIVIDER ── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  /* ── LEGEND ── */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ── LAST UPDATED ── */
+  .last-updated {
+    color: var(--muted); font-size: 11px;
+    margin-top: 40px; text-align: center; padding-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Guana<span>GO</span> · Ecosistema</h1>
+    <small>Sky Stephens · CTO / GuíaSAI S.A.S. · San Andrés, Colombia</small>
+  </div>
+  <span class="badge-jarvis">🤖 JARVIS COWORK</span>
+</header>
+
+<nav>
+  <button class="active" onclick="show('overview')">📊 Overview</button>
+  <button onclick="show('cowork')">🤖 Capas Cowork</button>
+  <button onclick="show('inventario')">📦 Inventario</button>
+  <button onclick="show('backend')">⚙️ Backend API</button>
+  <button onclick="show('b2c')">🏖️ B2C Turistas</button>
+  <button onclick="show('b2b')">🏢 B2B Agencias</button>
+  <button onclick="show('datos')">🗄️ Datos Airtable</button>
+  <button onclick="show('make')">⚡ Make.com</button>
+  <button onclick="show('roadmap')">🗺️ Roadmap</button>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════ OVERVIEW ═══════════════════════════════════ -->
+<div id="overview" class="section active">
+  <div class="section-title">📊 Estado del Ecosistema</div>
+  <div class="section-desc">Visión consolidada de GuanaGO + GuiaSAI · Actualizado: Abril 2026</div>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="val" style="color:var(--green)">14</div>
+      <div class="lbl">Features en Producción</div>
+    </div>
+    <div class="kpi">
+      <div class="val" style="color:var(--yellow)">6</div>
+      <div class="lbl">En Progreso</div>
+    </div>
+    <div class="kpi">
+      <div class="val" style="color:var(--naranja)">6</div>
+      <div class="lbl">Capas Cowork IA</div>
+    </div>
+    <div class="kpi">
+      <div class="val" style="color:var(--turquesa)">15</div>
+      <div class="lbl">Tablas Airtable</div>
+    </div>
+    <div class="kpi">
+      <div class="val" style="color:var(--purple)">25+</div>
+      <div class="lbl">Endpoints Backend</div>
+    </div>
+    <div class="kpi">
+      <div class="val" style="color:#ec4899">500M</div>
+      <div class="lbl">COP Potencial 2026</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card accent-green">
+      <h3>✅ En Producción</h3>
+      <ul class="task-list">
+        <li class="done">Chatbot IA (Groq — llama-3.3-70b)</li>
+        <li class="done">Mapa Directorio 31 puntos (Mapbox)</li>
+        <li class="done">Catálogo Tours + Alojamientos</li>
+        <li class="done">Caribbean Night (3 paquetes)</li>
+        <li class="done">Centro Reservas Unificado (B2C + B2B)</li>
+        <li class="done">Vouchers Civitatis (CRUD completo)</li>
+        <li class="done">Cotizaciones GuíaSAI con PDF</li>
+        <li class="done">Admin Panel (18+ vistas)</li>
+        <li class="done">Guana Wallet (puntos)</li>
+        <li class="done">Carrito + Checkout</li>
+        <li class="done">Firebase Auth</li>
+        <li class="done">AdminBackend Panel (datos)</li>
+        <li class="done">Cotizador Grupal (margen 20%)</li>
+        <li class="done">Sistema de Disponibilidad</li>
+      </ul>
+    </div>
+    <div>
+      <div class="card accent-yellow" style="margin-bottom:16px">
+        <h3>🔄 En Progreso / Crítico</h3>
+        <ul class="task-list">
+          <li>🔴 Pasarela Wompi/PayU (pagos reales)</li>
+          <li>🔴 Notificación al operador (WhatsApp)</li>
+          <li>🔴 Firestore como DB runtime</li>
+          <li>🔴 Cowork IA — Capas 2 y 3</li>
+          <li>🟡 Portal Agencias B2B (GuiaSAI)</li>
+          <li>🟡 FCM Push Notifications</li>
+          <li>🟡 Catálogo B2B tarifas netas</li>
+          <li>🟡 Integración Software Contable</li>
+        </ul>
+      </div>
+      <div class="card accent-turquesa">
+        <h3>🚀 Stack Técnico</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <span class="tag blue">React 19</span>
+          <span class="tag blue">TypeScript</span>
+          <span class="tag blue">Vite</span>
+          <span class="tag blue">Tailwind CSS</span>
+          <span class="tag orange">Node.js + Express</span>
+          <span class="tag orange">Airtable</span>
+          <span class="tag orange">Firebase</span>
+          <span class="tag green">Mapbox GL</span>
+          <span class="tag green">Groq AI</span>
+          <span class="tag purple">Claude API</span>
+          <span class="tag purple">Make.com</span>
+          <span class="tag gray">Render.com</span>
+          <span class="tag gray">jsPDF</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="grid3">
+    <div class="card">
+      <h3>💰 Modelo de Ingresos</h3>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Comisión por reserva (10-15%)</span><span style="color:var(--green)">Activo</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Markup OTA (+23-30%)</span><span style="color:var(--yellow)">En diseño</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:60%;background:var(--yellow)"></div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Suscripción Agencias</span><span style="color:var(--muted)">Pendiente</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:20%;background:var(--muted)"></div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Guana Points / Wallet</span><span style="color:var(--green)">Activo</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:80%;background:var(--turquesa)"></div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Cotizador Grupos PDF</span><span style="color:var(--yellow)">En diseño</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:40%;background:var(--naranja)"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🤖 Jarvis Cowork — Capas</h3>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Capa 1 · Datos Airtable</span><span style="color:var(--green)">100%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Capa 2 · Backend B2B</span><span style="color:var(--yellow)">0%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:0%;background:var(--yellow)"></div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Capa 3 · Frontend AdminCowork</span><span style="color:var(--yellow)">0%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:0%;background:var(--yellow)"></div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Capa 4A · Make Gmail→Voucher</span><span style="color:var(--muted)">Pendiente</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:0%;background:var(--muted)"></div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Capa 5 · Grupos PDF 150+ pax</span><span style="color:var(--muted)">Pendiente</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:0%;background:var(--muted)"></div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Capa 6 · Software Contable</span><span style="color:var(--muted)">Pendiente</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:0%;background:#ec4899)"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🔑 Decisiones de Arquitectura</h3>
+      <ul class="task-list" style="gap:2px">
+        <li class="done">Airtable = back-office (NO runtime)</li>
+        <li class="done">Firestore = runtime de la app</li>
+        <li class="done">Make.com = sincroniza Airtable→Firestore</li>
+        <li class="done">Dos canales, un backend unificado</li>
+        <li class="done">Motor precios 4 canales (pricingService)</li>
+        <li class="done">Nunca Airtable desde el frontend directo</li>
+        <li class="done">JWT 15min + Refresh 7 días</li>
+        <li class="done">Rate limiting: 5 auth/15min, 100 API/15min</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ COWORK CAPAS ═══════════════════════════════════ -->
+<div id="cowork" class="section">
+  <div class="section-title">🤖 Cowork IA — Jarvis</div>
+  <div class="section-desc">6 capas del asistente de rentabilidad B2B dentro del admin de GuanaGO</div>
+
+  <div class="grid2" style="margin-bottom:20px">
+    <div class="capa-card c1">
+      <div class="capa-num">CAPA 1</div>
+      <div class="capa-title">📊 Datos Airtable</div>
+      <div class="capa-desc">La base de datos ya tiene todo lo necesario. Sin trabajo adicional.</div>
+      <span class="tag green">✅ LISTA</span>
+      <ul class="task-list" style="margin-top:10px">
+        <li class="done"><code>ServiciosTuristicos_SAI</code> con precio neto OTA</li>
+        <li class="done">Campo <code>Precio actualizado</code> = tarifa neta</li>
+        <li class="done">80+ servicios catalogados</li>
+        <li class="done">Categorías, capacidad, imágenes</li>
+      </ul>
+    </div>
+
+    <div class="capa-card c2">
+      <div class="capa-num">CAPA 2 · JARVIS ejecuta</div>
+      <div class="capa-title">⚙️ Backend B2B</div>
+      <div class="capa-desc">Endpoints nuevos + modo B2B en agentService. Comando: <b>"ejecuta capa 2"</b></div>
+      <span class="tag yellow">🔄 PENDIENTE</span>
+      <ul class="task-list" style="margin-top:10px">
+        <li>Añadir <code>Precio actualizado</code> a <code>loadCatalogContext()</code></li>
+        <li>Crear modo <code>b2b</code> en <code>agentService.js</code></li>
+        <li>Endpoint <code>GET /api/cowork/catalogo-b2b</code></li>
+        <li>Endpoint <code>POST /api/cowork/chat</code></li>
+        <li>Nuevo archivo <code>backend/routes/cowork.js</code></li>
+      </ul>
+    </div>
+
+    <div class="capa-card c3">
+      <div class="capa-num">CAPA 3 · JARVIS ejecuta</div>
+      <div class="capa-title">🖥️ Frontend AdminCowork</div>
+      <div class="capa-desc">Nueva vista con 4 tabs en el admin. Comando: <b>"ejecuta capa 3"</b></div>
+      <span class="tag yellow">🔄 PENDIENTE</span>
+      <ul class="task-list" style="margin-top:10px">
+        <li>Tab <b>Catálogo B2B</b> — tabla precio neto + OTA</li>
+        <li>Tab <b>Cotizador</b> — chat IA modo b2b</li>
+        <li>Tab <b>Grupos</b> — formulario 150+ pax</li>
+        <li>Tab <b>Asistente</b> — chat libre con contexto</li>
+        <li>Crear <code>pages/admin/AdminCowork.tsx</code></li>
+        <li>Agregar ruta en <code>App.tsx</code></li>
+        <li>Tarjeta "Cowork IA" en <code>AdminDashboard.tsx</code></li>
+      </ul>
+    </div>
+
+    <div class="capa-card c4">
+      <div class="capa-num">CAPA 4 · SKY ejecuta en Make.com</div>
+      <div class="capa-title">⚡ Automatización Make.com</div>
+      <div class="capa-desc">Dos escenarios: emails Civitatis → Voucher automático + OTA → Cotización</div>
+      <span class="tag gray">🔜 POST CAPA 2</span>
+      <div style="margin-top:10px">
+        <div style="font-size:12px;font-weight:600;margin-bottom:6px;color:var(--turquesa)">Escenario A: Gmail Civitatis → Voucher</div>
+        <div class="flow">
+          <div class="flow-step"><b>1. Gmail Watch Emails</b> filtro: <code>comercial@guiasai.com</code> / Civitatis (500+ reservas/año)</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><b>2. Text Parser / OpenAI</b> extrae: cliente, reserva, fecha, pax, tour</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><b>3. HTTP POST</b> <code>/api/reservations/vouchers</code></div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><b>4. Gmail Label</b> → "civitatis-procesado"</div>
+        </div>
+        <div style="font-size:12px;font-weight:600;margin:10px 0 6px;color:var(--turquesa)">Escenario B: OTA → Cotización IA (futuro)</div>
+        <ul class="task-list">
+          <li>Agencia email → Make.com → POST /api/cowork/chat</li>
+          <li>Claude genera cotización JSON → PDF → email agencia</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="capa-card c5">
+      <div class="capa-num">CAPA 5 · JARVIS ejecuta</div>
+      <div class="capa-title">👥 Cotizador Grupos 150+ pax</div>
+      <div class="capa-desc">Propuesta ejecutiva PDF con descuento escalonado por volumen</div>
+      <span class="tag purple">🔜 FUTURO</span>
+      <ul class="task-list" style="margin-top:10px">
+        <li>Formulario: destino, fecha, nº pax, tipo evento</li>
+        <li>Descuento &lt;50 pax → estándar</li>
+        <li>Descuento 50-99 pax → -10%</li>
+        <li>Descuento 100-149 pax → -15%</li>
+        <li>Descuento 150+ pax → -20% + propuesta ejecutiva</li>
+        <li>PDF: portada, itinerario, tabla precios, QR confirmación</li>
+        <li>Tours + alojamiento + traslados + Caribbean Night</li>
+      </ul>
+    </div>
+
+    <div class="capa-card c6">
+      <div class="capa-num">CAPA 6 · SKY + JARVIS</div>
+      <div class="capa-title">📒 Software Contable</div>
+      <div class="capa-desc">Sincronización automática de ventas al sistema contable vía Make.com</div>
+      <span class="tag" style="background:rgba(236,72,153,0.15);color:#f472b6">🔜 PENDIENTE CONFIRMAR</span>
+      <ul class="task-list" style="margin-top:10px">
+        <li>⚠️ <b>Confirmar software:</b> Siigo / Alegra / QuickBooks / otro</li>
+        <li>Make.com: Reserva Pagada → Crear factura automática</li>
+        <li>Categorizar por canal: B2C / B2B / OTA</li>
+        <li>Campo <code>contabilizado: boolean</code> en tabla Reservas</li>
+        <li>Jarvis: resúmenes mensuales por canal</li>
+        <li>Alerta: reserva sin contabilizar &gt;48h</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card accent-turquesa">
+    <h3>⚡ Comandos rápidos para Jarvis</h3>
+    <div class="grid3" style="gap:10px;margin-top:8px">
+      <div style="background:var(--card2);border-radius:8px;padding:12px">
+        <code>"ejecuta capa 2"</code>
+        <div style="color:var(--muted);font-size:12px;margin-top:4px">Backend B2B: agentService + endpoints /cowork</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:12px">
+        <code>"ejecuta capa 3"</code>
+        <div style="color:var(--muted);font-size:12px;margin-top:4px">Frontend: AdminCowork.tsx con 4 tabs</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:12px">
+        <code>"ejecuta capa 2 y 3"</code>
+        <div style="color:var(--muted);font-size:12px;margin-top:4px">Ambas a la vez (recomendado)</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:12px">
+        <code>"ejecuta cotizador PDF"</code>
+        <div style="color:var(--muted);font-size:12px;margin-top:4px">Capa 5: grupos 150+ pax (necesita 2+3)</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:12px">
+        <code>"diseña escenario contable [software]"</code>
+        <div style="color:var(--muted);font-size:12px;margin-top:4px">Capa 6: Make.com para contabilidad</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:12px">
+        <code>"estado capas"</code>
+        <div style="color:var(--muted);font-size:12px;margin-top:4px">Jarvis revisa este archivo y reporta avance</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ INVENTARIO ═══════════════════════════════════ -->
+<div id="inventario" class="section">
+  <div class="section-title">📦 Inventario de Productos y Servicios</div>
+  <div class="section-desc">Todo lo que GuanaGO tiene para ofrecer a clientes B2C y B2B</div>
+
+  <div class="grid3">
+    <div class="card accent-turquesa">
+      <h3>🏖️ Tours y Experiencias</h3>
+      <ul class="task-list">
+        <li class="done">Tours acuáticos (80+ servicios en Airtable)</li>
+        <li class="done">Snorkel y buceo en arrecifes</li>
+        <li class="done">Paseos en lancha / Johnny Cay</li>
+        <li class="done">Pesca deportiva</li>
+        <li class="done">Kayak y deportes acuáticos</li>
+        <li class="done">Tours culturales Raizales</li>
+        <li class="done">Reserva Natural de Old Providence</li>
+        <li class="done">Caribbean Night (3 paquetes musicales)</li>
+      </ul>
+      <div style="margin-top:10px">
+        <span class="tag blue">Precio neto OTA disponible</span>
+        <span class="tag green">80+ registros</span>
+      </div>
+    </div>
+
+    <div class="card accent-naranja">
+      <h3>🏨 Alojamientos</h3>
+      <ul class="task-list">
+        <li class="done">Hoteles (tabla AlojamientosTuristicos_SAI)</li>
+        <li class="done">Hostales y posadas nativas</li>
+        <li class="done">Cabañas en playa</li>
+        <li class="done">Filtro por fechas, huéspedes, tipo</li>
+        <li class="done">Temporada alta/baja en precios</li>
+      </ul>
+      <div style="margin-top:10px">
+        <span class="tag orange">Base separada activa</span>
+        <span class="tag green">Con catálogo</span>
+      </div>
+    </div>
+
+    <div class="card accent-azul">
+      <h3>🚕 Traslados y Taxis</h3>
+      <ul class="task-list">
+        <li class="done">5 zonas taxi (SVG interactivo)</li>
+        <li class="done">Aeropuerto → Hotel (precio fijo por zona)</li>
+        <li class="done">Cooperativa de Taxistas asociada</li>
+        <li class="done">Tarifas en tabla Taxis (AdminBackend)</li>
+        <li>Traslados B2B: cotizador grupos</li>
+      </ul>
+      <div style="margin-top:10px">
+        <span class="tag blue">Alianza aeropuerto</span>
+      </div>
+    </div>
+
+    <div class="card accent-purple">
+      <h3>🎵 Caribbean Night / RIMM</h3>
+      <ul class="task-list">
+        <li class="done">3 paquetes de música en vivo</li>
+        <li class="done">20+ artistas en tabla Rimm_musicos</li>
+        <li class="done">Reservas con analytics</li>
+        <li class="done">NFT artistas (estructura lista)</li>
+        <li>Portal artista (en progreso)</li>
+        <li>Royalties automáticos (futuro Hedera)</li>
+      </ul>
+      <div style="margin-top:10px">
+        <span class="tag purple">Experiencia única</span>
+        <span class="tag green">20+ artistas</span>
+      </div>
+    </div>
+
+    <div class="card accent-green">
+      <h3>🗺️ Directorio / Mapa</h3>
+      <ul class="task-list">
+        <li class="done">31 puntos de interés mapeados</li>
+        <li class="done">Restaurantes, hoteles, sitios culturales</li>
+        <li class="done">Coordenadas lat/lon en Airtable</li>
+        <li class="done">Mapbox GL v3.17 interactivo</li>
+        <li class="done">Filtro por categoría</li>
+        <li class="done">Número RNT certificados</li>
+      </ul>
+      <div style="margin-top:10px">
+        <span class="tag green">31 POIs activos</span>
+        <span class="tag blue">Mapbox v3.17</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>✈️ Tiquetes Aéreos</h3>
+      <ul class="task-list">
+        <li class="done">Panel tiquetes en AdminBackend</li>
+        <li>Cotización integrada en paquetes</li>
+        <li>No venta directa (referido)</li>
+      </ul>
+      <div style="margin-top:10px">
+        <span class="tag gray">Módulo info</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="card">
+    <h3>💵 Motor de Precios Multi-Canal (pricingService.ts)</h3>
+    <table>
+      <tr>
+        <th>Canal</th><th>Tipo</th><th>Lógica de Precio</th><th>Estado</th>
+      </tr>
+      <tr>
+        <td><b>Directo B2C</b></td>
+        <td><span class="tag blue">Turista</span></td>
+        <td>Precio base + 15% concierge + logística</td>
+        <td><span class="tag green">✅ Activo</span></td>
+      </tr>
+      <tr>
+        <td><b>OTA / Agencia</b></td>
+        <td><span class="tag orange">B2B</span></td>
+        <td>Tarifa neta → OTA suma +23% para su venta pública</td>
+        <td><span class="tag yellow">🔄 Capa 2</span></td>
+      </tr>
+      <tr>
+        <td><b>Aliado Local</b></td>
+        <td><span class="tag green">Socio</span></td>
+        <td>Comisión por transacción al aliado</td>
+        <td><span class="tag green">✅ Activo</span></td>
+      </tr>
+      <tr>
+        <td><b>Promotor</b></td>
+        <td><span class="tag purple">Referido</span></td>
+        <td>Precio base + ref_code → 8% comisión al promotor</td>
+        <td><span class="tag gray">🔜 Futuro</span></td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ BACKEND API ═══════════════════════════════════ -->
+<div id="backend" class="section">
+  <div class="section-title">⚙️ Backend API</div>
+  <div class="section-desc">Express en Render.com · Base: <code>https://guanago-backend.onrender.com/api/v1</code></div>
+
+  <div class="card" style="margin-bottom:20px">
+    <h3>Endpoints Activos</h3>
+    <table>
+      <tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Estado</th></tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/health</code></td>
+        <td>Health check del servidor</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><code>/partners/auth/register</code></td>
+        <td>Registrar nuevo socio/aliado</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><code>/partners/auth/login</code></td>
+        <td>Login socio → JWT</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/partners/dashboard</code></td>
+        <td>Stats del dashboard del socio</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/partners/products</code></td>
+        <td>Listar productos del socio</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><code>/partners/products</code></td>
+        <td>Crear producto</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/partners/sales</code></td>
+        <td>Listar ventas del socio</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/partners/payouts</code></td>
+        <td>Comisiones y pagos al socio</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><code>/reservas</code></td>
+        <td>Crear reserva unificada (B2C o B2B)</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/reservas</code></td>
+        <td>Listar reservas (filtros: canal, estado, fecha)</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method put">PUT</span></td>
+        <td><code>/reservas/:id</code></td>
+        <td>Actualizar estado de reserva</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/reservations/vouchers</code></td>
+        <td>Listar vouchers Civitatis (base appij4vUx7GZEwf5x)</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><code>/reservations/vouchers</code></td>
+        <td>Crear voucher manual o desde Make</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/reservations/vouchers/civitatis-servicios</code></td>
+        <td>Catálogo para dropdown voucher</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><code>/chatbot/message</code></td>
+        <td>Mensaje al chatbot Groq</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><code>/sync/airtable</code></td>
+        <td>Sincronizar datos Airtable</td>
+        <td><span class="tag green">✅</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card accent-yellow">
+    <h3>Endpoints Pendientes — Cowork</h3>
+    <table>
+      <tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Capa</th></tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/api/cowork/catalogo-b2b</code></td>
+        <td>Servicios con precio neto + precio OTA calculado</td>
+        <td><span class="tag yellow">Capa 2</span></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><code>/api/cowork/chat</code></td>
+        <td>Chat con agente IA modo b2b (Claude API)</td>
+        <td><span class="tag yellow">Capa 2</span></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><code>/api/cotizaciones</code></td>
+        <td>Crear cotización B2B con items</td>
+        <td><span class="tag yellow">Capa 3</span></td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/api/v1/reservas?estado=Pagada&contabilizado=false</code></td>
+        <td>Reservas listas para contabilizar</td>
+        <td><span class="tag" style="background:rgba(236,72,153,0.15);color:#f472b6">Capa 6</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <div class="card">
+    <h3>Webhooks Make.com (no modificar sin documentar)</h3>
+    <table>
+      <tr><th>Webhook</th><th>URL</th><th>Función</th></tr>
+      <tr>
+        <td>Directory</td>
+        <td><code style="font-size:11px">hook.us1.make.com/gleyxf83giw4xqr7i6i94mb7syclmh2o</code></td>
+        <td>Mapa y directorio</td>
+      </tr>
+      <tr>
+        <td>Services</td>
+        <td><code style="font-size:11px">hook.us1.make.com/klnf8ruz7znu31mlig5y7osajbney2p3</code></td>
+        <td>Catálogo de tours</td>
+      </tr>
+      <tr>
+        <td>Users</td>
+        <td><code style="font-size:11px">hook.us1.make.com/8lz93j5qs3m5qu4cakeukxeq6hhgx6hc</code></td>
+        <td>Registro/Auth</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ B2C ═══════════════════════════════════ -->
+<div id="b2c" class="section">
+  <div class="section-title">🏖️ Canal B2C — Turistas</div>
+  <div class="section-desc">GuanaGO Travel · guanago.travel · Experiencias auténticas Raizales</div>
+
+  <div class="grid3">
+    <div class="card accent-turquesa">
+      <h3>🌟 Propuesta de Valor</h3>
+      <ul class="task-list">
+        <li class="done">Compra directa sin intermediarios</li>
+        <li class="done">Precios competitivos (10-15% vs OTAs 20-30%)</li>
+        <li class="done">Tickets digitales inmediatos</li>
+        <li class="done">Mobile-first (PWA offline-ready)</li>
+        <li class="done">Soporte IA en tiempo real (GuanaIA)</li>
+        <li class="done">Guana Points — fidelización</li>
+        <li class="done">Experiencias Raizales auténticas</li>
+        <li class="done">Artistas locales / Caribbean Night</li>
+      </ul>
+    </div>
+
+    <div class="card accent-naranja">
+      <h3>💰 Modelos de Ingreso B2C</h3>
+      <ul class="task-list">
+        <li class="done"><b>Comisión reserva:</b> 10-15% por transacción</li>
+        <li class="done"><b>Guana Points:</b> Tokens con 10% bonus</li>
+        <li><b>Planes mensuales:</b> $50-300/mes pre-comprado</li>
+        <li><b>Suscripción turista:</b> Tier Básico + Premium</li>
+        <li><b>NFTs Caribbean Night:</b> royalties 10% reventa</li>
+      </ul>
+    </div>
+
+    <div class="card accent-green">
+      <h3>📱 Features Activas (B2C)</h3>
+      <ul class="task-list">
+        <li class="done">Home + exploración tours</li>
+        <li class="done">Mapa interactivo 31 POIs</li>
+        <li class="done">Carrito de compras</li>
+        <li class="done">Checkout (mock pago)</li>
+        <li class="done">Chatbot GuanaIA</li>
+        <li class="done">Zonas taxi SVG</li>
+        <li class="done">Caribbean Night</li>
+        <li class="done">Wallet de puntos</li>
+        <li>Pagos reales (Wompi — pendiente)</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="card">
+    <h3>🔄 Flujo del Turista B2C</h3>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+      <div class="flow-step" style="flex:1;min-width:140px"><b>1. Descubrimiento</b>Web / WhatsApp / Instagram / Google</div>
+      <div class="flow-arrow" style="display:flex;align-items:center">→</div>
+      <div class="flow-step" style="flex:1;min-width:140px"><b>2. Exploración</b>Mapa, catálogo tours, alojamientos</div>
+      <div class="flow-arrow" style="display:flex;align-items:center">→</div>
+      <div class="flow-step" style="flex:1;min-width:140px"><b>3. Chat GuanaIA</b>Preguntas, recomendaciones personalizadas</div>
+      <div class="flow-arrow" style="display:flex;align-items:center">→</div>
+      <div class="flow-step" style="flex:1;min-width:140px"><b>4. Carrito</b>Selección servicios, fechas, pax</div>
+      <div class="flow-arrow" style="display:flex;align-items:center">→</div>
+      <div class="flow-step" style="flex:1;min-width:140px"><b>5. Pago</b>Wompi/PayU (próximo)</div>
+      <div class="flow-arrow" style="display:flex;align-items:center">→</div>
+      <div class="flow-step" style="flex:1;min-width:140px"><b>6. Voucher</b>Ticket digital + Guana Points acumulados</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ B2B ═══════════════════════════════════ -->
+<div id="b2b" class="section">
+  <div class="section-title">🏢 Canal B2B — Agencias y OTAs</div>
+  <div class="section-desc">GuiaSAI · 200+ prestadores · Civitatis, tur.com, mayoristas · Tarifas netas 2026</div>
+
+  <div class="grid2">
+    <div class="card accent-azul">
+      <h3>🌟 Propuesta de Valor B2B</h3>
+      <ul class="task-list">
+        <li class="done">Tarifa neta + acceso controlado</li>
+        <li class="done">Sistema de cotización multi-servicio</li>
+        <li class="done">Confirmación en tiempo real (2h máx)</li>
+        <li class="done">PDF ejecutivo con foto-grid y branding</li>
+        <li class="done">Vouchers Civitatis automatizados</li>
+        <li>Pago online seguro (Wompi)</li>
+        <li>Comisiones automáticas transparentes</li>
+        <li>Dashboard de seguimiento cotizaciones</li>
+        <li>API para integración OTA directa</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>💰 Modelos de Ingreso B2B</h3>
+      <table>
+        <tr><th>Modelo</th><th>Descripción</th><th>Proyección</th></tr>
+        <tr>
+          <td>Comisión Reserva</td>
+          <td>10-15% del monto</td>
+          <td style="color:var(--green)">$1.5-2.2M/1000 res</td>
+        </tr>
+        <tr>
+          <td>Markup OTA</td>
+          <td>+23-30% sobre precio neto</td>
+          <td style="color:var(--green)">OTA revende con margen</td>
+        </tr>
+        <tr>
+          <td>Suscripción Agencia</td>
+          <td>$50-200/mes por agencia</td>
+          <td style="color:var(--yellow)">$6-10k/mes (50 agencias)</td>
+        </tr>
+        <tr>
+          <td>Revenue-Share Tokens</td>
+          <td>% de ingresos por servicio</td>
+          <td style="color:var(--muted)">$250-500k levantado</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="card" style="margin-bottom:16px">
+    <h3>🔄 Flujo de Cotización B2B</h3>
+    <div class="flow" style="max-width:600px">
+      <div class="flow-step"><b>Agencia crea cotización</b> → Selecciona: Tours + Alojamientos + Traslados + Pax + Fechas</div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><b>Precios en tiempo real</b> desde Airtable (con tarifa neta OTA, sin revelar al turista)</div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><b>Cotización guardada</b> → Estado: 🟡 BORRADOR en Airtable <code>CotizacionesGG</code></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><b>Agencia comparte</b> → PDF ejecutivo + enlace URL único + WhatsApp/Email</div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><b>Cliente confirma</b> → Estado: 🟢 CONFIRMADA → Pago online (Wompi)</div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><b>Voucher automático</b> → QR digital → Operador notificado (WhatsApp)</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card accent-turquesa">
+      <h3>📊 OTAs Activas</h3>
+      <table>
+        <tr><th>OTA</th><th>Modelo</th><th>Volumen</th><th>Estado</th></tr>
+        <tr>
+          <td><b>Civitatis</b></td>
+          <td>Tarifa neta +23%</td>
+          <td>500+ emails/año</td>
+          <td><span class="tag green">✅ Activa</span></td>
+        </tr>
+        <tr>
+          <td><b>tur.com</b></td>
+          <td>Misma tarifa base</td>
+          <td>—</td>
+          <td><span class="tag green">✅ Activa</span></td>
+        </tr>
+        <tr>
+          <td><b>Mayoristas</b></td>
+          <td>Cotización directa</td>
+          <td>Grupos</td>
+          <td><span class="tag yellow">🔄 En diseño</span></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="card accent-purple">
+      <h3>🤖 Jarvis en B2B (Capa 2+)</h3>
+      <ul class="task-list">
+        <li>Catálogo B2B con precio neto (sin revelar al turista)</li>
+        <li>Chat IA modo agencia: genera cotizaciones JSON</li>
+        <li>Responde consultas de OTAs automáticamente</li>
+        <li>Escala grupos a cotizador 150+ pax</li>
+        <li>Dashboard de rentabilidad por canal</li>
+        <li>Alertas: servicios sin reservas próximos 7 días</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ DATOS AIRTABLE ═══════════════════════════════════ -->
+<div id="datos" class="section">
+  <div class="section-title">🗄️ Bases de Datos — Airtable</div>
+  <div class="section-desc">Base principal: <code>appiReH55Qhrbv4Lk</code> · Base vouchers: <code>appij4vUx7GZEwf5x</code></div>
+
+  <div class="card" style="margin-bottom:20px">
+    <h3>Tablas Principales (Base appiReH55Qhrbv4Lk)</h3>
+    <table>
+      <tr><th>#</th><th>Tabla</th><th>Descripción</th><th>Campos clave</th><th>Estado</th></tr>
+      <tr>
+        <td>1</td>
+        <td><code>ServiciosTuristicos_SAI</code></td>
+        <td>Tours, hoteles, paquetes</td>
+        <td>Nombre, Precio, Precio actualizado (neto OTA), Tipo, Capacidad, Imagenes</td>
+        <td><span class="tag green">✅ 80+ registros</span></td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><code>Directorio_Mapa</code></td>
+        <td>Puntos de interés</td>
+        <td>Nombre, Lat, Lon, Categoría, RNT</td>
+        <td><span class="tag green">✅ 31 POIs</span></td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><code>Leads</code></td>
+        <td>Usuarios y agencias</td>
+        <td>Email, Nombre, Fuente, Estado, Rol</td>
+        <td><span class="tag green">✅ 500+ registros</span></td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><code>Reservas</code></td>
+        <td>Reservas unificadas B2C+B2B</td>
+        <td>Canal, Estado, ClienteID, ServicioID, MontoCOP, FechaServicio, OperadorNotificado</td>
+        <td><span class="tag green">✅ Activa</span></td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><code>CotizacionesGG</code></td>
+        <td>Cotizaciones B2B</td>
+        <td>AgenciaID, Total, Estado, FechaExpiracion</td>
+        <td><span class="tag yellow">⚠️ Vacía</span></td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><code>cotizaciones_Items</code></td>
+        <td>Ítems por cotización</td>
+        <td>CotizacionID, ServicioID, Cantidad, Precio</td>
+        <td><span class="tag green">✅ Con datos</span></td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td><code>Pagos</code></td>
+        <td>Historial transacciones</td>
+        <td>Monto, Método, Estado, Fecha</td>
+        <td><span class="tag green">✅ 100+ registros</span></td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td><code>Rimm_musicos</code></td>
+        <td>Artistas Caribbean Night</td>
+        <td>Nombre, Genero, Bio, Imagen, Redes</td>
+        <td><span class="tag green">✅ 20+ artistas</span></td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td><code>AlojamientosTuristicos_SAI</code></td>
+        <td>Hoteles y hospedajes</td>
+        <td>Nombre, Tipo, Precio, Temporada, Imágenes</td>
+        <td><span class="tag green">✅ Activa</span></td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td><code>GUANA_Transacciones</code></td>
+        <td>Historial de puntos</td>
+        <td>UsuarioID, Monto, Tipo, Fecha</td>
+        <td><span class="tag green">✅ 1000+ registros</span></td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td><code>Aliados_Beta</code></td>
+        <td>Red de operadores certificados</td>
+        <td>Nombre, Categoria, QR_Code, Comision</td>
+        <td><span class="tag yellow">⚠️ En configuración</span></td>
+      </tr>
+      <tr>
+        <td>12</td>
+        <td><code>Agencias_OTA</code></td>
+        <td>Agencias externas (Civitatis, tur.com)</td>
+        <td>Nombre, TarifaNeta, Comision, Contacto</td>
+        <td><span class="tag yellow">⚠️ Pendiente datos</span></td>
+      </tr>
+      <tr>
+        <td>13</td>
+        <td><code>Promotores_GG</code></td>
+        <td>Red de promotores/referrers</td>
+        <td>Nombre, RefCode, Comision, Estado</td>
+        <td><span class="tag gray">🔜 Futuro</span></td>
+      </tr>
+      <tr>
+        <td>14</td>
+        <td><code>Tareas_To_do</code></td>
+        <td>Gestión de tareas del proyecto</td>
+        <td>Titulo, Estado, Prioridad, Asignado</td>
+        <td><span class="tag green">✅ Activa</span></td>
+      </tr>
+      <tr>
+        <td>15</td>
+        <td><code>Generador_vouchers</code></td>
+        <td>Vouchers Civitatis</td>
+        <td>Titular, ReservaNum, Pax, Fecha, TourName, Estado</td>
+        <td><span class="tag orange">Base: appij4vUx7GZEwf5x</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>🏗️ Regla de Arquitectura de Datos</h3>
+    <div class="flow" style="flex-direction:row;align-items:center;flex-wrap:wrap">
+      <div class="flow-step" style="flex:1;min-width:180px;text-align:center">
+        <b>📊 Airtable</b><br>
+        <small style="color:var(--muted)">Captura + aprobación humana<br>(back-office)</small>
+      </div>
+      <div class="flow-arrow" style="padding:0 8px">→ Make.com →</div>
+      <div class="flow-step" style="flex:1;min-width:180px;text-align:center">
+        <b>🔥 Firestore</b><br>
+        <small style="color:var(--muted)">Runtime de la app<br>(lo que el cliente lee/escribe)</small>
+      </div>
+      <div class="flow-arrow" style="padding:0 8px">→</div>
+      <div class="flow-step" style="flex:1;min-width:180px;text-align:center">
+        <b>📱 App</b><br>
+        <small style="color:var(--muted)">Frontend nunca llama<br>directo a Airtable</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ MAKE.COM ═══════════════════════════════════ -->
+<div id="make" class="section">
+  <div class="section-title">⚡ Make.com — Automatización</div>
+  <div class="section-desc">Orquestador central: sincroniza Airtable ↔ Firestore ↔ Notificaciones ↔ IA</div>
+
+  <div class="grid2">
+    <div class="card accent-green">
+      <h3>✅ Escenarios Activos</h3>
+      <div style="margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">📍 Directorio / Mapa</div>
+        <div style="color:var(--muted);font-size:12px">Airtable Directorio_Mapa → Firestore (puntos POI)</div>
+        <code style="font-size:10px">hook.us1.make.com/gleyxf83gi...</code>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">🏖️ Catálogo Servicios</div>
+        <div style="color:var(--muted);font-size:12px">ServiciosTuristicos_SAI → Firestore (tours activos)</div>
+        <code style="font-size:10px">hook.us1.make.com/klnf8ruz7z...</code>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">👤 Registro/Auth</div>
+        <div style="color:var(--muted);font-size:12px">Nuevo Lead → Sync Firebase Auth</div>
+        <code style="font-size:10px">hook.us1.make.com/8lz93j5qs3...</code>
+      </div>
+    </div>
+
+    <div class="card accent-yellow">
+      <h3>🔜 Escenarios Pendientes</h3>
+
+      <div style="margin-bottom:16px;padding:12px;background:var(--card2);border-radius:8px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--naranja)">📧 Escenario A: Civitatis → Voucher</div>
+        <div class="flow">
+          <div class="flow-step"><b>Gmail Watch</b> <code>comercial@guiasai.com</code></div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><b>Parser</b> extrae: cliente, reserva, fecha, tour, pax</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><b>POST</b> <code>/api/reservations/vouchers</code></div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><b>Gmail Label</b> "civitatis-procesado"</div>
+        </div>
+        <div style="margin-top:8px"><span class="tag orange">Depende de: Capa 2 en producción</span></div>
+      </div>
+
+      <div style="padding:12px;background:var(--card2);border-radius:8px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--turquesa)">📒 Escenario B: Contabilidad Automática (Capa 6)</div>
+        <div class="flow">
+          <div class="flow-step"><b>Airtable Watch</b> Reservas → filtro: <code>Estado = Pagada</code></div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><b>[Software Contable]</b> Crear factura automática (Siigo/Alegra/QBO)</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><b>Airtable Update</b> marcar <code>contabilizado = true</code></div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><b>Notificación</b> resumen diario (email/WhatsApp)</div>
+        </div>
+        <div style="margin-top:8px">
+          <span class="tag" style="background:rgba(236,72,153,0.15);color:#f472b6">⚠️ Confirmar software contable</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="card">
+    <h3>🤖 Escenario C: OTA → Cotización Automática (Futuro)</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="flow-step" style="flex:1;min-width:150px"><b>1. Trigger</b><br>Agencia envía email o llena formulario web</div>
+      <div class="flow-arrow" style="display:flex;align-items:center">→</div>
+      <div class="flow-step" style="flex:1;min-width:150px"><b>2. Make.com</b><br>Captura nombre agencia, fechas, pax, servicios</div>
+      <div class="flow-arrow" style="display:flex;align-items:center">→</div>
+      <div class="flow-step" style="flex:1;min-width:150px"><b>3. Jarvis IA</b><br>POST /api/cowork/chat modo b2b → cotización JSON</div>
+      <div class="flow-arrow" style="display:flex;align-items:center">→</div>
+      <div class="flow-step" style="flex:1;min-width:150px"><b>4. Airtable</b><br>Crear registro en CotizacionesGG</div>
+      <div class="flow-arrow" style="display:flex;align-items:center">→</div>
+      <div class="flow-step" style="flex:1;min-width:150px"><b>5. Output</b><br>PDF por email a la agencia + Sky aprueba en AdminCowork</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ ROADMAP ═══════════════════════════════════ -->
+<div id="roadmap" class="section">
+  <div class="section-title">🗺️ Roadmap — Abril 2026</div>
+  <div class="section-desc">Orden de ejecución recomendado por Jarvis</div>
+
+  <div class="grid2">
+    <div class="card accent-red" style="border-left-color:var(--red)">
+      <h3 style="color:var(--red)">🔴 Semana 1-2 (CRÍTICO)</h3>
+      <ul class="task-list">
+        <li><b>[Jarvis]</b> Ejecutar Capa 2: backend B2B + endpoints /cowork</li>
+        <li><b>[Jarvis]</b> Ejecutar Capa 3: AdminCowork.tsx con 4 tabs</li>
+        <li><b>[Sky]</b> Confirmar software contable usado en GuíaSAI</li>
+        <li><b>[Sky]</b> Verificar emails Civitatis llegan con remitente identificable</li>
+        <li><b>[Sky]</b> Decidir URL del Cowork: /admin o URL separada</li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--yellow)">
+      <h3 style="color:var(--yellow)">🟡 Semana 2-3 (ALTA)</h3>
+      <ul class="task-list">
+        <li><b>[Sky]</b> Construir Escenario A Make.com: Gmail Civitatis → Voucher</li>
+        <li><b>[Sky]</b> Probar cotizador B2B con agencia real (tur.com / Civitatis)</li>
+        <li><b>[Jarvis]</b> Ajustes según feedback de prueba real</li>
+        <li><b>[Sky + Jarvis]</b> Diseñar Escenario Contable según software confirmado</li>
+        <li><b>[Jarvis]</b> Iniciar Wompi/PayU (sandbox)</li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--naranja)">
+      <h3 style="color:var(--naranja)">🟠 Semana 3+ (MEDIA)</h3>
+      <ul class="task-list">
+        <li><b>[Jarvis]</b> Cotizador Grupos PDF — Capa 5 (150+ pax)</li>
+        <li><b>[Sky]</b> Escenario B Make.com: OTA → Cotización automática</li>
+        <li><b>[Jarvis]</b> Notificación WhatsApp al operador</li>
+        <li><b>[Jarvis]</b> FCM Push Notifications</li>
+        <li><b>[Jarvis]</b> Firestore como DB runtime (migración)</li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--muted)">
+      <h3 style="color:var(--muted)">⬜ Futuro (BAJA)</h3>
+      <ul class="task-list">
+        <li>Hedera Blockchain / NFT minting artistas RIMM</li>
+        <li>Firebase Hosting deploy</li>
+        <li>OAuth Google/Apple</li>
+        <li>Red de promotores (ref codes)</li>
+        <li>Dashboard rentabilidad (Capa E Cowork)</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="card accent-turquesa">
+    <h3>📋 Registro de Sesiones Jarvis</h3>
+    <table>
+      <tr><th>Fecha</th><th>Sesión</th><th>Trabajado</th><th>Decisiones</th></tr>
+      <tr>
+        <td>2026-04-19</td>
+        <td>Arquitectura inicial + Capa 6</td>
+        <td>Estructura 6 capas, COWORK_B2B_TAREAS.md, COWORK_REGISTRO.md, este mapa</td>
+        <td>Cowork usa claude-sonnet-4-6; contabilidad vía Make.com; Jarvis confirma sw contable</td>
+      </tr>
+    </table>
+    <div style="margin-top:12px;color:var(--muted);font-size:12px">
+      Ver log completo en: <code>GuanaGo/tareasGG/COWORK_REGISTRO.md</code>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<div class="last-updated">
+  GuanaGO · Mapa del Ecosistema · Generado por Jarvis (Claude Code) · Abril 2026 · Sky Stephens / GuíaSAI S.A.S.
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

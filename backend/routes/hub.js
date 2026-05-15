@@ -69,6 +69,34 @@ router.get('/:token/agentes', (req, res) => {
   res.sendFile(join(DOCS_DIR, 'agentes.html'));
 });
 
+// ── GET /hub/:token/ecosistema ────────────────────────────────────────────────
+
+router.get('/:token/ecosistema', (req, res) => {
+  if (!validToken(req.params.token)) return res.redirect('/hub?error=1');
+  res.sendFile(join(DOCS_DIR, 'ecosistema.html'));
+});
+
+// ── GET /hub/:token/arquitectura ──────────────────────────────────────────────
+
+router.get('/:token/arquitectura', (req, res) => {
+  if (!validToken(req.params.token)) return res.redirect('/hub?error=1');
+  res.sendFile(join(DOCS_DIR, 'arquitectura.html'));
+});
+
+// ── GET /hub/:token/aliados ───────────────────────────────────────────────────
+
+router.get('/:token/aliados', (req, res) => {
+  if (!validToken(req.params.token)) return res.redirect('/hub?error=1');
+  res.sendFile(join(DOCS_DIR, 'aliados.html'));
+});
+
+// ── GET /hub/:token/contenido ─────────────────────────────────────────────────
+
+router.get('/:token/contenido', (req, res) => {
+  if (!validToken(req.params.token)) return res.redirect('/hub?error=1');
+  res.sendFile(join(DOCS_DIR, 'contenido.html'));
+});
+
 export default router;
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -128,8 +156,12 @@ button:hover{opacity:.9}
 
 function hubHtml(token, activeDoc) {
   const docs = [
-    { id: 'estrategia', label: '📊 Estrategia May 2026', src: `/hub/${token}/estrategia` },
-    { id: 'agentes',    label: '🤖 Agentes & Eventos',   src: `/hub/${token}/agentes`    },
+    { id: 'estrategia',   label: '📊 Estrategia',       src: `/hub/${token}/estrategia`   },
+    { id: 'agentes',      label: '🤖 Agentes & Eventos', src: `/hub/${token}/agentes`      },
+    { id: 'ecosistema',   label: '🗺️ Ecosistema',        src: `/hub/${token}/ecosistema`   },
+    { id: 'arquitectura', label: '🏗️ Arquitectura',      src: `/hub/${token}/arquitectura` },
+    { id: 'aliados',      label: '🤝 Aliados',            src: `/hub/${token}/aliados`      },
+    { id: 'contenido',    label: '📱 Contenido',          src: `/hub/${token}/contenido`    },
   ];
 
   const navButtons = docs.map(d =>

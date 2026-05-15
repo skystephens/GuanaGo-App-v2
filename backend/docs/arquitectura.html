@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO — Arquitectura Maestra del Ecosistema</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:   #00E5CC;
+  --teal2:  #00C9B1;
+  --ocean:  #004060;
+  --deep:   #060E18;
+  --bg:     #0B1622;
+  --card:   #101E2C;
+  --card2:  #0D1928;
+  --border: rgba(0,229,204,0.12);
+  --border2:rgba(255,255,255,0.07);
+  --gold:   #FFB74D;
+  --coral:  #FF6B6B;
+  --mint:   #52E3C2;
+  --purple: #A78BFA;
+  --cream:  #F0F4F8;
+  --muted:  #6B8A9E;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--cream); line-height:1.5; }
+
+/* NAV */
+.nav {
+  background:rgba(6,14,24,0.95);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:0 20px;
+  display:flex; gap:2px;
+  overflow-x:auto;
+  position:sticky; top:0; z-index:100;
+}
+.nb {
+  font-size:11px; font-weight:700;
+  letter-spacing:0.5px;
+  color:var(--muted);
+  padding:14px 14px;
+  border:none; background:none;
+  cursor:pointer;
+  border-bottom:2px solid transparent;
+  white-space:nowrap;
+  transition:all .2s;
+  font-family:'Outfit',sans-serif;
+}
+.nb.on, .nb:hover { color:var(--teal); border-bottom-color:var(--teal); }
+
+/* SECTIONS */
+.s { display:none; padding:32px 20px; max-width:900px; margin:0 auto; }
+.s.on { display:block; }
+
+/* HERO HEADER */
+.hero {
+  background:linear-gradient(135deg,var(--ocean) 0%,var(--deep) 70%);
+  padding:52px 28px 44px;
+  position:relative; overflow:hidden;
+}
+.hero::before {
+  content:'';
+  position:absolute; top:-120px; right:-80px;
+  width:420px; height:420px; border-radius:50%;
+  background:radial-gradient(circle,rgba(0,229,204,.1) 0%,transparent 70%);
+}
+.hero-eye { font-size:10px; letter-spacing:4px; color:var(--teal); text-transform:uppercase; margin-bottom:12px; }
+.hero-h1 { font-size:clamp(26px,5vw,48px); font-weight:800; line-height:1.1; margin-bottom:10px; }
+.hero-h1 span { color:var(--teal); }
+.hero-sub { font-size:14px; color:var(--muted); max-width:520px; font-weight:300; }
+.hero-tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; }
+.htag {
+  font-size:11px; font-weight:600;
+  color:var(--teal); background:rgba(0,229,204,.1);
+  border:1px solid var(--border);
+  padding:4px 14px; border-radius:100px;
+}
+
+/* CARDS */
+.card {
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:14px; padding:24px;
+  margin-bottom:16px;
+}
+.card.accent { border-color:var(--border); background:var(--card2); }
+.eye { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--teal); font-weight:700; margin-bottom:8px; }
+.card h3 { font-size:15px; font-weight:700; margin-bottom:12px; }
+
+/* SECTION TITLE */
+.stitle { font-size:22px; font-weight:800; margin-bottom:4px; }
+.ssub { font-size:13px; color:var(--muted); margin-bottom:28px; font-weight:300; }
+
+/* GRID */
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+.g3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+@media(max-width:640px){ .g2,.g3{ grid-template-columns:1fr; } }
+
+/* METRIC */
+.m-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-bottom:20px; }
+.mbox { background:var(--card); border:1px solid var(--border2); border-radius:10px; padding:16px 12px; text-align:center; }
+.mval { font-size:22px; font-weight:800; display:block; }
+.mlbl { font-size:10px; color:var(--muted); margin-top:3px; line-height:1.3; }
+.t { color:var(--teal); } .g { color:var(--gold); } .c { color:var(--coral); } .p { color:var(--purple); } .m { color:var(--mint); }
+
+/* LIST */
+ul.lst { list-style:none; }
+ul.lst li { font-size:13px; color:var(--muted); padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.04); display:flex; gap:8px; }
+ul.lst li:last-child { border:none; }
+ul.lst li::before { content:'→'; color:var(--teal); flex-shrink:0; }
+ul.lst li strong { color:var(--cream); }
+
+/* HIGHLIGHT */
+.hl {
+  background:rgba(0,229,204,.06); border-left:3px solid var(--teal);
+  border-radius:0 10px 10px 0; padding:14px 18px; margin:14px 0;
+  font-size:13px; color:var(--cream); line-height:1.7;
+}
+.hl.gold { background:rgba(255,183,77,.06); border-left-color:var(--gold); }
+.hl.coral { background:rgba(255,107,107,.06); border-left-color:var(--coral); }
+.hl.purple { background:rgba(167,139,250,.06); border-left-color:var(--purple); }
+
+/* TABLE */
+.tbl { width:100%; border-collapse:collapse; font-size:12px; margin:12px 0; }
+.tbl th { text-align:left; padding:8px 10px; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--border2); font-weight:600; }
+.tbl td { padding:10px 10px; border-bottom:1px solid rgba(255,255,255,0.04); color:var(--muted); vertical-align:top; }
+.tbl tr:last-child td { border:none; }
+.tbl .bold { font-weight:700; color:var(--cream); }
+.tbl .tg { color:var(--teal); font-weight:700; }
+
+/* ARCHITECTURE DIAGRAM */
+.arch-wrap { position:relative; }
+.arch-layer {
+  background:var(--card2);
+  border:1px solid var(--border2);
+  border-radius:12px; padding:18px 20px;
+  margin-bottom:4px; position:relative;
+}
+.arch-layer.active { border-color:var(--border); }
+.arch-conn {
+  width:2px; height:16px; background:linear-gradient(180deg,var(--teal),rgba(0,229,204,0.2));
+  margin:0 auto; display:block;
+}
+.arch-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--teal); font-weight:700; margin-bottom:6px; }
+.arch-title { font-size:14px; font-weight:700; margin-bottom:8px; }
+.arch-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.chip {
+  font-size:10px; font-weight:600;
+  padding:3px 10px; border-radius:100px;
+  background:rgba(255,255,255,0.06);
+  color:var(--cream);
+}
+.chip.t { background:rgba(0,229,204,.12); color:var(--teal); }
+.chip.g { background:rgba(255,183,77,.12); color:var(--gold); }
+.chip.p { background:rgba(167,139,250,.12); color:var(--purple); }
+.chip.c { background:rgba(255,107,107,.12); color:var(--coral); }
+
+/* STEP FLOW */
+.step {
+  display:grid; grid-template-columns:40px 1fr;
+  gap:14px; padding:16px 0;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  align-items:start;
+}
+.step:last-child { border:none; }
+.step-num { font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:600; color:rgba(0,229,204,.3); line-height:1; }
+.step-title { font-size:14px; font-weight:700; margin-bottom:4px; }
+.step-desc { font-size:12px; color:var(--muted); line-height:1.65; }
+.step-tag { display:inline-block; font-size:10px; font-weight:700; color:var(--teal); background:rgba(0,229,204,.1); padding:2px 10px; border-radius:100px; margin-top:6px; }
+
+/* KIT CARDS */
+.kit-item {
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:12px; padding:18px;
+}
+.kit-icon { font-size:26px; margin-bottom:8px; }
+.kit-name { font-size:13px; font-weight:700; margin-bottom:6px; }
+.kit-desc { font-size:12px; color:var(--muted); line-height:1.55; }
+.kit-spec { font-size:11px; color:var(--teal); font-weight:600; margin-top:8px; }
+
+/* REWARD TIERS */
+.tier {
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:14px; padding:20px;
+  margin-bottom:12px;
+  position:relative;
+}
+.tier.featured { border-color:var(--border); }
+.tier-badge {
+  position:absolute; top:-8px; right:16px;
+  font-size:9px; font-weight:700; letter-spacing:1px;
+  padding:3px 12px; border-radius:100px;
+}
+.tier-name { font-size:16px; font-weight:800; margin-bottom:4px; }
+.tier-desc { font-size:12px; color:var(--muted); margin-bottom:14px; }
+.tier-rewards { display:flex; flex-direction:column; gap:6px; }
+.tier-r { font-size:12px; color:var(--muted); display:flex; gap:8px; align-items:flex-start; }
+.tier-r::before { content:'🪙'; font-size:12px; flex-shrink:0; }
+
+/* WIFI DIAGRAM */
+.wifi-flow { display:flex; flex-direction:column; gap:8px; }
+.wf-step {
+  background:var(--card2);
+  border:1px solid var(--border2);
+  border-left:3px solid var(--teal);
+  border-radius:0 10px 10px 0;
+  padding:12px 16px;
+}
+.wf-n { font-size:10px; color:var(--teal); font-weight:700; letter-spacing:2px; margin-bottom:3px; }
+.wf-t { font-size:13px; font-weight:600; margin-bottom:3px; }
+.wf-d { font-size:12px; color:var(--muted); }
+
+/* AIRTABLE CLAUDE */
+.ac-block {
+  background:var(--card2);
+  border:1px solid var(--border2);
+  border-radius:12px; overflow:hidden;
+  margin-bottom:12px;
+}
+.ac-head {
+  background:var(--ocean);
+  padding:12px 18px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.ac-head-title { font-size:13px; font-weight:700; }
+.ac-head-tag { font-size:10px; color:var(--teal); font-weight:600; }
+.ac-body { padding:16px 18px; }
+.ac-body ul { list-style:none; }
+.ac-body ul li { font-size:12px; color:var(--muted); padding:4px 0; display:flex; gap:8px; }
+.ac-body ul li::before { content:'·'; color:var(--teal); font-weight:700; }
+
+/* ROADMAP */
+.rm-item {
+  display:grid; grid-template-columns:90px 1fr;
+  gap:16px; padding:14px 0;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.rm-item:last-child { border:none; }
+.rm-phase {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px; font-weight:600; color:var(--teal);
+  line-height:1.4;
+}
+.rm-title { font-size:14px; font-weight:700; margin-bottom:4px; }
+.rm-desc { font-size:12px; color:var(--muted); line-height:1.6; }
+.rm-cost { font-size:11px; color:var(--gold); font-weight:600; margin-top:5px; }
+
+/* PUSH / WHATSAPP */
+.notif-preview {
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border2);
+  border-radius:16px; padding:16px;
+  margin:8px 0;
+  display:flex; gap:12px; align-items:flex-start;
+}
+.notif-icon { font-size:24px; flex-shrink:0; }
+.notif-app { font-size:10px; color:var(--teal); font-weight:700; margin-bottom:3px; }
+.notif-title { font-size:13px; font-weight:700; margin-bottom:2px; }
+.notif-body { font-size:12px; color:var(--muted); }
+.notif-time { font-size:10px; color:var(--muted); margin-top:4px; }
+
+/* FOOTER */
+.footer { text-align:center; padding:36px 20px; font-size:11px; color:rgba(240,244,248,.2); border-top:1px solid var(--border2); }
+.footer strong { color:var(--teal); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-eye">GuanaGO · Arquitectura Maestra del Ecosistema</div>
+  <h1 class="hero-h1">Sistema Operativo<br><span>de Destino</span></h1>
+  <p class="hero-sub">Kit físico de marketing, sistema de recompensas multinivel, WiFi captivo, Claude+Airtable, notificaciones push, y hoja de ruta PWA → PlayStore.</p>
+  <div class="hero-tags">
+    <span class="htag">guanago.travel</span>
+    <span class="htag">React PWA</span>
+    <span class="htag">Firebase</span>
+    <span class="htag">Hedera</span>
+    <span class="htag">Make.com</span>
+    <span class="htag">Airtable + Claude</span>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nb on" onclick="sw('arq',this)">🏗️ Arquitectura</button>
+  <button class="nb" onclick="sw('kit',this)">🖨️ Kit Físico</button>
+  <button class="nb" onclick="sw('reward',this)">🪙 Recompensas</button>
+  <button class="nb" onclick="sw('wifi',this)">📶 WiFi+Push</button>
+  <button class="nb" onclick="sw('airtable',this)">🤖 Airtable+Claude</button>
+  <button class="nb" onclick="sw('roadmap',this)">🗺️ Hoja de Ruta</button>
+</nav>
+
+<!-- ═══════════════ ARQUITECTURA ═══════════════ -->
+<div class="s on" id="s-arq">
+  <div class="stitle">Arquitectura del Ecosistema</div>
+  <div class="ssub">Cómo se conectan todas las piezas: frontend, backend, datos, IA, físico y canales de distribución.</div>
+
+  <div class="m-grid">
+    <div class="mbox"><span class="mval t">$5 USD</span><span class="mlbl">hosting/mes en Render</span></div>
+    <div class="mbox"><span class="mval g">PWA→App</span><span class="mlbl">camino a PlayStore</span></div>
+    <div class="mbox"><span class="mval m">3 capas</span><span class="mlbl">Airtable→Firebase→IA</span></div>
+    <div class="mbox"><span class="mval p">6 roles</span><span class="mlbl">Turista Aliado Agencia…</span></div>
+  </div>
+
+  <div class="arch-wrap">
+    <div class="arch-layer active">
+      <div class="arch-label">Capa de acceso — el turista llega</div>
+      <div class="arch-title">🌐 Puntos de entrada al ecosistema</div>
+      <div class="arch-chips">
+        <span class="chip t">guanago.travel (PWA)</span>
+        <span class="chip t">QR físico en negocios</span>
+        <span class="chip t">WiFi captivo aliado</span>
+        <span class="chip g">WhatsApp Business</span>
+        <span class="chip g">Instagram/TikTok</span>
+        <span class="chip">Free Tour Kriol (físico)</span>
+        <span class="chip">Sticker "Verificado"</span>
+      </div>
+    </div>
+    <span class="arch-conn"></span>
+
+    <div class="arch-layer active">
+      <div class="arch-label">Capa frontend — la app que ve el usuario</div>
+      <div class="arch-title">📱 React 19 + TypeScript + Vite + Tailwind — guanago.travel</div>
+      <div class="arch-chips">
+        <span class="chip t">B2C: turista</span>
+        <span class="chip t">B2B: aliados + agencias</span>
+        <span class="chip t">Admin: Torre de Control</span>
+        <span class="chip">Mapbox (31 POIs)</span>
+        <span class="chip">Groq Chatbot</span>
+        <span class="chip">Guana Wallet</span>
+        <span class="chip p">FCM push (pendiente)</span>
+        <span class="chip">PDF generator</span>
+      </div>
+    </div>
+    <span class="arch-conn"></span>
+
+    <div class="arch-layer active">
+      <div class="arch-label">Capa backend — el cerebro operativo</div>
+      <div class="arch-title">⚙️ Node.js + Express en Render ($5 USD/mes)</div>
+      <div class="arch-chips">
+        <span class="chip t">API REST autenticada</span>
+        <span class="chip t">Firebase Admin SDK</span>
+        <span class="chip g">Claude API (contenido)</span>
+        <span class="chip g">Webhooks Make.com</span>
+        <span class="chip">Pricing dinámico (canales)</span>
+        <span class="chip">JWT + rate limiting</span>
+        <span class="chip c">Hedera audit (preparado)</span>
+      </div>
+    </div>
+    <span class="arch-conn"></span>
+
+    <div class="arch-layer active">
+      <div class="arch-label">Capa de datos — tres bases coordinadas</div>
+      <div class="arch-title">🗄️ Airtable (entrada) → Firestore (runtime) → Claude (análisis)</div>
+      <div class="arch-chips">
+        <span class="chip t">Airtable: CRM aliados</span>
+        <span class="chip t">Firestore: app en tiempo real</span>
+        <span class="chip g">Claude: análisis + generación</span>
+        <span class="chip">Make.com: sync automático</span>
+        <span class="chip">Firebase Storage: fotos</span>
+        <span class="chip">Firebase Auth: login</span>
+      </div>
+    </div>
+    <span class="arch-conn"></span>
+
+    <div class="arch-layer">
+      <div class="arch-label">Capa de distribución — cómo llega a más gente</div>
+      <div class="arch-title">📣 Canales de adquisición y retención</div>
+      <div class="arch-chips">
+        <span class="chip t">Meta Ads ($20k/campaña)</span>
+        <span class="chip t">WhatsApp Business (push)</span>
+        <span class="chip t">WiFi captivo aliados</span>
+        <span class="chip g">FCM push notifications</span>
+        <span class="chip g">GuanaToken: recompensas</span>
+        <span class="chip">QR físicos en isla</span>
+        <span class="chip">Free Tour ancla</span>
+        <span class="chip p">PlayStore / AppStore (futuro)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hl" style="margin-top:20px">
+    <strong>El principio de diseño:</strong> todo debe funcionar offline en la isla (señal irregular) y sincronizar al recuperar conexión. Firestore SDK tiene caché local nativo — eso es la clave para que el mapa, las fichas y el itinerario funcionen sin datos.
+  </div>
+
+  <div class="card">
+    <div class="eye">Flujo de dato — de formulario a pantalla de turista</div>
+    <div class="step">
+      <div class="step-num">01</div>
+      <div><div class="step-title">Aliado llena formulario Tally.so</div><div class="step-desc">Nombre, fotos, descripción, categoría, ubicación GPS, RNT, WhatsApp. Todo en 3 minutos desde el celular.</div></div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div><div class="step-title">Make.com recibe el webhook</div><div class="step-desc">Notifica a Sky por WhatsApp instantáneamente. Crea registro en tabla Aliados_Locales de Airtable. Envía ficha preview en PDF al aliado.</div></div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div><div class="step-title">Sky aprueba en Airtable</div><div class="step-desc">Cambia el campo Estado a "Verificado". Make.com detecta el cambio y empuja el registro a Firestore en tiempo real.</div></div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div><div class="step-title">Aparece en el mapa de GuanaGO</div><div class="step-desc">El pin del negocio aparece en Mapbox. Los turistas que abran la app ven el negocio verificado. El aliado recibe confirmación por WhatsApp.</div><span class="step-tag">TIEMPO TOTAL: ~2 HORAS</span></div>
+    </div>
+    <div class="step">
+      <div class="step-num">05</div>
+      <div><div class="step-title">Claude genera la ficha del negocio</div><div class="step-desc">Con los datos del formulario, Claude API genera descripción en 3 idiomas (español, inglés, creole básico), 4 copies para redes sociales del mes, y hashtags optimizados por audiencia.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ KIT FÍSICO ═══════════════ -->
+<div class="s" id="s-kit">
+  <div class="stitle">Kit Físico de Marketing</div>
+  <div class="ssub">Los materiales impresos y físicos que activan el canal y convierten al turista en la isla antes de que abra la app. Todo diseñado para bajo costo, alto impacto.</div>
+
+  <div class="hl gold"><strong>Principio:</strong> el canal físico es el que abre el digital en la isla. El turista no busca GuanaGO — GuanaGO lo encuentra a él en el restaurante, en la posada, en el taxi, en el muelle.</div>
+
+  <div class="g2">
+    <div class="kit-item">
+      <div class="kit-icon">📌</div>
+      <div class="kit-name">Sticker "Negocio Verificado GuanaGO"</div>
+      <div class="kit-desc">Circular 5cm, vinilo resistente al agua. Fondo oscuro con logo GuanaGO + ícono Sea Flower Biosphere. QR central que lleva a la ficha del negocio en la app.</div>
+      <div class="kit-spec">Impresión: ~$800 COP/unidad · 50 unidades mínimo · Entregar al activar cualquier plan</div>
+    </div>
+    <div class="kit-item">
+      <div class="kit-icon">🪧</div>
+      <div class="kit-name">Tarjetón A6 para mesa / mostrador</div>
+      <div class="kit-desc">Tarjetón doble cara, plastificado. Frente: "Descarga GuanaGO y acumula tokens en este negocio." Reverso: QR + beneficios del turista al descargar la app.</div>
+      <div class="kit-spec">Impresión: ~$1.200 COP/unidad · 20 por aliado · Reemplaza al menú genérico de QR vacío</div>
+    </div>
+    <div class="kit-item">
+      <div class="kit-icon">🎴</div>
+      <div class="kit-name">Tarjeta de Colaborador / Promotor</div>
+      <div class="kit-desc">Tarjeta personal tamaño crédito. Nombre del colaborador + código de referido único + QR. El turista escanea y el colaborador acumula comisión en tiempo real.</div>
+      <div class="kit-spec">Impresión: ~$500 COP/unidad · 10 por colaborador activo · Activa el canal de promotores</div>
+    </div>
+    <div class="kit-item">
+      <div class="kit-icon">🌴</div>
+      <div class="kit-name">Kit de Bienvenida Free Tour Kriol</div>
+      <div class="kit-desc">Sobre pequeño con: 1 artesanía de palma de coco (Breda Sky), 1 tarjetón del Free Tour, 1 código QR de activación de GuanaPoints. Entregado en punto físico aliado al descargar la app.</div>
+      <div class="kit-spec">Costo artesanía: $3.000–8.000 COP · Breda Sky puede producir 10+ diarios · Alto impacto emocional</div>
+    </div>
+    <div class="kit-item">
+      <div class="kit-icon">🖼️</div>
+      <div class="kit-name">Mini banner roll-up para eventos</div>
+      <div class="kit-desc">Roll-up 60x150cm para Caribbean Night, ferias locales, aeropuerto. Fondo oscuro, marca GuanaGO, mapa de la isla con pins de aliados, QR de descarga grande.</div>
+      <div class="kit-spec">~$120.000 COP una sola vez · Reutilizable 2 años · Evento = 100+ descargas en una noche</div>
+    </div>
+    <div class="kit-item">
+      <div class="kit-icon">🎞️</div>
+      <div class="kit-name">Hoja de vida del negocio (HV aliado)</div>
+      <div class="kit-desc">PDF 2 páginas generado por IA con: historia del negocio, fotos curadas, reseñas top, mapa de ubicación, link directo y código QR. El aliado lo usa para presentarse a agencias B2B.</div>
+      <div class="kit-spec">Generado por Claude API con datos de Airtable · Actualizable mensualmente · Entregado vía WhatsApp</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="eye">Sistema de contenido visual — cómo producir sin equipo extra</div>
+    <h3>Videos del negocio aliado — estructura mínima viable</h3>
+    <table class="tbl">
+      <thead><tr><th>Tipo</th><th>Duración</th><th>Herramienta</th><th>Quién filma</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">Reel de presentación</td><td>30–45s</td><td>Celular + CapCut</td><td>Sky o colaborador local</td><td>Feed + Pauta aliado</td></tr>
+        <tr><td class="bold">Story del producto</td><td>15s</td><td>Celular nativo</td><td>El mismo aliado</td><td>Stories diarias</td></tr>
+        <tr><td class="bold">Mini-documental Kriol</td><td>60–90s</td><td>Celular + Breda Sky</td><td>Sky + artesano</td><td>YouTube + TikTok SEO</td></tr>
+        <tr><td class="bold">Testimonial turista</td><td>20–30s</td><td>Celular en destino</td><td>Turista guiado por aliado</td><td>Prueba social máxima</td></tr>
+        <tr><td class="bold">Tour virtual del lugar</td><td>45s</td><td>Celular panorámico</td><td>Sky o colaborador</td><td>Ficha del aliado en app</td></tr>
+      </tbody>
+    </table>
+    <div class="hl">Claude API genera el guión, los textos superpuestos, y los copies de publicación para cada video. Sky filma, CapCut edita, Make.com programa la publicación. El aliado aprueba en WhatsApp con un clic.</div>
+  </div>
+
+  <div class="card accent">
+    <div class="eye">Ampliación del HV — Hoja de Vida del Negocio Aliado</div>
+    <h3>Qué incluye la HV generada automáticamente por Claude</h3>
+    <ul class="lst">
+      <li><strong>Historia del negocio:</strong> redactada por Claude a partir de los datos del formulario + entrevista corta por WhatsApp</li>
+      <li><strong>Fotos curadas:</strong> hasta 6 fotos del aliado organizadas por tipo (producto, ambiente, equipo, ubicación)</li>
+      <li><strong>Reseñas verificadas:</strong> las 3 mejores reseñas de la plataforma, citadas con fecha y fuente</li>
+      <li><strong>Mapa de ubicación:</strong> captura del mapa Mapbox con el pin del negocio + negocios cercanos de la red</li>
+      <li><strong>Tabla de servicios y precios:</strong> extraída directamente de Airtable, siempre actualizada</li>
+      <li><strong>QR de reserva directa:</strong> enlace profundo a la ficha en GuanaGO, bypaseando OTAs</li>
+      <li><strong>Badge de membresía:</strong> nivel del plan actual (Básico / Activo / Premium) con ícono visual</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════ RECOMPENSAS ═══════════════ -->
+<div class="s" id="s-reward">
+  <div class="stitle">Sistema de Recompensas Multinivel</div>
+  <div class="ssub">Turistas, colaboradores locales, aliados y agencias B2B — cada uno gana algo diferente por participar. Sin esto, el canal se muere en cuanto alguien deja de empujarlo.</div>
+
+  <div class="m-grid">
+    <div class="mbox"><span class="mval t">4</span><span class="mlbl">tipos de participante que ganan</span></div>
+    <div class="mbox"><span class="mval g">3</span><span class="mlbl">monedas del sistema (COP, GuanaPoints, GuanaToken)</span></div>
+    <div class="mbox"><span class="mval c">∞</span><span class="mlbl">ciclos de economía circular</span></div>
+  </div>
+
+  <div class="tier">
+    <div class="tier-badge" style="background:rgba(0,229,204,.15);color:var(--teal);border:1px solid var(--border);">TURISTA</div>
+    <div class="tier-name">🧳 El Viajero</div>
+    <div class="tier-desc">Llega sin conocer la isla. GuanaGO le da contexto, recomendaciones, y lo conecta con negocios reales. Gana por usar la plataforma.</div>
+    <div class="tier-rewards">
+      <div class="tier-r">50 GuanaPoints al descargar la app y completar perfil</div>
+      <div class="tier-r">100 puntos por cada reserva confirmada desde GuanaGO</div>
+      <div class="tier-r">25 puntos por dejar una reseña verificada</div>
+      <div class="tier-r">30 puntos al hacer check-in en el Free Tour Kriol</div>
+      <div class="tier-r">75 puntos por referir un amigo que descarga la app</div>
+      <div class="tier-r">Canjea puntos por descuentos, artesanías Breda Sky, entrada Caribbean Night</div>
+    </div>
+  </div>
+
+  <div class="tier featured">
+    <div class="tier-badge" style="background:var(--teal);color:var(--deep);">COLABORADOR LOCAL</div>
+    <div class="tier-name">🤝 El Promotor Raizal</div>
+    <div class="tier-desc">Persona local (taxista, recepcionista de hotel, guía, estudiante) que recomienda GuanaGO y gana comisión real en efectivo. Sin inversión inicial — solo su red social.</div>
+    <div class="tier-rewards">
+      <div class="tier-r">Código de referido único generado en la app</div>
+      <div class="tier-r"><strong style="color:var(--cream)">5–10% de la primera membresía</strong> de cada aliado que activa por su código</div>
+      <div class="tier-r"><strong style="color:var(--cream)">$2.000–5.000 COP</strong> por cada turista que descarga la app usando su QR</div>
+      <div class="tier-r">GuanaPoints adicionales por volumen mensual (ranking visible en la app)</div>
+      <div class="tier-r">Tabla de líderes mensual con premio físico para el top 3 de promotores</div>
+      <div class="tier-r">Liquidación quincenal vía Nequi o transferencia — sin papeleos</div>
+    </div>
+  </div>
+
+  <div class="tier">
+    <div class="tier-badge" style="background:rgba(255,183,77,.15);color:var(--gold);border:1px solid rgba(255,183,77,.3);">ALIADO LOCAL</div>
+    <div class="tier-name">🏪 El Empresario Raizal</div>
+    <div class="tier-desc">Restaurante, posada, operador, artesano. Paga membresía y recibe clientes, contenido, y tokens. Su participación activa la red para todos los demás.</div>
+    <div class="tier-rewards">
+      <div class="tier-r">200 GuanaPoints al activar membresía</div>
+      <div class="tier-r">50 puntos por cada venta confirmada desde GuanaGO</div>
+      <div class="tier-r"><strong style="color:var(--cream)">Upgrade gratuito de 1 mes</strong> si refiere a 3 aliados que activan plan pagado</div>
+      <div class="tier-r">Aparece destacado en la sección "Aliados del mes" (rotativo según actividad)</div>
+      <div class="tier-r">Acceso a panel de métricas: visitas, escaneos QR, conversiones, GuanaPoints de clientes</div>
+      <div class="tier-r">1 foto profesional / trimestre cuando GuanaGO hace producción de contenido en la zona</div>
+    </div>
+  </div>
+
+  <div class="tier">
+    <div class="tier-badge" style="background:rgba(167,139,250,.15);color:var(--purple);border:1px solid rgba(167,139,250,.3);">AGENCIA B2B</div>
+    <div class="tier-name">✈️ La Agencia de Viajes</div>
+    <div class="tier-desc">Agencia nacional o internacional que usa GuíaSAI para cotizar y vender paquetes en San Andrés. Gana acceso a inventario en tiempo real sin llamar a nadie.</div>
+    <div class="tier-rewards">
+      <div class="tier-r">Acceso al cotizador de GuíaSAI (markup propio sobre precios base)</div>
+      <div class="tier-r">Vouchers digitales automáticos para cada reserva confirmada</div>
+      <div class="tier-r"><strong style="color:var(--cream)">GuanaPoints canjeables</strong> por prioridad en el catálogo o acceso anticipado a temporadas</div>
+      <div class="tier-r">Comisión de agencia: 10–15% sobre precio neto (ellos definen markup con su cliente)</div>
+      <div class="tier-r">Material de ventas actualizado automáticamente (HV de aliados, fotos, precios actualizados)</div>
+      <div class="tier-r">API directa a disponibilidad real — sin WhatsApp de confirmación</div>
+    </div>
+  </div>
+
+  <div class="hl purple">
+    <strong>La clave anti-OTA:</strong> el turista que llega por GuanaGO (descarga + reserva directa) genera GuanaPoints para el aliado Y para él mismo. Booking.com no puede darle eso. Esa diferencia de experiencia es lo que hace que el turista repita el canal directo en su próximo viaje.
+  </div>
+
+  <div class="card">
+    <div class="eye">Tabla de líderes — gamificación visible</div>
+    <h3>Rankings que motivan sin que Sky tenga que empujar</h3>
+    <table class="tbl">
+      <thead><tr><th>Ranking</th><th>Quién compite</th><th>Período</th><th>Premio top 3</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">Top Promotores</td><td>Colaboradores locales</td><td>Mensual</td><td>$50k / $30k / $20k COP en efectivo</td></tr>
+        <tr><td class="bold">Top Aliados</td><td>Negocios aliados activos</td><td>Mensual</td><td>Mes Premium gratis + stickers especiales</td></tr>
+        <tr><td class="bold">Top Viajeros</td><td>Turistas con más check-ins</td><td>Temporada</td><td>Kit Kriol de Breda Sky + entrada Caribbean Night</td></tr>
+        <tr><td class="bold">Top Reseñistas</td><td>Turistas con mejores reseñas</td><td>Trimestral</td><td>Tour gratuito con aliado partner</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════ WIFI + PUSH ═══════════════ -->
+<div class="s" id="s-wifi">
+  <div class="stitle">WiFi Captivo + Notificaciones Push</div>
+  <div class="ssub">El WiFi del aliado como punto de entrada a GuanaGO. Igual al modelo de Easy Promos — el turista obtiene conexión gratis a cambio de entrar al ecosistema.</div>
+
+  <div class="hl gold">
+    <strong>Referencia probada:</strong> Easy Promos, Wifinity y otros sistemas de "social WiFi" llevan años usando este modelo. El turista en la isla tiene señal irregular — el WiFi del restaurante es valioso. Ese valor se intercambia por una descarga y un registro.
+  </div>
+
+  <div class="card">
+    <div class="eye">Flujo WiFi Captivo — cómo funciona en el restaurante aliado</div>
+    <div class="wifi-flow">
+      <div class="wf-step">
+        <div class="wf-n">PASO 01</div>
+        <div class="wf-t">Turista conecta al WiFi del restaurante</div>
+        <div class="wf-d">Red llamada "GuanaGO_[NombreNegocio]" — visible y atractiva. No necesita contraseña.</div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-n">PASO 02</div>
+        <div class="wf-t">Portal captivo abre automáticamente</div>
+        <div class="wf-d">Página de GuanaGO con la oferta: "Descarga la app y obtén WiFi gratis + 50 GuanaPoints". 1 pantalla, sin fricción.</div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-n">PASO 03</div>
+        <div class="wf-t">Turista descarga la app o escanea QR</div>
+        <div class="wf-d">Si ya la tiene: ingresa su código de usuario. Si no la tiene: descarga en 30 segundos. En ambos casos, el sistema lo reconoce.</div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-n">PASO 04</div>
+        <div class="wf-t">WiFi se activa — turista navega libre</div>
+        <div class="wf-d">20–30 minutos de acceso. Suficiente para una comida. GuanaGO acredita los puntos al turista y registra el check-in del aliado.</div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-n">PASO 05</div>
+        <div class="wf-t">Push notification 2 horas después</div>
+        <div class="wf-d">"¿Te gustó [Nombre restaurante]? Déjales una reseña y gana 25 puntos más." — Automatizado vía FCM o WhatsApp.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="eye">Implementación técnica WiFi captivo</div>
+      <h3>Opción A — Router OpenWRT ($0 extra)</h3>
+      <ul class="lst">
+        <li>Router Xiaomi o TP-Link flasheado con OpenWRT (~$80k COP)</li>
+        <li>Página captiva personalizada con logo GuanaGO</li>
+        <li>Redirige a guanago.travel/wifi-login al conectar</li>
+        <li>El aliado solo necesita enchufar el router</li>
+        <li>Control total sin mensualidad a terceros</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="eye">Implementación técnica WiFi captivo</div>
+      <h3>Opción B — Servicio gestionado (~$15k COP/mes)</h3>
+      <ul class="lst">
+        <li>WiFiMarketing.co o similar con portal branded</li>
+        <li>Estadísticas: cuántos se conectaron, tiempo, dispositivos</li>
+        <li>Integración directa con Make.com vía webhook</li>
+        <li>Más fácil para aliados sin conocimiento técnico</li>
+        <li>Costo incluido en plan Premium ($129.900/mes)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="eye">Notificaciones Push — FCM ya instalado en GuanaGO</div>
+    <h3>Ejemplos de mensajes que convierten</h3>
+
+    <div class="notif-preview">
+      <div class="notif-icon">🌴</div>
+      <div>
+        <div class="notif-app">GUANAGO</div>
+        <div class="notif-title">¡Hola! El mar te espera hoy 🌊</div>
+        <div class="notif-body">Chamey tiene cupos para el tour de snorkel esta tarde. Paga con GuanaPoints y ahorra 15%.</div>
+        <div class="notif-time">Trigger: 9:00 AM · días soleados en temporada alta</div>
+      </div>
+    </div>
+
+    <div class="notif-preview">
+      <div class="notif-icon">🍽️</div>
+      <div>
+        <div class="notif-app">GUANAGO</div>
+        <div class="notif-title">Miss Trinie te recomienda...</div>
+        <div class="notif-body">El Rondon del día está listo en Bobby Rock. Muestra este mensaje y recibe 20 GuanaPoints extra.</div>
+        <div class="notif-time">Trigger: 12:00 PM · turistas con check-in registrado hoy</div>
+      </div>
+    </div>
+
+    <div class="notif-preview">
+      <div class="notif-icon">🎶</div>
+      <div>
+        <div class="notif-app">GUANAGO</div>
+        <div class="notif-title">Caribbean Night esta noche 🌙</div>
+        <div class="notif-body">Breda Sky se presenta a las 8 PM. Últimos 5 cupos con descuento para usuarios GuanaGO.</div>
+        <div class="notif-time">Trigger: 4:00 PM · día del evento · todos los turistas activos</div>
+      </div>
+    </div>
+
+    <div class="notif-preview">
+      <div class="notif-icon">🪙</div>
+      <div>
+        <div class="notif-app">GUANAGO · WhatsApp</div>
+        <div class="notif-title">¡Tienes 175 GuanaPoints acumulados!</div>
+        <div class="notif-body">Ya puedes canjear una artesanía de palma de coco de Breda Sky. Solo 200 puntos. ¿Quieres verla?</div>
+        <div class="notif-time">Trigger: WhatsApp API · cuando el turista alcanza umbral de canje</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card accent">
+    <div class="eye">WhatsApp Business como canal push alternativo</div>
+    <h3>Para turistas que no activan notificaciones de la app</h3>
+    <ul class="lst">
+      <li><strong>WhatsApp Business API (oficial):</strong> ~$0.05 USD por mensaje enviado — viable para mensajes de alto valor (canje, reserva, evento)</li>
+      <li><strong>Template messages aprobados:</strong> hay que pre-aprobar los formatos con Meta. Proceso toma 1–3 días. Costo: $0.</li>
+      <li><strong>Make.com orquesta el envío:</strong> cuando Airtable detecta un trigger (puntos acumulados, tour disponible, check-in), Make envía el WhatsApp automáticamente</li>
+      <li><strong>Opt-in requerido:</strong> el turista da su número al registrarse en la app y acepta recibir mensajes. Cumple regulación colombiana.</li>
+      <li><strong>Conversión esperada:</strong> 35–60% open rate en WhatsApp vs 5–15% en email — es el canal más potente disponible</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════ AIRTABLE + CLAUDE ═══════════════ -->
+<div class="s" id="s-airtable">
+  <div class="stitle">Airtable + Claude — El Cerebro de Datos</div>
+  <div class="ssub">Cómo conectar Airtable con Claude para crear campos, analizar datos, generar contenido, y tomar decisiones desde un solo panel. Sin programar cada vez.</div>
+
+  <div class="hl">
+    <strong>El objetivo:</strong> Sky habla con Claude en lenguaje natural — "¿cuántos aliados llevan más de 30 días sin actualizar su ficha?" — y Claude consulta Airtable, analiza, y responde con recomendaciones concretas. Eso es lo que se construye aquí.
+  </div>
+
+  <div class="card">
+    <div class="eye">Tablas Airtable — estado actual + campos a agregar</div>
+    <div class="ac-block">
+      <div class="ac-head"><div class="ac-head-title">ServiciosTuristicos_SAI</div><div class="ac-head-tag">✅ ACTIVA</div></div>
+      <div class="ac-body"><ul>
+        <li>Campos existentes: Nombre, Precio, Imagen, Categoria, Estado</li>
+        <li>Agregar: PrecioPromotor, PrecioAgencia, PrecioDirecto, GuanaPoints_por_reserva</li>
+        <li>Agregar: FechaUltimaActualizacion, ResponsableAliado, VideoURL, EstadoContenido</li>
+        <li>Claude puede: actualizar precios en lote, detectar fichas desactualizadas, generar descripciones</li>
+      </ul></div>
+    </div>
+    <div class="ac-block">
+      <div class="ac-head"><div class="ac-head-title">Aliados_Locales</div><div class="ac-head-tag">🔧 CREAR</div></div>
+      <div class="ac-body"><ul>
+        <li>NombreNegocio, Categoria, RNT, NIT, WhatsApp, Instagram, UbicacionGPS</li>
+        <li>PlanActual (Basico/Activo/Premium), FechaActivacion, FechaRenovacion</li>
+        <li>GuanaPointsAcumulados, VentasGeneradas, EscaneoQR_mes, VisitasPerfil_mes</li>
+        <li>ProductoRegaloMes, EstadoContenidoIA, UltimaPublicacion, NotasInternas</li>
+        <li>Claude puede: detectar aliados sin actividad, calcular ROI por aliado, identificar candidatos a upgrade</li>
+      </ul></div>
+    </div>
+    <div class="ac-block">
+      <div class="ac-head"><div class="ac-head-title">Promotores_GG</div><div class="ac-head-tag">✅ ACTIVA</div></div>
+      <div class="ac-body"><ul>
+        <li>Campos existentes: (revisar estructura)</li>
+        <li>Agregar: CodigoReferido, TotalReferidos, ComisionPendiente, ComisionPagada</li>
+        <li>Agregar: UltimaActividad, TipoPromotora (local/digital/aliado), Nequi, RankingMes</li>
+        <li>Claude puede: calcular liquidaciones mensuales, identificar top promotores, generar reporte de comisiones</li>
+      </ul></div>
+    </div>
+    <div class="ac-block">
+      <div class="ac-head"><div class="ac-head-title">ContenidoIA_Queue</div><div class="ac-head-tag">🔧 CREAR</div></div>
+      <div class="ac-body"><ul>
+        <li>AlinadoID (link a Aliados_Locales), TipoContenido (post/reel/historia/HV)</li>
+        <li>Estado (pendiente/generado/aprobado/publicado), FechaGeneracion, FechaPublicacion</li>
+        <li>CopyES, CopyEN, CopyCreole, Hashtags, PlataformaDestino</li>
+        <li>Claude puede: llenar esta tabla automáticamente, detectar cuellos de botella en la cola de aprobación</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="card accent">
+    <div class="eye">Permisos de Claude en Airtable — qué puede hacer</div>
+    <h3>Acceso vía Airtable MCP (ya conectado en este proyecto)</h3>
+    <table class="tbl">
+      <thead><tr><th>Acción</th><th>Alcance</th><th>Requiere aprobación de Sky</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">Leer registros</td><td>Todas las tablas</td><td class="tg">No — lectura libre</td></tr>
+        <tr><td class="bold">Crear registros</td><td>ContenidoIA_Queue, Leads</td><td>Sí — Sky confirma</td></tr>
+        <tr><td class="bold">Actualizar campos</td><td>Estado, FechaActualizacion</td><td>Sí para campos críticos</td></tr>
+        <tr><td class="bold">Crear nuevos campos</td><td>Con instrucción explícita</td><td>Sí — siempre</td></tr>
+        <tr><td class="bold">Analizar y reportar</td><td>Cualquier tabla</td><td class="tg">No — análisis libre</td></tr>
+        <tr><td class="bold">Eliminar registros</td><td>Nunca autónomamente</td><td>Siempre — doble confirmación</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="eye">Comandos naturales que puedes darle a Claude + Airtable</div>
+    <h3>Ejemplos de lo que puedes pedirle hoy</h3>
+    <div class="step">
+      <div class="step-num">📊</div>
+      <div><div class="step-title">"¿Cuántos aliados están en plan Básico hace más de 60 días sin subir de plan?"</div><div class="step-desc">Claude consulta Aliados_Locales, filtra por PlanActual=Básico y FechaActivacion, lista los candidatos a llamar esta semana con sus WhatsApp incluidos.</div></div>
+    </div>
+    <div class="step">
+      <div class="step-num">✍️</div>
+      <div><div class="step-title">"Genera los 4 posts de mayo para el restaurante Bobby Rock/Bushi Food"</div><div class="step-desc">Claude lee la ficha del aliado en Airtable, genera 4 copies en español con hashtags, los guarda en ContenidoIA_Queue con estado "pendiente". Sky aprueba con un clic.</div></div>
+    </div>
+    <div class="step">
+      <div class="step-num">💰</div>
+      <div><div class="step-title">"Calcula las comisiones de los promotores de abril para liquidar esta semana"</div><div class="step-desc">Claude lee Promotores_GG y Ventas_Promotor, calcula totales por código de referido, genera tabla de liquidación lista para pagar por Nequi.</div></div>
+    </div>
+    <div class="step">
+      <div class="step-num">🗺️</div>
+      <div><div class="step-title">"¿Qué categorías del mapa tienen menos de 3 aliados verificados?"</div><div class="step-desc">Claude analiza Directorio_Mapa y Aliados_Locales, identifica gaps en el catálogo (ej: no hay spa verificado, no hay alquiler de bicicletas). Sugiere a quién contactar primero.</div></div>
+    </div>
+    <div class="step">
+      <div class="step-num">📈</div>
+      <div><div class="step-title">"¿Cuál es el aliado con mejor ROI de la plataforma este mes?"</div><div class="step-desc">Claude cruza VentasGeneradas vs PlanActual vs CostoMembresía, calcula ROI real por aliado, identifica el caso de éxito para usar como testimonial en el pitch de nuevos aliados.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ HOJA DE RUTA ═══════════════ -->
+<div class="s" id="s-roadmap">
+  <div class="stitle">Hoja de Ruta Técnica</div>
+  <div class="ssub">De guanago.travel (showroom actual) a PlayStore + AppStore. Cada fase tiene su costo real, lo que se activa, y la métrica que valida el avance.</div>
+
+  <div class="m-grid">
+    <div class="mbox"><span class="mval t">$5 USD</span><span class="mlbl">hosting actual/mes — Render</span></div>
+    <div class="mbox"><span class="mval g">$25 USD</span><span class="mlbl">fee único PlayStore</span></div>
+    <div class="mbox"><span class="mval c">$99 USD</span><span class="mlbl">fee anual AppStore iOS</span></div>
+    <div class="mbox"><span class="mval p">$0</span><span class="mlbl">migrar PWA a Capacitor</span></div>
+  </div>
+
+  <div class="rm-item">
+    <div class="rm-phase">HOY<br>activo</div>
+    <div>
+      <div class="rm-title">🌐 guanago.travel — Showroom PWA</div>
+      <div class="rm-desc">Frontend React en Render. B2C turista funcional, B2B aliados, Admin Torre de Control. Mapbox activo con 31 POIs. Groq chatbot activo. Firebase Auth funcionando. El usuario accede desde navegador del celular — sin instalación.</div>
+      <div class="rm-cost">Costo: $5 USD/mes (Render Starter) · Lo que falta: pasarela de pago, FCM push, sync Airtable→Firestore</div>
+    </div>
+  </div>
+
+  <div class="rm-item">
+    <div class="rm-phase">SEMANA<br>1–2</div>
+    <div>
+      <div class="rm-title">🔔 Activar FCM Push Notifications</div>
+      <div class="rm-desc">Firebase Cloud Messaging SDK ya está instalado en el proyecto. Solo falta configurar las credenciales en .env y activar el service worker del PWA. Con esto, el turista recibe notificaciones aunque no tenga la app abierta — igual que una app nativa.</div>
+      <div class="rm-cost">Costo: $0 · Tiempo: ~4 horas de desarrollo · Impacto: retención de usuarios +40%</div>
+    </div>
+  </div>
+
+  <div class="rm-item">
+    <div class="rm-phase">SEMANA<br>2–4</div>
+    <div>
+      <div class="rm-title">💳 Activar pasarela de pago (Wompi/PayU)</div>
+      <div class="rm-desc">La UI de checkout ya está construida. Solo falta integrar el SDK de Wompi (la pasarela más simple para Colombia — cuentas bancarias locales, PSE, tarjetas, Nequi). Con esto, el turista puede pagar tours y el aliado puede cobrar membresía en línea desde GuanaGO.</div>
+      <div class="rm-cost">Costo: 2.9% + $900 COP por transacción (Wompi) · Tiempo: ~8 horas de desarrollo · Impacto: primer peso real en la plataforma</div>
+    </div>
+  </div>
+
+  <div class="rm-item">
+    <div class="rm-phase">MES 1–2</div>
+    <div>
+      <div class="rm-title">🗄️ Migrar Airtable→Firestore (datos en tiempo real)</div>
+      <div class="rm-desc">Configurar Make.com para sincronizar Airtable (captura/aprobación) con Firestore (runtime de la app). Cuando Sky aprueba un aliado en Airtable, aparece en el mapa de la app en segundos. Esto elimina el bottleneck actual donde los datos no se actualizan en tiempo real.</div>
+      <div class="rm-cost">Costo: plan Make.com Team ~$50k COP/mes · Tiempo: ~12 horas de configuración · Base de datos: Firestore plan Blaze (pay-as-you-go, primeros meses ~$0)</div>
+    </div>
+  </div>
+
+  <div class="rm-item">
+    <div class="rm-phase">MES 2–3</div>
+    <div>
+      <div class="rm-title">📱 PWA instalable (sin PlayStore aún)</div>
+      <div class="rm-desc">Una PWA bien configurada ya se puede "instalar" en el home screen del celular — Android e iOS. El turista ve el ícono de GuanaGO igual que una app. Necesita: manifest.json completo, service worker con offline cache, íconos en todos los tamaños. Migrar hosting a Firebase Hosting (más rápido para PWA que Render).</div>
+      <div class="rm-cost">Costo: Firebase Hosting gratuito hasta 10GB/mes · Tiempo: ~6 horas · Impacto: experiencia de app sin fee de PlayStore</div>
+    </div>
+  </div>
+
+  <div class="rm-item">
+    <div class="rm-phase">MES 3–4</div>
+    <div>
+      <div class="rm-title">🤖 Claude API como cerebro de contenido</div>
+      <div class="rm-desc">Integrar Claude API en el backend de GuanaGO para: generar automáticamente los copies de los aliados, analizar reseñas, responder consultas en el chatbot con contexto real del catálogo (RAG sobre Firestore), y generar los reportes mensuales de cada aliado.</div>
+      <div class="rm-cost">Costo: Claude API Sonnet ~$3 USD/millón tokens input · Estimado: $10–30 USD/mes con 40 aliados · ROI: elimina horas de trabajo manual de Sky</div>
+    </div>
+  </div>
+
+  <div class="rm-item">
+    <div class="rm-phase">MES 4–6</div>
+    <div>
+      <div class="rm-title">📦 PlayStore Android — $25 USD una sola vez</div>
+      <div class="rm-desc">Usar Capacitor.js (ya compatible con React + Vite) para empaquetar la PWA como APK nativa. No requiere reescribir código — es un wrapper. Proceso: instalar Capacitor → configurar android/ → generar .aab → subir a Google Play Console ($25 USD fee único). La app es idéntica a la PWA pero con presencia en PlayStore.</div>
+      <div class="rm-cost">Fee: $25 USD único · Tiempo desarrollo: ~16 horas · Impacto: distribución orgánica PlayStore + credibilidad institucional</div>
+    </div>
+  </div>
+
+  <div class="rm-item">
+    <div class="rm-phase">MES 6–8</div>
+    <div>
+      <div class="rm-title">🍎 AppStore iOS — $99 USD/año</div>
+      <div class="rm-desc">Mismo proceso con Capacitor pero para iOS. Requiere: Mac para compilar (se puede usar servicio en la nube como MacInCloud ~$1 USD/hora) + cuenta Apple Developer ($99 USD/año). El review de Apple es más estricto — dedicar 2 semanas a preparar el submission correctamente (capturas, descripción, privacidad).</div>
+      <div class="rm-cost">Fee: $99 USD/año + ~$5 USD compilación en nube · Tiempo: ~20 horas preparación · Impacto: acceso al mercado iOS (mayoría de turistas internacionales usan iPhone)</div>
+    </div>
+  </div>
+
+  <div class="rm-item">
+    <div class="rm-phase">MES 8–12</div>
+    <div>
+      <div class="rm-title">🪙 GuanaToken on-chain (Hedera)</div>
+      <div class="rm-desc">Migrar GuanaPoints (off-chain) al token Hedera ya preparado en la arquitectura. Cada transacción verificada genera un Hedra Transaction ID visible al usuario. Los NFT de autenticidad de Breda Sky se emiten en Hedera. Consultar abogado fintech antes del lanzamiento on-chain.</div>
+      <div class="rm-cost">Costo/tx Hedera: ~$0.0001 USD · Abogado: ~$500k COP una vez · Impacto: diferenciación radical vs cualquier otra plataforma turística</div>
+    </div>
+  </div>
+
+  <div class="hl" style="margin-top:8px">
+    <strong>Convocatorias para financiar el desarrollo:</strong> iNNpulsa Colombia (cierra convocatorias ~2x/año, hasta $100M COP), Apps.co (MinTIC, gratuito, formación + recursos), Fontur (fondo de turismo, hasta $200M COP para plataformas digitales de destino), Fondo Emprender SENA (para personas vinculadas al SENA). GuíaSAI ya tiene historial con Apps.co, Fondo Emprender e iNNpulsa — eso es ventaja competitiva en futuras aplicaciones.
+  </div>
+
+  <div class="card accent">
+    <div class="eye">Stack de costos totales — operación mensual sostenible</div>
+    <table class="tbl">
+      <thead><tr><th>Servicio</th><th>Plan</th><th>Costo/mes</th><th>Cuándo activar</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">Render (backend)</td><td>Starter</td><td class="tg">$5 USD</td><td>Hoy — activo</td></tr>
+        <tr><td class="bold">Firebase (Firestore+Hosting+Auth)</td><td>Blaze (pay-as-you-go)</td><td class="tg">$0–15 USD</td><td>Mes 1–2</td></tr>
+        <tr><td class="bold">Airtable</td><td>Free/Plus</td><td class="tg">$0–20 USD</td><td>Hoy — activo</td></tr>
+        <tr><td class="bold">Make.com</td><td>Core (10k ops)</td><td class="tg">$9 USD</td><td>Mes 1</td></tr>
+        <tr><td class="bold">Claude API (Sonnet)</td><td>Pay-as-you-go</td><td class="tg">$10–30 USD</td><td>Mes 3–4</td></tr>
+        <tr><td class="bold">Wompi (pasarela)</td><td>2.9% + $900/tx</td><td class="tg">Variable</td><td>Mes 1–2</td></tr>
+        <tr><td class="bold">WhatsApp Business API</td><td>~$0.05/msg</td><td class="tg">~$5–20 USD</td><td>Mes 2</td></tr>
+        <tr><td class="bold">Mapbox</td><td>Free 50k loads/mes</td><td class="tg">$0</td><td>Hoy — activo</td></tr>
+        <tr><td class="bold" style="color:var(--cream)">TOTAL OPERACIÓN</td><td>—</td><td style="color:var(--gold);font-weight:700">$29–99 USD/mes</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <div class="hl gold" style="margin-top:12px"><strong>Con solo 1 aliado en plan Activo ($49.900 COP ≈ $12 USD):</strong> cubre la mitad del stack técnico completo. Con 3 aliados Activos: toda la infraestructura está cubierta y hay margen neto positivo desde el día 1.</div>
+  </div>
+</div>
+
+<div class="footer">
+  <strong>GuanaGO × GuíaSAI S.A.S.</strong> · RNT 48674 · NIT 901013739-9<br>
+  San Andrés Islas · Reserva de Biosfera Sea Flower · Sistema Operativo de Destino<br>
+  <em>Plataforma operada por isleños, para el mundo.</em>
+</div>
+
+<script>
+function sw(id, btn) {
+  document.querySelectorAll('.s').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  btn.classList.add('on');
+}
+</script>
+</body>
+</html>

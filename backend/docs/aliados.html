@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO — Estrategia Aliados & Análisis Financiero</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #00C9B1;
+    --teal-dark: #00A896;
+    --ocean: #005F73;
+    --coral: #FF6B6B;
+    --sand: #F4E8C1;
+    --cream: #FAFAF7;
+    --ink: #0D1B2A;
+    --mist: #E8F4F8;
+    --gold: #FFB347;
+    --green: #52B788;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--ink);
+    color: var(--cream);
+    line-height: 1.6;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, var(--ocean) 0%, var(--ink) 60%);
+    padding: 60px 40px 50px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,201,177,0.15) 0%, transparent 70%);
+  }
+  .hero-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  .hero h1 span { color: var(--teal); }
+  .hero-sub {
+    font-size: 15px;
+    color: rgba(250,250,247,0.65);
+    max-width: 560px;
+    font-weight: 300;
+  }
+  .hero-badges {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 28px;
+  }
+  .badge {
+    background: rgba(0,201,177,0.12);
+    border: 1px solid rgba(0,201,177,0.3);
+    color: var(--teal);
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* NAV TABS */
+  .nav-tabs {
+    display: flex;
+    overflow-x: auto;
+    background: rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 0 40px;
+  }
+  .nav-tab {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(250,250,247,0.4);
+    padding: 16px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    background: none; border-top: none; border-left: none; border-right: none;
+  }
+  .nav-tab.active, .nav-tab:hover {
+    color: var(--teal);
+    border-bottom-color: var(--teal);
+  }
+
+  /* SECTIONS */
+  .section { display: none; padding: 40px; max-width: 960px; margin: 0 auto; }
+  .section.active { display: block; }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--cream);
+  }
+  .section-desc {
+    font-size: 14px;
+    color: rgba(250,250,247,0.5);
+    margin-bottom: 32px;
+    font-weight: 300;
+  }
+
+  /* CARDS */
+  .card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--teal);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+
+  /* FINANCIAL TABLE */
+  .fin-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  .fin-table th {
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(250,250,247,0.4);
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-weight: 500;
+  }
+  .fin-table td {
+    padding: 12px 12px;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    vertical-align: top;
+  }
+  .fin-table tr:last-child td { border-bottom: none; }
+  .fin-table .num { font-family: 'Syne', sans-serif; font-weight: 700; }
+  .fin-table .highlight td { background: rgba(0,201,177,0.06); }
+  .fin-table .total td { 
+    background: rgba(0,201,177,0.12);
+    border-top: 1px solid rgba(0,201,177,0.3);
+    font-weight: 600;
+    color: var(--teal);
+  }
+
+  /* METRIC BOXES */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .metric-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .metric-label { font-size: 11px; color: rgba(250,250,247,0.4); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .metric-value { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; }
+  .metric-value.teal { color: var(--teal); }
+  .metric-value.gold { color: var(--gold); }
+  .metric-value.coral { color: var(--coral); }
+  .metric-value.green { color: var(--green); }
+  .metric-sub { font-size: 11px; color: rgba(250,250,247,0.35); margin-top: 4px; }
+
+  /* PLAN CARDS */
+  .plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .plan-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+  }
+  .plan-card.featured {
+    border-color: var(--teal);
+    background: rgba(0,201,177,0.06);
+  }
+  .plan-card .featured-tag {
+    position: absolute;
+    top: -10px; left: 20px;
+    background: var(--teal);
+    color: var(--ink);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 100px;
+    letter-spacing: 1px;
+  }
+  .plan-name { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .plan-price { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--teal); }
+  .plan-price span { font-size: 13px; font-weight: 400; color: rgba(250,250,247,0.5); }
+  .plan-features { list-style: none; margin-top: 16px; }
+  .plan-features li { font-size: 13px; color: rgba(250,250,247,0.75); padding: 5px 0; display: flex; gap: 8px; align-items: flex-start; }
+  .plan-features li::before { content: '→'; color: var(--teal); flex-shrink: 0; }
+
+  /* CAMPAIGN BREAKDOWN */
+  .campaign-row {
+    display: grid;
+    grid-template-columns: 1fr 120px 120px;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    align-items: start;
+  }
+  .campaign-row.header {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(250,250,247,0.35);
+    border-bottom-color: rgba(255,255,255,0.1);
+  }
+  .campaign-row:last-child { border-bottom: none; }
+  .campaign-name { font-size: 14px; }
+  .campaign-name small { display: block; font-size: 12px; color: rgba(250,250,247,0.45); margin-top: 3px; }
+  .campaign-val { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+
+  /* CONTENT PILLARS */
+  .pillars-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .pillar-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .pillar-icon { font-size: 24px; margin-bottom: 10px; }
+  .pillar-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .pillar-desc { font-size: 12px; color: rgba(250,250,247,0.55); }
+  .pillar-freq { font-size: 11px; color: var(--teal); margin-top: 8px; font-weight: 500; }
+
+  /* TC BLOCK */
+  .tc-block {
+    background: rgba(255,255,255,0.04);
+    border-left: 3px solid var(--teal);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .tc-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 6px;
+  }
+  .tc-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+  .tc-content { font-size: 13px; color: rgba(250,250,247,0.75); line-height: 1.7; }
+  .tc-content ul { list-style: none; margin-top: 8px; }
+  .tc-content ul li { padding: 3px 0; }
+  .tc-content ul li::before { content: '· '; color: var(--teal); font-weight: 700; }
+
+  /* ALERT */
+  .alert {
+    background: rgba(255,107,107,0.1);
+    border: 1px solid rgba(255,107,107,0.3);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: rgba(250,250,247,0.8);
+    margin-bottom: 20px;
+  }
+  .alert strong { color: var(--coral); }
+
+  .tip {
+    background: rgba(82,183,136,0.1);
+    border: 1px solid rgba(82,183,136,0.3);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: rgba(250,250,247,0.8);
+    margin-bottom: 20px;
+  }
+  .tip strong { color: var(--green); }
+
+  /* ROI VISUAL */
+  .roi-bar-wrap { margin: 12px 0 6px; }
+  .roi-bar-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+  .roi-bar-label span:last-child { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--teal); }
+  .roi-bar-bg { background: rgba(255,255,255,0.08); border-radius: 100px; height: 8px; }
+  .roi-bar { height: 8px; border-radius: 100px; background: linear-gradient(90deg, var(--teal-dark), var(--teal)); }
+
+  /* VIDEO STRUCTURE */
+  .video-type {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    align-items: start;
+  }
+  .video-type:last-child { border-bottom: none; }
+  .video-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: rgba(0,201,177,0.25);
+    line-height: 1;
+  }
+  .video-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .video-desc { font-size: 13px; color: rgba(250,250,247,0.6); }
+  .video-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .video-tag {
+    background: rgba(255,255,255,0.06);
+    border-radius: 100px;
+    font-size: 11px;
+    padding: 3px 10px;
+    color: rgba(250,250,247,0.5);
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    padding: 40px;
+    font-size: 12px;
+    color: rgba(250,250,247,0.2);
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .footer strong { color: var(--teal); }
+
+  @media (max-width: 600px) {
+    .hero, .section { padding: 30px 20px; }
+    .nav-tab { padding: 14px 14px; font-size: 11px; }
+    .campaign-row { grid-template-columns: 1fr 90px; }
+    .campaign-row .campaign-val:last-child { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-label">GuanaGO × GuíaSAI — Documento interno estratégico</div>
+  <h1>Oferta para Aliados<br><span>& Análisis Financiero</span></h1>
+  <p class="hero-sub">Cuánto cuesta, qué se entrega, cómo se sostiene. La base para cerrar negocios con nuevas marcas y empresarios locales de San Andrés.</p>
+  <div class="hero-badges">
+    <span class="badge">Plataforma Raizal</span>
+    <span class="badge">Sea Flower Biosphere</span>
+    <span class="badge">RNT 48674</span>
+    <span class="badge">NIT 901013739-9</span>
+    <span class="badge">+10 años de experiencia</span>
+  </div>
+</div>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="showTab('financiero')">💰 Financiero</button>
+  <button class="nav-tab" onclick="showTab('planes')">📦 Planes</button>
+  <button class="nav-tab" onclick="showTab('contenido')">🎬 Contenido</button>
+  <button class="nav-tab" onclick="showTab('tc')">📋 T&C Aliados</button>
+  <button class="nav-tab" onclick="showTab('pitch')">🎯 Pitch</button>
+</div>
+
+<!-- ==================== FINANCIERO ==================== -->
+<div class="section active" id="tab-financiero">
+  <div class="section-title">Análisis Financiero de Campaña</div>
+  <div class="section-desc">Cada peso rastreado. Lo que se invierte, lo que se entrega, y el retorno esperado por tipo de campaña.</div>
+
+  <div class="metrics-grid">
+    <div class="metric-box">
+      <div class="metric-label">Inversión mínima/mes</div>
+      <div class="metric-value teal">$20K</div>
+      <div class="metric-sub">COP por campaña</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-label">Alcance estimado</div>
+      <div class="metric-value gold">10.000+</div>
+      <div class="metric-sub">personas potenciales</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-label">Costo por persona</div>
+      <div class="metric-value green">$2</div>
+      <div class="metric-sub">COP por alcance</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-label">Con 10 aliados Premium</div>
+      <div class="metric-value coral">100K</div>
+      <div class="metric-sub">personas/mes alcanzadas</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Desglose por tipo de inversión — $20.000 COP base</div>
+    <div class="campaign-row header">
+      <div>Destino del peso</div>
+      <div>% del total</div>
+      <div>Valor COP</div>
+    </div>
+    <div class="campaign-row">
+      <div class="campaign-name">
+        Pauta Meta Ads (Instagram + Facebook)
+        <small>Reels, Stories y Feed — audiencias segmentadas por interés en viajes, Caribe, turismo ecológico</small>
+      </div>
+      <div class="campaign-val">60%</div>
+      <div class="campaign-val teal" style="color:var(--teal)">$12.000</div>
+    </div>
+    <div class="campaign-row">
+      <div class="campaign-name">
+        Producción de contenido (IA + material existente)
+        <small>Edición de video, copy, diseño de piezas — usando material GuíaSAI y disco duro</small>
+      </div>
+      <div class="campaign-val">20%</div>
+      <div class="campaign-val" style="color:var(--gold)">$4.000</div>
+    </div>
+    <div class="campaign-row">
+      <div class="campaign-name">
+        Retargeting (personas que interactuaron)
+        <small>Segmento cálido: ya vio la isla, recuperar con oferta específica o testimonio</small>
+      </div>
+      <div class="campaign-val">15%</div>
+      <div class="campaign-val" style="color:var(--green)">$3.000</div>
+    </div>
+    <div class="campaign-row">
+      <div class="campaign-name">
+        Prueba de nuevos formatos (A/B)
+        <small>Probar carrusel vs reel vs historia — qué convierte más para el aliado</small>
+      </div>
+      <div class="campaign-val">5%</div>
+      <div class="campaign-val" style="color:rgba(250,250,247,0.5)">$1.000</div>
+    </div>
+    <div class="campaign-row" style="border-top: 1px solid rgba(0,201,177,0.3); margin-top:8px; background:rgba(0,201,177,0.06); border-radius:8px; padding: 14px 0">
+      <div class="campaign-name" style="font-weight:600">TOTAL INVERTIDO</div>
+      <div class="campaign-val" style="color:var(--teal)">100%</div>
+      <div class="campaign-val" style="color:var(--teal)">$20.000</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">ROI Esperado por escenario — campaña de $20k COP</div>
+    <div class="roi-bar-wrap">
+      <div class="roi-bar-label"><span>Alcance orgánico (sin pauta)</span><span>800–1.200 personas</span></div>
+      <div class="roi-bar-bg"><div class="roi-bar" style="width:12%"></div></div>
+    </div>
+    <div class="roi-bar-wrap">
+      <div class="roi-bar-label"><span>Con $20k pauta — alcance pagado</span><span>10.000–15.000 personas</span></div>
+      <div class="roi-bar-bg"><div class="roi-bar" style="width:55%"></div></div>
+    </div>
+    <div class="roi-bar-wrap">
+      <div class="roi-bar-label"><span>Tasa de clic esperada (CTR 1.5%)</span><span>150–225 clics</span></div>
+      <div class="roi-bar-bg"><div class="roi-bar" style="width:20%"></div></div>
+    </div>
+    <div class="roi-bar-wrap">
+      <div class="roi-bar-label"><span>Conversiones a reserva/consulta (5%)</span><span>7–11 consultas calificadas</span></div>
+      <div class="roi-bar-bg"><div class="roi-bar" style="width:8%"></div></div>
+    </div>
+    <div class="roi-bar-wrap">
+      <div class="roi-bar-label"><span>Cierre de ventas (40% de consultas)</span><span>3–5 ventas/mes</span></div>
+      <div class="roi-bar-bg"><div class="roi-bar" style="width:5%"></div></div>
+    </div>
+    <div class="tip" style="margin-top:16px"><strong>Ticket promedio paquete turístico:</strong> $350.000–$800.000 COP. Con 3–5 ventas → retorno $1,05M–$4M COP vs inversión de $20k. <strong>ROI mínimo: 52x.</strong></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Escalabilidad — a medida que entran aliados Premium</div>
+    <table class="fin-table">
+      <thead>
+        <tr>
+          <th>Aliados Premium</th>
+          <th>Membresías/mes</th>
+          <th>Pauta total</th>
+          <th>Alcance total</th>
+          <th>Ingresos GuanaGO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">1</td>
+          <td>$129.900</td>
+          <td>$20.000</td>
+          <td>~10.000</td>
+          <td>$129.900</td>
+        </tr>
+        <tr>
+          <td class="num">5</td>
+          <td>$649.500</td>
+          <td>$100.000</td>
+          <td>~50.000</td>
+          <td>$649.500</td>
+        </tr>
+        <tr class="highlight">
+          <td class="num">10</td>
+          <td>$1.299.000</td>
+          <td>$200.000</td>
+          <td>~100.000</td>
+          <td>$1.299.000</td>
+        </tr>
+        <tr>
+          <td class="num">20</td>
+          <td>$2.598.000</td>
+          <td>$400.000</td>
+          <td>~200.000</td>
+          <td>$2.598.000</td>
+        </tr>
+        <tr class="total">
+          <td class="num">40</td>
+          <td>$5.196.000</td>
+          <td>$800.000</td>
+          <td>~400.000</td>
+          <td>$5.196.000/mes</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="alert"><strong>Nota:</strong> A 40 aliados Premium, los ingresos mensuales cubren 1 desarrollador junior ($2.5M) + 1 community manager ($1.5M) + infraestructura digital ($500k) con margen neto positivo. Ese es el umbral de autosostenibilidad operativa.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Costos de operación estimados — fase inicial (1 humano orquestando)</div>
+    <table class="fin-table">
+      <thead><tr><th>Rubro</th><th>Costo/mes</th><th>Tipo</th></tr></thead>
+      <tbody>
+        <tr><td>Claude API (contenido IA)</td><td>$60.000–120.000 COP</td><td>Variable</td></tr>
+        <tr><td>Airtable (plan Team)</td><td>~$88.000 COP</td><td>Fijo</td></tr>
+        <tr><td>Firebase (Blaze plan)</td><td>$0–50.000 COP</td><td>Variable</td></tr>
+        <tr><td>Make.com (automatizaciones)</td><td>~$50.000 COP</td><td>Fijo</td></tr>
+        <tr><td>Render (backend)</td><td>~$25.000 COP</td><td>Fijo</td></tr>
+        <tr><td>Dominio + email profesional</td><td>~$15.000 COP</td><td>Fijo</td></tr>
+        <tr class="total"><td>TOTAL OPERACIÓN</td><td>~$238.000–348.000 COP</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <div class="tip"><strong>Con solo 3 aliados Activos ($49.900 c/u) = $149.700/mes</strong> — ya cubre toda la infraestructura digital. La operación es sostenible desde el primer mes si se activan 3 negocios.</div>
+  </div>
+</div>
+
+<!-- ==================== PLANES ==================== -->
+<div class="section" id="tab-planes">
+  <div class="section-title">Planes para Aliados</div>
+  <div class="section-desc">Lo que recibe cada empresario local según su nivel de membresía. Diseñado para que la propuesta se cierre en una sola conversación.</div>
+
+  <div class="plans-grid">
+    <div class="plan-card">
+      <div class="plan-name">🌴 Básico</div>
+      <div class="plan-price">$0 <span>/ siempre</span></div>
+      <ul class="plan-features">
+        <li>Ficha en el mapa oficial de GuanaGO</li>
+        <li>Formulario de registro con fotos y descripción</li>
+        <li>Badge "Negocio Verificado" (proceso de formalidad aceptado)</li>
+        <li>Aparición en búsquedas de turistas</li>
+        <li>Soporte por WhatsApp</li>
+      </ul>
+    </div>
+
+    <div class="plan-card featured">
+      <div class="featured-tag">⭐ MÁS POPULAR</div>
+      <div class="plan-name">🐠 Aliado Activo</div>
+      <div class="plan-price">$49.900 <span>/ mes</span></div>
+      <ul class="plan-features">
+        <li>Todo lo del plan Básico</li>
+        <li>Perfil destacado en su categoría</li>
+        <li>QR personalizado con tracking de escaneos</li>
+        <li>Sticker físico "Recomendado por GuanaGO"</li>
+        <li>Dashboard: cuántos turistas vieron su perfil</li>
+        <li>Link directo a WhatsApp o reserva</li>
+        <li>Aparece en carrusel de inicio de la App</li>
+      </ul>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-name">🦀 Aliado Premium</div>
+      <div class="plan-price">$129.900 <span>/ mes</span></div>
+      <ul class="plan-features">
+        <li>Todo lo del plan Activo</li>
+        <li>IA genera 4 posts/mes para sus redes sociales</li>
+        <li>$20.000 COP de pauta incluidos (reach +10.000)</li>
+        <li>Primero en su categoría en la App</li>
+        <li>Métricas de ventas y conversiones mensual</li>
+        <li>Inclusión en campañas temáticas GuanaGO</li>
+        <li>Menciones en redes de GuíaSAI (+10 años)</li>
+        <li>1 reseña video corto/trimestre (con material propio)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">¿Quién puede ser aliado?</div>
+    <div style="font-size:14px; color:rgba(250,250,247,0.75); line-height:1.8;">
+      GuanaGO trabaja con negocios <strong style="color:var(--cream)">legalmente constituidos o en proceso de formalización</strong> en San Andrés, Providencia y Santa Catalina. Aceptamos:
+      <ul style="list-style:none; margin-top:12px;">
+        <li style="padding:5px 0">✅ Negocios con RNT activo (turismo, gastronomía, artesanías, alojamiento)</li>
+        <li style="padding:5px 0">✅ Emprendedores en proceso de Cámara de Comercio</li>
+        <li style="padding:5px 0">✅ Artesanos y artistas con oferta documentada (Breda Sky, palma de coco, etc.)</li>
+        <li style="padding:5px 0">✅ Operadores náuticos con permiso de operación</li>
+        <li style="padding:5px 0">🔶 Negocios informales con carta de intención de formalización (plan gratuito)</li>
+        <li style="padding:5px 0">❌ Negocios sin ningún proceso de formalidad ni intención documentada</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Lo que GuanaGO garantiza al aliado</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:13px; color:rgba(250,250,247,0.75)">
+      <div>
+        <strong style="color:var(--teal); display:block; margin-bottom:6px">Visibilidad real</strong>
+        El perfil del aliado aparece en el mapa interactivo, en la búsqueda por categoría, y en el carrusel de inicio. No es un directorio muerto — es la pantalla que el turista ve cuando llega a la isla.
+      </div>
+      <div>
+        <strong style="color:var(--teal); display:block; margin-bottom:6px">Marketing con contenido propio</strong>
+        No pedimos presupuesto extra de producción. Usamos las fotos y videos que el aliado ya tiene, más el material de Breda Sky y GuíaSAI, para generar contenido real y auténtico.
+      </div>
+      <div>
+        <strong style="color:var(--teal); display:block; margin-bottom:6px">Reporte mensual</strong>
+        Cada aliado Activo y Premium recibe un reporte simple: cuántas personas vieron su perfil, cuántos escanearon su QR, cuántas ventas se originaron desde GuanaGO.
+      </div>
+      <div>
+        <strong style="color:var(--teal); display:block; margin-bottom:6px">Red, no competencia</strong>
+        Los aliados se benefician de toda la red. Si un turista busca "restaurante", ve a todos los aliados de gastronomía. Si reserva un tour, puede añadir el restaurante del aliado. Economía circular.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== CONTENIDO ==================== -->
+<div class="section" id="tab-contenido">
+  <div class="section-title">Estrategia de Contenido & Base de Videos</div>
+  <div class="section-desc">Cómo construir la biblioteca de contenido de GuanaGO usando el material existente de GuíaSAI, discos duros, y el archivo de Breda Sky.</div>
+
+  <div class="alert"><strong>Inventario primero:</strong> Antes de producir nada nuevo, catalog el material existente en disco duro por categorías. Ese archivo es oro — la mayoría de operadores de la isla no tiene nada digitalizado.</div>
+
+  <div class="card">
+    <div class="card-label">5 Pilares de contenido GuanaGO</div>
+    <div class="pillars-grid">
+      <div class="pillar-card">
+        <div class="pillar-icon">🌊</div>
+        <div class="pillar-name">Mar & Naturaleza</div>
+        <div class="pillar-desc">Buceo, caimanero, manglar, Sea Flower Biosphere. El destino que no se puede ver en ningún otro lugar.</div>
+        <div class="pillar-freq">2x semana</div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-icon">🌴</div>
+        <div class="pillar-name">Cultura Kriol</div>
+        <div class="pillar-desc">Palma de coco, Breda Sky, música RIMM, idioma creole, gastronomía raizal, Miss Trinie museum.</div>
+        <div class="pillar-freq">2x semana</div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-icon">🗺️</div>
+        <div class="pillar-name">Guía del Viajero</div>
+        <div class="pillar-desc">Tips de llegada, free tour virtual, mapa de negocios verificados, temporadas, qué no hacer.</div>
+        <div class="pillar-freq">1x semana</div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-icon">🤝</div>
+        <div class="pillar-name">Aliados en Acción</div>
+        <div class="pillar-desc">Retratos de los empresarios locales, su historia, su producto. Humaniza la marca y vende sin vender.</div>
+        <div class="pillar-freq">1x semana</div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-icon">✨</div>
+        <div class="pillar-name">Experiencias Vivas</div>
+        <div class="pillar-desc">Caribbean Night, Coco ART, Rondon Tour, regata. Contenido emocional que provoca "quiero estar ahí".</div>
+        <div class="pillar-freq">1x semana</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Tipos de video — cómo categorizar el material existente</div>
+    <div class="video-type">
+      <div class="video-num">01</div>
+      <div>
+        <div class="video-name">Hero Video (60–90 seg)</div>
+        <div class="video-desc">La pieza principal. El archipiélago desde arriba, el mar turquesa, la gente sonriendo. Sin texto, solo música y cortes. Sirve para pauta, para la app, para el pitch. Prioridad máxima.</div>
+        <div class="video-tags">
+          <span class="video-tag">Reels</span><span class="video-tag">Pauta Meta</span><span class="video-tag">App loading screen</span>
+        </div>
+      </div>
+    </div>
+    <div class="video-type">
+      <div class="video-num">02</div>
+      <div>
+        <div class="video-name">Reel de experiencia (15–30 seg)</div>
+        <div class="video-desc">Un momento específico: el Free Tour de palma de coco, un buceo en el Caimanero, el Rondon recién servido. Cada experiencia del portafolio tiene su reel.</div>
+        <div class="video-tags">
+          <span class="video-tag">Instagram Reels</span><span class="video-tag">TikTok</span><span class="video-tag">Stories</span>
+        </div>
+      </div>
+    </div>
+    <div class="video-type">
+      <div class="video-num">03</div>
+      <div>
+        <div class="video-name">Retrato de aliado (45–60 seg)</div>
+        <div class="video-desc">Breda Sky tallando una palma. El cocinero de Bobby Rock preparando el plato. El dueño de la posada contando su historia. Autenticidad que ninguna cadena hotelera puede replicar.</div>
+        <div class="video-tags">
+          <span class="video-tag">Feed</span><span class="video-tag">Perfil de aliado en App</span><span class="video-tag">Pitch a marcas</span>
+        </div>
+      </div>
+    </div>
+    <div class="video-type">
+      <div class="video-num">04</div>
+      <div>
+        <div class="video-name">Tutorial / Guía (60–120 seg)</div>
+        <div class="video-desc">"Cómo llegar a la isla sin estrés", "3 cosas que debes saber antes de viajar a San Andrés", "Qué es la tarjeta de turismo y cómo tramitarla". SEO natural, alto alcance orgánico.</div>
+        <div class="video-tags">
+          <span class="video-tag">YouTube Shorts</span><span class="video-tag">TikTok</span><span class="video-tag">Guarda en Highlights</span>
+        </div>
+      </div>
+    </div>
+    <div class="video-type">
+      <div class="video-num">05</div>
+      <div>
+        <div class="video-name">Campaña de membresía (30 seg)</div>
+        <div class="video-desc">Dirigido al empresario local, no al turista. "¿Tu negocio está en el mapa? Únete a GuanaGO." Simple, directo, con llamado a acción claro. Para correr como pauta en Facebook segmentado a San Andrés.</div>
+        <div class="video-tags">
+          <span class="video-tag">Pauta segmentada isleños</span><span class="video-tag">WhatsApp Business</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Flujo de producción con IA — sin equipo extra</div>
+    <div style="font-size:13px; color:rgba(250,250,247,0.75); line-height:1.9;">
+      <strong style="color:var(--cream)">Paso 1 — Inventario:</strong> Catalogar todo el material del disco duro en carpetas: Mar, Cultura, Experiencias, Retratos, Aéreos.<br>
+      <strong style="color:var(--cream)">Paso 2 — Alimentar el formulario:</strong> Cada aliado llena su ficha en Airtable con fotos y descripción del negocio.<br>
+      <strong style="color:var(--cream)">Paso 3 — Claude API genera:</strong> Descripción del negocio en 3 idiomas (español, inglés, creole básico), 4 copies para posts del mes, hashtags optimizados por audiencia.<br>
+      <strong style="color:var(--cream)">Paso 4 — Sky aprueba:</strong> Revisa en 5 minutos por WhatsApp o panel Airtable. Un clic para publicar.<br>
+      <strong style="color:var(--cream)">Paso 5 — Publicación automática:</strong> Make.com empuja a Instagram + Facebook en la hora óptima. Registro de métricas automático.<br>
+      <strong style="color:var(--coral)">Resultado:</strong> Una persona (Sky) orquesta el contenido de 40 aliados generando presencia de marca para todos simultáneamente.
+    </div>
+  </div>
+</div>
+
+<!-- ==================== T&C ==================== -->
+<div class="section" id="tab-tc">
+  <div class="section-title">Términos & Condiciones — Base para Aliados</div>
+  <div class="section-desc">Borrador base. Requiere revisión de abogado especializado en comercio electrónico colombiano (Ley 1480 de 2011 + Ley 1581 de 2012). Este documento es el punto de partida, no el documento final.</div>
+
+  <div class="alert"><strong>Importante:</strong> Este borrador debe ser revisado por un abogado antes de ser publicado. Prioridad: semana 8 del cronograma según el Checklist Maestro.</div>
+
+  <div class="tc-block">
+    <div class="tc-num">Cláusula 01</div>
+    <div class="tc-title">Definiciones y Partes</div>
+    <div class="tc-content">
+      <strong>GuanaGO</strong> es la plataforma digital turística operada por GuíaSAI S.A.S. (NIT 901013739-9, RNT 48674), con domicilio en San Andrés Islas, Colombia. <strong>Aliado</strong> es toda persona natural o jurídica que, habiendo completado el formulario de registro y aceptado los presentes términos, hace parte activa del catálogo interactivo de GuanaGO.
+      <br><br>
+      La relación entre GuanaGO y el Aliado es de <strong>colaboración comercial independiente</strong>, no de subordinación laboral, sociedad, ni representación legal mutua.
+    </div>
+  </div>
+
+  <div class="tc-block">
+    <div class="tc-num">Cláusula 02</div>
+    <div class="tc-title">Elegibilidad para ser Aliado</div>
+    <div class="tc-content">
+      Podrán ser aliados de GuanaGO:
+      <ul>
+        <li>Personas naturales o jurídicas con actividad económica en San Andrés, Providencia o Santa Catalina Islas</li>
+        <li>Negocios con RNT (Registro Nacional de Turismo) activo o en proceso de renovación</li>
+        <li>Emprendimientos con matrícula mercantil activa o en proceso de obtención ante la Cámara de Comercio local</li>
+        <li>Artesanos y artistas con oferta documentada y verificable</li>
+        <li>Operadores informales que presenten carta de intención de formalización (elegibles solo para plan Básico)</li>
+      </ul>
+      GuanaGO se reserva el derecho de verificar la información y rechazar o suspender la membresía de cualquier aliado que no cumpla los criterios de elegibilidad o que incumpla los presentes términos.
+    </div>
+  </div>
+
+  <div class="tc-block">
+    <div class="tc-num">Cláusula 03</div>
+    <div class="tc-title">Obligaciones del Aliado</div>
+    <div class="tc-content">
+      El Aliado se compromete a:
+      <ul>
+        <li>Mantener actualizada la información de su ficha (horarios, precios, fotos, servicios) con un máximo de 30 días de desactualización</li>
+        <li>Responder consultas o solicitudes de reserva provenientes de GuanaGO en un plazo máximo de 24 horas hábiles</li>
+        <li>Prestar sus servicios con los estándares de calidad declarados en su ficha, sin desviar al cliente hacia canales que eludan la comisión de GuanaGO</li>
+        <li>Notificar a GuanaGO con mínimo 48 horas de anticipación cualquier cierre temporal, cambio de precios significativo o suspensión de servicio</li>
+        <li>No publicar información falsa, engañosa o que viole derechos de terceros en su ficha de GuanaGO</li>
+        <li>Autorizar a GuanaGO el uso de las imágenes y descripciones proporcionadas para fines de promoción en la plataforma y sus redes asociadas</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tc-block">
+    <div class="tc-num">Cláusula 04</div>
+    <div class="tc-title">Obligaciones de GuanaGO</div>
+    <div class="tc-content">
+      GuanaGO se compromete a:
+      <ul>
+        <li>Publicar y mantener activa la ficha del Aliado en la plataforma durante la vigencia del plan contratado</li>
+        <li>Entregar mensualmente un reporte básico de métricas (vistas de perfil, escaneos QR, clics) para planes Activo y Premium</li>
+        <li>Ejecutar la pauta publicitaria incluida en el plan Premium ($20.000 COP/mes mínimo) dentro del mes calendario correspondiente</li>
+        <li>Generar el contenido de marketing prometido en el plan Premium (mínimo 4 piezas/mes) con base en el material proporcionado por el Aliado</li>
+        <li>No ceder ni vender los datos del Aliado a terceros sin consentimiento expreso</li>
+        <li>Responder solicitudes del Aliado en máximo 48 horas hábiles</li>
+        <li>Liquidar comisiones por ventas generadas dentro de los primeros 10 días del mes siguiente</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tc-block">
+    <div class="tc-num">Cláusula 05</div>
+    <div class="tc-title">Comisiones y Pagos</div>
+    <div class="tc-content">
+      <ul>
+        <li><strong>Membresía mensual:</strong> cobrada por adelantado el día de activación o renovación, mediante transferencia bancaria o pago digital (Nequi, Daviplata, PSE)</li>
+        <li><strong>Comisión por venta:</strong> 10% sobre el valor neto de cada transacción generada desde la plataforma hacia el Aliado, liquidada mensualmente</li>
+        <li><strong>Plan Básico:</strong> sin costo de membresía, comisión del 15% por transacción</li>
+        <li><strong>Comprobantes:</strong> GuanaGO emitirá factura electrónica (DIAN) por cada cobro de membresía</li>
+        <li><strong>Retrasos en pago:</strong> un retraso de más de 15 días en el pago de membresía suspende automáticamente el perfil del Aliado hasta regularización</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tc-block">
+    <div class="tc-num">Cláusula 06</div>
+    <div class="tc-title">Propiedad Intelectual y Uso de Imagen</div>
+    <div class="tc-content">
+      Al registrarse, el Aliado otorga a GuanaGO una licencia no exclusiva, gratuita y durante la vigencia del plan para:
+      <ul>
+        <li>Usar las fotografías, descripciones y logotipos del Aliado en la plataforma GuanaGO y sus canales de marketing asociados (Instagram, Facebook, TikTok, WhatsApp)</li>
+        <li>Adaptar y editar dichos materiales para formatos propios de la plataforma, siempre atribuyendo al negocio</li>
+        <li>Incluir al Aliado en campañas temáticas (ej: "Semana de la Gastronomía Raizal") sin costo adicional</li>
+      </ul>
+      El material fotográfico y audiovisual generado por GuanaGO para el Aliado (contenido IA, reels, diseños) es propiedad de GuanaGO pero el Aliado tiene licencia perpetua para usarlo en sus propias redes durante y después de la membresía.
+    </div>
+  </div>
+
+  <div class="tc-block">
+    <div class="tc-num">Cláusula 07</div>
+    <div class="tc-title">Terminación y Salida</div>
+    <div class="tc-content">
+      <ul>
+        <li><strong>Cancelación voluntaria:</strong> el Aliado puede cancelar su membresía con 15 días de aviso. No hay reembolso del mes en curso. El perfil se desactiva al vencimiento del período pagado.</li>
+        <li><strong>Suspensión por incumplimiento:</strong> GuanaGO puede suspender o eliminar un perfil si el Aliado incumple estas condiciones, notificando con 48h de anticipación salvo en casos de fraude o contenido ilegal.</li>
+        <li><strong>Reservas activas:</strong> al momento de la terminación, las reservas ya confirmadas deben ser honradas por el Aliado. GuanaGO actuará como mediador en caso de disputas.</li>
+        <li><strong>Datos:</strong> tras la terminación, los datos del Aliado serán eliminados de la plataforma en un plazo de 30 días, salvo requerimiento legal.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tc-block">
+    <div class="tc-num">Cláusula 08</div>
+    <div class="tc-title">Protección de Datos — Ley 1581 de 2012</div>
+    <div class="tc-content">
+      GuíaSAI S.A.S. actúa como <strong>Responsable del Tratamiento</strong> de los datos personales de los aliados y sus clientes. Los datos recopilados (nombre, NIT/CC, datos de contacto, ubicación GPS, material gráfico) se usan exclusivamente para operar la plataforma, generar reportes y ejecutar campañas de marketing autorizadas. El titular tiene derecho a conocer, actualizar, rectificar y suprimir sus datos en cualquier momento contactando a <strong>hola@guanago.travel</strong>. Nos regimos por la política de privacidad publicada en la app.
+    </div>
+  </div>
+
+  <div class="tc-block">
+    <div class="tc-num">Cláusula 09</div>
+    <div class="tc-title">Jurisdicción</div>
+    <div class="tc-content">
+      Los presentes términos se rigen por las leyes de la República de Colombia. Cualquier controversia que no pueda resolverse amigablemente será sometida a los jueces competentes del municipio de San Andrés Islas. Las partes acuerdan agotar una instancia de mediación ante la Cámara de Comercio de San Andrés, Providencia y Santa Catalina antes de acudir a la jurisdicción ordinaria.
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PITCH ==================== -->
+<div class="section" id="tab-pitch">
+  <div class="section-title">El Pitch al Empresario Local</div>
+  <div class="section-desc">Lo que dices en una conversación de 5 minutos para cerrar un aliado. Adaptado para WhatsApp, visita personal, o mensaje de voz.</div>
+
+  <div class="card">
+    <div class="card-label">El discurso de 30 segundos (para WhatsApp o presentación rápida)</div>
+    <div style="background:rgba(0,201,177,0.08); border:1px solid rgba(0,201,177,0.2); border-radius:12px; padding:20px; font-size:15px; line-height:1.8; color:var(--cream); font-style:italic;">
+      "GuanaGO es la app oficial de turismo de San Andrés, hecha por isleños. Cuando un visitante descarga la app, ve el mapa de negocios verificados — y tu restaurante, posada o servicio aparece ahí. Con $129.900 al mes nosotros te generamos el contenido para tus redes, corremos la pauta de publicidad, y te traemos clientes. Sin que tengas que contratar un community manager ni saber de publicidad. ¿Tienes 10 minutos para que te cuente más?"
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Objeciones frecuentes y cómo responderlas</div>
+    <div style="font-size:13px; line-height:1.9;">
+      <div style="padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06)">
+        <strong style="color:var(--coral)">❓ "No tengo plata para gastar en eso"</strong><br>
+        <span style="color:rgba(250,250,247,0.7)">→ El plan básico es gratis. Empieza con la ficha y el mapa sin costo. Cuando veas los resultados, decides si subir al plan activo. Muchos aliados nuestros recuperan el costo del plan en una sola reserva.</span>
+      </div>
+      <div style="padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06)">
+        <strong style="color:var(--coral)">❓ "Ya tengo Instagram, no necesito otra plataforma"</strong><br>
+        <span style="color:rgba(250,250,247,0.7)">→ GuanaGO no reemplaza tu Instagram — lo alimenta. El contenido que creamos para ti lo publicamos en tus redes. Y además apareces en la app que el turista ya tiene descargada cuando llega a la isla.</span>
+      </div>
+      <div style="padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06)">
+        <strong style="color:var(--coral)">❓ "¿Cómo sé que va a funcionar?"</strong><br>
+        <span style="color:rgba(250,250,247,0.7)">→ GuíaSAI lleva más de 10 años operando turismo en San Andrés. Tenemos el RNT, la red de aliados, y ya trabajamos con agencias nacionales. GuanaGO es la versión digital de esa red. No estamos empezando de cero.</span>
+      </div>
+      <div style="padding:12px 0">
+        <strong style="color:var(--coral)">❓ "No estoy formalizado todavía"</strong><br>
+        <span style="color:rgba(250,250,247,0.7)">→ No es problema. Trabajamos con negocios en proceso de formalización. El plan básico está disponible mientras regularizas tu situación ante Cámara de Comercio. De hecho, podemos ayudarte a entender el proceso.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">El argumento de la economía circular — para el empresario más escéptico</div>
+    <div style="font-size:13px; color:rgba(250,250,247,0.75); line-height:1.8;">
+      Cuando un turista llega a San Andrés y usa GuanaGO, el mapa le muestra primero los negocios verificados de la red. Eso significa que va a tu restaurante en vez de al que recomienda Tripadvisor (donde no apareces). Compra la artesanía de Breda Sky en vez de la que venden en el duty free. Se queda en la posada raizal en vez del hotel de cadena. El dinero del visitante se queda en la isla, en manos de los isleños. Eso es lo que GuanaGO construye — un sistema donde el que conoce la isla de verdad es el que gana.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Propuesta de valor por tipo de negocio</div>
+    <table class="fin-table">
+      <thead><tr><th>Tipo de negocio</th><th>Lo que más valora</th><th>Argumento de cierre</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>🍽 Restaurante / Bar</td>
+          <td>Tráfico de nuevos clientes que no conocen el local</td>
+          <td>"El turista que llegó hoy a la isla te encuentra antes de salir del hotel"</td>
+        </tr>
+        <tr>
+          <td>🏠 Posada / Guesthouse</td>
+          <td>Ocupación alta, canal directo sin comisión de OTA</td>
+          <td>"Pagas $129k/mes vs 15–20% de comisión que cobra Booking por cada reserva"</td>
+        </tr>
+        <tr>
+          <td>🤿 Operador de tours</td>
+          <td>Reservas anticipadas, grupos grandes</td>
+          <td>"Tu tour aparece en el cotizador de agencias que usan GuíaSAI"</td>
+        </tr>
+        <tr>
+          <td>🎨 Artesano / Artista</td>
+          <td>Reconocimiento cultural + ventas</td>
+          <td>"El Free Tour de palma de coco genera tráfico físico hacia ti. Tú vendes en persona."</td>
+        </tr>
+        <tr>
+          <td>🛥 Náutico (Chamey)</td>
+          <td>Paquetes combinados, grupos grandes</td>
+          <td>"Apareces en todos los paquetes grupales como el Regata de Old Point Bay"</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tip"><strong>Siguiente paso operativo:</strong> Crear el formulario de registro de aliados en Airtable esta semana. Con el formulario activo, puedes empezar a capturar interesados inmediatamente mientras se construye el resto de la plataforma. El negocio empieza con el formulario, no con la app completa.</div>
+</div>
+
+<div class="footer">
+  Documento interno de trabajo — <strong>GuanaGO × GuíaSAI S.A.S.</strong><br>
+  RNT 48674 · NIT 901013739-9 · San Andrés Islas, Reserva de Biosfera Sea Flower<br>
+  <em>Plataforma operada por isleños, para el mundo.</em>
+</div>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

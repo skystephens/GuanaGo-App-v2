@@ -17,6 +17,7 @@ import tasksRoutes     from './routes/tasks.js';
 import paymentsRoutes, { resultadoPago } from './routes/payments.js';
 import directoryRoutes from './routes/directory.js';
 import hubRoutes       from './routes/hub.js';
+import leadsRoutes     from './routes/leads.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -71,6 +72,13 @@ app.get('/api', (req, res) => {
     },
   });
 });
+
+// ── Leads — formulario público de captura ─────────────────────────────────────
+app.use('/api/leads', leadsRoutes);
+
+// ── Formulario de cotización pública ──────────────────────────────────────────
+const docsPath = join(__dirname, 'docs');
+app.get('/cotizar', (req, res) => res.sendFile(join(docsPath, 'cotizar.html')));
 
 // ── Hub interno ───────────────────────────────────────────────────────────────
 app.use('/hub', hubRoutes);
