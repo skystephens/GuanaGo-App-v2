@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO — Onboarding de Aliados · Mayo 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#00E5CC; --ocean:#004060; --deep:#060E18;
+  --bg:#0B1622; --card:#101E2C; --card2:#0D1928;
+  --border:rgba(0,229,204,0.14); --border2:rgba(255,255,255,0.07);
+  --gold:#FFB74D; --coral:#FF6B6B; --purple:#A78BFA;
+  --orange:#F5831F; --green:#4ADE80; --sky:#38BDF8;
+  --cream:#F0F4F8; --muted:#6B8A9E;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--cream);line-height:1.5}
+.nav{background:rgba(6,14,24,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:0;overflow-x:auto;position:sticky;top:0;z-index:100;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nb{font-size:13px;font-weight:700;color:var(--muted);padding:14px 14px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;font-family:'Outfit',sans-serif}
+.nb.on,.nb:hover{color:var(--teal);border-bottom-color:var(--teal)}
+.s{display:none;padding:28px 18px 80px;max-width:960px;margin:0 auto}
+.s.on{display:block}
+.hero{background:linear-gradient(135deg,#001830 0%,var(--deep) 70%);padding:52px 24px 44px;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+.h-eye{font-size:12px;letter-spacing:4px;color:var(--teal);text-transform:uppercase;margin-bottom:10px;font-weight:700}
+.h-h1{font-size:clamp(28px,5vw,52px);font-weight:800;line-height:1.1;margin-bottom:10px}
+.h-h1 span{color:var(--teal)}
+.h-sub{font-size:15px;color:var(--muted);max-width:580px;font-weight:300;line-height:1.7}
+.h-date{display:inline-block;font-size:13px;font-weight:700;color:var(--orange);background:rgba(245,131,31,.1);border:1px solid rgba(245,131,31,.2);padding:4px 14px;border-radius:100px;margin-top:16px}
+.card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:22px;margin-bottom:14px}
+.card.acc{border-color:var(--border);background:var(--card2)}
+.eye{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:8px;display:block}
+.eye.gold{color:var(--gold)}.eye.or{color:var(--orange)}.eye.gr{color:var(--green)}.eye.pu{color:var(--purple)}.eye.coral{color:var(--coral)}.eye.sky{color:var(--sky)}
+.stitle{font-size:26px;font-weight:800;margin-bottom:4px}
+.ssub{font-size:14px;color:var(--muted);margin-bottom:24px;font-weight:300}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:100px}
+.badge.ok{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.badge.pend{background:rgba(255,183,77,.12);color:var(--gold);border:1px solid rgba(255,183,77,.2)}
+.badge.next{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.badge.crit{background:rgba(255,107,107,.12);color:var(--coral);border:1px solid rgba(255,107,107,.2)}
+.hl{background:rgba(0,229,204,.06);border-left:3px solid var(--teal);border-radius:0 10px 10px 0;padding:14px 18px;margin:12px 0;font-size:15px;color:var(--cream);line-height:1.7}
+.hl.gold{background:rgba(255,183,77,.06);border-left-color:var(--gold)}
+.hl.or{background:rgba(245,131,31,.07);border-left-color:var(--orange)}
+.hl.gr{background:rgba(74,222,128,.06);border-left-color:var(--green)}
+.hl.coral{background:rgba(255,107,107,.06);border-left-color:var(--coral)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+.tbl th{text-align:left;padding:9px 10px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border2);font-weight:600}
+.tbl td{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--muted);vertical-align:top}
+.tbl tr:last-child td{border:none}
+.tbl .bold{font-weight:700;color:var(--cream)}
+.tbl .tg{color:var(--teal);font-weight:700}
+ul.lst{list-style:none}
+ul.lst li{font-size:14px;color:var(--muted);padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:8px;align-items:flex-start}
+ul.lst li:last-child{border:none}
+ul.lst li::before{content:'→';color:var(--teal);flex-shrink:0}
+ul.lst li strong{color:var(--cream)}
+.chip{font-size:12px;font-weight:600;padding:3px 11px;border-radius:100px;display:inline-block}
+.chip.t{background:rgba(0,229,204,.12);color:var(--teal)}
+.chip.g{background:rgba(255,183,77,.12);color:var(--gold)}
+.chip.o{background:rgba(245,131,31,.12);color:var(--orange)}
+.chip.gr{background:rgba(74,222,128,.12);color:var(--green)}
+.chip.p{background:rgba(167,139,250,.12);color:var(--purple)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+/* Step */
+.step{display:grid;grid-template-columns:40px 1fr;gap:12px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:start}
+.step:last-child{border:none}
+.step-num{width:40px;height:40px;border-radius:50%;background:rgba(0,229,204,.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--teal);font-size:15px;flex-shrink:0}
+.step-title{font-weight:700;color:var(--cream);font-size:15px;margin-bottom:4px}
+.step-body{font-size:14px;color:var(--muted);line-height:1.6}
+/* Category card */
+.cat{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:10px}
+.cat-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cat-icon{font-size:24px}
+.cat-name{font-size:15px;font-weight:700;color:var(--cream)}
+.cat-url{font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--teal);background:rgba(0,229,204,.08);padding:2px 8px;border-radius:4px;margin-top:2px}
+.priority{font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:auto}
+/* Checklist */
+.check-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.check-item:last-child{border:none}
+.check-box{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.check-box.done{background:var(--green);border-color:var(--green)}
+.check-box.done::after{content:'✓';color:#000;font-weight:800;font-size:12px}
+.check-label{font-size:14px;color:var(--muted)}
+.check-label.done{text-decoration:line-through;color:rgba(107,138,158,.5)}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div style="max-width:960px;margin:0 auto">
+    <div class="h-eye">GuanaGO · Aliados</div>
+    <h1 class="h-h1">Onboarding de <span>Aliados</span></h1>
+    <p class="h-sub">5 minutos de registro, $0 costo inicial, 20% comisión, activo en 24 horas. Guía completa para todos los tipos de negocio aliado.</p>
+    <span class="h-date">Mayo 2026</span>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nb on" onclick="show('flujo',this)">Flujo General</button>
+  <button class="nb" onclick="show('categorias',this)">Categorías</button>
+  <button class="nb" onclick="show('campos',this)">Campos por Tipo</button>
+  <button class="nb" onclick="show('interno',this)">Flujo Interno</button>
+  <button class="nb" onclick="show('discurso',this)">Discurso de Ventas</button>
+  <button class="nb" onclick="show('checklist',this)">Checklist</button>
+</nav>
+
+<!-- FLUJO GENERAL -->
+<div id="flujo" class="s on">
+  <div class="stitle">Flujo del Aliado</div>
+  <p class="ssub">Lo que vive el aliado desde el primer contacto hasta estar activo y generando reservas</p>
+
+  <div class="card acc">
+    <div class="g3" style="text-align:center;margin-bottom:0">
+      <div style="padding:14px;background:rgba(0,229,204,.04);border-radius:8px;border:1px solid var(--border2)">
+        <div style="font-size:28px;font-weight:800;color:var(--teal)">5 min</div>
+        <div style="font-size:12px;color:var(--muted)">para registrarse</div>
+      </div>
+      <div style="padding:14px;background:rgba(74,222,128,.04);border-radius:8px;border:1px solid var(--border2)">
+        <div style="font-size:28px;font-weight:800;color:var(--green)">$0</div>
+        <div style="font-size:12px;color:var(--muted)">costo inicial</div>
+      </div>
+      <div style="padding:14px;background:rgba(245,131,31,.04);border-radius:8px;border:1px solid var(--border2)">
+        <div style="font-size:28px;font-weight:800;color:var(--orange)">20%</div>
+        <div style="font-size:12px;color:var(--muted)">comisión por reserva</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Primer contacto</div>
+        <div class="step-body">El aliado ve un flyer, lo contactamos directamente, o llega por recomendación de otro aliado. Se explica la propuesta: "Tu negocio visible a todos los turistas de San Andrés en 5 minutos, sin costo."</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Registro en formulario especializado</div>
+        <div class="step-body">Accede a su formulario según tipo de negocio. Hoteles: guanago.travel/registro-alojamiento. Tours: guanago.travel/registro-tour. Restaurantes: guanago.travel/registro-restaurante. Completa datos básicos, descripción y fotos.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">Revisión y aprobación (máximo 24h)</div>
+        <div class="step-body">Sky revisa el registro en Airtable. Verifica que la información sea correcta, el negocio sea legítimo y las fotos sean adecuadas. Aprueba o solicita correcciones por WhatsApp.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">Activación automática (Make.com)</div>
+        <div class="step-body">Al cambiar Estado a "Activo" en Airtable, Make.com: genera QR único del aliado, crea el perfil en Firestore, publica en el mapa directorio, y envía WhatsApp de bienvenida con el QR y guía de inicio.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">El aliado aparece en la plataforma</div>
+        <div class="step-body">El negocio ya aparece en el mapa, en el cotizador y en las búsquedas de turistas. El aliado puede aceptar reservas, ver sus estadísticas y participar en el banco de promociones.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hl">
+    <strong>Meta de lanzamiento:</strong> 25 aliados activos antes del lanzamiento público. Prioridad: Chamey, Breda Sky y Bobby Rock la semana 1 (ya confirmados), luego hoteles boutique y cooperativa de taxistas.
+  </div>
+</div>
+
+<!-- CATEGORÍAS -->
+<div id="categorias" class="s">
+  <div class="stitle">Categorías de Aliados</div>
+  <p class="ssub">6 tipos de negocio, formulario especializado por tipo — el universal no funciona con todas las formas de reserva</p>
+
+  <div class="cat" style="border-color:rgba(56,189,248,.25)">
+    <div class="cat-header">
+      <div class="cat-icon">🤿</div>
+      <div>
+        <div class="cat-name">Tours & Servicios Turísticos</div>
+        <div class="cat-url">guanago.travel/registro-tour</div>
+      </div>
+      <span class="priority" style="background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)">LANZAMIENTO</span>
+    </div>
+    <p style="font-size:13px;color:var(--muted)">Operadores de tours náuticos, buceo, snorkel, paseos en lancha, tours culturales, senderismo. Manejo de disponibilidad por fecha y horario, capacidad máxima, tipo de embarcación.</p>
+    <div class="chips" style="margin-top:8px">
+      <span class="chip t">Disponibilidad por fecha</span>
+      <span class="chip t">Cupos máximos</span>
+      <span class="chip t">Punto de salida</span>
+    </div>
+  </div>
+
+  <div class="cat" style="border-color:rgba(245,131,31,.2)">
+    <div class="cat-header">
+      <div class="cat-icon">🏨</div>
+      <div>
+        <div class="cat-name">Alojamiento</div>
+        <div class="cat-url">guanago.travel/registro-alojamiento</div>
+      </div>
+      <span class="priority" style="background:rgba(255,183,77,.12);color:var(--gold);border:1px solid rgba(255,183,77,.2)">BUGS PENDIENTES</span>
+    </div>
+    <p style="font-size:13px;color:var(--muted)">Hoteles, posadas, apartahoteles, hostales. Manejo de habitaciones por tipo, disponibilidad por rango de fechas, precio por noche, número de huéspedes máximo.</p>
+    <div class="chips" style="margin-top:8px">
+      <span class="chip o">Check-in/out</span>
+      <span class="chip o">Tipos de habitación</span>
+      <span class="chip o">Amenidades</span>
+    </div>
+  </div>
+
+  <div class="cat" style="border-color:rgba(255,107,107,.2)">
+    <div class="cat-header">
+      <div class="cat-icon">🍽️</div>
+      <div>
+        <div class="cat-name">Gastronomía</div>
+        <div class="cat-url">guanago.travel/registro-restaurante</div>
+      </div>
+      <span class="priority" style="background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)">LANZAMIENTO</span>
+    </div>
+    <p style="font-size:13px;color:var(--muted)">Restaurantes, cafés, bares de cocina, food trucks. Manejo de reservas de mesa, menú destacado, horarios, tipo de cocina. Participan en banco de cupones y GuanaPoints.</p>
+    <div class="chips" style="margin-top:8px">
+      <span class="chip" style="background:rgba(255,107,107,.12);color:var(--coral)">Reserva de mesa</span>
+      <span class="chip" style="background:rgba(255,107,107,.12);color:var(--coral)">Cupones GuanaPoints</span>
+    </div>
+  </div>
+
+  <div class="cat" style="border-color:rgba(167,139,250,.2)">
+    <div class="cat-header">
+      <div class="cat-icon">🎨</div>
+      <div>
+        <div class="cat-name">Arte & Artesanía</div>
+        <div class="cat-url">guanago.travel/registro-arte</div>
+      </div>
+      <span class="priority" style="background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.2)">FASE 2</span>
+    </div>
+    <p style="font-size:13px;color:var(--muted)">Galerías, artesanos raizales, talleres culturales, diseñadores. Muestran catálogo de productos, talleres con cupos, eventos. Perfil destacado como "Raizal Auténtico".</p>
+    <div class="chips" style="margin-top:8px">
+      <span class="chip p">Catálogo productos</span>
+      <span class="chip p">Talleres con cupos</span>
+    </div>
+  </div>
+
+  <div class="cat" style="border-color:rgba(74,222,128,.15)">
+    <div class="cat-header">
+      <div class="cat-icon">🏪</div>
+      <div>
+        <div class="cat-name">Comercio & Almacenes</div>
+        <div class="cat-url">guanago.travel/registro-comercio</div>
+      </div>
+      <span class="priority" style="background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)">LANZAMIENTO</span>
+    </div>
+    <p style="font-size:13px;color:var(--muted)">Tiendas, almacenes, farmacias, librerías. Aparecen en el mapa con descripción y horarios. No manejan reservas complejas — solo visibilidad y promociones.</p>
+    <div class="chips" style="margin-top:8px">
+      <span class="chip gr">Solo mapa</span>
+      <span class="chip gr">Promociones simples</span>
+    </div>
+  </div>
+
+  <div class="cat" style="border-color:rgba(255,183,77,.15)">
+    <div class="cat-header">
+      <div class="cat-icon">🎭</div>
+      <div>
+        <div class="cat-name">Entretenimiento & Eventos</div>
+        <div class="cat-url">guanago.travel/registro-evento</div>
+      </div>
+      <span class="priority" style="background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.2)">FASE 2</span>
+    </div>
+    <p style="font-size:13px;color:var(--muted)">Bares, discotecas, espacios de shows, Caribbean Night. Manejan eventos con fecha, hora, cupos, precios de entrada. Integración con sistema de tickets.</p>
+    <div class="chips" style="margin-top:8px">
+      <span class="chip g">Eventos con fecha</span>
+      <span class="chip g">Tickets digitales</span>
+    </div>
+  </div>
+</div>
+
+<!-- CAMPOS -->
+<div id="campos" class="s">
+  <div class="stitle">Campos por Tipo de Aliado</div>
+  <p class="ssub">Cada formulario pide solo lo que necesita ese tipo de negocio</p>
+
+  <div class="card acc">
+    <span class="eye">Tours & Servicios Turísticos — Campos obligatorios</span>
+    <table class="tbl" style="margin-top:8px">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Obligatorio</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">Nombre del tour / servicio</td><td>Text</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Descripción (150-500 palabras)</td><td>Textarea</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Precio por persona (COP)</td><td>Number</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Duración (horas)</td><td>Number</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Punto de salida</td><td>Text + Maps</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Cupo máximo por salida</td><td>Number</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Horarios disponibles</td><td>Multiple Select</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Fotos del tour (mín. 3)</td><td>File upload</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">WhatsApp de contacto</td><td>Phone</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Qué incluye</td><td>Checklist</td><td><span class="badge pend">Recomendado</span></td></tr>
+        <tr><td class="bold">Qué NO incluye</td><td>Text</td><td><span class="badge pend">Recomendado</span></td></tr>
+        <tr><td class="bold">Requisitos del turista</td><td>Text</td><td><span class="badge pend">Recomendado</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <span class="eye gold">Alojamiento — Campos específicos</span>
+    <table class="tbl" style="margin-top:8px">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Obligatorio</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">Nombre del hospedaje</td><td>Text</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Tipo (hotel / posada / aparta)</td><td>Select</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Dirección exacta</td><td>Text + Maps</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Tipos de habitación</td><td>Repeater (nombre, precio, cupos)</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Fotos (mín. 5)</td><td>File upload</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Amenidades</td><td>Checklist (WiFi, parking, piscina...)</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Check-in / Check-out</td><td>Time</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Política de cancelación</td><td>Select</td><td><span class="badge pend">Recomendado</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="border-color:rgba(255,107,107,.15)">
+    <span class="eye coral">Restaurante — Campos específicos</span>
+    <table class="tbl" style="margin-top:8px">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Obligatorio</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">Nombre del restaurante</td><td>Text</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Tipo de cocina</td><td>Multiple Select</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Horarios de atención</td><td>Time range por día</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Plato estrella (foto + precio)</td><td>Text + File</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Capacidad máxima</td><td>Number</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">¿Acepta cupones GuanaPoints?</td><td>Boolean</td><td><span class="badge ok">Sí</span></td></tr>
+        <tr><td class="bold">Descuento ofrecido con GP</td><td>Number %</td><td>Si GP = Sí</td></tr>
+        <tr><td class="bold">Menú en PDF / link</td><td>URL o File</td><td><span class="badge pend">Recomendado</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- FLUJO INTERNO -->
+<div id="interno" class="s">
+  <div class="stitle">Flujo Interno — Sky + Equipo</div>
+  <p class="ssub">Qué pasa en el backend desde que el aliado envía el formulario hasta que está activo</p>
+
+  <div class="card acc">
+    <span class="eye">Pipeline de activación (Airtable + Make.com)</span>
+    <div style="margin-top:14px">
+      <div class="step">
+        <div class="step-num" style="background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3);color:var(--sky)">1</div>
+        <div>
+          <div class="step-title">Formulario → Airtable</div>
+          <div class="step-body">El aliado envía el formulario en guanago.travel/registro-[tipo]. Los datos llegan a Airtable tabla <code style="color:var(--teal);background:rgba(0,229,204,.08);padding:2px 6px;border-radius:4px">Aliados_Beta</code> con Estado = "Pendiente". Make.com envía WhatsApp a Sky con el resumen del nuevo aliado.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:rgba(255,183,77,.1);border-color:rgba(255,183,77,.3);color:var(--gold)">2</div>
+        <div>
+          <div class="step-title">Revisión por Sky (máximo 24h)</div>
+          <div class="step-body">Sky revisa desde Airtable mobile: nombre, descripción, fotos, información de contacto. Si falta algo, manda WhatsApp directo al aliado. Si está OK, cambia Estado a "Aprobado".</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:rgba(0,229,204,.1);border-color:var(--border);color:var(--teal)">3</div>
+        <div>
+          <div class="step-title">Make.com detecta "Aprobado" → automatizaciones</div>
+          <div class="step-body">Trigger sobre campo Estado en Aliados_Beta. En secuencia: genera QR único del aliado → crea perfil en Firestore → actualiza mapa Directorio_Mapa → sube fotos a Firebase Storage → envía WhatsApp de bienvenida al aliado con QR, guía de uso y link de su perfil.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:var(--green)">4</div>
+        <div>
+          <div class="step-title">Aliado activo — aparece en la plataforma</div>
+          <div class="step-body">El negocio ya aparece en el mapa de GuanaGO, en los resultados del cotizador, en la sección de categoría. El aliado puede compartir su link personalizado y empezar a recibir reservas.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.3);color:var(--purple)">5</div>
+        <div>
+          <div class="step-title">Primera reserva → pago de comisión</div>
+          <div class="step-body">Cuando el aliado recibe su primera reserva completada, el sistema calcula la comisión, la registra en Ventas_Promotor y notifica a Sky para el pago al operador (monto neto: precio - 20% GuanaGO).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card" style="border-color:rgba(0,229,204,.15)">
+      <span class="eye">Tabla Aliados_Beta — campos clave</span>
+      <ul class="lst">
+        <li><strong>Nombre, Categoria, Estado</strong> (Pendiente / Aprobado / Activo / Pausado)</li>
+        <li><strong>TipoFormulario</strong> (Tour / Alojamiento / Restaurante / etc.)</li>
+        <li><strong>QR_Code</strong> (URL generada por Make.com)</li>
+        <li><strong>Comision</strong> (default 20%, ajustable por aliado)</li>
+        <li><strong>WhatsApp, Email</strong> del contacto del negocio</li>
+        <li><strong>FirestoreID</strong> (ID del perfil en Firestore una vez activo)</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:rgba(255,183,77,.15)">
+      <span class="eye gold">4 Automatizaciones Make.com para aliados</span>
+      <ul class="lst">
+        <li><strong>Nuevo registro</strong> → WhatsApp a Sky con resumen del aliado</li>
+        <li><strong>Estado "Aprobado"</strong> → genera QR + crea perfil Firestore + WhatsApp bienvenida</li>
+        <li><strong>Primera reserva completada</strong> → notificación al aliado + registro comisión</li>
+        <li><strong>Estado "Pausado"</strong> → retira del mapa y cotizador automáticamente</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- DISCURSO -->
+<div id="discurso" class="s">
+  <div class="stitle">Discurso de Ventas</div>
+  <p class="ssub">Guión adaptado por tipo de aliado + respuestas a las 3 objeciones más comunes</p>
+
+  <div class="card acc">
+    <span class="eye">Pitch universal (30 segundos)</span>
+    <div class="hl" style="font-size:16px;margin-top:10px">
+      "Somos GuanaGO — la plataforma de turismo de San Andrés. Te registro tu negocio en 5 minutos, apareces en el mapa que todos los turistas están usando, y solo me pagas el 20% cuando yo te traigo una reserva. Hoy mismo puedes estar activo."
+    </div>
+  </div>
+
+  <div class="card" style="border-color:rgba(56,189,248,.2)">
+    <span class="eye sky">Para operadores de tours</span>
+    <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:10px">Énfasis en que el turista llega a la isla sin itinerario y los busca en la app. El operador no gasta nada en marketing — GuanaGO lo hace.</p>
+    <div style="padding:12px;background:rgba(56,189,248,.04);border-radius:8px;border:1px solid rgba(56,189,248,.1);font-size:14px;color:var(--muted);line-height:1.8">
+      "Cada turista que llega al aeropuerto, los taxistas de la cooperativa le muestran GuanaGO. Tus tours aparecen ahí. Si el turista reserva tu tour de snorkel a $200K, yo te paso $160K y me quedo $40K — solo porque traje al cliente. Tú no gastaste nada en publicidad."
+    </div>
+  </div>
+
+  <div class="card" style="border-color:rgba(245,131,31,.2)">
+    <span class="eye or">Para restaurantes</span>
+    <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:10px">Énfasis en los cupones GuanaPoints — el turista que acumula puntos los canjea en el restaurante, atrayendo clientes sin costo de adquisición para el restaurante.</p>
+    <div style="padding:12px;background:rgba(245,131,31,.04);border-radius:8px;border:1px solid rgba(245,131,31,.1);font-size:14px;color:var(--muted);line-height:1.8">
+      "Cuando un turista compra un tour de buceo, gana 300 GuanaPoints. Esos puntos los canjea en tu restaurante por una cena. Tú recibes un cliente nuevo que ya llegó con ganas de gastar — yo lo traje, tú das un 20% de descuento como si fuera un cupón de descuento que ya traen pagado."
+    </div>
+  </div>
+
+  <div class="card acc" style="margin-top:6px">
+    <span class="eye coral">Las 3 objeciones y cómo responderlas</span>
+    <div style="margin-top:12px;display:grid;gap:10px">
+      <div style="padding:14px;background:rgba(255,107,107,.04);border-radius:8px;border:1px solid rgba(255,107,107,.12)">
+        <div style="font-weight:700;color:var(--coral);margin-bottom:6px">"El 20% es mucho"</div>
+        <div style="font-size:14px;color:var(--muted);line-height:1.7">"Booking cobra 25-30%. Nosotros cobramos 20% y solo cuando te traemos un cliente que no tendrías de otra forma. Si no reservan, no te cobro nada. Es marketing 100% por resultados."</div>
+      </div>
+      <div style="padding:14px;background:rgba(255,183,77,.04);border-radius:8px;border:1px solid rgba(255,183,77,.12)">
+        <div style="font-weight:700;color:var(--gold);margin-bottom:6px">"No tengo tiempo para esto"</div>
+        <div style="font-size:14px;color:var(--muted);line-height:1.7">"Son 5 minutos de formulario ahora — yo hago el resto. Después, cuando llega una reserva, te llega un WhatsApp con todos los datos del cliente. Solo confirmas con un mensaje."</div>
+      </div>
+      <div style="padding:14px;background:rgba(167,139,250,.04);border-radius:8px;border:1px solid rgba(167,139,250,.12)">
+        <div style="font-weight:700;color:var(--purple);margin-bottom:6px">"Ya tengo mis clientes"</div>
+        <div style="font-size:14px;color:var(--muted);line-height:1.7">"Perfecto — y yo te traigo los que no tienes. El turista que llega sin recomendación previa, el que busca en Google 'tour San Andrés', el que está en el hotel preguntando qué hacer mañana. Ese cliente no te llega de otra forma."</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKLIST -->
+<div id="checklist" class="s">
+  <div class="stitle">Checklist de Lanzamiento</div>
+  <p class="ssub">Lo que debe estar listo para salir a calle a reclutar aliados</p>
+
+  <div class="g2">
+    <div class="card" style="border-color:rgba(0,229,204,.15)">
+      <span class="eye">Técnico</span>
+      <div id="tech-checks">
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box done"></div>
+          <div class="check-label done">Formulario /registro-alojamiento creado</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">Bugs de /registro-alojamiento corregidos</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">Formulario /registro-tour creado</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">Formulario /registro-restaurante creado</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box done"></div>
+          <div class="check-label done">Cotizador /cotizador funcionando</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">Make.com: trigger Estado "Aprobado" → activación automática</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">Make.com: WhatsApp bienvenida a aliado con QR</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">Make.com: notificación a Sky de nuevos registros</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">Tabla Embajadores en Airtable creada</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="border-color:rgba(245,131,31,.15)">
+      <span class="eye or">Comercial</span>
+      <div id="biz-checks">
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box done"></div>
+          <div class="check-label done">Flyer impreso con QR al cotizador</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">Contactar Chamey (semana 1)</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">Contactar Breda Sky (semana 1)</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">Contactar Bobby Rock (semana 1)</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">Visitar 5 hoteles boutique (semana 2)</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">Reunión Cooperativa Taxistas (semana 2)</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">Mini-guía "Tu negocio en GuanaGO en 5 min" impresa</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">25 aliados activos antes del lanzamiento público</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-label">10 embajadores activos antes del lanzamiento</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hl gold">
+    <strong>Orden de prioridad:</strong> Primero los formularios técnicos → luego los aliados conocidos (Chamey, Breda, Bobby) → luego la automatización de Make.com → luego la ronda de hoteles y taxistas.
+  </div>
+</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.s').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+}
+function toggle(el) {
+  const box = el.querySelector('.check-box');
+  const lbl = el.querySelector('.check-label');
+  box.classList.toggle('done');
+  lbl.classList.toggle('done');
+}
+</script>
+</body>
+</html>

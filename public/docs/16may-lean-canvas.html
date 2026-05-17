@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO — Lean Canvas · Mayo 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#00E5CC; --teal2:#00C9B1; --ocean:#004060; --deep:#060E18;
+  --bg:#0B1622; --card:#101E2C; --card2:#0D1928;
+  --border:rgba(0,229,204,0.14); --border2:rgba(255,255,255,0.07);
+  --gold:#FFB74D; --coral:#FF6B6B; --mint:#52E3C2; --purple:#A78BFA;
+  --orange:#F5831F; --green:#4ADE80; --sky:#38BDF8; --rose:#F472B6;
+  --cream:#F0F4F8; --muted:#6B8A9E;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--cream);line-height:1.5}
+.nav{background:rgba(6,14,24,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:0;overflow-x:auto;position:sticky;top:0;z-index:100;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nb{font-size:13px;font-weight:700;letter-spacing:.4px;color:var(--muted);padding:14px 14px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;font-family:'Outfit',sans-serif}
+.nb.on,.nb:hover{color:var(--teal);border-bottom-color:var(--teal)}
+.s{display:none;padding:28px 18px 80px;max-width:960px;margin:0 auto}
+.s.on{display:block}
+.hero{background:linear-gradient(135deg,var(--ocean) 0%,var(--deep) 70%);padding:52px 24px 44px;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+.hero::before{content:'';position:absolute;top:-120px;right:-80px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(0,229,204,.08) 0%,transparent 70%);pointer-events:none}
+.h-eye{font-size:12px;letter-spacing:4px;color:var(--teal);text-transform:uppercase;margin-bottom:10px;font-weight:700}
+.h-h1{font-size:clamp(28px,5vw,52px);font-weight:800;line-height:1.1;margin-bottom:10px}
+.h-h1 span{color:var(--teal)}
+.h-sub{font-size:15px;color:var(--muted);max-width:580px;font-weight:300;line-height:1.7}
+.h-date{display:inline-block;font-size:13px;font-weight:700;color:var(--orange);background:rgba(245,131,31,.1);border:1px solid rgba(245,131,31,.2);padding:4px 14px;border-radius:100px;margin-top:16px}
+.card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:22px;margin-bottom:14px}
+.card.acc{border-color:var(--border);background:var(--card2)}
+.card.g-b{border-color:rgba(74,222,128,.2)}
+.card.o-b{border-color:rgba(245,131,31,.2)}
+.card.p-b{border-color:rgba(167,139,250,.2)}
+.card.t-b{border-color:var(--border)}
+.card.gold-b{border-color:rgba(255,183,77,.25)}
+.card.coral-b{border-color:rgba(255,107,107,.2)}
+.card.sky-b{border-color:rgba(56,189,248,.2)}
+.eye{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:8px;display:block}
+.eye.gold{color:var(--gold)}.eye.coral{color:var(--coral)}.eye.or{color:var(--orange)}.eye.gr{color:var(--green)}.eye.pu{color:var(--purple)}.eye.sky{color:var(--sky)}
+.stitle{font-size:26px;font-weight:800;margin-bottom:4px}
+.ssub{font-size:14px;color:var(--muted);margin-bottom:24px;font-weight:300}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:100px}
+.badge.ok{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.badge.pend{background:rgba(255,183,77,.12);color:var(--gold);border:1px solid rgba(255,183,77,.2)}
+.badge.next{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.badge.crit{background:rgba(255,107,107,.12);color:var(--coral);border:1px solid rgba(255,107,107,.2)}
+.hl{background:rgba(0,229,204,.06);border-left:3px solid var(--teal);border-radius:0 10px 10px 0;padding:14px 18px;margin:12px 0;font-size:15px;color:var(--cream);line-height:1.7}
+.hl.gold{background:rgba(255,183,77,.06);border-left-color:var(--gold)}
+.hl.coral{background:rgba(255,107,107,.06);border-left-color:var(--coral)}
+.hl.or{background:rgba(245,131,31,.07);border-left-color:var(--orange)}
+.hl.pu{background:rgba(167,139,250,.06);border-left-color:var(--purple)}
+.hl.gr{background:rgba(74,222,128,.06);border-left-color:var(--green)}
+.hl.sky{background:rgba(56,189,248,.06);border-left-color:var(--sky)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+.tbl th{text-align:left;padding:9px 10px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border2);font-weight:600}
+.tbl td{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--muted);vertical-align:top}
+.tbl tr:last-child td{border:none}
+.tbl .bold{font-weight:700;color:var(--cream)}
+.tbl .tg{color:var(--teal);font-weight:700}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+ul.lst{list-style:none}
+ul.lst li{font-size:14px;color:var(--muted);padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:8px;align-items:flex-start}
+ul.lst li:last-child{border:none}
+ul.lst li::before{content:'→';color:var(--teal);flex-shrink:0}
+ul.lst li strong{color:var(--cream)}
+.chip{font-size:12px;font-weight:600;padding:3px 11px;border-radius:100px;background:rgba(255,255,255,.06);color:var(--cream);display:inline-block}
+.chip.t{background:rgba(0,229,204,.12);color:var(--teal)}
+.chip.g{background:rgba(255,183,77,.12);color:var(--gold)}
+.chip.p{background:rgba(167,139,250,.12);color:var(--purple)}
+.chip.c{background:rgba(255,107,107,.12);color:var(--coral)}
+.chip.o{background:rgba(245,131,31,.12);color:var(--orange)}
+.chip.gr{background:rgba(74,222,128,.12);color:var(--green)}
+.chip.sky{background:rgba(56,189,248,.12);color:var(--sky)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+/* Canvas Grid */
+.canvas-grid{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:auto auto;gap:8px;margin-bottom:14px}
+.canvas-cell{background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:14px;min-height:120px}
+.canvas-cell.span2{grid-row:span 2}
+.canvas-cell .cell-label{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;margin-bottom:8px}
+.canvas-cell .cell-title{font-size:14px;font-weight:700;color:var(--cream);margin-bottom:6px}
+.canvas-cell ul{list-style:none}
+.canvas-cell ul li{font-size:12px;color:var(--muted);padding:3px 0;display:flex;gap:6px}
+.canvas-cell ul li::before{content:'·';color:var(--teal)}
+@media(max-width:640px){.canvas-grid{grid-template-columns:1fr 1fr}.canvas-cell.span2{grid-row:span 1}}
+.seg-card{background:var(--card2);border-radius:12px;padding:18px;border:1px solid var(--border2)}
+.seg-icon{font-size:28px;margin-bottom:10px}
+.seg-name{font-size:15px;font-weight:700;color:var(--cream);margin-bottom:4px}
+.seg-tag{font-size:11px;font-weight:700;padding:2px 10px;border-radius:100px;display:inline-block;margin-bottom:10px}
+.seg-body{font-size:13px;color:var(--muted);line-height:1.7}
+.num-big{font-size:32px;font-weight:800;margin-bottom:2px}
+.num-label{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div style="max-width:960px;margin:0 auto">
+    <div class="h-eye">GuanaGO · Estrategia</div>
+    <h1 class="h-h1">Lean <span>Canvas</span></h1>
+    <p class="h-sub">Modelo de negocio adaptado al turismo comunitario de San Andrés — 4 segmentos, economía circular local, distribución por embajadores.</p>
+    <span class="h-date">Mayo 2026</span>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nb on" onclick="show('canvas',this)">Canvas Visual</button>
+  <button class="nb" onclick="show('segmentos',this)">Segmentos</button>
+  <button class="nb" onclick="show('problema',this)">Problema & Solución</button>
+  <button class="nb" onclick="show('valor',this)">Propuesta de Valor</button>
+  <button class="nb" onclick="show('canales',this)">Canales & Revenue</button>
+  <button class="nb" onclick="show('metricas',this)">Métricas Clave</button>
+</nav>
+
+<!-- CANVAS VISUAL -->
+<div id="canvas" class="s on">
+  <div class="stitle">Canvas Completo</div>
+  <p class="ssub">Los 9 bloques del Lean Canvas aplicados a GuanaGO</p>
+
+  <div class="canvas-grid">
+    <!-- Problema -->
+    <div class="canvas-cell" style="border-color:rgba(255,107,107,.25)">
+      <div class="cell-label" style="color:var(--coral)">Problema</div>
+      <ul>
+        <li>El turista llega sin plan y cae en trampas de intermediarios</li>
+        <li>El operador raizal no tiene canal digital propio</li>
+        <li>El isleño recomienda gratis sin monetizar</li>
+        <li>Agencias usan OTAs foráneas que se llevan el margen</li>
+      </ul>
+    </div>
+
+    <!-- Solución -->
+    <div class="canvas-cell" style="border-color:rgba(0,229,204,.25)">
+      <div class="cell-label" style="color:var(--teal)">Solución</div>
+      <ul>
+        <li>Cotizador en tiempo real + catálogo local</li>
+        <li>Onboarding de aliados en 5 min</li>
+        <li>Programa de embajadores con link de referido</li>
+        <li>Canal B2B para agencias (GuíaSAI)</li>
+      </ul>
+    </div>
+
+    <!-- Propuesta de Valor -->
+    <div class="canvas-cell span2" style="border-color:var(--border);background:rgba(0,64,96,.3)">
+      <div class="cell-label" style="color:var(--teal)">Propuesta de Valor Única</div>
+      <div class="cell-title" style="font-size:16px;line-height:1.4">"La única plataforma donde el turista diseña su viaje en tiempo real con operadores raizales certificados, y el isleño gana comisión por cada recomendación."</div>
+      <div style="margin-top:10px">
+        <div class="chips">
+          <span class="chip t">Raizal-owned</span>
+          <span class="chip o">Economía circular</span>
+          <span class="chip gr">GuanaPoints</span>
+          <span class="chip p">IA integrada</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ventaja Injusta -->
+    <div class="canvas-cell" style="border-color:rgba(167,139,250,.25)">
+      <div class="cell-label" style="color:var(--purple)">Ventaja Injusta</div>
+      <ul>
+        <li>Red de confianza raizal imposible de comprar</li>
+        <li>Conocimiento profundo del territorio</li>
+        <li>RNT 48674 — operador certificado</li>
+        <li>Alianza cooperativa taxistas aeropuerto</li>
+        <li>Chatbot IA en producción</li>
+      </ul>
+    </div>
+
+    <!-- Segmentos -->
+    <div class="canvas-cell" style="border-color:rgba(56,189,248,.25)">
+      <div class="cell-label" style="color:var(--sky)">Segmentos</div>
+      <ul>
+        <li>Turista FIT sin plan</li>
+        <li>Nómada digital (estancias largas)</li>
+        <li>Grupos / celebraciones</li>
+        <li>Isleño raizal / residente</li>
+        <li>Agencia B2B / OTA</li>
+      </ul>
+    </div>
+
+    <!-- Canales -->
+    <div class="canvas-cell" style="border-color:rgba(255,183,77,.25)">
+      <div class="cell-label" style="color:var(--gold)">Canales</div>
+      <ul>
+        <li>QR físico en hoteles y restaurantes</li>
+        <li>WhatsApp (link embajador)</li>
+        <li>Civitatis / tur.com (OTA)</li>
+        <li>SEO + redes sociales</li>
+        <li>Boca a boca raizal</li>
+      </ul>
+    </div>
+
+    <!-- Métricas Clave -->
+    <div class="canvas-cell" style="border-color:rgba(74,222,128,.25)">
+      <div class="cell-label" style="color:var(--green)">Métricas Clave</div>
+      <ul>
+        <li># Aliados activos</li>
+        <li># Embajadores activos</li>
+        <li>Reservas / mes</li>
+        <li>CAC por canal</li>
+        <li>LTV turista</li>
+        <li>GuanaPoints emitidos vs canjeados</li>
+      </ul>
+    </div>
+
+    <!-- Estructura de costos -->
+    <div class="canvas-cell" style="border-color:rgba(255,107,107,.15)">
+      <div class="cell-label" style="color:var(--coral)">Estructura de Costos</div>
+      <ul>
+        <li>Infraestructura (Render, Firebase)</li>
+        <li>Comisión embajadores (5-10%)</li>
+        <li>Operación y soporte</li>
+        <li>Marketing digital</li>
+        <li>Make.com automatizaciones</li>
+      </ul>
+    </div>
+
+    <!-- Fuentes de ingreso -->
+    <div class="canvas-cell" style="border-color:rgba(74,222,128,.25)">
+      <div class="cell-label" style="color:var(--green)">Fuentes de Ingreso</div>
+      <ul>
+        <li>Comisión 20% por reserva B2C</li>
+        <li>Comisión 12% canal OTA/agencia</li>
+        <li>Paquetes turísticos (margen 25%)</li>
+        <li>Membresía GuanaPoints premium</li>
+        <li>Fee mensual aliado destacado</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="hl">
+    <strong>Insight clave:</strong> El isleño raizal es el canal de distribución más potente — y ninguna OTA lo activa. GuanaGO simplemente lo monetiza con un link de referido y un sticker QR.
+  </div>
+</div>
+
+<!-- SEGMENTOS -->
+<div id="segmentos" class="s">
+  <div class="stitle">Segmentos de Cliente</div>
+  <p class="ssub">4 segmentos principales con motivaciones, canales y valor diferenciado</p>
+
+  <div class="g2">
+    <div class="seg-card" style="border-color:rgba(56,189,248,.2)">
+      <div class="seg-icon">✈️</div>
+      <div class="seg-name">Turista FIT</div>
+      <span class="seg-tag" style="background:rgba(56,189,248,.12);color:var(--sky)">Segmento primario</span>
+      <div class="seg-body">Viajero individual o pareja que llega sin itinerario definido. Alta disposición de pago, busca experiencias auténticas. Lo capturamos en el hotel, taxi o restaurante aliado via QR.<br><br><strong style="color:var(--cream)">Subsegmentos:</strong> Nómada digital (estancias largas, gasta 3x), grupos de celebración, turistas internacionales FIT (paga en USD via Civitatis), familia del isleño.</div>
+      <div class="chips" style="margin-top:12px">
+        <span class="chip t">B2C directo</span>
+        <span class="chip sky">QR en punto de contacto</span>
+      </div>
+    </div>
+    <div class="seg-card" style="border-color:rgba(0,229,204,.2)">
+      <div class="seg-icon">🏝️</div>
+      <div class="seg-name">Isleño / Local</div>
+      <span class="seg-tag" style="background:rgba(0,229,204,.12);color:var(--teal)">Canal de distribución</span>
+      <div class="seg-body">
+        <strong style="color:var(--cream)">Raizal ancestral:</strong> Tiene lazos culturales profundos. Quiere reconocimiento, no solo dinero. Badge "Raizal Auténtico" + cupones en negocios culturales.<br><br>
+        <strong style="color:var(--cream)">Residente OCCRE:</strong> Vive en la isla hace años, integrado a la comunidad. Motivado por ingreso extra fácil + descuentos en servicios que ya usa.<br><br>
+        <strong style="color:var(--cream)">Freelancer local:</strong> Vende tours de forma independiente. Mayor riesgo de bypass — lo retiene el catálogo amplio + herramienta profesional + pago competitivo.
+      </div>
+      <div class="chips" style="margin-top:12px">
+        <span class="chip t">Embajadores</span>
+        <span class="chip gr">Comisión + cupones</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="seg-card" style="border-color:rgba(245,131,31,.2)">
+      <div class="seg-icon">🏨</div>
+      <div class="seg-name">Aliado Local</div>
+      <span class="seg-tag" style="background:rgba(245,131,31,.12);color:var(--orange)">Oferta del ecosistema</span>
+      <div class="seg-body">Hoteles, operadores de tours, restaurantes, tiendas de artesanía, negocios de entretenimiento. Se registran en 5 minutos, sin costo inicial, con onboarding guiado por tipo de negocio.<br><br><strong style="color:var(--cream)">Propuesta:</strong> Visibilidad digital + reservas directas + herramienta de gestión + participación en el ecosistema GuanaPoints.</div>
+      <div class="chips" style="margin-top:12px">
+        <span class="chip o">20% comisión</span>
+        <span class="chip gr">24h activo</span>
+        <span class="chip">$0 costo inicial</span>
+      </div>
+    </div>
+    <div class="seg-card" style="border-color:rgba(167,139,250,.2)">
+      <div class="seg-icon">🏢</div>
+      <div class="seg-name">Agencia B2B / OTA</div>
+      <span class="seg-tag" style="background:rgba(167,139,250,.12);color:var(--purple)">Canal mayorista</span>
+      <div class="seg-body">Agencias de viajes nacionales e internacionales, plataformas OTA (Civitatis, tur.com). Acceden via GuíaSAI al catálogo B2B con tarifas netas 2026.<br><br><strong style="color:var(--cream)">Propuesta:</strong> Catálogo curado de experiencias Raizales certificadas + tarifas netas competitivas + comisión 12%.</div>
+      <div class="chips" style="margin-top:12px">
+        <span class="chip p">GuíaSAI</span>
+        <span class="chip">Tarifa neta 2026</span>
+        <span class="chip sky">12% comisión</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card acc" style="margin-top:6px">
+    <span class="eye">6 Clientes que las agencias tradicionales NO captan</span>
+    <div class="g3" style="margin-top:12px">
+      <div><span style="color:var(--teal);font-weight:700">1.</span> <span style="color:var(--muted)">Turista que ya llegó sin plan → captura en hotel/taxi via QR</span></div>
+      <div><span style="color:var(--teal);font-weight:700">2.</span> <span style="color:var(--muted)">Nómada digital → estancias largas, gasta 3x más</span></div>
+      <div><span style="color:var(--teal);font-weight:700">3.</span> <span style="color:var(--muted)">Grupos de celebración → quieren personalización</span></div>
+      <div><span style="color:var(--teal);font-weight:700">4.</span> <span style="color:var(--muted)">Comunidades de nicho → LAMA, buceadores, fotógrafos</span></div>
+      <div><span style="color:var(--teal);font-weight:700">5.</span> <span style="color:var(--muted)">Turista internacional FIT → paga en USD via Civitatis</span></div>
+      <div><span style="color:var(--teal);font-weight:700">6.</span> <span style="color:var(--muted)">Familia del isleño → el embajador convierte a sus propios visitantes</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLEMA Y SOLUCIÓN -->
+<div id="problema" class="s">
+  <div class="stitle">Problema & Solución</div>
+  <p class="ssub">El diagnóstico real del mercado turístico de San Andrés</p>
+
+  <div class="g2">
+    <div class="card coral-b">
+      <span class="eye coral">Problemas validados</span>
+      <ul class="lst">
+        <li><strong>El turista llega sin plan</strong> y cae en recomendaciones no verificadas de taxistas o intermediarios que cobran comisión doble</li>
+        <li><strong>El operador raizal</strong> no tiene canal digital propio y depende de walk-in o WhatsApp informal</li>
+        <li><strong>El isleño recomienda gratis</strong> — ya genera tráfico turístico por WhatsApp sin recibir nada a cambio</li>
+        <li><strong>Las agencias usan OTAs foráneas</strong> (Booking, Airbnb, Viator) que se llevan el 25-35% del margen sin dejar nada en la isla</li>
+        <li><strong>No hay inventario unificado</strong> — el turista no puede comparar tours, hoteles y restaurantes en un solo lugar</li>
+        <li><strong>La información de precios es opaca</strong> — el turista no sabe si está pagando precio justo</li>
+      </ul>
+    </div>
+    <div class="card g-b">
+      <span class="eye gr">Soluciones implementadas</span>
+      <ul class="lst">
+        <li><strong>Cotizador en tiempo real</strong> → guanago.travel/cotizador — el turista arma su viaje en minutos con precios transparentes</li>
+        <li><strong>Onboarding de aliados en 5 min</strong> → formulario especializado por tipo de negocio, activo en 24h</li>
+        <li><strong>Programa de embajadores</strong> → link de referido personalizado + comisión real en COP por cada reserva</li>
+        <li><strong>Canal B2B via GuíaSAI</strong> → catálogo con tarifas netas 2026 para agencias y OTAs</li>
+        <li><strong>Mapa de 31+ puntos verificados</strong> → directorio curado de servicios raizales auténticos</li>
+        <li><strong>Chatbot IA (Groq)</strong> → responde consultas 24/7 en español e inglés</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card acc">
+    <span class="eye">Early Adopters — Quiénes atacar primero</span>
+    <div class="g3" style="margin-top:12px">
+      <div style="padding:12px;background:rgba(0,229,204,.05);border-radius:8px;border:1px solid var(--border2)">
+        <div style="font-weight:700;color:var(--cream);margin-bottom:6px">Aliados conocidos (semana 1)</div>
+        <div style="font-size:13px;color:var(--muted)">Chamey, Breda Sky, Bobby Rock — ya son aliados, facilitan los primeros 3 registros y validan el flujo.</div>
+      </div>
+      <div style="padding:12px;background:rgba(245,131,31,.05);border-radius:8px;border:1px solid var(--border2)">
+        <div style="font-weight:700;color:var(--cream);margin-bottom:6px">Hoteles boutique (semana 2-3)</div>
+        <div style="font-size:13px;color:var(--muted)">Hoteles familiares con recepción activa — son el primer punto de contacto con el turista.</div>
+      </div>
+      <div style="padding:12px;background:rgba(167,139,250,.05);border-radius:8px;border:1px solid var(--border2)">
+        <div style="font-weight:700;color:var(--cream);margin-bottom:6px">Cooperativa de Taxistas</div>
+        <div style="font-size:13px;color:var(--muted)">Alianza clave: captura al turista en el aeropuerto. Cada taxi = un punto de venta móvil con QR.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROPUESTA DE VALOR -->
+<div id="valor" class="s">
+  <div class="stitle">Propuesta de Valor Única</div>
+  <p class="ssub">Por qué GuanaGO gana — los 5 moats competitivos</p>
+
+  <div class="hl" style="font-size:17px;font-weight:600">
+    "La única plataforma donde el turista diseña su viaje en tiempo real con operadores raizales certificados, y el isleño gana comisión por cada recomendación."
+  </div>
+
+  <div class="card acc" style="margin-top:18px">
+    <span class="eye">5 Ventajas que nadie puede copiar rápido</span>
+    <div style="margin-top:14px">
+      <div style="display:grid;gap:10px">
+        <div style="display:flex;gap:14px;align-items:flex-start;padding:12px;background:rgba(0,229,204,.04);border-radius:8px;border:1px solid var(--border2)">
+          <span style="font-size:22px;flex-shrink:0">🤝</span>
+          <div>
+            <div style="font-weight:700;color:var(--teal);margin-bottom:3px">Red de confianza raizal</div>
+            <div style="font-size:14px;color:var(--muted)">Los aliados nos recomiendan porque somos de aquí. Booking.com no puede comprar esa confianza. Lleva años de relaciones construidas en la comunidad.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;padding:12px;background:rgba(245,131,31,.04);border-radius:8px;border:1px solid var(--border2)">
+          <span style="font-size:22px;flex-shrink:0">📍</span>
+          <div>
+            <div style="font-weight:700;color:var(--orange);margin-bottom:3px">Conocimiento profundo del territorio</div>
+            <div style="font-size:14px;color:var(--muted)">Sabemos qué tours realmente valen, qué restaurantes son auténticos, cuándo hay marea baja en el Acuario. Las OTAs listan todo sin curarlo.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;padding:12px;background:rgba(167,139,250,.04);border-radius:8px;border:1px solid var(--border2)">
+          <span style="font-size:22px;flex-shrink:0">📋</span>
+          <div>
+            <div style="font-weight:700;color:var(--purple);margin-bottom:3px">RNT 48674 — Operador certificado</div>
+            <div style="font-size:14px;color:var(--muted)">Registro Nacional de Turismo activo. Somos legales, damos factura, generamos confianza institucional. El freelancer informal no puede competir en este nivel.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;padding:12px;background:rgba(74,222,128,.04);border-radius:8px;border:1px solid var(--border2)">
+          <span style="font-size:22px;flex-shrink:0">🤖</span>
+          <div>
+            <div style="font-weight:700;color:var(--green);margin-bottom:3px">IA + datos propios en producción</div>
+            <div style="font-size:14px;color:var(--muted)">Chatbot Groq activo 24/7. Historial de reservas en Airtable. Esto genera un dataset único del comportamiento del turista en San Andrés que ningún competidor tiene.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;padding:12px;background:rgba(255,183,77,.04);border-radius:8px;border:1px solid var(--border2)">
+          <span style="font-size:22px;flex-shrink:0">🏝️</span>
+          <div>
+            <div style="font-weight:700;color:var(--gold);margin-bottom:3px">Narrativa de impacto social real</div>
+            <div style="font-size:14px;color:var(--muted)">Empresa raizal-owned, impacto en soberanía económica, elegible a fondos Fontur / Ministerio Interior / Coralina. Esto abre puertas que una startup tech pura no puede abrir.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CANALES Y REVENUE -->
+<div id="canales" class="s">
+  <div class="stitle">Canales & Revenue</div>
+  <p class="ssub">Cómo llega el cliente y cómo se monetiza cada canal</p>
+
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Canal de adquisición</th>
+        <th>CAC estimado</th>
+        <th>Velocidad</th>
+        <th>Escalabilidad</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="bold">Embajador raizal (WhatsApp)</td>
+        <td class="tg">$30.000 COP</td>
+        <td><span class="badge ok">Alta</span></td>
+        <td><span class="badge pend">Media</span></td>
+      </tr>
+      <tr>
+        <td class="bold">QR físico en aliados</td>
+        <td class="tg">$15.000 COP</td>
+        <td><span class="badge ok">Alta</span></td>
+        <td><span class="badge ok">Alta</span></td>
+      </tr>
+      <tr>
+        <td class="bold">OTA / Civitatis</td>
+        <td><span class="badge">Comisión OTA</span></td>
+        <td><span class="badge pend">Media</span></td>
+        <td><span class="badge ok">Alta</span></td>
+      </tr>
+      <tr>
+        <td class="bold">SEO / Redes sociales</td>
+        <td class="tg">$80.000 COP</td>
+        <td><span class="badge crit">Baja</span></td>
+        <td><span class="badge ok">Alta</span></td>
+      </tr>
+      <tr>
+        <td class="bold">Ads pagos (Meta/Google)</td>
+        <td class="tg">$150.000 COP</td>
+        <td><span class="badge ok">Alta</span></td>
+        <td><span class="badge pend">Media</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="height:16px"></div>
+
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Fuente de ingreso</th>
+        <th>% / Monto</th>
+        <th>Canal</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="bold">Comisión reserva B2C directa</td>
+        <td class="tg">20%</td>
+        <td>guanago.travel</td>
+        <td><span class="badge ok">Activo</span></td>
+      </tr>
+      <tr>
+        <td class="bold">Comisión canal OTA / Agencia</td>
+        <td class="tg">12%</td>
+        <td>GuíaSAI / Civitatis</td>
+        <td><span class="badge ok">Activo</span></td>
+      </tr>
+      <tr>
+        <td class="bold">Paquetes turísticos B2C</td>
+        <td class="tg">25% margen</td>
+        <td>App + OTA</td>
+        <td><span class="badge pend">En desarrollo</span></td>
+      </tr>
+      <tr>
+        <td class="bold">Fee mensual aliado destacado</td>
+        <td class="tg">$50K–150K COP/mes</td>
+        <td>Directorio</td>
+        <td><span class="badge next">Planificado</span></td>
+      </tr>
+      <tr>
+        <td class="bold">GuanaPoints Premium (turista)</td>
+        <td class="tg">$30K–80K COP</td>
+        <td>App</td>
+        <td><span class="badge next">Planificado</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- MÉTRICAS -->
+<div id="metricas" class="s">
+  <div class="stitle">Métricas Clave — North Stars</div>
+  <p class="ssub">Indicadores que determinan si el modelo funciona</p>
+
+  <div class="g4">
+    <div class="card t-b" style="text-align:center">
+      <div class="num-big" style="color:var(--teal)">25</div>
+      <div class="num-label">Aliados activos</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">Meta mes 1</div>
+    </div>
+    <div class="card gold-b" style="text-align:center">
+      <div class="num-big" style="color:var(--gold)">50</div>
+      <div class="num-label">Embajadores</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">Meta mes 6</div>
+    </div>
+    <div class="card g-b" style="text-align:center">
+      <div class="num-big" style="color:var(--green)">$16M</div>
+      <div class="num-label">Utilidad COP/mes</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">Proyección mes 6</div>
+    </div>
+    <div class="card p-b" style="text-align:center">
+      <div class="num-big" style="color:var(--purple)">28x</div>
+      <div class="num-label">LTV / CAC embajador</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">vs 5.6x en ads</div>
+    </div>
+  </div>
+
+  <div class="card acc">
+    <span class="eye">Embudo de conversión objetivo</span>
+    <div style="margin-top:12px;display:grid;gap:8px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:90px;font-size:12px;color:var(--muted)">Visitante</span>
+        <div style="flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:22px;position:relative">
+          <div style="width:100%;height:100%;background:var(--teal);border-radius:4px;opacity:.3"></div>
+          <span style="position:absolute;left:10px;top:3px;font-size:12px;color:var(--cream)">100%</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:90px;font-size:12px;color:var(--muted)">Cotizador</span>
+        <div style="flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:22px;position:relative">
+          <div style="width:45%;height:100%;background:var(--teal);border-radius:4px;opacity:.5"></div>
+          <span style="position:absolute;left:10px;top:3px;font-size:12px;color:var(--cream)">45%</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:90px;font-size:12px;color:var(--muted)">Interés</span>
+        <div style="flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:22px;position:relative">
+          <div style="width:20%;height:100%;background:var(--teal);border-radius:4px;opacity:.7"></div>
+          <span style="position:absolute;left:10px;top:3px;font-size:12px;color:var(--cream)">20%</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:90px;font-size:12px;color:var(--muted)">Reserva</span>
+        <div style="flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:22px;position:relative">
+          <div style="width:8%;height:100%;background:var(--green);border-radius:4px"></div>
+          <span style="position:absolute;left:10px;top:3px;font-size:12px;color:var(--cream)">8%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2" style="margin-top:14px">
+    <div class="card">
+      <span class="eye gr">Métricas de salud del ecosistema</span>
+      <ul class="lst">
+        <li><strong>GuanaPoints emitidos vs canjeados</strong> — si el ratio baja, el ecosistema pierde valor</li>
+        <li><strong>Cupones con vencimiento 60d activos</strong> — indica qué tan vivos están los embajadores</li>
+        <li><strong>Tiempo de activación aliado</strong> — objetivo &lt; 24 horas desde registro</li>
+        <li><strong>NPS turista post-servicio</strong> — objetivo &gt; 70</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="eye gold">Hitos de validación</span>
+      <ul class="lst">
+        <li><strong>Break-even:</strong> 10+ aliados activos, mes 1-2</li>
+        <li><strong>Product-Market Fit:</strong> 30%+ reservas recurrentes</li>
+        <li><strong>Escala:</strong> 80 aliados + 50 embajadores en mes 6</li>
+        <li><strong>Fundraising:</strong> $16M COP utilidad mensual sostenida</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.s').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO — Programa de Embajadores · Mayo 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#00E5CC; --ocean:#004060; --deep:#060E18;
+  --bg:#0B1622; --card:#101E2C; --card2:#0D1928;
+  --border:rgba(0,229,204,0.14); --border2:rgba(255,255,255,0.07);
+  --gold:#FFB74D; --coral:#FF6B6B; --purple:#A78BFA;
+  --orange:#F5831F; --green:#4ADE80; --sky:#38BDF8; --rose:#F472B6;
+  --cream:#F0F4F8; --muted:#6B8A9E;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--cream);line-height:1.5}
+.nav{background:rgba(6,14,24,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:0;overflow-x:auto;position:sticky;top:0;z-index:100;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nb{font-size:13px;font-weight:700;color:var(--muted);padding:14px 14px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;font-family:'Outfit',sans-serif}
+.nb.on,.nb:hover{color:var(--teal);border-bottom-color:var(--teal)}
+.s{display:none;padding:28px 18px 80px;max-width:960px;margin:0 auto}
+.s.on{display:block}
+.hero{background:linear-gradient(135deg,#003040 0%,var(--deep) 70%);padding:52px 24px 44px;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+.hero::before{content:'';position:absolute;top:-100px;right:-60px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(0,229,204,.07) 0%,transparent 70%);pointer-events:none}
+.h-eye{font-size:12px;letter-spacing:4px;color:var(--teal);text-transform:uppercase;margin-bottom:10px;font-weight:700}
+.h-h1{font-size:clamp(28px,5vw,52px);font-weight:800;line-height:1.1;margin-bottom:10px}
+.h-h1 span{color:var(--teal)}
+.h-sub{font-size:15px;color:var(--muted);max-width:580px;font-weight:300;line-height:1.7}
+.h-date{display:inline-block;font-size:13px;font-weight:700;color:var(--orange);background:rgba(245,131,31,.1);border:1px solid rgba(245,131,31,.2);padding:4px 14px;border-radius:100px;margin-top:16px}
+.card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:22px;margin-bottom:14px}
+.card.acc{border-color:var(--border);background:var(--card2)}
+.eye{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:8px;display:block}
+.eye.gold{color:var(--gold)}.eye.or{color:var(--orange)}.eye.gr{color:var(--green)}.eye.pu{color:var(--purple)}.eye.coral{color:var(--coral)}
+.stitle{font-size:26px;font-weight:800;margin-bottom:4px}
+.ssub{font-size:14px;color:var(--muted);margin-bottom:24px;font-weight:300}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:100px}
+.badge.ok{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.badge.pend{background:rgba(255,183,77,.12);color:var(--gold);border:1px solid rgba(255,183,77,.2)}
+.badge.next{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.hl{background:rgba(0,229,204,.06);border-left:3px solid var(--teal);border-radius:0 10px 10px 0;padding:14px 18px;margin:12px 0;font-size:15px;color:var(--cream);line-height:1.7}
+.hl.gold{background:rgba(255,183,77,.06);border-left-color:var(--gold)}
+.hl.or{background:rgba(245,131,31,.07);border-left-color:var(--orange)}
+.hl.pu{background:rgba(167,139,250,.06);border-left-color:var(--purple)}
+.hl.coral{background:rgba(255,107,107,.06);border-left-color:var(--coral)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+.tbl th{text-align:left;padding:9px 10px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border2);font-weight:600}
+.tbl td{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--muted);vertical-align:top}
+.tbl tr:last-child td{border:none}
+.tbl .bold{font-weight:700;color:var(--cream)}
+.tbl .tg{color:var(--teal);font-weight:700}
+ul.lst{list-style:none}
+ul.lst li{font-size:14px;color:var(--muted);padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:8px;align-items:flex-start}
+ul.lst li:last-child{border:none}
+ul.lst li::before{content:'→';color:var(--teal);flex-shrink:0}
+ul.lst li strong{color:var(--cream)}
+.chip{font-size:12px;font-weight:600;padding:3px 11px;border-radius:100px;background:rgba(255,255,255,.06);color:var(--cream);display:inline-block}
+.chip.t{background:rgba(0,229,204,.12);color:var(--teal)}
+.chip.g{background:rgba(255,183,77,.12);color:var(--gold)}
+.chip.p{background:rgba(167,139,250,.12);color:var(--purple)}
+.chip.o{background:rgba(245,131,31,.12);color:var(--orange)}
+.chip.gr{background:rgba(74,222,128,.12);color:var(--green)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+/* Profile cards */
+.profile{border-radius:14px;padding:22px;margin-bottom:12px}
+.profile-header{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.profile-icon{font-size:36px}
+.profile-name{font-size:18px;font-weight:800;color:var(--cream)}
+.profile-tag{font-size:11px;font-weight:700;padding:3px 12px;border-radius:100px;margin-top:4px;display:inline-block}
+/* Level cards */
+.level{border-radius:10px;padding:14px;border:1px solid var(--border2)}
+.level-num{font-size:26px;font-weight:800;margin-bottom:2px}
+.level-name{font-size:14px;font-weight:700;color:var(--cream);margin-bottom:4px}
+.level-req{font-size:12px;color:var(--muted)}
+/* Funnel step */
+.step{display:grid;grid-template-columns:36px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:start}
+.step:last-child{border:none}
+.step-num{width:36px;height:36px;border-radius:50%;background:rgba(0,229,204,.12);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--teal);font-size:14px;flex-shrink:0}
+.step-title{font-weight:700;color:var(--cream);margin-bottom:3px}
+.step-body{font-size:14px;color:var(--muted);line-height:1.6}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div style="max-width:960px;margin:0 auto">
+    <div class="h-eye">GuanaGO · Comunidad</div>
+    <h1 class="h-h1">Programa de <span>Embajadores</span></h1>
+    <p class="h-sub">El isleño que ya recomienda por WhatsApp gratis, ahora gana comisión real. 3 perfiles, 4 niveles, 1 mecanismo que se retroalimenta solo.</p>
+    <span class="h-date">Mayo 2026</span>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nb on" onclick="show('perfiles',this)">3 Perfiles</button>
+  <button class="nb" onclick="show('mecanica',this)">Mecánica</button>
+  <button class="nb" onclick="show('beneficios',this)">Beneficios</button>
+  <button class="nb" onclick="show('herramientas',this)">Herramientas</button>
+  <button class="nb" onclick="show('airtable',this)">Airtable</button>
+</nav>
+
+<!-- PERFILES -->
+<div id="perfiles" class="s on">
+  <div class="stitle">Los 3 Perfiles de Embajador</div>
+  <p class="ssub">Motivaciones distintas, misma mecánica base — beneficios diferenciados</p>
+
+  <div class="profile" style="background:rgba(139,90,0,.08);border:1px solid rgba(255,183,77,.2)">
+    <div class="profile-header">
+      <div class="profile-icon">🤎</div>
+      <div>
+        <div class="profile-name">Raizal Ancestral</div>
+        <span class="profile-tag" style="background:rgba(255,183,77,.12);color:var(--gold)">Embajador Cultural</span>
+      </div>
+    </div>
+    <div class="g2">
+      <div>
+        <span class="eye gold">Motivación principal</span>
+        <p style="font-size:14px;color:var(--muted);line-height:1.7">No lo mueve solo el dinero. Quiere <strong style="color:var(--cream)">reconocimiento cultural</strong> — que se vea que él representa la identidad raizal auténtica de la isla. El badge "Raizal Auténtico" desde el día 1 tiene más valor simbólico que la primera comisión.</p>
+        <div class="chips" style="margin-top:10px">
+          <span class="chip g">Badge Raizal Auténtico</span>
+          <span class="chip o">Cupón Coco ART</span>
+          <span class="chip t">Cupos exclusivos</span>
+        </div>
+      </div>
+      <div>
+        <span class="eye gold">Beneficios diferenciados</span>
+        <ul class="lst">
+          <li><strong>Badge "Raizal Auténtico"</strong> visible en app desde el registro</li>
+          <li><strong>Cupón automático para Coco ART</strong> (galería, artesanía) al registrarse</li>
+          <li><strong>Cupos prioritarios</strong> en experiencias culturales exclusivas (capacidad limitada)</li>
+          <li><strong>Invitación a eventos GuanaGO</strong> como voz de la comunidad</li>
+          <li>Comisión base 8% + 2% extra por referidos que compran tours raizales</li>
+        </ul>
+      </div>
+    </div>
+    <div class="hl gold" style="margin-top:12px">
+      <strong>Insight:</strong> Este perfil es el más difícil de conseguir pero el más valioso. Su recomendación tiene una autenticidad que ninguna campaña de marketing puede replicar.
+    </div>
+  </div>
+
+  <div class="profile" style="background:rgba(0,64,96,.15);border:1px solid rgba(0,229,204,.15)">
+    <div class="profile-header">
+      <div class="profile-icon">🏘️</div>
+      <div>
+        <div class="profile-name">Residente OCCRE</div>
+        <span class="profile-tag" style="background:rgba(0,229,204,.12);color:var(--teal)">Embajador Comunitario</span>
+      </div>
+    </div>
+    <div class="g2">
+      <div>
+        <span class="eye">Motivación principal</span>
+        <p style="font-size:14px;color:var(--muted);line-height:1.7">Quiere <strong style="color:var(--cream)">sentirse parte sin complicarse</strong>. Vive en la isla hace años, tiene OCCRE, parte de la comunidad. Lo motiva el <strong style="color:var(--cream)">ingreso extra fácil</strong> + descuentos en servicios que ya usa en el día a día. El link de WhatsApp es su herramienta natural.</p>
+        <div class="chips" style="margin-top:10px">
+          <span class="chip t">WhatsApp Link</span>
+          <span class="chip gr">Ingreso extra</span>
+          <span class="chip">Descuentos locales</span>
+        </div>
+      </div>
+      <div>
+        <span class="eye">Beneficios diferenciados</span>
+        <ul class="lst">
+          <li><strong>Link de referido personalizado</strong> con QR descargable para WhatsApp</li>
+          <li><strong>Comisión 5% en COP</strong> depositada mensualmente (simple, transparente)</li>
+          <li><strong>Descuentos 10-20%</strong> en restaurantes y servicios aliados del ecosistema</li>
+          <li><strong>1 cupón de cena mensual</strong> para un aliado gastronómico (voucher 60 días)</li>
+          <li>Dashboard simple en app: cuánto he ganado, cuántos referidos activos</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile" style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.2)">
+    <div class="profile-header">
+      <div class="profile-icon">🎯</div>
+      <div>
+        <div class="profile-name">Freelancer Local</div>
+        <span class="profile-tag" style="background:rgba(167,139,250,.12);color:var(--purple)">Embajador Profesional</span>
+      </div>
+    </div>
+    <div class="g2">
+      <div>
+        <span class="eye pu">Motivación principal</span>
+        <p style="font-size:14px;color:var(--muted);line-height:1.7">Es el mayor <strong style="color:var(--coral)">riesgo</strong> y la mayor <strong style="color:var(--green)">oportunidad</strong>. Ya vende tours de forma independiente — si no le das valor real, te <strong style="color:var(--cream)">bypass</strong>. Lo que lo retiene: catálogo más amplio del que consigue solo, herramienta profesional para mostrar a clientes, y pago competitivo.</p>
+        <div class="chips" style="margin-top:10px">
+          <span class="chip p">Catálogo amplio</span>
+          <span class="chip t">Herramienta pro</span>
+          <span class="chip gr">Mejor comisión</span>
+        </div>
+      </div>
+      <div>
+        <span class="eye pu">Beneficios diferenciados</span>
+        <ul class="lst">
+          <li><strong>Comisión 10%</strong> (la más alta — compite con su margen actual de intermediario)</li>
+          <li><strong>Catálogo amplio</strong>: accede a todos los aliados, no solo los que conoce</li>
+          <li><strong>Herramienta de cotización</strong> que puede mostrar en el celular al cliente en tiempo real</li>
+          <li><strong>Perfil verificado</strong> en la app con foto y especialidades</li>
+          <li><strong>2 productos gratis/mes</strong> (para que experimente los tours y los venda mejor)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="hl pu">
+      <strong>Estrategia:</strong> Si un freelancer ya mueve 5+ reservas/mes por su cuenta, convertirlo en embajador verificado puede doblar su volumen y triplicar su ingreso. Ese caso de éxito es el mejor marketing.
+    </div>
+  </div>
+</div>
+
+<!-- MECÁNICA -->
+<div id="mecanica" class="s">
+  <div class="stitle">Cómo Funciona la Mecánica</div>
+  <p class="ssub">El ciclo que se retroalimenta solo — el cupón de 60 días es la pieza clave</p>
+
+  <div class="card acc">
+    <span class="eye">Flujo del embajador (paso a paso)</span>
+    <div style="margin-top:14px">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <div class="step-title">Registro en guanago.travel/embajador</div>
+          <div class="step-body">Formulario de 5 campos: nombre, WhatsApp, tipo de perfil (Raizal / Residente / Freelancer), referencia de aliado conocido. Se crea record en Airtable tabla <code style="color:var(--teal);background:rgba(0,229,204,.08);padding:2px 6px;border-radius:4px">Embajadores</code>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <div class="step-title">Activación (Make.com trigger)</div>
+          <div class="step-body">Sky revisa y aprueba en Airtable → campo Estado cambia a "Activo" → Make.com genera el link de referido único (UTM + código personal) → WhatsApp automático al embajador con su link y QR.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <div class="step-title">El embajador comparte su link</div>
+          <div class="step-body">Copia el link / descarga el QR → lo comparte por WhatsApp con turistas o lo pega en sus redes. Cada clic queda trazado con UTM. Cada reserva generada vincula el embajador automáticamente.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div>
+          <div class="step-title">El turista reserva</div>
+          <div class="step-body">El turista abre el link → llega al cotizador con el código del embajador pre-cargado → selecciona servicio → reserva → paga. La reserva se crea en Airtable <code style="color:var(--teal);background:rgba(0,229,204,.08);padding:2px 6px;border-radius:4px">Reservas</code> con campo <code style="color:var(--teal);background:rgba(0,229,204,.08);padding:2px 6px;border-radius:4px">EmbajadorID</code>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div>
+          <div class="step-title">El embajador recibe su recompensa</div>
+          <div class="step-body">Make.com detecta la reserva completada → calcula comisión según perfil → actualiza <code style="color:var(--teal);background:rgba(0,229,204,.08);padding:2px 6px;border-radius:4px">Ventas_Promotor</code> → envía WhatsApp de confirmación con monto ganado → genera cupón digital si aplica.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div>
+          <div class="step-title">El cupón activa el ciclo</div>
+          <div class="step-body">El embajador recibe cupón de cena (60 días). Va al restaurante aliado para no perderlo. Mientras come, recomienda a compañeros de mesa. Genera 2 nuevas reservas. Recibe nuevo cupón. El ecosistema se retroalimenta.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hl">
+    <strong>El mecanismo clave:</strong> El cupón con vencimiento de 60 días crea urgencia de uso real. El embajador va al aliado → mientras está ahí recomienda a otros → genera nuevas referencias. El ecosistema crece con cero costo de marketing adicional.
+  </div>
+</div>
+
+<!-- BENEFICIOS -->
+<div id="beneficios" class="s">
+  <div class="stitle">Beneficios por Nivel</div>
+  <p class="ssub">4 niveles de embajador con beneficios escalonados — el nivel sube con actividad</p>
+
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+    <div class="level" style="border-color:rgba(107,138,158,.3)">
+      <div class="level-num" style="color:var(--muted)">L1</div>
+      <div class="level-name">Explorador</div>
+      <div class="level-req">0–2 referidos/mes</div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+        <div style="padding:4px 0;border-bottom:1px solid var(--border2)">Link de referido</div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--border2)">Comisión 5%</div>
+        <div style="padding:4px 0">Dashboard básico</div>
+      </div>
+    </div>
+    <div class="level" style="border-color:rgba(0,229,204,.25)">
+      <div class="level-num" style="color:var(--teal)">L2</div>
+      <div class="level-name">Conector</div>
+      <div class="level-req">3–7 referidos/mes</div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+        <div style="padding:4px 0;border-bottom:1px solid var(--border2)">Comisión 7%</div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--border2)">1 cupón cena/mes</div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--border2)">QR personalizado</div>
+        <div style="padding:4px 0">Badge en app</div>
+      </div>
+    </div>
+    <div class="level" style="border-color:rgba(255,183,77,.3)">
+      <div class="level-num" style="color:var(--gold)">L3</div>
+      <div class="level-name">Guardián</div>
+      <div class="level-req">8–15 referidos/mes</div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+        <div style="padding:4px 0;border-bottom:1px solid var(--border2)">Comisión 9%</div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--border2)">2 cupones/mes</div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--border2)">1 tour gratis/mes</div>
+        <div style="padding:4px 0">Pago semanal</div>
+      </div>
+    </div>
+    <div class="level" style="border-color:rgba(167,139,250,.3)">
+      <div class="level-num" style="color:var(--purple)">L4</div>
+      <div class="level-name">Embajador Elite</div>
+      <div class="level-req">16+ referidos/mes</div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+        <div style="padding:4px 0;border-bottom:1px solid var(--border2)">Comisión 12%</div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--border2)">3 cupones/mes</div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--border2)">2 tours gratis/mes</div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--border2)">Pago semanal</div>
+        <div style="padding:4px 0">Mención en redes</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card acc">
+    <span class="eye">Tipos de Recompensa — Las 3 Capas</span>
+    <div class="g3" style="margin-top:12px">
+      <div style="padding:14px;background:rgba(0,229,204,.05);border-radius:10px;border:1px solid var(--border2)">
+        <div style="font-size:20px;margin-bottom:8px">🏆</div>
+        <div style="font-weight:700;color:var(--cream);margin-bottom:4px">GuanaPoints</div>
+        <div style="font-size:13px;color:var(--muted)">Acumulables, canjeables en toda la red de aliados. Se valorizan con cada nuevo aliado que se une. El embajador tiene incentivo en que la red crezca.</div>
+      </div>
+      <div style="padding:14px;background:rgba(245,131,31,.05);border-radius:10px;border:1px solid var(--border2)">
+        <div style="font-size:20px;margin-bottom:8px">🎟️</div>
+        <div style="font-weight:700;color:var(--cream);margin-bottom:4px">Cupones físicos/digitales</div>
+        <div style="font-size:13px;color:var(--muted)">Vencimiento 60 días — crean urgencia. Son trueque con aliados ($0 costo para GuanaGO). Cena, entrada, descuento. Retención inmediata.</div>
+      </div>
+      <div style="padding:14px;background:rgba(74,222,128,.05);border-radius:10px;border:1px solid var(--border2)">
+        <div style="font-size:20px;margin-bottom:8px">💵</div>
+        <div style="font-weight:700;color:var(--cream);margin-bottom:4px">Efectivo COP</div>
+        <div style="font-size:13px;color:var(--muted)">Sale del margen de comisión de GuanaGO. $20K–$60K COP por reserva según nivel y tipo de servicio. Transparente y predecible.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:rgba(74,222,128,.2);margin-top:6px">
+    <span class="eye gr">Proyección de ingresos embajador activo</span>
+    <table class="tbl" style="margin-top:10px">
+      <thead>
+        <tr>
+          <th>Nivel</th>
+          <th>Referidos/mes</th>
+          <th>Ticket prom.</th>
+          <th>Comisión</th>
+          <th>Ingreso estimado/mes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">L1 Explorador</td>
+          <td>2</td>
+          <td>$300K COP</td>
+          <td>5%</td>
+          <td class="tg">$30K COP</td>
+        </tr>
+        <tr>
+          <td class="bold">L2 Conector</td>
+          <td>5</td>
+          <td>$300K COP</td>
+          <td>7%</td>
+          <td class="tg">$105K COP</td>
+        </tr>
+        <tr>
+          <td class="bold">L3 Guardián</td>
+          <td>12</td>
+          <td>$350K COP</td>
+          <td>9%</td>
+          <td class="tg">$378K COP</td>
+        </tr>
+        <tr>
+          <td class="bold">L4 Elite</td>
+          <td>20+</td>
+          <td>$400K COP</td>
+          <td>12%</td>
+          <td class="tg">$960K+ COP</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- HERRAMIENTAS -->
+<div id="herramientas" class="s">
+  <div class="stitle">Herramientas del Embajador</div>
+  <p class="ssub">Lo que recibe cada embajador para operar desde el primer día</p>
+
+  <div class="g2">
+    <div class="card">
+      <span class="eye">Kit digital de bienvenida</span>
+      <ul class="lst">
+        <li><strong>Link de referido único</strong> → guanago.travel/r/[codigo]</li>
+        <li><strong>QR descargable</strong> en PNG y PDF para imprimir o compartir</li>
+        <li><strong>Story para WhatsApp</strong> — imagen lista para compartir en estado</li>
+        <li><strong>Mini-guía de 1 página</strong> "Cómo ganar con GuanaGO"</li>
+        <li><strong>Mensaje de WhatsApp pre-escrito</strong> para enviar a turistas</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="eye">Dashboard en app (pantalla embajador)</span>
+      <ul class="lst">
+        <li><strong>Referidos activos este mes</strong> (número + lista)</li>
+        <li><strong>Reservas completadas</strong> y en proceso</li>
+        <li><strong>Comisión ganada</strong> (acumulada + este mes)</li>
+        <li><strong>GuanaPoints</strong> disponibles para canjear</li>
+        <li><strong>Cupones activos</strong> con días restantes (60d countdown)</li>
+        <li><strong>Nivel actual</strong> y progreso al siguiente nivel</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card acc">
+    <span class="eye">Piezas físicas para embajadores (punto de venta)</span>
+    <div class="g3" style="margin-top:12px">
+      <div style="text-align:center;padding:14px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--border2)">
+        <div style="font-size:28px;margin-bottom:8px">🏷️</div>
+        <div style="font-weight:700;color:var(--cream);margin-bottom:4px">Sticker QR</div>
+        <div style="font-size:12px;color:var(--muted)">Para pegar en restaurante, hotel, tienda. Escanear = llega al cotizador con código del embajador.</div>
+      </div>
+      <div style="text-align:center;padding:14px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--border2)">
+        <div style="font-size:28px;margin-bottom:8px">🃏</div>
+        <div style="font-weight:700;color:var(--cream);margin-bottom:4px">Tarjeta de presentación</div>
+        <div style="font-size:12px;color:var(--muted)">Con nombre del embajador + QR personalizado. "Soy embajador GuanaGO — escanea y diseña tu viaje."</div>
+      </div>
+      <div style="text-align:center;padding:14px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--border2)">
+        <div style="font-size:28px;margin-bottom:8px">🎫</div>
+        <div style="font-weight:700;color:var(--cream);margin-bottom:4px">Cupón impreso</div>
+        <div style="font-size:12px;color:var(--muted)">Para dar al turista en el momento. "10% descuento en tu próximo tour — reserva con este cupón."</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AIRTABLE -->
+<div id="airtable" class="s">
+  <div class="stitle">Implementación Airtable</div>
+  <p class="ssub">Tabla Embajadores + flujo Make.com para automatizar todo el ciclo</p>
+
+  <div class="card acc">
+    <span class="eye">Tabla: Embajadores (nueva)</span>
+    <table class="tbl" style="margin-top:10px">
+      <thead>
+        <tr>
+          <th>Campo</th>
+          <th>Tipo</th>
+          <th>Descripción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="bold">Nombre</td><td>Text</td><td class="tg">Nombre completo del embajador</td></tr>
+        <tr><td class="bold">WhatsApp</td><td>Phone</td><td>Número con código de país</td></tr>
+        <tr><td class="bold">TipoPerfil</td><td>Single Select</td><td>Raizal / Residente OCCRE / Freelancer</td></tr>
+        <tr><td class="bold">Estado</td><td>Single Select</td><td>Pendiente / Activo / Pausado / Inactivo</td></tr>
+        <tr><td class="bold">Nivel</td><td>Single Select</td><td>L1 / L2 / L3 / L4</td></tr>
+        <tr><td class="bold">CodigoRef</td><td>Text</td><td>Código único ej: JUAN-SAI-001</td></tr>
+        <tr><td class="bold">LinkReferido</td><td>URL</td><td>guanago.travel/r/[codigo]</td></tr>
+        <tr><td class="bold">ReferidosEste Mes</td><td>Count (linked)</td><td>Auto-count de Ventas_Promotor</td></tr>
+        <tr><td class="bold">ComisionTotal</td><td>Currency</td><td>Suma histórica en COP</td></tr>
+        <tr><td class="bold">CuponesActivos</td><td>Number</td><td>Cupones vigentes disponibles</td></tr>
+        <tr><td class="bold">GuanaPoints</td><td>Number</td><td>Puntos acumulados disponibles</td></tr>
+        <tr><td class="bold">FechaRegistro</td><td>Date</td><td>Fecha de alta</td></tr>
+        <tr><td class="bold">AliadoReferente</td><td>Link → Aliados_Beta</td><td>Quién lo invitó al ecosistema</td></tr>
+        <tr><td class="bold">Notas</td><td>Long text</td><td>Observaciones del equipo</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="margin-top:6px">
+    <span class="eye gold">5 Automatizaciones Make.com para embajadores</span>
+    <ul class="lst" style="margin-top:10px">
+      <li><strong>Trigger Registro</strong>: nuevo record en Embajadores → WhatsApp bienvenida al equipo para revisar</li>
+      <li><strong>Trigger Activación</strong>: Estado cambia a "Activo" → genera link referido → envía kit digital por WhatsApp al embajador</li>
+      <li><strong>Trigger Reserva Completada</strong>: nueva Venta_Promotor con EmbajadorID → calcula comisión → actualiza ComisionTotal → envía WhatsApp "¡Ganaste $X!"</li>
+      <li><strong>Trigger Nivel Up</strong>: ReferidosEsteMes supera umbral → actualiza Nivel → envía WhatsApp de felicitación con nuevos beneficios</li>
+      <li><strong>Trigger Cupón Generado</strong>: Estado cambio + nivel ≥ L2 → genera cupón digital → registra en tabla Cupones con vencimiento 60 días</li>
+    </ul>
+  </div>
+
+  <div class="hl or" style="margin-top:14px">
+    <strong>Próximos pasos técnicos:</strong> Crear tabla <code style="font-family:'IBM Plex Mono';background:rgba(245,131,31,.1);padding:2px 6px;border-radius:4px">Embajadores</code> en Airtable → crear página <code style="font-family:'IBM Plex Mono';background:rgba(245,131,31,.1);padding:2px 6px;border-radius:4px">guanago.travel/embajador</code> → conectar los 5 escenarios en Make.com.
+  </div>
+</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.s').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO — Paquetes & Promociones · Mayo 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#00E5CC; --ocean:#004060; --deep:#060E18;
+  --bg:#0B1622; --card:#101E2C; --card2:#0D1928;
+  --border:rgba(0,229,204,0.14); --border2:rgba(255,255,255,0.07);
+  --gold:#FFB74D; --coral:#FF6B6B; --purple:#A78BFA;
+  --orange:#F5831F; --green:#4ADE80; --sky:#38BDF8;
+  --cream:#F0F4F8; --muted:#6B8A9E;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--cream);line-height:1.5}
+.nav{background:rgba(6,14,24,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:0;overflow-x:auto;position:sticky;top:0;z-index:100;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nb{font-size:13px;font-weight:700;color:var(--muted);padding:14px 14px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;font-family:'Outfit',sans-serif}
+.nb.on,.nb:hover{color:var(--teal);border-bottom-color:var(--teal)}
+.s{display:none;padding:28px 18px 80px;max-width:960px;margin:0 auto}
+.s.on{display:block}
+.hero{background:linear-gradient(135deg,#003020 0%,var(--deep) 70%);padding:52px 24px 44px;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+.h-eye{font-size:12px;letter-spacing:4px;color:var(--teal);text-transform:uppercase;margin-bottom:10px;font-weight:700}
+.h-h1{font-size:clamp(28px,5vw,52px);font-weight:800;line-height:1.1;margin-bottom:10px}
+.h-h1 span{color:var(--teal)}
+.h-sub{font-size:15px;color:var(--muted);max-width:580px;font-weight:300;line-height:1.7}
+.h-date{display:inline-block;font-size:13px;font-weight:700;color:var(--orange);background:rgba(245,131,31,.1);border:1px solid rgba(245,131,31,.2);padding:4px 14px;border-radius:100px;margin-top:16px}
+.card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:22px;margin-bottom:14px}
+.card.acc{border-color:var(--border);background:var(--card2)}
+.eye{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:8px;display:block}
+.eye.gold{color:var(--gold)}.eye.or{color:var(--orange)}.eye.gr{color:var(--green)}.eye.pu{color:var(--purple)}.eye.coral{color:var(--coral)}
+.stitle{font-size:26px;font-weight:800;margin-bottom:4px}
+.ssub{font-size:14px;color:var(--muted);margin-bottom:24px;font-weight:300}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:100px}
+.badge.ok{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.badge.pend{background:rgba(255,183,77,.12);color:var(--gold);border:1px solid rgba(255,183,77,.2)}
+.badge.next{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.badge.crit{background:rgba(255,107,107,.12);color:var(--coral);border:1px solid rgba(255,107,107,.2)}
+.hl{background:rgba(0,229,204,.06);border-left:3px solid var(--teal);border-radius:0 10px 10px 0;padding:14px 18px;margin:12px 0;font-size:15px;color:var(--cream);line-height:1.7}
+.hl.gold{background:rgba(255,183,77,.06);border-left-color:var(--gold)}
+.hl.or{background:rgba(245,131,31,.07);border-left-color:var(--orange)}
+.hl.gr{background:rgba(74,222,128,.06);border-left-color:var(--green)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+.tbl th{text-align:left;padding:9px 10px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border2);font-weight:600}
+.tbl td{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--muted);vertical-align:top}
+.tbl tr:last-child td{border:none}
+.tbl .bold{font-weight:700;color:var(--cream)}
+.tbl .tg{color:var(--teal);font-weight:700}
+ul.lst{list-style:none}
+ul.lst li{font-size:14px;color:var(--muted);padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:8px;align-items:flex-start}
+ul.lst li:last-child{border:none}
+ul.lst li::before{content:'→';color:var(--teal);flex-shrink:0}
+ul.lst li strong{color:var(--cream)}
+.chip{font-size:12px;font-weight:600;padding:3px 11px;border-radius:100px;background:rgba(255,255,255,.06);color:var(--cream);display:inline-block}
+.chip.t{background:rgba(0,229,204,.12);color:var(--teal)}
+.chip.g{background:rgba(255,183,77,.12);color:var(--gold)}
+.chip.p{background:rgba(167,139,250,.12);color:var(--purple)}
+.chip.o{background:rgba(245,131,31,.12);color:var(--orange)}
+.chip.gr{background:rgba(74,222,128,.12);color:var(--green)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+/* Paquete card */
+.pkg{border-radius:14px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden}
+.pkg-price{font-size:32px;font-weight:800;margin-bottom:4px}
+.pkg-name{font-size:18px;font-weight:700;margin-bottom:14px}
+.pkg-feature{font-size:13px;color:var(--muted);padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:8px}
+.pkg-feature::before{content:'✓';flex-shrink:0}
+/* Promo card */
+.promo{background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:14px;display:flex;gap:12px;align-items:flex-start}
+.promo-state{font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;flex-shrink:0;margin-top:2px}
+/* Step */
+.step{display:grid;grid-template-columns:32px 1fr;gap:10px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:start}
+.step:last-child{border:none}
+.step-num{width:32px;height:32px;border-radius:50%;background:rgba(0,229,204,.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--teal);font-size:13px;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div style="max-width:960px;margin:0 auto">
+    <div class="h-eye">GuanaGO · Comercial</div>
+    <h1 class="h-h1">Paquetes & <span>Promociones</span></h1>
+    <p class="h-sub">3 paquetes turísticos B2C con escala por grupo, banco de promociones con flujo de aprobación, y distribución automática en redes.</p>
+    <span class="h-date">Mayo 2026</span>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nb on" onclick="show('paquetes',this)">Paquetes</button>
+  <button class="nb" onclick="show('escala',this)">Escala por Grupo</button>
+  <button class="nb" onclick="show('promos',this)">Banco de Promos</button>
+  <button class="nb" onclick="show('distribucion',this)">Distribución</button>
+  <button class="nb" onclick="show('airtable',this)">Airtable</button>
+</nav>
+
+<!-- PAQUETES -->
+<div id="paquetes" class="s on">
+  <div class="stitle">Paquetes Turísticos B2C</div>
+  <p class="ssub">3 paquetes base con precio, contenido y GuanaPoints incluidos</p>
+
+  <div class="g3">
+    <div class="pkg" style="background:rgba(0,64,96,.2);border:1px solid rgba(0,229,204,.2)">
+      <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:var(--teal)">Explorer</span>
+      <div class="pkg-price" style="color:var(--teal)">$180K</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">COP · por persona</div>
+      <div class="pkg-feature" style="color:var(--teal)::before{content:'✓'}"><span style="color:var(--teal)">✓</span> <span>1 tour principal (4h)</span></div>
+      <div class="pkg-feature"><span style="color:var(--teal)">✓</span> <span>Transporte incluido</span></div>
+      <div class="pkg-feature"><span style="color:var(--teal)">✓</span> <span>Guía certificado</span></div>
+      <div class="pkg-feature"><span style="color:var(--teal)">✓</span> <span>180 GuanaPoints</span></div>
+      <div class="pkg-feature"><span style="color:var(--muted)">·</span> <span style="color:var(--muted)">Sin almuerzo incluido</span></div>
+      <div class="pkg-feature"><span style="color:var(--muted)">·</span> <span style="color:var(--muted)">Sin acceso a eventos</span></div>
+      <div class="chips" style="margin-top:14px">
+        <span class="chip t">Mar</span><span class="chip t">Aventura</span>
+      </div>
+    </div>
+
+    <div class="pkg" style="background:rgba(245,131,31,.06);border:1px solid rgba(245,131,31,.3)">
+      <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:var(--orange)">Cultural ⭐ Popular</span>
+      <div class="pkg-price" style="color:var(--orange)">$280K</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">COP · por persona</div>
+      <div class="pkg-feature"><span style="color:var(--orange)">✓</span> <span>2 tours (mar + cultura)</span></div>
+      <div class="pkg-feature"><span style="color:var(--orange)">✓</span> <span>Almuerzo raizal incluido</span></div>
+      <div class="pkg-feature"><span style="color:var(--orange)">✓</span> <span>Transporte + guía</span></div>
+      <div class="pkg-feature"><span style="color:var(--orange)">✓</span> <span>280 GuanaPoints</span></div>
+      <div class="pkg-feature"><span style="color:var(--orange)">✓</span> <span>Descuento 10% en aliados</span></div>
+      <div class="pkg-feature"><span style="color:var(--muted)">·</span> <span style="color:var(--muted)">Sin acceso VIP a eventos</span></div>
+      <div class="chips" style="margin-top:14px">
+        <span class="chip o">Cultura</span><span class="chip o">Gastronomía</span><span class="chip o">Mar</span>
+      </div>
+    </div>
+
+    <div class="pkg" style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.3)">
+      <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:var(--purple)">VIP Premium</span>
+      <div class="pkg-price" style="color:var(--purple)">$480K</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">COP · por persona</div>
+      <div class="pkg-feature"><span style="color:var(--purple)">✓</span> <span>3 tours (selección completa)</span></div>
+      <div class="pkg-feature"><span style="color:var(--purple)">✓</span> <span>Almuerzo + cena raizal</span></div>
+      <div class="pkg-feature"><span style="color:var(--purple)">✓</span> <span>Transporte privado</span></div>
+      <div class="pkg-feature"><span style="color:var(--purple)">✓</span> <span>480 GuanaPoints</span></div>
+      <div class="pkg-feature"><span style="color:var(--purple)">✓</span> <span>Acceso Caribbean Night VIP</span></div>
+      <div class="pkg-feature"><span style="color:var(--purple)">✓</span> <span>Fotógrafo incluido (2h)</span></div>
+      <div class="chips" style="margin-top:14px">
+        <span class="chip p">Todo incluido</span><span class="chip p">VIP</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hl">
+    <strong>Lógica de precios:</strong> Cada paquete incluye GP equivalentes al precio base / 1000. El paquete Cultural es el más popular porque la relación precio/valor es óptima y el almuerzo raizal es el momento de mayor satisfacción del turista.
+  </div>
+</div>
+
+<!-- ESCALA POR GRUPO -->
+<div id="escala" class="s">
+  <div class="stitle">Escala por Grupo</div>
+  <p class="ssub">Más personas = más extras activados automáticamente</p>
+
+  <div class="card acc">
+    <span class="eye">Tabla de extras por tamaño de grupo</span>
+    <table class="tbl" style="margin-top:10px">
+      <thead>
+        <tr>
+          <th>Tamaño</th>
+          <th>Descuento</th>
+          <th>GP extra</th>
+          <th>Beneficio adicional</th>
+          <th>Paquetes aplica</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">Solo / Pareja (1-2)</td>
+          <td>Precio base</td>
+          <td>0 GP extra</td>
+          <td>Ninguno</td>
+          <td>Todos</td>
+        </tr>
+        <tr>
+          <td class="bold">Grupo pequeño (3-6)</td>
+          <td class="tg">-5%</td>
+          <td>+50 GP/persona</td>
+          <td>Coctel de bienvenida grupal</td>
+          <td>Cultural y VIP</td>
+        </tr>
+        <tr>
+          <td class="bold">Grupo mediano (7-15)</td>
+          <td class="tg">-10%</td>
+          <td>+100 GP/persona</td>
+          <td>Coctel + 1 actividad extra</td>
+          <td>Cultural y VIP</td>
+        </tr>
+        <tr>
+          <td class="bold">Grupo grande (16-30)</td>
+          <td class="tg">-15%</td>
+          <td>+150 GP/persona</td>
+          <td>Coctel + actividad + sesión foto grupal</td>
+          <td>Cultural y VIP</td>
+        </tr>
+        <tr>
+          <td class="bold">Evento corporativo / celebración (31+)</td>
+          <td class="tg">-20%</td>
+          <td>+200 GP/persona</td>
+          <td>Todo lo anterior + coordinador dedicado + acceso Caribbean Night</td>
+          <td>Solo VIP (cotización especial)</td>
+        </tr>
+        <tr>
+          <td class="bold">Grupo XLARGE (150+)</td>
+          <td><span class="badge pend">Cotización especial</span></td>
+          <td>Negociable</td>
+          <td>Paquete ejecutivo personalizado con PDF</td>
+          <td>Cotizador B2B</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="g2">
+    <div class="card" style="border-color:rgba(0,229,204,.15)">
+      <span class="eye">Intereses que modifican el paquete</span>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">
+        <div style="padding:8px 12px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);border-radius:8px;text-align:center">
+          <div style="font-size:18px">🌊</div>
+          <div style="font-size:12px;color:var(--sky);margin-top:4px">Mar</div>
+        </div>
+        <div style="padding:8px 12px;background:rgba(255,183,77,.08);border:1px solid rgba(255,183,77,.2);border-radius:8px;text-align:center">
+          <div style="font-size:18px">🎭</div>
+          <div style="font-size:12px;color:var(--gold);margin-top:4px">Cultura</div>
+        </div>
+        <div style="padding:8px 12px;background:rgba(245,131,31,.08);border:1px solid rgba(245,131,31,.2);border-radius:8px;text-align:center">
+          <div style="font-size:18px">🍽️</div>
+          <div style="font-size:12px;color:var(--orange);margin-top:4px">Gastro</div>
+        </div>
+        <div style="padding:8px 12px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);border-radius:8px;text-align:center">
+          <div style="font-size:18px">🌃</div>
+          <div style="font-size:12px;color:var(--purple);margin-top:4px">Noche</div>
+        </div>
+        <div style="padding:8px 12px;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);border-radius:8px;text-align:center">
+          <div style="font-size:18px">📸</div>
+          <div style="font-size:12px;color:var(--coral);margin-top:4px">Foto</div>
+        </div>
+        <div style="padding:8px 12px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:8px;text-align:center">
+          <div style="font-size:18px">🧘</div>
+          <div style="font-size:12px;color:var(--green);margin-top:4px">Relax</div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px">El simulador del cotizador ajusta las recomendaciones de tours y extras según los intereses seleccionados.</p>
+    </div>
+    <div class="card" style="border-color:rgba(245,131,31,.15)">
+      <span class="eye or">Canales de compra que afectan el precio</span>
+      <table class="tbl" style="margin-top:8px">
+        <thead><tr><th>Canal</th><th>Modificador</th></tr></thead>
+        <tbody>
+          <tr><td class="bold">B2C directo app</td><td class="tg">Precio base</td></tr>
+          <tr><td class="bold">Via embajador (ref code)</td><td class="tg">-3% extra para el turista</td></tr>
+          <tr><td class="bold">Via OTA / agencia</td><td><span style="color:var(--muted)">Tarifa neta + comisión OTA</span></td></tr>
+          <tr><td class="bold">Pago anticipado (30d+)</td><td class="tg">-5% descuento early bird</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- BANCO DE PROMOS -->
+<div id="promos" class="s">
+  <div class="stitle">Banco de Promociones</div>
+  <p class="ssub">Donde se crean, aprueban y distribuyen las ofertas. Sky aprueba → Make.com distribuye automáticamente.</p>
+
+  <div class="card acc">
+    <span class="eye">Flujo de una promoción (estados)</span>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0">
+      <div style="padding:8px 14px;background:rgba(107,138,158,.1);border:1px solid rgba(107,138,158,.3);border-radius:8px;font-size:13px;font-weight:700;color:var(--muted)">1. Borrador</div>
+      <span style="color:var(--teal)">→</span>
+      <div style="padding:8px 14px;background:rgba(255,183,77,.08);border:1px solid rgba(255,183,77,.3);border-radius:8px;font-size:13px;font-weight:700;color:var(--gold)">2. En revisión</div>
+      <span style="color:var(--teal)">→</span>
+      <div style="padding:8px 14px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.3);border-radius:8px;font-size:13px;font-weight:700;color:var(--green)">3. Aprobado</div>
+      <span style="color:var(--teal)">→</span>
+      <div style="padding:8px 14px;background:rgba(0,229,204,.08);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;color:var(--teal)">4. Publicado</div>
+      <span style="color:var(--teal)">→</span>
+      <div style="padding:8px 14px;background:rgba(107,138,158,.06);border:1px solid rgba(107,138,158,.2);border-radius:8px;font-size:13px;font-weight:700;color:var(--muted)">5. Vencido</div>
+    </div>
+  </div>
+
+  <div style="display:grid;gap:8px">
+    <div class="promo">
+      <span class="promo-state" style="background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)">Publicada</span>
+      <div style="flex:1">
+        <div style="font-weight:700;color:var(--cream)">2x1 en snorkel — solo fines de semana</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Operador: Johnny Cay Tours · Vence: 31 mayo · Canal: App + Instagram</div>
+      </div>
+      <span style="font-size:14px;font-weight:700;color:var(--green)">-50%</span>
+    </div>
+    <div class="promo">
+      <span class="promo-state" style="background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)">Publicada</span>
+      <div style="flex:1">
+        <div style="font-weight:700;color:var(--cream)">Cena raizal para 2 — Restaurante Morgan</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Válido para titulares GuanaPoints L2+ · Vence: 15 junio · Canal: App</div>
+      </div>
+      <span style="font-size:14px;font-weight:700;color:var(--green)">500 GP</span>
+    </div>
+    <div class="promo">
+      <span class="promo-state" style="background:rgba(255,183,77,.12);color:var(--gold);border:1px solid rgba(255,183,77,.2)">En revisión</span>
+      <div style="flex:1">
+        <div style="font-weight:700;color:var(--cream)">Paquete pareja — Tour + cena + Caribbean Night</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Combo especial temporada alta · Canal: App + Redes + OTA</div>
+      </div>
+      <span style="font-size:14px;font-weight:700;color:var(--gold)">$420K</span>
+    </div>
+    <div class="promo">
+      <span class="promo-state" style="background:rgba(107,138,158,.12);color:var(--muted);border:1px solid rgba(107,138,158,.2)">Borrador</span>
+      <div style="flex:1">
+        <div style="font-weight:700;color:var(--muted)">Descuento grupos LAMA — temporada buceo</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Pendiente confirmar disponibilidad con operador</div>
+      </div>
+      <span style="font-size:14px;font-weight:700;color:var(--muted)">-20%</span>
+    </div>
+  </div>
+
+  <div class="hl or" style="margin-top:14px">
+    <strong>El trigger más importante:</strong> Cuando el campo "Estado" de Banco_Promociones cambia a "Aprobado" en Airtable, Make.com detecta el cambio y publica automáticamente en todos los canales seleccionados — sin intervención manual.
+  </div>
+</div>
+
+<!-- DISTRIBUCIÓN -->
+<div id="distribucion" class="s">
+  <div class="stitle">Motor de Distribución</div>
+  <p class="ssub">Sky aprueba en Airtable → el contenido se distribuye solo en 6 pasos automáticos</p>
+
+  <div class="card acc">
+    <div style="margin-top:4px">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <div style="font-weight:700;color:var(--cream)">Sky aprueba en Airtable</div>
+          <div style="font-size:13px;color:var(--muted)">Cambia el campo Estado de "En revisión" a "Aprobado" en la tabla Banco_Promociones. Puede hacerlo desde el celular con la app de Airtable.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <div style="font-weight:700;color:var(--cream)">Make.com detecta el cambio</div>
+          <div style="font-size:13px;color:var(--muted)">Scenario de Make.com con trigger "Watch records" sobre Banco_Promociones — se activa cuando Estado = "Aprobado". Lee todos los campos de la promoción.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <div style="font-weight:700;color:var(--cream)">IA genera copy por canal</div>
+          <div style="font-size:13px;color:var(--muted)">Claude API genera variantes de copy adaptadas a cada canal seleccionado: Instagram (caption + hashtags), WhatsApp (mensaje corto), Email (asunto + cuerpo), story (texto superpuesto).</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div>
+          <div style="font-weight:700;color:var(--cream)">Publica en redes sociales</div>
+          <div style="font-size:13px;color:var(--muted)">Make.com publica en los canales marcados en la promo: Instagram via API, Facebook via API, story programado. El copy viene del paso anterior.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div>
+          <div style="font-weight:700;color:var(--cream)">Notifica embajadores activos</div>
+          <div style="font-size:13px;color:var(--muted)">WhatsApp broadcast a todos los embajadores L2+ con la promo y el link de referido de cada uno pre-incluido. Cada embajador recibe su versión personalizada.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div>
+          <div style="font-weight:700;color:var(--cream)">Sincroniza OTAs (si aplica)</div>
+          <div style="font-size:13px;color:var(--muted)">Si la promo es para canal OTA, actualiza el inventario en Civitatis o tur.com via su API. Si es solo B2C, actualiza la app en Firestore directamente.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <span class="eye">Canales de distribución disponibles</span>
+      <ul class="lst">
+        <li><strong>App GuanaGO</strong> → sección promociones + notificación push</li>
+        <li><strong>Instagram</strong> → post en feed + story programado</li>
+        <li><strong>WhatsApp embajadores</strong> → broadcast con link personalizado</li>
+        <li><strong>Email lista</strong> → campaña via Make.com + Gmail API</li>
+        <li><strong>Civitatis / tur.com</strong> → actualización de oferta via API</li>
+        <li><strong>Mapa directorio</strong> → badge "Promo activa" en el pin del aliado</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:rgba(167,139,250,.2)">
+      <span class="eye pu">Copy generado por IA — ejemplo</span>
+      <div style="margin-top:10px">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--purple);margin-bottom:6px">Instagram caption</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;padding:10px;background:rgba(167,139,250,.05);border-radius:8px;border:1px solid rgba(167,139,250,.1)">"2x1 en snorkel esta fin de semana 🤿🏝️ El mar Caribe de San Andrés te espera — y esta vez traes a alguien. Reserva en el link de la bio con código SNORKEL2X1 antes del domingo. #GuanaGO #SanAndres #Snorkel #IslaCaribe"</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AIRTABLE -->
+<div id="airtable" class="s">
+  <div class="stitle">Estructura Airtable</div>
+  <p class="ssub">3 tablas nuevas para implementar el sistema completo de paquetes y promociones</p>
+
+  <div class="card acc">
+    <span class="eye">Tabla: Paquetes_Turisticos (nueva)</span>
+    <table class="tbl" style="margin-top:10px">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">NombrePaquete</td><td>Text</td><td class="tg">Explorer / Cultural / VIP</td></tr>
+        <tr><td class="bold">PrecioBase</td><td>Currency COP</td><td>Precio por persona, grupo de 1-2</td></tr>
+        <tr><td class="bold">Descripcion</td><td>Long text</td><td>Descripción completa del paquete</td></tr>
+        <tr><td class="bold">Incluye</td><td>Long text</td><td>Lista de lo que incluye</td></tr>
+        <tr><td class="bold">GuanaPointsBase</td><td>Number</td><td>GP que otorga por persona</td></tr>
+        <tr><td class="bold">ToursIncluidos</td><td>Link → ServiciosTuristicos_SAI</td><td>Servicios que componen el paquete</td></tr>
+        <tr><td class="bold">Intereses</td><td>Multiple Select</td><td>Mar / Cultura / Gastro / Noche / Foto / Relax</td></tr>
+        <tr><td class="bold">Estado</td><td>Single Select</td><td>Activo / Pausado / Temporada</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <span class="eye gold">Tabla: Banco_Promociones (nueva)</span>
+    <table class="tbl" style="margin-top:10px">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">TituloPromo</td><td>Text</td><td class="tg">Nombre corto de la promoción</td></tr>
+        <tr><td class="bold">Descripcion</td><td>Long text</td><td>Detalles de la oferta</td></tr>
+        <tr><td class="bold">TipoPromo</td><td>Single Select</td><td>Descuento % / Combo / GP extra / 2x1 / Cupón</td></tr>
+        <tr><td class="bold">DescuentoPct</td><td>Number</td><td>Porcentaje de descuento (si aplica)</td></tr>
+        <tr><td class="bold">Estado</td><td>Single Select</td><td>Borrador / En revisión / Aprobado / Publicado / Vencido</td></tr>
+        <tr><td class="bold">FechaInicio</td><td>Date</td><td>Cuándo comienza la promo</td></tr>
+        <tr><td class="bold">FechaVencimiento</td><td>Date</td><td>Cuándo vence (trigger Make.com)</td></tr>
+        <tr><td class="bold">Canales</td><td>Multiple Select</td><td>App / Instagram / WhatsApp / Email / OTA / Mapa</td></tr>
+        <tr><td class="bold">AliadoID</td><td>Link → Directorio_Mapa</td><td>Aliado que ofrece la promo</td></tr>
+        <tr><td class="bold">PaqueteID</td><td>Link → Paquetes_Turisticos</td><td>Si aplica a un paquete específico</td></tr>
+        <tr><td class="bold">CopyGenerado</td><td>Long text</td><td>Copy IA para cada canal (JSON)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="border-color:rgba(74,222,128,.2)">
+    <span class="eye gr">Tabla: Reservas_Paquetes (nueva)</span>
+    <table class="tbl" style="margin-top:10px">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">ClienteID</td><td>Link → Leads</td><td class="tg">Turista que reservó</td></tr>
+        <tr><td class="bold">PaqueteID</td><td>Link → Paquetes_Turisticos</td><td>Paquete reservado</td></tr>
+        <tr><td class="bold">NumPersonas</td><td>Number</td><td>Para calcular descuento por grupo</td></tr>
+        <tr><td class="bold">Intereses</td><td>Multiple Select</td><td>Personalización del paquete</td></tr>
+        <tr><td class="bold">PrecioFinal</td><td>Currency COP</td><td>Precio calculado con descuentos</td></tr>
+        <tr><td class="bold">GuanaPointsOtorgados</td><td>Number</td><td>GP que recibirá al completar</td></tr>
+        <tr><td class="bold">EmbajadorID</td><td>Link → Embajadores</td><td>Si vino referido por embajador</td></tr>
+        <tr><td class="bold">Estado</td><td>Single Select</td><td>Pendiente / Confirmada / Completada / Cancelada</td></tr>
+        <tr><td class="bold">FechaServicio</td><td>Date</td><td>Cuándo se realiza el paquete</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.s').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO — Modelo Económico · Mayo 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#00E5CC; --ocean:#004060; --deep:#060E18;
+  --bg:#0B1622; --card:#101E2C; --card2:#0D1928;
+  --border:rgba(0,229,204,0.14); --border2:rgba(255,255,255,0.07);
+  --gold:#FFB74D; --coral:#FF6B6B; --purple:#A78BFA;
+  --orange:#F5831F; --green:#4ADE80; --sky:#38BDF8;
+  --cream:#F0F4F8; --muted:#6B8A9E;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--cream);line-height:1.5}
+.nav{background:rgba(6,14,24,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:0;overflow-x:auto;position:sticky;top:0;z-index:100;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nb{font-size:13px;font-weight:700;color:var(--muted);padding:14px 14px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;font-family:'Outfit',sans-serif}
+.nb.on,.nb:hover{color:var(--teal);border-bottom-color:var(--teal)}
+.s{display:none;padding:28px 18px 80px;max-width:960px;margin:0 auto}
+.s.on{display:block}
+.hero{background:linear-gradient(135deg,#002830 0%,var(--deep) 70%);padding:52px 24px 44px;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+.h-eye{font-size:12px;letter-spacing:4px;color:var(--teal);text-transform:uppercase;margin-bottom:10px;font-weight:700}
+.h-h1{font-size:clamp(28px,5vw,52px);font-weight:800;line-height:1.1;margin-bottom:10px}
+.h-h1 span{color:var(--teal)}
+.h-sub{font-size:15px;color:var(--muted);max-width:580px;font-weight:300;line-height:1.7}
+.h-date{display:inline-block;font-size:13px;font-weight:700;color:var(--orange);background:rgba(245,131,31,.1);border:1px solid rgba(245,131,31,.2);padding:4px 14px;border-radius:100px;margin-top:16px}
+.card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:22px;margin-bottom:14px}
+.card.acc{border-color:var(--border);background:var(--card2)}
+.eye{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:8px;display:block}
+.eye.gold{color:var(--gold)}.eye.or{color:var(--orange)}.eye.gr{color:var(--green)}.eye.pu{color:var(--purple)}.eye.coral{color:var(--coral)}
+.stitle{font-size:26px;font-weight:800;margin-bottom:4px}
+.ssub{font-size:14px;color:var(--muted);margin-bottom:24px;font-weight:300}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:100px}
+.badge.ok{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.badge.pend{background:rgba(255,183,77,.12);color:var(--gold);border:1px solid rgba(255,183,77,.2)}
+.badge.next{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.hl{background:rgba(0,229,204,.06);border-left:3px solid var(--teal);border-radius:0 10px 10px 0;padding:14px 18px;margin:12px 0;font-size:15px;color:var(--cream);line-height:1.7}
+.hl.gold{background:rgba(255,183,77,.06);border-left-color:var(--gold)}
+.hl.or{background:rgba(245,131,31,.07);border-left-color:var(--orange)}
+.hl.gr{background:rgba(74,222,128,.06);border-left-color:var(--green)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+.tbl th{text-align:left;padding:9px 10px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border2);font-weight:600}
+.tbl td{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--muted);vertical-align:top}
+.tbl tr:last-child td{border:none}
+.tbl .bold{font-weight:700;color:var(--cream)}
+.tbl .tg{color:var(--teal);font-weight:700}
+.tbl .or{color:var(--orange);font-weight:700}
+.tbl .gr{color:var(--green);font-weight:700}
+.tbl .go{color:var(--gold);font-weight:700}
+ul.lst{list-style:none}
+ul.lst li{font-size:14px;color:var(--muted);padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:8px;align-items:flex-start}
+ul.lst li:last-child{border:none}
+ul.lst li::before{content:'→';color:var(--teal);flex-shrink:0}
+ul.lst li strong{color:var(--cream)}
+.num-big{font-size:36px;font-weight:800;margin-bottom:2px}
+.num-label{font-size:12px;color:var(--muted)}
+/* Circular economy flow */
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0}
+.flow-node{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;text-align:center;flex:1;min-width:140px}
+.flow-arrow{color:var(--teal);font-size:18px;flex-shrink:0}
+/* GP Layer card */
+.gp-layer{padding:16px;border-radius:10px;border:1px solid var(--border2);margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div style="max-width:960px;margin:0 auto">
+    <div class="h-eye">GuanaGO · Estrategia Financiera</div>
+    <h1 class="h-h1">Modelo <span>Económico</span></h1>
+    <p class="h-sub">GuanaPoints como utility token, economía circular demostrada, proyección de ingresos y el CAC que cambia todo el juego.</p>
+    <span class="h-date">Mayo 2026</span>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nb on" onclick="show('token',this)">GuanaPoints Token</button>
+  <button class="nb" onclick="show('circular',this)">Economía Circular</button>
+  <button class="nb" onclick="show('cac',this)">CAC & Fidelización</button>
+  <button class="nb" onclick="show('canjes',this)">Tabla de Canjes</button>
+  <button class="nb" onclick="show('proyeccion',this)">Proyección</button>
+</nav>
+
+<!-- TOKEN -->
+<div id="token" class="s on">
+  <div class="stitle">GuanaPoints — Utility Token</div>
+  <p class="ssub">Las 3 capas del sistema: no son costos separados, son un mecanismo integrado</p>
+
+  <div class="gp-layer" style="background:rgba(0,229,204,.04);border-color:rgba(0,229,204,.2)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:22px">🏆</span>
+      <div>
+        <div style="font-weight:700;color:var(--teal)">Capa 1 — Puntos (GuanaPoints)</div>
+        <div style="font-size:12px;color:var(--muted)">Deuda diferida — el ecosistema la absorbe</div>
+      </div>
+    </div>
+    <p style="font-size:14px;color:var(--muted);line-height:1.7">El turista gana puntos con cada compra. 1 GP = $100 COP de valor de canje. Los puntos son deuda diferida que <strong style="color:var(--cream)">el ecosistema absorbe</strong> cuando el turista los canjea en aliados — no sale de la caja de GuanaGO. El aliado que recibe el canje hace un descuento a cambio de visibilidad destacada en la plataforma.</p>
+    <div style="margin-top:10px;font-size:13px;background:rgba(0,0,0,.2);padding:8px 12px;border-radius:6px;color:var(--muted)">
+      <strong style="color:var(--cream)">Costo real para GuanaGO: $0</strong> — es trueque entre el turista y el aliado, mediado por GuanaGO como coordinador.
+    </div>
+  </div>
+
+  <div class="gp-layer" style="background:rgba(245,131,31,.04);border-color:rgba(245,131,31,.2)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:22px">🎟️</span>
+      <div>
+        <div style="font-weight:700;color:var(--orange)">Capa 2 — Cupones (trueque con aliados)</div>
+        <div style="font-size:12px;color:var(--muted)">Costo $0 para GuanaGO — es trueque</div>
+      </div>
+    </div>
+    <p style="font-size:14px;color:var(--muted);line-height:1.7">El embajador o turista recibe un cupón (cena gratis, descuento 20%, entrada). El aliado otorga el cupón a cambio de <strong style="color:var(--cream)">visibilidad destacada en la plataforma y reseña verificada</strong>. GuanaGO coordina el trueque pero no pone el dinero. El vencimiento de 60 días crea urgencia de uso que genera nuevas visitas al aliado.</p>
+    <div style="margin-top:10px;font-size:13px;background:rgba(0,0,0,.2);padding:8px 12px;border-radius:6px;color:var(--muted)">
+      <strong style="color:var(--cream)">Costo real para GuanaGO: $0</strong> — el aliado absorbe el descuento a cambio de marketing real.
+    </div>
+  </div>
+
+  <div class="gp-layer" style="background:rgba(74,222,128,.04);border-color:rgba(74,222,128,.2)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:22px">💵</span>
+      <div>
+        <div style="font-weight:700;color:var(--green)">Capa 3 — Efectivo COP (del margen)</div>
+        <div style="font-size:12px;color:var(--muted)">Sale del margen de comisión — ya está presupuestado</div>
+      </div>
+    </div>
+    <p style="font-size:14px;color:var(--muted);line-height:1.7">La comisión en efectivo a embajadores (5-12% según nivel) <strong style="color:var(--cream)">ya está dentro del margen de comisión que cobra GuanaGO</strong>. Si GuanaGO cobra 20% al turista, y el embajador recibe 8%, GuanaGO neto queda con 12% — que es su margen objetivo.</p>
+    <div style="margin-top:10px;font-size:13px;background:rgba(0,0,0,.2);padding:8px 12px;border-radius:6px;color:var(--muted)">
+      <strong style="color:var(--cream)">Costo real para GuanaGO: $20K-60K COP/cliente activo</strong> — 100% presupuestado en el precio.
+    </div>
+  </div>
+
+  <div class="hl">
+    <strong>Costo neto de fidelización:</strong> ≈ $30.000 COP por cliente activo (solo la parte en efectivo). El trueque y los puntos cuestan $0 a GuanaGO y crean retención real.
+  </div>
+</div>
+
+<!-- CIRCULAR -->
+<div id="circular" class="s">
+  <div class="stitle">Economía Circular</div>
+  <p class="ssub">Una reserva de $300K COP pasa por 4 manos locales — el dinero no "escapa" a plataformas foráneas</p>
+
+  <div class="card acc">
+    <span class="eye">Flujo de $300.000 COP en una reserva típica</span>
+    <div style="margin-top:18px">
+      <div class="flow">
+        <div class="flow-node" style="border-color:rgba(56,189,248,.3)">
+          <div style="font-size:20px;margin-bottom:4px">✈️</div>
+          <div style="font-weight:700;color:var(--sky)">Turista</div>
+          <div style="font-size:12px;color:var(--muted)">Paga $300K COP</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color:rgba(0,229,204,.3)">
+          <div style="font-size:20px;margin-bottom:4px">🏝️</div>
+          <div style="font-weight:700;color:var(--teal)">GuanaGO</div>
+          <div style="font-size:12px;color:var(--muted)">Retiene $60K (20%)</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color:rgba(74,222,128,.3)">
+          <div style="font-size:20px;margin-bottom:4px">🤿</div>
+          <div style="font-weight:700;color:var(--green)">Operador</div>
+          <div style="font-size:12px;color:var(--muted)">Recibe $240K (80%)</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+        <div style="padding:12px;background:rgba(0,229,204,.05);border-radius:8px;border:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:14px;color:var(--muted)">De los $60K de GuanaGO → <strong style="color:var(--cream)">comisión embajador (8%)</strong></span>
+          <span style="color:var(--teal);font-weight:700">$24K al embajador</span>
+        </div>
+        <div style="padding:12px;background:rgba(245,131,31,.05);border-radius:8px;border:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:14px;color:var(--muted)">El turista gana <strong style="color:var(--cream)">300 GP</strong> que canjea en restaurante aliado</span>
+          <span style="color:var(--orange);font-weight:700">$30K en valor canjeable</span>
+        </div>
+        <div style="padding:12px;background:rgba(74,222,128,.05);border-radius:8px;border:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:14px;color:var(--muted)">GuanaGO neto después de comisión</span>
+          <span style="color:var(--green);font-weight:700">$36K utilidad neta</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:rgba(74,222,128,.2)">
+    <span class="eye gr">Los 4 destinos del dinero turístico — todos locales</span>
+    <div class="g2" style="margin-top:12px">
+      <div>
+        <div style="font-weight:700;color:var(--cream);margin-bottom:6px">Con OTA foránea (Booking/Viator)</div>
+        <ul class="lst">
+          <li>Booking: 25-30% se va a Holanda/EE.UU.</li>
+          <li>Viator: 20-25% a TripAdvisor (EE.UU.)</li>
+          <li>El operador local recibe 70-75%</li>
+          <li><strong style="color:var(--coral)">0 COP queda en el ecosistema GuanaGO</strong></li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-weight:700;color:var(--cream);margin-bottom:6px">Con GuanaGO</div>
+        <ul class="lst">
+          <li>GuanaGO: 12-20% (empresa local)</li>
+          <li>Operador raizal: 80-88%</li>
+          <li>Embajador: 5-12% del margen GuanaGO</li>
+          <li><strong style="color:var(--green)">100% del dinero circula en la isla</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="hl gr">
+    <strong>El impacto de escala:</strong> Con 200 reservas/mes de $300K promedio = $60M COP que circula por mes 100% localmente. Si el 30% hubiera ido a OTAs foráneas, serían $18M que se pierden de la economía isleña cada mes.
+  </div>
+</div>
+
+<!-- CAC -->
+<div id="cac" class="s">
+  <div class="stitle">CAC & Fidelización</div>
+  <p class="ssub">El canal embajador tiene un CAC 5x menor al canal de ads — y un LTV/CAC 5x mayor</p>
+
+  <div class="g4">
+    <div class="card" style="text-align:center;border-color:rgba(0,229,204,.25)">
+      <div style="font-size:30px;font-weight:800;color:var(--teal)">$30K</div>
+      <div style="font-size:12px;color:var(--muted)">CAC embajador COP</div>
+    </div>
+    <div class="card" style="text-align:center;border-color:rgba(255,107,107,.2)">
+      <div style="font-size:30px;font-weight:800;color:var(--coral)">$150K</div>
+      <div style="font-size:12px;color:var(--muted)">CAC ads pagos COP</div>
+    </div>
+    <div class="card" style="text-align:center;border-color:rgba(74,222,128,.25)">
+      <div style="font-size:30px;font-weight:800;color:var(--green)">28x</div>
+      <div style="font-size:12px;color:var(--muted)">LTV/CAC embajador</div>
+    </div>
+    <div class="card" style="text-align:center;border-color:rgba(255,183,77,.2)">
+      <div style="font-size:30px;font-weight:800;color:var(--gold)">5.6x</div>
+      <div style="font-size:12px;color:var(--muted)">LTV/CAC ads pagos</div>
+    </div>
+  </div>
+
+  <div class="card acc">
+    <span class="eye">Tabla comparativa de canales</span>
+    <table class="tbl" style="margin-top:10px">
+      <thead>
+        <tr>
+          <th>Canal</th>
+          <th>CAC</th>
+          <th>Tiempo de activación</th>
+          <th>LTV esperado</th>
+          <th>LTV/CAC</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">Embajador raizal</td>
+          <td class="tg">$30K COP</td>
+          <td>Inmediato</td>
+          <td>$840K COP</td>
+          <td class="gr">28x</td>
+        </tr>
+        <tr>
+          <td class="bold">QR físico aliado</td>
+          <td class="tg">$15K COP</td>
+          <td>Inmediato</td>
+          <td>$420K COP</td>
+          <td class="gr">28x</td>
+        </tr>
+        <tr>
+          <td class="bold">OTA / Civitatis</td>
+          <td>Comisión variable</td>
+          <td>1-3 días</td>
+          <td>$500K COP</td>
+          <td style="color:var(--gold);font-weight:700">~10x</td>
+        </tr>
+        <tr>
+          <td class="bold">SEO orgánico</td>
+          <td class="tg">$40K COP equiv.</td>
+          <td>3-6 meses</td>
+          <td>$600K COP</td>
+          <td class="gr">15x</td>
+        </tr>
+        <tr>
+          <td class="bold">Ads pagos (Meta/Google)</td>
+          <td style="color:var(--coral);font-weight:700">$150K COP</td>
+          <td>Inmediato</td>
+          <td>$840K COP</td>
+          <td style="color:var(--gold);font-weight:700">5.6x</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="border-color:rgba(0,229,204,.15)">
+    <span class="eye">Efecto de fidelización GuanaPoints sobre LTV</span>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:12px">Un turista con GuanaPoints activos tiene 3x más probabilidad de reservar de nuevo vs uno sin puntos:</p>
+    <div style="display:grid;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="width:180px;font-size:13px;color:var(--muted)">Sin GuanaPoints</span>
+        <div style="flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:20px;position:relative">
+          <div style="width:25%;height:100%;background:var(--muted);border-radius:4px"></div>
+          <span style="position:absolute;right:8px;top:2px;font-size:11px;color:var(--muted)">25% retención</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="width:180px;font-size:13px;color:var(--muted)">Con GP activos (L1-L2)</span>
+        <div style="flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:20px;position:relative">
+          <div style="width:55%;height:100%;background:var(--teal);border-radius:4px;opacity:.6"></div>
+          <span style="position:absolute;right:8px;top:2px;font-size:11px;color:var(--cream)">55% retención</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="width:180px;font-size:13px;color:var(--muted)">Con GP + cupón activo</span>
+        <div style="flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:20px;position:relative">
+          <div style="width:75%;height:100%;background:var(--teal);border-radius:4px"></div>
+          <span style="position:absolute;right:8px;top:2px;font-size:11px;color:var(--cream)">75% retención</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hl gold">
+    <strong>El hallazgo más importante:</strong> Añadir 10 embajadores activos impacta más en los ingresos que doblar el presupuesto de ads. Un embajador activo L3 genera ~$378K COP/mes con un CAC de $30K.
+  </div>
+</div>
+
+<!-- CANJES -->
+<div id="canjes" class="s">
+  <div class="stitle">Tabla de Canjes</div>
+  <p class="ssub">Qué pueden canjear turistas y embajadores con sus GuanaPoints y cupones</p>
+
+  <div class="card acc">
+    <span class="eye">Turista — 8 tipos de canje disponibles</span>
+    <table class="tbl" style="margin-top:10px">
+      <thead>
+        <tr>
+          <th>Canje</th>
+          <th>GP requeridos</th>
+          <th>Valor equivalente</th>
+          <th>Aliado que lo ofrece</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">Coctel de bienvenida</td>
+          <td class="tg">100 GP</td>
+          <td>$10K COP</td>
+          <td>Restaurantes aliados</td>
+        </tr>
+        <tr>
+          <td class="bold">Descuento 10% en tour</td>
+          <td class="tg">200 GP</td>
+          <td>~$30K COP</td>
+          <td>Operadores aliados</td>
+        </tr>
+        <tr>
+          <td class="bold">Entrada a evento cultural</td>
+          <td class="tg">300 GP</td>
+          <td>$30K COP</td>
+          <td>Caribbean Night y aliados</td>
+        </tr>
+        <tr>
+          <td class="bold">Cena para 2 (plato del día)</td>
+          <td class="tg">500 GP</td>
+          <td>$50K COP</td>
+          <td>Restaurantes aliados</td>
+        </tr>
+        <tr>
+          <td class="bold">Tour en kayak (2h)</td>
+          <td class="tg">800 GP</td>
+          <td>$80K COP</td>
+          <td>Operadores náuticos</td>
+        </tr>
+        <tr>
+          <td class="bold">Noche de hotel (mid-season)</td>
+          <td class="tg">2.000 GP</td>
+          <td>$200K COP</td>
+          <td>Hoteles aliados seleccionados</td>
+        </tr>
+        <tr>
+          <td class="bold">Tour privado 4h (hasta 4 pax)</td>
+          <td class="tg">3.500 GP</td>
+          <td>$350K COP</td>
+          <td>Operadores premium</td>
+        </tr>
+        <tr>
+          <td class="bold">Experiencia exclusiva raizal</td>
+          <td class="tg">5.000 GP</td>
+          <td>$500K COP</td>
+          <td>Cupos limitados — lista de espera</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="border-color:rgba(167,139,250,.2)">
+    <span class="eye pu">Embajador — 4 niveles de canje</span>
+    <table class="tbl" style="margin-top:10px">
+      <thead>
+        <tr>
+          <th>Nivel</th>
+          <th>Beneficio mensual</th>
+          <th>Cupones</th>
+          <th>Extras</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">L1 Explorador</td>
+          <td>5% en efectivo</td>
+          <td>0</td>
+          <td>Dashboard básico</td>
+        </tr>
+        <tr>
+          <td class="bold">L2 Conector</td>
+          <td>7% en efectivo</td>
+          <td>1 cena/mes</td>
+          <td>QR personalizado + badge</td>
+        </tr>
+        <tr>
+          <td class="bold">L3 Guardián</td>
+          <td>9% en efectivo + pago semanal</td>
+          <td>2 cupones/mes</td>
+          <td>1 tour gratis/mes</td>
+        </tr>
+        <tr>
+          <td class="bold">L4 Elite</td>
+          <td>12% en efectivo + pago semanal</td>
+          <td>3 cupones/mes</td>
+          <td>2 tours gratis + mención en redes</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PROYECCIÓN -->
+<div id="proyeccion" class="s">
+  <div class="stitle">Proyección Financiera</div>
+  <p class="ssub">Break-even en mes 1-2 — $16M COP utilidad mensual en mes 6</p>
+
+  <div class="card acc">
+    <span class="eye">Modelo de crecimiento — 6 meses</span>
+    <table class="tbl" style="margin-top:10px">
+      <thead>
+        <tr>
+          <th>Mes</th>
+          <th>Aliados</th>
+          <th>Embajadores</th>
+          <th>Reservas/mes</th>
+          <th>Revenue bruto</th>
+          <th>Utilidad neta</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">Mes 1</td>
+          <td>10</td>
+          <td>5</td>
+          <td>20</td>
+          <td class="tg">$6M COP</td>
+          <td class="go">$1.2M COP</td>
+        </tr>
+        <tr>
+          <td class="bold">Mes 2</td>
+          <td>20</td>
+          <td>15</td>
+          <td>50</td>
+          <td class="tg">$15M COP</td>
+          <td class="go">$3M COP</td>
+        </tr>
+        <tr>
+          <td class="bold">Mes 3</td>
+          <td>35</td>
+          <td>25</td>
+          <td>100</td>
+          <td class="tg">$30M COP</td>
+          <td class="go">$6M COP</td>
+        </tr>
+        <tr>
+          <td class="bold">Mes 4</td>
+          <td>50</td>
+          <td>35</td>
+          <td>160</td>
+          <td class="tg">$48M COP</td>
+          <td class="go">$9.6M COP</td>
+        </tr>
+        <tr>
+          <td class="bold">Mes 5</td>
+          <td>65</td>
+          <td>45</td>
+          <td>230</td>
+          <td class="tg">$69M COP</td>
+          <td class="go">$13.8M COP</td>
+        </tr>
+        <tr>
+          <td class="bold" style="color:var(--green)">Mes 6</td>
+          <td style="color:var(--green);font-weight:700">80</td>
+          <td style="color:var(--green);font-weight:700">50</td>
+          <td style="color:var(--green);font-weight:700">300</td>
+          <td class="tg" style="font-size:15px">$90M COP</td>
+          <td class="gr" style="font-size:15px">$16M COP</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--muted);margin-top:8px">Supuestos: ticket promedio $300K COP, comisión neta GuanaGO 20%, costos operativos fijos $2M/mes + variable 15% del revenue.</p>
+  </div>
+
+  <div class="g2">
+    <div class="card" style="border-color:rgba(74,222,128,.2)">
+      <span class="eye gr">Supuestos del modelo</span>
+      <ul class="lst">
+        <li><strong>Ticket promedio</strong> $300K COP por reserva (mezcla tours + paquetes)</li>
+        <li><strong>Comisión neta</strong> 20% B2C directo, 12% via OTA</li>
+        <li><strong>Mix de canales</strong>: 60% directo, 30% embajadores, 10% OTA</li>
+        <li><strong>Costo fidelización</strong>: $30K COP/cliente activo (solo efectivo)</li>
+        <li><strong>Crecimiento aliados</strong>: +10-15/mes con onboarding activo</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:rgba(255,183,77,.2)">
+      <span class="eye gold">Hitos críticos</span>
+      <ul class="lst">
+        <li><strong>Break-even:</strong> Mes 1-2 con 10+ aliados activos</li>
+        <li><strong>Primer pago embajador:</strong> Semana 3-4 del lanzamiento</li>
+        <li><strong>Product-market fit:</strong> Mes 3 con 30%+ reservas recurrentes</li>
+        <li><strong>Fundraising-ready:</strong> Mes 5-6 con $13M+ utilidad sostenida</li>
+        <li><strong>Expansión Providencia:</strong> Mes 7+ según métricas</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="hl">
+    <strong>La variable más poderosa:</strong> Cada embajador activo L3 genera ~$378K COP/mes de revenue con un CAC de $30K. Si tienes 50 embajadores L3, el impacto es mayor que $15M COP en ads pagos.
+  </div>
+</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.s').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+}
+</script>
+</body>
+</html>
