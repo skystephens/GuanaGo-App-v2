@@ -376,19 +376,44 @@ export async function downloadQuotePDF(
     document.body.appendChild(container);
     container.innerHTML = generateQuoteHTML(cotizacion, items, services);
 
-    // Fix: imágenes lazy no cargan off-screen → forzar eager + crossOrigin antes de esperar
+    // Fix: imágenes lazy no cargan off-screen → forzar eager
     container.querySelectorAll<HTMLImageElement>('img').forEach(img => {
       img.loading = 'eager';
-      img.crossOrigin = 'anonymous';
     });
 
-    // Esperar a que TODAS las imágenes carguen (o fallen) antes de capturar
-    const imgs = Array.from(container.querySelectorAll<HTMLImageElement>('img'));
+    // Pre-convertir imágenes a data URIs para evitar que CORS falle y dispare onerror→fallback.
+    // crossOrigin='anonymous' en un img que ya empezó a cargar re-dispara un fetch CORS;
+    // las URLs de Airtable/WP sí soportan CORS, pero la secuencia de attrs causaba el error.
+    const allImgs = Array.from(container.querySelectorAll<HTMLImageElement>('img'));
     await Promise.allSettled(
-      imgs.map(img => {
+      allImgs.map(async img => {
+        const src = img.getAttribute('src') || img.src;
+        if (!src || src.startsWith('data:') || src.startsWith('blob:')) return;
+        try {
+          const res = await fetch(src);
+          if (!res.ok) return;
+          const blob = await res.blob();
+          const dataUri = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload  = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error('FileReader error'));
+            reader.readAsDataURL(blob);
+          });
+          img.src = dataUri;
+          img.removeAttribute('onerror'); // data URI nunca falla; quitar fallback
+        } catch {
+          // Si fetch falla, dejamos la URL original; html2canvas intentará usarla
+        }
+      })
+    );
+
+    // Esperar a que cualquier imagen que quedó con URL original cargue o falle
+    const remainingImgs = allImgs.filter(img => !img.src.startsWith('data:'));
+    await Promise.allSettled(
+      remainingImgs.map(img => {
         if (img.complete && img.naturalWidth > 0) return Promise.resolve();
         return new Promise<void>(resolve => {
-          const timer = setTimeout(resolve, 8000); // máx 8s por imagen
+          const timer = setTimeout(resolve, 8000);
           img.addEventListener('load',  () => { clearTimeout(timer); resolve(); }, { once: true });
           img.addEventListener('error', () => { clearTimeout(timer); resolve(); }, { once: true });
         });
