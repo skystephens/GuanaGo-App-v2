@@ -369,21 +369,39 @@ export async function downloadQuotePDF(
   try {
     // Crear elemento temporal con el HTML
     const container = document.createElement('div');
-    container.innerHTML = generateQuoteHTML(cotizacion, items, services);
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '0';
+    container.style.width = '800px';
     document.body.appendChild(container);
+    container.innerHTML = generateQuoteHTML(cotizacion, items, services);
 
-    // Esperar un momento para que se renderice
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Fix: imágenes lazy no cargan off-screen → forzar eager + crossOrigin antes de esperar
+    container.querySelectorAll<HTMLImageElement>('img').forEach(img => {
+      img.loading = 'eager';
+      img.crossOrigin = 'anonymous';
+    });
+
+    // Esperar a que TODAS las imágenes carguen (o fallen) antes de capturar
+    const imgs = Array.from(container.querySelectorAll<HTMLImageElement>('img'));
+    await Promise.allSettled(
+      imgs.map(img => {
+        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+        return new Promise<void>(resolve => {
+          const timer = setTimeout(resolve, 8000); // máx 8s por imagen
+          img.addEventListener('load',  () => { clearTimeout(timer); resolve(); }, { once: true });
+          img.addEventListener('error', () => { clearTimeout(timer); resolve(); }, { once: true });
+        });
+      })
+    );
 
     // Capturar como imagen
     const canvas = await html2canvas(container, {
       scale: 2,
       useCORS: true,
+      allowTaint: false,
       logging: false,
-      backgroundColor: '#ffffff'
+      backgroundColor: '#ffffff',
     });
 
     // Remover elemento temporal
