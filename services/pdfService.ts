@@ -388,9 +388,11 @@ export async function downloadQuotePDF(
     allImgs.forEach(img => {
       const src = img.getAttribute('src') || '';
       if (src) {
-        img.loading = 'eager';                  // cancela lazy antes del nuevo src
-        img.removeAttribute('onerror');         // proxy no necesita fallback inline
-        img.src = proxyUrl(src);
+        img.loading = 'eager';          // cancela lazy antes del nuevo src
+        const proxied = proxyUrl(src);
+        // Si el proxy también falla, volver a la URL original directamente
+        img.setAttribute('onerror', `this.onerror=null;this.src='${src}'`);
+        img.src = proxied;
       }
     });
 

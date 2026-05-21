@@ -8,6 +8,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import axios from 'axios';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -75,22 +76,27 @@ app.get('/api', (req, res) => {
 });
 
 // ── Image proxy — evita CORS en html2canvas al generar PDFs ──────────────────
-// Rutas usadas internamente por el admin; requiere que el URL sea HTTPS y devuelva imagen.
+// Axios en lugar de fetch global para compatibilidad con Node < 18.
+// Acepta cualquier respuesta binaria (Airtable a veces devuelve octet-stream).
 app.get('/api/proxy-image', async (req, res) => {
   const { url } = req.query;
   if (!url || typeof url !== 'string') return res.status(400).json({ error: 'Missing url' });
   if (!url.startsWith('https://'))     return res.status(403).json({ error: 'HTTPS only' });
   try {
-    const upstream = await fetch(url, { headers: { 'User-Agent': 'GuanaGO-PDF/1.0' } });
-    if (!upstream.ok) return res.status(502).json({ error: 'Upstream error', status: upstream.status });
-    const ct = upstream.headers.get('content-type') || 'image/jpeg';
-    if (!ct.startsWith('image/')) return res.status(415).json({ error: 'Not an image' });
-    const buf = await upstream.arrayBuffer();
-    res.set('Content-Type', ct);
+    const upstream = await axios.get(url, {
+      responseType: 'arraybuffer',
+      headers: { 'User-Agent': 'GuanaGO-PDF/1.0' },
+      timeout: 10000,
+    });
+    const ct = upstream.headers['content-type'] || 'image/jpeg';
+    // Forzar tipo imagen incluso si el CDN devuelve octet-stream
+    const safeType = ct.startsWith('image/') ? ct : 'image/jpeg';
+    res.set('Content-Type', safeType);
     res.set('Cache-Control', 'public, max-age=3600');
-    res.send(Buffer.from(buf));
+    res.send(Buffer.from(upstream.data));
   } catch (err) {
-    res.status(502).json({ error: 'Fetch failed', detail: err.message });
+    console.error('[proxy-image] error:', err.message, '| url:', url.substring(0, 80));
+    res.status(502).json({ error: 'Fetch failed' });
   }
 });
 
