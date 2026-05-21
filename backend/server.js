@@ -74,6 +74,26 @@ app.get('/api', (req, res) => {
   });
 });
 
+// ── Image proxy — evita CORS en html2canvas al generar PDFs ──────────────────
+// Rutas usadas internamente por el admin; requiere que el URL sea HTTPS y devuelva imagen.
+app.get('/api/proxy-image', async (req, res) => {
+  const { url } = req.query;
+  if (!url || typeof url !== 'string') return res.status(400).json({ error: 'Missing url' });
+  if (!url.startsWith('https://'))     return res.status(403).json({ error: 'HTTPS only' });
+  try {
+    const upstream = await fetch(url, { headers: { 'User-Agent': 'GuanaGO-PDF/1.0' } });
+    if (!upstream.ok) return res.status(502).json({ error: 'Upstream error', status: upstream.status });
+    const ct = upstream.headers.get('content-type') || 'image/jpeg';
+    if (!ct.startsWith('image/')) return res.status(415).json({ error: 'Not an image' });
+    const buf = await upstream.arrayBuffer();
+    res.set('Content-Type', ct);
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(Buffer.from(buf));
+  } catch (err) {
+    res.status(502).json({ error: 'Fetch failed', detail: err.message });
+  }
+});
+
 // ── Leads — formulario público de captura ─────────────────────────────────────
 app.use('/api/leads',   leadsRoutes);
 
