@@ -59,7 +59,7 @@ export async function findOrCreateLeadUser({ firebaseUid, email, nombre, photoUr
 
     // 3. Encontrado → actualizar última actividad y retornar
     if (record) {
-      await patchRecord(record.id, { Ultima_Actividad: new Date().toISOString() }).catch(() => {});
+      await patchRecord(record.id, { 'Ultimo acceso': new Date().toISOString() }).catch(() => {});
       return { success: true, user: buildProfile(record, firebaseUid) };
     }
 
@@ -79,11 +79,9 @@ export async function findOrCreateLeadUser({ firebaseUid, email, nombre, photoUr
             Firebase_UID: firebaseUid || '',
             Rol: role,
             Activo: isAutoActive,
-            Fecha: new Date().toISOString(),
-            Ultima_Actividad: new Date().toISOString(),
+            Fecha_de_Creacion: new Date().toISOString(),
+            'Ultimo acceso': new Date().toISOString(),
             Origen: 'Firebase',
-            Saldo_GUANA: 0,
-            Nivel: 'Bronce',
           },
         }],
       }),
