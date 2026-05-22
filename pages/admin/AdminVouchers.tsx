@@ -50,7 +50,13 @@ interface VoucherFormData {
   puntoEncuentro: string;
   observaciones: string;
   tourName: string;
+  tourId: string;
   estado: string;
+}
+
+interface Servicio {
+  id: string;
+  nombre: string;
 }
 
 interface AgentMsg {
@@ -86,7 +92,8 @@ const ESTADO_CFG: Record<string, { label: string; bg: string; text: string; icon
 
 const EMPTY_FORM: VoucherFormData = {
   titular: '', telefono: '', email: '', pax: '',
-  fecha: '', hora: '', puntoEncuentro: '', observaciones: '', tourName: '', estado: 'Pendiente',
+  fecha: '', hora: '', puntoEncuentro: '', observaciones: '',
+  tourName: '', tourId: '', estado: 'Pendiente',
 };
 
 const AGENT_PROMPTS = [
@@ -494,12 +501,27 @@ function NuevoVoucherModal({ onClose, onSaved }: {
   onClose: () => void;
   onSaved: (v: VoucherRecord) => void;
 }) {
-  const [form, setForm]     = useState<VoucherFormData>(EMPTY_FORM);
-  const [saving, setSaving] = useState(false);
-  const [error, setError]   = useState('');
+  const [form, setForm]         = useState<VoucherFormData>(EMPTY_FORM);
+  const [saving, setSaving]     = useState(false);
+  const [error, setError]       = useState('');
+  const [servicios, setServicios] = useState<Servicio[]>([]);
+  const [loadingServ, setLoadingServ] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API}/api/reservations/vouchers/civitatis-servicios`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setServicios(d.data || []); })
+      .catch(() => {})
+      .finally(() => setLoadingServ(false));
+  }, []);
 
   const set = (k: keyof VoucherFormData, v: string) =>
     setForm(f => ({ ...f, [k]: v }));
+
+  const handleTourChange = (id: string) => {
+    const s = servicios.find(x => x.id === id);
+    setForm(f => ({ ...f, tourId: id, tourName: s?.nombre || '' }));
+  };
 
   const handleSave = async () => {
     if (!form.titular || !form.fecha || !form.tourName) {
@@ -539,28 +561,95 @@ function NuevoVoucherModal({ onClose, onSaved }: {
         </div>
 
         <div className="px-5 py-4 space-y-3 max-h-[70vh] overflow-y-auto">
-          {/* Campos */}
-          {([
-            { key: 'titular',    label: 'Titular *',  type: 'text',  placeholder: 'Nombre del cliente' },
-            { key: 'tourName',   label: 'Tour / Servicio *', type: 'text', placeholder: 'Nombre del tour' },
-            { key: 'fecha',      label: 'Fecha *',    type: 'date',  placeholder: '' },
-            { key: 'hora',       label: 'Hora',       type: 'time',  placeholder: '' },
-            { key: 'pax',        label: 'Pax',        type: 'text',  placeholder: 'Ej: 4' },
-            { key: 'telefono',   label: 'Teléfono',   type: 'tel',   placeholder: '+57 ...' },
-            { key: 'email',      label: 'Email',      type: 'email', placeholder: '' },
-            { key: 'observaciones', label: 'Observaciones', type: 'text', placeholder: 'Notas especiales…' },
-          ] as { key: keyof VoucherFormData; label: string; type: string; placeholder: string }[]).map(({ key, label, type, placeholder }) => (
-            <div key={key}>
-              <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">{label}</label>
+
+          {/* Titular */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Titular *</label>
+            <input
+              type="text"
+              value={form.titular}
+              onChange={e => set('titular', e.target.value)}
+              placeholder="Nombre del cliente"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-600"
+            />
+          </div>
+
+          {/* Tour / Servicio — dropdown de Airtable */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Tour / Servicio *</label>
+            {loadingServ ? (
+              <div className="flex items-center gap-2 py-2 text-xs text-gray-500">
+                <Loader2 size={13} className="animate-spin text-orange-400" /> Cargando servicios…
+              </div>
+            ) : (
+              <select
+                value={form.tourId}
+                onChange={e => handleTourChange(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-600"
+              >
+                <option value="">— Selecciona un tour —</option>
+                {servicios.map(s => (
+                  <option key={s.id} value={s.id}>{s.nombre}</option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Fecha / Hora / Pax */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-1">
+              <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Fecha *</label>
               <input
-                type={type}
-                value={form[key]}
-                onChange={e => set(key, e.target.value)}
-                placeholder={placeholder}
+                type="date"
+                value={form.fecha}
+                onChange={e => set('fecha', e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-2 py-2 text-sm text-white focus:outline-none focus:border-orange-600"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Hora</label>
+              <input
+                type="time"
+                value={form.hora}
+                onChange={e => set('hora', e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-2 py-2 text-sm text-white focus:outline-none focus:border-orange-600"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Pax</label>
+              <input
+                type="number"
+                min="1"
+                value={form.pax}
+                onChange={e => set('pax', e.target.value)}
+                placeholder="1"
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-2 py-2 text-sm text-white focus:outline-none focus:border-orange-600"
+              />
+            </div>
+          </div>
+
+          {/* Teléfono / Email */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Teléfono</label>
+              <input
+                type="tel"
+                value={form.telefono}
+                onChange={e => set('telefono', e.target.value)}
+                placeholder="+57 …"
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-600"
               />
             </div>
-          ))}
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Email</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => set('email', e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-600"
+              />
+            </div>
+          </div>
 
           {/* Punto de encuentro */}
           <div>
@@ -573,6 +662,18 @@ function NuevoVoucherModal({ onClose, onSaved }: {
               <option value="">Seleccionar…</option>
               {PUNTOS.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
+          </div>
+
+          {/* Observaciones */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Observaciones</label>
+            <textarea
+              value={form.observaciones}
+              onChange={e => set('observaciones', e.target.value)}
+              rows={3}
+              placeholder="Necesidades especiales, alergias, solicitudes del cliente…"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-orange-600"
+            />
           </div>
 
           {/* Estado */}
