@@ -730,6 +730,30 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
                 </div>
               </div>
 
+              {/* Observaciones */}
+              <div>
+                <label className="text-xs text-gray-400 mb-1 block font-medium">Observaciones del cliente</label>
+                <textarea
+                  value={form.observaciones}
+                  onChange={e => setField('observaciones', e.target.value)}
+                  rows={3}
+                  placeholder="Necesidades especiales, alergias, solicitudes…"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:border-orange-500"
+                />
+              </div>
+
+              {/* Notas internas */}
+              <div>
+                <label className="text-xs text-gray-400 mb-1 block font-medium">Notas internas</label>
+                <textarea
+                  value={form.notasAdicionales}
+                  onChange={e => setField('notasAdicionales', e.target.value)}
+                  rows={2}
+                  placeholder="Notas para el operador…"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:border-orange-500"
+                />
+              </div>
+
               {/* Estado */}
               <div>
                 <label className="text-xs text-gray-400 mb-1 block font-medium">Estado</label>
@@ -751,30 +775,6 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
                     );
                   })}
                 </div>
-              </div>
-
-              {/* Observaciones */}
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block font-medium">Observaciones del cliente</label>
-                <textarea
-                  value={form.observaciones}
-                  onChange={e => setField('observaciones', e.target.value)}
-                  rows={3}
-                  placeholder="Necesidades especiales, alergias…"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:border-orange-500"
-                />
-              </div>
-
-              {/* Notas internas */}
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block font-medium">Notas internas</label>
-                <textarea
-                  value={form.notasAdicionales}
-                  onChange={e => setField('notasAdicionales', e.target.value)}
-                  rows={2}
-                  placeholder="Notas para el operador…"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:border-orange-500"
-                />
               </div>
 
               {saveError && (

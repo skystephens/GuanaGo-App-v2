@@ -43,7 +43,7 @@ function mapRecord(record) {
                           : '') || '',
     estado:             rawEstado || 'Pendiente',
     estadoVoucher:      sel(f['Estado_Voucher']),
-    telefono:           f['Telefono']             || '',
+    telefono:           f['Teléfono']             || '',
     email:              f['Email']                || '',
     ultimaModificacion: f['ultima modificacion']  || record.createdTime || '',
     createdTime:        record.createdTime        || '',
@@ -76,7 +76,7 @@ export async function createVoucher(data) {
     'Nombre del Cliente': data.titular,
     'Estado de la Reserva': data.estado || 'Pendiente',
   };
-  if (data.telefono)       fields['Telefono']                   = data.telefono;
+  if (data.telefono)       fields['Teléfono']                   = data.telefono;
   if (data.email)          fields['Email']                      = data.email;
   if (data.pax)            fields['Numero de Personas ']        = String(data.pax);
   if (data.fecha)          fields['Fecha de Inicio']            = data.fecha;
@@ -111,21 +111,23 @@ export async function updateVoucherStatus(recordId, estado) {
 
 /** Obtener servicios Civitatis (tabla: Servicios Turisticos, misma base) */
 export async function getCivitatisServicios() {
-  const SERVICIOS_TABLE = 'Servicios Turisticos';
-  const url = `${AT_URL}/${VOUCHER_BASE_ID}/${encodeURIComponent(SERVICIOS_TABLE)}`;
-  const params = new URLSearchParams({
-    maxRecords: '100',
-    'sort[0][field]': 'Nombre del Servicio',
-    'sort[0][direction]': 'asc',
-  });
-  const res = await fetch(`${url}?${params}`, { headers: getHeaders() });
-  if (!res.ok) throw new Error(`Airtable error ${res.status}`);
+  // Usar ID de tabla para evitar problemas de encoding con espacios en el nombre
+  const SERVICIOS_TABLE_ID = 'tbl9vIkdyA3Hoyck0';
+  const url = `${AT_URL}/${VOUCHER_BASE_ID}/${SERVICIOS_TABLE_ID}`;
+  const res = await fetch(`${url}?maxRecords=200`, { headers: getHeaders() });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`Airtable error ${res.status}: ${errText.slice(0, 200)}`);
+  }
   const data = await res.json();
-  return (data.records || []).map(r => ({
-    id:             r.id,
-    nombre:         r.fields['Nombre del Servicio'] || '',
-    tipo:           r.fields['Tipo de Servicio']    || '',
-    precioNeto:     r.fields['Precio Neto 2026']    || 0,
-    horarios:       r.fields['Horarios de Salida']  || [],
-  }));
+  return (data.records || [])
+    .map(r => ({
+      id:         r.id,
+      nombre:     r.fields['Nombre del Servicio'] || '',
+      tipo:       (r.fields['Tipo de Servicio']?.name ?? r.fields['Tipo de Servicio'] ?? ''),
+      precioNeto: r.fields['Precio Neto 2026']    || 0,
+      horarios:   r.fields['Horarios de Salida']  || [],
+    }))
+    .filter(s => s.nombre.trim() !== '')
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
 }
