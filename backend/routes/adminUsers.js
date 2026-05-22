@@ -12,7 +12,7 @@ import admin, { firebaseInitialized } from '../firebaseAdmin.js';
 
 const router = express.Router();
 
-const TABLE   = 'Usuarios_Admins';
+const TABLE   = 'tblpy5YxDt6knhZHd'; // Usuarios_Admins
 const BASE_ID = () => process.env.AIRTABLE_BASE_ID;
 const AT_HDRS = () => ({
   'Authorization': `Bearer ${process.env.AIRTABLE_API_KEY}`,

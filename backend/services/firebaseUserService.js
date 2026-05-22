@@ -4,7 +4,7 @@
  * Busca o crea el registro al autenticar con Firebase.
  */
 
-const TABLE = 'Usuarios_Admins';
+const TABLE = 'tblpy5YxDt6knhZHd'; // Usuarios_Admins
 
 const ADMIN_ROLES = ['Super_Admin', 'SuperAdmin', 'Admin', 'Junior', 'Asesor', 'Socio operador'];
 
