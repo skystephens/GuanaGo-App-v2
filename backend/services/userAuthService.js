@@ -38,6 +38,14 @@ const LOCAL_USERS = [
     activo: true
   },
   {
+    id: 'local-admin-marta',
+    nombre: 'Marta Porras',
+    email: 'nereams4ever@gmail.com',
+    pin: '',
+    rol: 'SuperAdmin',
+    activo: true
+  },
+  {
     id: 'local-turista-1',
     nombre: 'Turista Demo',
     email: 'turista@demo.com',
