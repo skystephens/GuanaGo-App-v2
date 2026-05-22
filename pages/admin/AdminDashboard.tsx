@@ -321,6 +321,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       { icon: <Network size={18} />, label: 'Torre Control', route: AppRoute.ADMIN_TORRE_CONTROL },
       { icon: <Map size={18} />, label: 'Mapa Mental', route: AppRoute.ADMIN_MAPA_MENTAL },
       { icon: <Server size={18} />, label: 'Backend', route: AppRoute.ADMIN_BACKEND },
+      { icon: <Map size={18} />, label: 'Zonas Taxi', route: AppRoute.ADMIN_TAXI_ZONE_EDITOR },
     ]},
     { label: 'CONFIG', items: [
       { icon: <Settings size={18} />, label: 'Control Panel', route: AppRoute.ADMIN_CONTROL_PANEL },
@@ -629,6 +630,11 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               icon={<FileText size={18} className="text-emerald-400" />} label="Documento Estratégico"
               onClick={() => onNavigate(AppRoute.ADMIN_ESTRATEGIA)}
               pulse="bg-emerald-400" gradient="from-emerald-900/50 to-teal-900/50" border="border-emerald-700 hover:border-emerald-500"
+            />
+            <MiniButton
+              icon={<Map size={18} className="text-cyan-400" />} label="Editor Zonas Taxi"
+              onClick={() => onNavigate(AppRoute.ADMIN_TAXI_ZONE_EDITOR)}
+              pulse="bg-cyan-400" gradient="from-cyan-900/50 to-blue-900/50" border="border-cyan-700 hover:border-cyan-500"
             />
           </Section>
 

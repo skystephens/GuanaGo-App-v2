@@ -72,6 +72,7 @@ import AdminCerebro from './pages/admin/AdminCerebro';
 import AdminControlPanel from './pages/admin/AdminControlPanel';
 import AdminSkyPanel from './pages/admin/AdminSkyPanel';
 import AdminCowork from './pages/admin/AdminCowork';
+import AdminTaxiZoneEditor from './pages/admin/AdminTaxiZoneEditor';
 
 // Artista Portal
 import ArtistaPortal from './pages/ArtistaPortal';
@@ -284,6 +285,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_APP_ARQUITECTURA: return <AdminAppArquitectura onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_PREVIEW_ROLES: return <AdminPreviewRoles onBack={goBack} onNavigate={navigateTo} onPreview={startPreview} />;
       case AppRoute.ADMIN_ESTRATEGIA: return <AdminEstrategia onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_TAXI_ZONE_EDITOR: return <AdminTaxiZoneEditor onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };
