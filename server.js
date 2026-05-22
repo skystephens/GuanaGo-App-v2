@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import axios from 'axios';
 
 // Import routes
 import authRoutes from './backend/routes/auth.js';
@@ -24,8 +25,9 @@ import publicQuoteRoutes from './backend/routes/publicQuote.js';
 import publicVoucherRoutes from './backend/routes/publicVoucher.js';
 import paymentsRoutes  from './backend/routes/payments.js';
 import hubRoutes      from './backend/routes/hub.js';
-import leadsRoutes    from './backend/routes/leads.js';
-import agentesRoutes  from './backend/routes/agentes.js';
+import leadsRoutes       from './backend/routes/leads.js';
+import agentesRoutes     from './backend/routes/agentes.js';
+import adminUsersRoutes  from './backend/routes/adminUsers.js';
 
 // Import middleware
 import { requestLogger } from './backend/middleware/logger.js';
@@ -221,9 +223,31 @@ app.use('/voucher', publicVoucherRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/pagar', paymentsRoutes);
 
+// ==================== IMAGE PROXY (PDF generation) ====================
+app.get('/api/proxy-image', async (req, res) => {
+  const { url } = req.query;
+  if (!url || typeof url !== 'string') return res.status(400).json({ error: 'Missing url' });
+  if (!url.startsWith('https://'))     return res.status(403).json({ error: 'HTTPS only' });
+  try {
+    const upstream = await axios.get(url, {
+      responseType: 'arraybuffer',
+      headers: { 'User-Agent': 'GuanaGO-PDF/1.0' },
+      timeout: 10000,
+    });
+    const ct = upstream.headers['content-type'] || 'image/jpeg';
+    res.set('Content-Type', ct.startsWith('image/') ? ct : 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(Buffer.from(upstream.data));
+  } catch (err) {
+    console.error('[proxy-image]', err.message);
+    res.status(502).json({ error: 'Fetch failed' });
+  }
+});
+
 // ==================== LEADS & AGENTES ====================
-app.use('/api/leads',   leadsRoutes);
-app.use('/api/agentes', agentesRoutes);
+app.use('/api/leads',        leadsRoutes);
+app.use('/api/agentes',      agentesRoutes);
+app.use('/api/admin/users',  adminUsersRoutes);
 
 // ==================== HUB & COTIZAR & REGISTRO ==================
 // MUST be before the SPA catch-all
