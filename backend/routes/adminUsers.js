@@ -54,17 +54,15 @@ router.get('/', verifyFirebaseToken, async (req, res) => {
     }
     if (filters.length) formula = filters.length === 1 ? filters[0] : `AND(${filters.join(',')})`;
 
-    const params = new URLSearchParams({
-      'sort[0][field]': 'Fecha_de_Registro',
-      'sort[0][direction]': 'desc',
-      maxRecords: String(pageSize),
-    });
-    if (formula) params.set('filterByFormula', formula);
-    if (offset) params.set('offset', offset);
+    let url = `${leadsUrl()}?maxRecords=${pageSize}`;
+    if (formula) url += `&filterByFormula=${encodeURIComponent(formula)}`;
+    if (offset)  url += `&offset=${encodeURIComponent(String(offset))}`;
 
-    const url = `${leadsUrl()}?${params.toString()}`;
     const response = await fetch(url, { headers: AT_HEADERS() });
-    if (!response.ok) throw new Error(`Airtable error: ${response.status}`);
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      throw new Error(`Airtable ${response.status}: ${body.slice(0, 200)}`);
+    }
 
     const data = await response.json();
     res.json({
