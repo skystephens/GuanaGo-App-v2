@@ -42,6 +42,7 @@ interface VoucherRecord {
 
 interface VoucherFormData {
   titular: string;
+  reservaNum: string;
   telefono: string;
   email: string;
   pax: string;
@@ -91,7 +92,7 @@ const ESTADO_CFG: Record<string, { label: string; bg: string; text: string; icon
 };
 
 const EMPTY_FORM: VoucherFormData = {
-  titular: '', telefono: '', email: '', pax: '',
+  titular: '', reservaNum: '', telefono: '', email: '', pax: '',
   fecha: '', hora: '', puntoEncuentro: '', observaciones: '',
   tourName: '', tourId: '', estado: 'Pendiente',
 };
@@ -524,8 +525,8 @@ function NuevoVoucherModal({ onClose, onSaved }: {
   };
 
   const handleSave = async () => {
-    if (!form.titular || !form.fecha || !form.tourName) {
-      setError('Completa: Titular, Tour y Fecha');
+    if (!form.titular || !form.reservaNum || !form.fecha || !form.tourName) {
+      setError('Completa: Titular, Reserva #, Tour y Fecha');
       return;
     }
     setSaving(true);
@@ -570,6 +571,18 @@ function NuevoVoucherModal({ onClose, onSaved }: {
               value={form.titular}
               onChange={e => set('titular', e.target.value)}
               placeholder="Nombre del cliente"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-600"
+            />
+          </div>
+
+          {/* Reserva # */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Reserva # *</label>
+            <input
+              type="text"
+              value={form.reservaNum}
+              onChange={e => set('reservaNum', e.target.value)}
+              placeholder="Ej: CIV-2026-00123"
               className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-600"
             />
           </div>

@@ -76,6 +76,7 @@ export async function createVoucher(data) {
     'Nombre del Cliente': data.titular,
     'Estado de la Reserva': data.estado || 'Pendiente',
   };
+  if (data.reservaNum)     fields['Reserva #']                  = data.reservaNum;
   if (data.telefono)       fields['Teléfono']                   = data.telefono;
   if (data.email)          fields['Email']                      = data.email;
   if (data.pax)            fields['Numero de Personas ']        = String(data.pax);
