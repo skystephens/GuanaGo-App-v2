@@ -79,26 +79,27 @@ router.get('/', verifyFirebaseToken, async (req, res) => {
   }
 
   // Fallback: return LOCAL_USERS so the panel is never empty
-  const { getLocalUserByEmail } = await import('../services/userAuthService.js');
-  const LOCAL_EMAILS = ['admin@guanago.travel', 'dev@guanago.travel', 'info@guiasai.com', 'nereams4ever@gmail.com'];
-  const localUsers = LOCAL_EMAILS.map((email, i) => {
-    const u = getLocalUserByEmail(email);
-    return {
-      id: `local-${i}`,
-      nombre: u?.nombre || email.split('@')[0],
-      email,
-      role: u?.rol || 'SuperAdmin',
-      estado: 'Activo',
-      fechaRegistro: null,
-      ultimaInteraccion: null,
-      metodoAuth: 'LOCAL',
-      firebaseUid: null,
-      saldo: 0,
-      telefono: null,
-      pais: null,
-      ciudad: null,
-    };
-  });
+  const LOCAL_FALLBACK = [
+    { email: 'admin@guanago.travel',     nombre: 'Super Admin',    role: 'SuperAdmin' },
+    { email: 'dev@guanago.travel',       nombre: 'Admin Dev',      role: 'SuperAdmin' },
+    { email: 'info@guiasai.com',         nombre: 'GuiaSAI Admin',  role: 'SuperAdmin' },
+    { email: 'nereams4ever@gmail.com',   nombre: 'Marta Porras',   role: 'SuperAdmin' },
+  ];
+  const localUsers = LOCAL_FALLBACK.map((u, i) => ({
+    id: `local-${i}`,
+    nombre: u.nombre,
+    email: u.email,
+    role: u.role,
+    estado: 'Activo',
+    fechaRegistro: null,
+    ultimaInteraccion: null,
+    metodoAuth: 'LOCAL',
+    firebaseUid: null,
+    saldo: 0,
+    telefono: null,
+    pais: null,
+    ciudad: null,
+  }));
 
   const searchLower = search ? String(search).toLowerCase() : '';
   const filtered = searchLower
