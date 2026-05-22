@@ -533,11 +533,19 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
           {/* ── 2. Socios & Usuarios ── */}
           <Section label="Socios & Usuarios" color="blue">
-            <div className="grid grid-cols-3 gap-2">
+            <BigButton
+              label="Gestión de Usuarios · CRM"
+              sub="Registros Firebase · Roles · Leads Airtable"
+              icon={<Users size={20} className="text-blue-400" />}
+              gradient="from-blue-950 via-indigo-950 to-blue-950"
+              border="border-blue-700 hover:border-blue-400"
+              pulse="bg-blue-400"
+              onClick={() => onNavigate(AppRoute.ADMIN_USERS)}
+            />
+            <div className="grid grid-cols-2 gap-2">
               <MiniButton icon={<Handshake size={18} className="text-emerald-400" />} label="Socios"
                 onClick={() => onNavigate(AppRoute.ADMIN_SOCIOS)}
                 pulse="bg-teal-500" gradient="from-emerald-900/60 to-teal-900/60" border="border-emerald-700 hover:border-emerald-500" />
-              <MiniButton icon={<Users size={18} className="text-blue-400" />} label="Usuarios" onClick={() => onNavigate(AppRoute.ADMIN_USERS)} />
               <MiniButton icon={<DollarSign size={18} className="text-green-400" />} label="Finanzas" onClick={() => onNavigate(AppRoute.ADMIN_FINANCE)} />
             </div>
           </Section>
