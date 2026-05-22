@@ -1,473 +1,380 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  ArrowLeft, Search, RefreshCw, Shield, Users, UserCheck,
+  ChevronDown, X, Loader2, AlertCircle, Phone, Calendar,
+  Globe, CheckCircle, Clock, XCircle, Edit3, Check,
+} from 'lucide-react';
+import { AppRoute } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 
-import React, { useState } from 'react';
-import { Search, MoreHorizontal, MessageCircle, X, MapPin, Phone, Calendar, Shield, CheckCircle, XCircle, Clock, ShoppingBag, Briefcase, Building, CreditCard, Tag, User as UserIcon, Globe, Star, Award, Zap } from 'lucide-react';
-import { PARTNER_CLIENTS, PARTNER_RESERVATIONS } from '../../constants';
-import { Client, Reservation } from '../../types';
-import ChatWindow from '../../components/ChatWindow';
+interface AdminUsersProps {
+  onBack: () => void;
+  onNavigate?: (route: AppRoute) => void;
+}
 
-type MainTab = 'turistas' | 'raizal' | 'embajadores' | 'establecimientos';
+interface LeadUser {
+  id: string;
+  nombre: string;
+  email: string;
+  role: string;
+  estado: string;
+  fechaRegistro: string | null;
+  ultimaInteraccion: string | null;
+  metodoAuth: string;
+  firebaseUid: string | null;
+  saldo: number;
+  telefono: string | null;
+  pais: string | null;
+  ciudad: string | null;
+}
 
-const TAB_CONFIG: { id: MainTab; label: string; icon: React.ReactNode; color: string }[] = [
-  { id: 'turistas',        label: 'Turistas',            icon: <Globe size={13} />,  color: '#38BDF8' },
-  { id: 'raizal',          label: 'Raizal & Residentes', icon: <Award size={13} />,  color: '#00E5CC' },
-  { id: 'embajadores',     label: 'Embajadores',         icon: <Star size={13} />,   color: '#FFB74D' },
-  { id: 'establecimientos',label: 'Establecimientos',    icon: <Building size={13} />,color: '#A78BFA' },
+const ROLES = [
+  { value: 'Turista',          label: 'Turista',           color: 'text-sky-400',     bg: 'bg-sky-900/40' },
+  { value: 'Raizal_Residente', label: 'Raizal/Residente',  color: 'text-teal-400',    bg: 'bg-teal-900/40' },
+  { value: 'Aliado',           label: 'Aliado',            color: 'text-orange-400',  bg: 'bg-orange-900/40' },
+  { value: 'Operador',         label: 'Operador',          color: 'text-blue-400',    bg: 'bg-blue-900/40' },
+  { value: 'Socio',            label: 'Socio',             color: 'text-emerald-400', bg: 'bg-emerald-900/40' },
+  { value: 'Artista',          label: 'Artista',           color: 'text-pink-400',    bg: 'bg-pink-900/40' },
+  { value: 'Asesor',           label: 'Asesor',            color: 'text-yellow-400',  bg: 'bg-yellow-900/40' },
+  { value: 'Admin',            label: 'Admin',             color: 'text-purple-400',  bg: 'bg-purple-900/40' },
+  { value: 'Super_Admin',      label: 'Super Admin',       color: 'text-red-400',     bg: 'bg-red-900/40' },
 ];
 
-const AMBASSADOR_LEVELS = ['L1 Explorador', 'L2 Conector', 'L3 Guardián', 'L4 Elite'];
+function roleMeta(role: string) {
+  return ROLES.find(r => r.value === role) || { value: role, label: role, color: 'text-gray-400', bg: 'bg-gray-800' };
+}
 
-// Mock ambassadors for display — in production these come from Airtable Embajadores
-const MOCK_AMBASSADORS = [
-  { id: 'emb1', name: 'Carlos Archbold',    tipo: 'Raizal',         nivel: 'L3 Guardián',    referidos: 12, comision: 378000, estado: 'Activo',    phone: '+57 313 000 0001' },
-  { id: 'emb2', name: 'María O\'Neill',     tipo: 'Residente OCCRE', nivel: 'L2 Conector',   referidos: 5,  comision: 105000, estado: 'Activo',    phone: '+57 313 000 0002' },
-  { id: 'emb3', name: 'Jimmy Forbes',       tipo: 'Freelancer',     nivel: 'L4 Elite',       referidos: 22, comision: 960000, estado: 'Activo',    phone: '+57 313 000 0003' },
-  { id: 'emb4', name: 'Rosita Livingston',  tipo: 'Raizal',         nivel: 'L1 Explorador',  referidos: 2,  comision: 30000,  estado: 'Pendiente', phone: '+57 313 000 0004' },
-];
+function fmtDate(iso: string | null) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+}
 
-const AdminUsers: React.FC = () => {
-  const [tab, setTab] = useState<MainTab>('turistas');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedChatUser, setSelectedChatUser] = useState<Client | null>(null);
-  const [selectedUser, setSelectedUser] = useState<Client | null>(null);
-  const [users, setUsers] = useState<Client[]>(PARTNER_CLIENTS);
+function StatCard({ label, value, color }: { label: string; value: number | string; color: string }) {
+  return (
+    <div className="bg-gray-800 rounded-xl p-3 border border-gray-700 text-center">
+      <div className={`text-lg font-bold ${color}`}>{value}</div>
+      <div className="text-[10px] text-gray-500 uppercase font-bold mt-0.5">{label}</div>
+    </div>
+  );
+}
 
-  // Filter helpers per tab
-  const tourists = users.filter(u => u.role === 'tourist' || (!u.role));
-  const establecimientos = users.filter(u => u.role === 'partner' || u.status === 'pending');
+const AdminUsers: React.FC<AdminUsersProps> = ({ onBack }) => {
+  const { firebaseUser } = useAuth();
+  const [users, setUsers] = useState<LeadUser[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [filterRole, setFilterRole] = useState('');
+  const [selected, setSelected] = useState<LeadUser | null>(null);
+  const [editRole, setEditRole] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const applySearch = <T extends { name: string }>(list: T[]) =>
-    searchQuery ? list.filter(u => u.name.toLowerCase().includes(searchQuery.toLowerCase())) : list;
+  const getToken = useCallback(async () => {
+    if (!firebaseUser) return null;
+    return firebaseUser.getIdToken();
+  }, [firebaseUser]);
 
-  const getRoleBadge = (role: string) => {
-    if (role === 'admin') return <span className="bg-purple-900/50 text-purple-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Admin</span>;
-    if (role === 'partner') return <span className="bg-blue-900/50 text-blue-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Operador</span>;
-    return <span className="bg-gray-700 text-gray-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Turista</span>;
+  const load = useCallback(async (searchVal = '', roleVal = '') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('Sin sesión activa');
+      const params = new URLSearchParams({ pageSize: '200' });
+      if (searchVal) params.set('search', searchVal.toLowerCase());
+      if (roleVal)   params.set('role', roleVal);
+      const res = await fetch(`/api/admin/users?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Error del servidor');
+      setUsers(data.users || []);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [getToken]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleSearch = (val: string) => {
+    setSearch(val);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => load(val, filterRole), 400);
   };
 
-  const getStatusBadge = (status: string) => {
-    if (status === 'active') return <span className="text-green-500 flex items-center gap-1 text-xs font-bold"><CheckCircle size={12}/> Activo</span>;
-    if (status === 'pending') return <span className="text-yellow-500 flex items-center gap-1 text-xs font-bold"><Clock size={12}/> Pendiente</span>;
-    return <span className="text-red-500 flex items-center gap-1 text-xs font-bold"><XCircle size={12}/> Suspendido</span>;
+  const handleFilterRole = (val: string) => {
+    setFilterRole(val);
+    load(search, val);
   };
 
-  const handleApproveUser = (userId: string) => {
-    if (window.confirm('¿Aprobar a este operador? Se le notificará por email.')) {
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'active' } : u));
-      setSelectedUser(prev => prev ? { ...prev, status: 'active' } : null);
+  const handleRoleChange = async (user: LeadUser, newRole: string) => {
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      const token = await getToken();
+      const res = await fetch(`/api/admin/users/${user.id}/role`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ role: newRole, firebaseUid: user.firebaseUid }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role: newRole } : u));
+      setSelected(prev => prev ? { ...prev, role: newRole } : null);
+      setSaveMsg(`Rol actualizado a ${roleMeta(newRole).label}`);
+      setEditRole(false);
+      setTimeout(() => setSaveMsg(null), 3000);
+    } catch (err: any) {
+      setSaveMsg(`Error: ${err.message}`);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const getUserHistory = (userId: string, userName: string) =>
-    PARTNER_RESERVATIONS.filter(r => r.clientName === userName);
-
-  const getLevelColor = (nivel: string) => {
-    if (nivel.includes('L4')) return '#A78BFA';
-    if (nivel.includes('L3')) return '#FFB74D';
-    if (nivel.includes('L2')) return '#00E5CC';
-    return '#6B8A9E';
-  };
-
-  const getTipoColor = (tipo: string) => {
-    if (tipo === 'Raizal') return { bg: 'rgba(255,183,77,.12)', color: '#FFB74D', border: 'rgba(255,183,77,.25)' };
-    if (tipo === 'Freelancer') return { bg: 'rgba(167,139,250,.12)', color: '#A78BFA', border: 'rgba(167,139,250,.25)' };
-    return { bg: 'rgba(0,229,204,.1)', color: '#00E5CC', border: 'rgba(0,229,204,.2)' };
-  };
+  // Stats
+  const total = users.length;
+  const admins = users.filter(u => ['Super_Admin', 'Admin', 'Asesor'].includes(u.role)).length;
+  const partners = users.filter(u => ['Aliado', 'Operador', 'Socio', 'Artista'].includes(u.role)).length;
+  const tourists = users.filter(u => u.role === 'Turista' || u.role === 'Raizal_Residente').length;
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white pb-24 font-sans relative">
-      <header className="px-6 pt-12 pb-4 bg-gray-900 sticky top-0 z-10">
-        <h1 className="text-xl font-bold mb-4">Gestión de Usuarios</h1>
-        <div className="relative mb-4">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-          <input
-            type="text"
-            placeholder="Buscar por nombre..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-800 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none border border-gray-700 focus:border-green-500"
-          />
-        </div>
+    <div className="bg-gray-900 min-h-screen text-white pb-24 font-sans">
 
-        {/* Main Tabs */}
-        <div className="flex gap-1 overflow-x-auto no-scrollbar">
-          {TAB_CONFIG.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              style={tab === t.id ? { background: `${t.color}20`, color: t.color, borderColor: `${t.color}40` } : {}}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap border transition-all ${
-                tab === t.id ? 'border' : 'bg-gray-800 text-gray-400 border-gray-700'
-              }`}
-            >
-              {t.icon}
-              {t.label}
-            </button>
-          ))}
+      {/* Header */}
+      <header className="sticky top-0 z-20 bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+        <button onClick={onBack} className="p-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-400 hover:text-white">
+          <ArrowLeft size={20} />
+        </button>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-base font-bold leading-tight">Gestión de Usuarios</h1>
+          <p className="text-[11px] text-gray-500">Base: Leads · Airtable</p>
         </div>
+        <button
+          onClick={() => load(search, filterRole)}
+          disabled={loading}
+          className="p-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-400 hover:text-white disabled:opacity-50"
+        >
+          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+        </button>
       </header>
 
-      <div className="px-6 space-y-3 mt-2">
+      <div className="px-4 pt-4 space-y-4">
 
-        {/* ── TURISTAS ── */}
-        {tab === 'turistas' && (
-          <>
-            {/* Stats row */}
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              <div className="bg-gray-800 rounded-xl p-3 text-center border border-gray-700">
-                <div className="text-lg font-bold text-sky-400">{tourists.length}</div>
-                <div className="text-[10px] text-gray-500 uppercase font-bold mt-0.5">Turistas</div>
-              </div>
-              <div className="bg-gray-800 rounded-xl p-3 text-center border border-gray-700">
-                <div className="text-lg font-bold text-green-400">{tourists.filter(u => u.status === 'active').length}</div>
-                <div className="text-[10px] text-gray-500 uppercase font-bold mt-0.5">Activos</div>
-              </div>
-              <div className="bg-gray-800 rounded-xl p-3 text-center border border-gray-700">
-                <div className="text-lg font-bold text-purple-400">0</div>
-                <div className="text-[10px] text-gray-500 uppercase font-bold mt-0.5">GuanaPoints</div>
-              </div>
-            </div>
+        {/* Stats */}
+        <div className="grid grid-cols-4 gap-2">
+          <StatCard label="Total" value={total} color="text-white" />
+          <StatCard label="Turistas" value={tourists} color="text-sky-400" />
+          <StatCard label="Partners" value={partners} color="text-emerald-400" />
+          <StatCard label="Admin" value={admins} color="text-red-400" />
+        </div>
 
-            {applySearch(tourists).length === 0 && (
-              <div className="text-center py-10 text-gray-500">No hay turistas registrados.</div>
-            )}
-            {applySearch(tourists).map(user => (
-              <div
-                key={user.id}
-                onClick={() => setSelectedUser(user)}
-                className="bg-gray-800 rounded-xl p-4 border border-gray-700 flex items-center justify-between cursor-pointer hover:bg-gray-750 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <img src={user.image} alt={user.name} className="w-11 h-11 rounded-full object-cover border-2 border-gray-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm">{user.name}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-500">{user.city}, {user.country}</span>
-                      {getStatusBadge(user.status)}
-                    </div>
-                  </div>
-                </div>
-                <button className="text-gray-400 hover:text-white p-2"><MoreHorizontal size={18} /></button>
-              </div>
+        {/* Search + filter */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input
+              value={search}
+              onChange={e => handleSearch(e.target.value)}
+              placeholder="Buscar por nombre o email..."
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+          <div className="relative">
+            <select
+              value={filterRole}
+              onChange={e => handleFilterRole(e.target.value)}
+              className="appearance-none bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm pr-8 focus:outline-none focus:border-indigo-500"
+            >
+              <option value="">Todos los roles</option>
+              {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+            </select>
+            <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+          </div>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="flex items-center gap-2 p-3 bg-red-900/30 border border-red-800 rounded-xl text-sm text-red-400">
+            <AlertCircle size={16} />
+            {error}
+          </div>
+        )}
+
+        {/* Loading skeleton */}
+        {loading && users.length === 0 && (
+          <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="bg-gray-800 rounded-xl p-4 border border-gray-700 animate-pulse h-16" />
             ))}
-          </>
+          </div>
         )}
 
-        {/* ── RAIZAL & RESIDENTES ── */}
-        {tab === 'raizal' && (
-          <>
-            <div className="bg-gray-800/60 rounded-2xl border border-teal-900/40 p-4 mb-4">
-              <div className="text-xs font-bold text-teal-400 uppercase tracking-widest mb-2">Acerca de este segmento</div>
-              <p className="text-sm text-gray-400 leading-relaxed">
-                Personas que viven en San Andrés y Providencia — ya sea con ancestros raizales o con OCCRE. Son el canal de distribución más potente del ecosistema GuanaGO. Se gestionan desde la tabla <span className="text-teal-400 font-bold">Embajadores</span> en Airtable.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
-                <div className="text-[10px] text-yellow-500 uppercase font-bold mb-1">🤎 Raizal ancestral</div>
-                <p className="text-xs text-gray-400">Reconocimiento cultural + cupones en negocios raizales. Badge "Raizal Auténtico" desde el día 1.</p>
-              </div>
-              <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
-                <div className="text-[10px] text-teal-400 uppercase font-bold mb-1">🏘️ Residente OCCRE</div>
-                <p className="text-xs text-gray-400">Ingreso extra fácil + descuentos en servicios que ya usa. Link de WhatsApp como herramienta natural.</p>
-              </div>
-            </div>
-
-            <div className="text-center py-10">
-              <div className="text-4xl mb-3">🏝️</div>
-              <p className="text-gray-400 text-sm font-bold mb-1">Módulo en construcción</p>
-              <p className="text-gray-500 text-xs">Los raizales y residentes se gestionarán desde<br/>la tabla Embajadores en Airtable una vez creada.</p>
-              <a
-                href="https://airtable.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-block mt-4 px-4 py-2 rounded-lg bg-teal-900/30 border border-teal-800/50 text-teal-400 text-xs font-bold"
-              >
-                Ir a Airtable → Crear tabla Embajadores
-              </a>
-            </div>
-          </>
+        {/* Empty */}
+        {!loading && !error && users.length === 0 && (
+          <div className="text-center py-14 text-gray-500">
+            <Users size={32} className="mx-auto mb-2 opacity-30" />
+            <p className="text-sm">No se encontraron usuarios</p>
+          </div>
         )}
 
-        {/* ── EMBAJADORES ── */}
-        {tab === 'embajadores' && (
-          <>
-            {/* Stats */}
-            <div className="grid grid-cols-4 gap-2 mb-4">
-              {[
-                { label: 'Total', value: MOCK_AMBASSADORS.length, color: 'text-amber-400' },
-                { label: 'Activos', value: MOCK_AMBASSADORS.filter(e => e.estado === 'Activo').length, color: 'text-green-400' },
-                { label: 'Referidos/mes', value: MOCK_AMBASSADORS.reduce((a, e) => a + (e.estado === 'Activo' ? e.referidos : 0), 0), color: 'text-teal-400' },
-                { label: 'Comisión COP', value: '1.47M', color: 'text-purple-400' },
-              ].map(s => (
-                <div key={s.label} className="bg-gray-800 rounded-xl p-3 text-center border border-gray-700">
-                  <div className={`text-base font-bold ${s.color}`}>{s.value}</div>
-                  <div className="text-[10px] text-gray-500 uppercase font-bold mt-0.5">{s.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Level filter */}
-            <div className="flex gap-2 overflow-x-auto no-scrollbar mb-3">
-              <span className="text-[10px] text-gray-500 uppercase font-bold self-center flex-shrink-0">Nivel:</span>
-              {['Todos', ...AMBASSADOR_LEVELS].map(lvl => (
-                <button key={lvl} className="px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap bg-gray-800 text-gray-400 border border-gray-700 hover:border-amber-700 hover:text-amber-400 transition-colors">
-                  {lvl}
-                </button>
-              ))}
-            </div>
-
-            {applySearch(MOCK_AMBASSADORS).map(emb => {
-              const tc = getTipoColor(emb.tipo);
-              const lvlColor = getLevelColor(emb.nivel);
-              return (
-                <div key={emb.id} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: tc.bg, border: `2px solid ${tc.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                        {emb.tipo === 'Raizal' ? '🤎' : emb.tipo === 'Freelancer' ? '🎯' : '🏘️'}
-                      </div>
-                      <div>
-                        <div className="font-bold text-sm">{emb.name}</div>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100, background: tc.bg, color: tc.color, border: `1px solid ${tc.border}` }}>
-                          {emb.tipo}
-                        </span>
-                      </div>
-                    </div>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 100, background: `${lvlColor}18`, color: lvlColor, border: `1px solid ${lvlColor}40` }}>
-                      {emb.nivel}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="bg-gray-700/50 rounded-lg p-2">
-                      <div className="text-sm font-bold text-teal-400">{emb.referidos}</div>
-                      <div className="text-[10px] text-gray-500">Referidos</div>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-2">
-                      <div className="text-sm font-bold text-green-400">${(emb.comision / 1000).toFixed(0)}K</div>
-                      <div className="text-[10px] text-gray-500">Comisión COP</div>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-2">
-                      <div className={`text-sm font-bold ${emb.estado === 'Activo' ? 'text-green-400' : 'text-yellow-400'}`}>{emb.estado}</div>
-                      <div className="text-[10px] text-gray-500">Estado</div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 mt-3">
-                    <button className="flex-1 py-1.5 rounded-lg bg-gray-700 text-xs text-gray-300 font-bold border border-gray-600 hover:bg-gray-600 transition-colors">
-                      Ver perfil
-                    </button>
-                    <button className="py-1.5 px-3 rounded-lg bg-gray-700 text-xs text-amber-400 font-bold border border-gray-600 hover:bg-gray-600 transition-colors">
-                      <Zap size={12} />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-
-            <div className="mt-4 p-4 rounded-xl bg-amber-900/10 border border-amber-900/30 text-xs text-amber-400 font-bold text-center">
-              Datos de ejemplo — conectar con tabla Embajadores en Airtable
-            </div>
-          </>
-        )}
-
-        {/* ── ESTABLECIMIENTOS ── */}
-        {tab === 'establecimientos' && (
-          <>
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              <div className="bg-gray-800 rounded-xl p-3 text-center border border-gray-700">
-                <div className="text-lg font-bold text-purple-400">{establecimientos.length}</div>
-                <div className="text-[10px] text-gray-500 uppercase font-bold mt-0.5">Total</div>
-              </div>
-              <div className="bg-gray-800 rounded-xl p-3 text-center border border-gray-700">
-                <div className="text-lg font-bold text-green-400">{establecimientos.filter(u => u.status === 'active').length}</div>
-                <div className="text-[10px] text-gray-500 uppercase font-bold mt-0.5">Activos</div>
-              </div>
-              <div className="bg-gray-800 rounded-xl p-3 text-center border border-gray-700">
-                <div className="text-lg font-bold text-yellow-400">{establecimientos.filter(u => u.status === 'pending').length}</div>
-                <div className="text-[10px] text-gray-500 uppercase font-bold mt-0.5">Pendientes</div>
-              </div>
-            </div>
-
-            {establecimientos.filter(u => u.status === 'pending').length > 0 && (
-              <div className="bg-yellow-900/15 border border-yellow-800/40 rounded-xl p-3 mb-3 flex items-center gap-2 text-xs text-yellow-400 font-bold">
-                <Clock size={14} />
-                {establecimientos.filter(u => u.status === 'pending').length} establecimiento(s) pendiente(s) de aprobación
-              </div>
-            )}
-
-            {applySearch(establecimientos).length === 0 && (
-              <div className="text-center py-10 text-gray-500">No hay establecimientos registrados.</div>
-            )}
-            {applySearch(establecimientos).map(user => (
-              <div
+        {/* User list */}
+        <div className="space-y-2">
+          {users.map(user => {
+            const rm = roleMeta(user.role);
+            return (
+              <button
                 key={user.id}
-                onClick={() => setSelectedUser(user)}
-                className="bg-gray-800 rounded-xl p-4 border border-gray-700 flex items-center justify-between cursor-pointer hover:bg-gray-750 transition-colors"
+                onClick={() => { setSelected(user); setEditRole(false); setSaveMsg(null); }}
+                className="w-full bg-gray-800 hover:bg-gray-750 border border-gray-700 hover:border-gray-600 rounded-xl p-3.5 flex items-center gap-3 text-left transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <img src={user.image} alt={user.name} className={`w-11 h-11 rounded-full object-cover border-2 ${user.status === 'pending' ? 'border-yellow-500' : 'border-gray-600'}`} />
-                    {user.status === 'pending' && (
-                      <div className="absolute -top-1 -right-1 bg-yellow-500 text-black text-[10px] font-bold px-1 rounded-full">!</div>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm">{user.name}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      {getRoleBadge(user.role)}
-                      {getStatusBadge(user.status)}
-                    </div>
-                  </div>
+                <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center text-sm font-bold text-gray-300 shrink-0 uppercase">
+                  {user.nombre?.[0] || user.email?.[0] || '?'}
                 </div>
-                <button className="text-gray-400 hover:text-white p-2"><MoreHorizontal size={18} /></button>
-              </div>
-            ))}
-          </>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold truncate">{user.nombre || '(sin nombre)'}</p>
+                  <p className="text-[11px] text-gray-500 truncate">{user.email}</p>
+                </div>
+                <div className="shrink-0 flex flex-col items-end gap-1">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${rm.bg} ${rm.color}`}>
+                    {rm.label}
+                  </span>
+                  <span className="text-[10px] text-gray-600">{fmtDate(user.fechaRegistro)}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {users.length > 0 && (
+          <p className="text-center text-xs text-gray-600 pb-2">{users.length} usuarios cargados</p>
         )}
       </div>
 
-      {/* USER DETAIL MODAL (for Turistas & Establecimientos) */}
-      {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in">
-          <div className="bg-gray-900 w-full max-w-lg rounded-3xl border border-gray-800 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-10">
-            <div className="relative h-32 bg-gradient-to-r from-gray-800 to-gray-700">
-              <button onClick={() => setSelectedUser(null)} className="absolute top-4 right-4 bg-black/20 p-2 rounded-full hover:bg-black/40 transition-colors text-white">
-                <X size={20} />
-              </button>
-              <div className="absolute -bottom-10 left-6">
-                <img src={selectedUser.image} alt={selectedUser.name} className="w-20 h-20 rounded-full border-4 border-gray-900 bg-gray-800 object-cover shadow-xl" />
+      {/* Detail Modal */}
+      {selected && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-gray-900 w-full max-w-md rounded-2xl border border-gray-700 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+
+            {/* Modal header */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-800">
+              <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-base font-bold text-white uppercase shrink-0">
+                {selected.nombre?.[0] || selected.email?.[0] || '?'}
               </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm leading-tight truncate">{selected.nombre || '(sin nombre)'}</p>
+                <p className="text-[11px] text-gray-500 truncate">{selected.email}</p>
+              </div>
+              <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-500 hover:text-white">
+                <X size={18} />
+              </button>
             </div>
 
-            <div className="pt-12 px-6 pb-6 overflow-y-auto no-scrollbar">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-white leading-none mb-1">{selectedUser.name}</h2>
-                  <p className="text-gray-400 text-sm">{selectedUser.email}</p>
-                </div>
-                <button onClick={() => setSelectedChatUser(selectedUser)} className="bg-gray-800 p-2 rounded-lg text-blue-400 hover:bg-gray-700 shadow-sm">
-                  <MessageCircle size={20} />
-                </button>
-              </div>
+            <div className="overflow-y-auto p-4 space-y-4">
 
-              {selectedUser.status === 'pending' && (
-                <div className="bg-yellow-900/20 border border-yellow-500/30 p-4 rounded-xl mb-6 flex items-start gap-3">
-                  <Clock className="text-yellow-500 shrink-0 mt-0.5" size={20} />
-                  <div>
-                    <h3 className="font-bold text-yellow-500 text-sm">Solicitud de Afiliación</h3>
-                    <p className="text-gray-400 text-xs mt-1 mb-3">Este usuario desea unirse como operador. Valida los datos del negocio a continuación.</p>
-                    <div className="flex gap-2">
-                      <button onClick={() => handleApproveUser(selectedUser.id)} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors">
-                        Aprobar Operador
-                      </button>
-                      <button className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors border border-gray-700">
-                        Rechazar
-                      </button>
-                    </div>
-                  </div>
+              {/* Save msg */}
+              {saveMsg && (
+                <div className={`flex items-center gap-2 p-2.5 rounded-xl text-sm font-bold ${
+                  saveMsg.startsWith('Error') ? 'bg-red-900/40 text-red-400 border border-red-800' : 'bg-emerald-900/40 text-emerald-400 border border-emerald-800'
+                }`}>
+                  {saveMsg.startsWith('Error') ? <AlertCircle size={14} /> : <Check size={14} />}
+                  {saveMsg}
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-gray-800 p-3 rounded-xl border border-gray-700">
-                  <span className="text-gray-500 text-[10px] uppercase font-bold flex items-center gap-1 mb-1"><Shield size={10} /> Rol</span>
-                  <p className="text-sm font-medium capitalize">{selectedUser.role === 'partner' ? 'Operador' : 'Turista'}</p>
+              {/* Rol actual + editar */}
+              <div className="bg-gray-800 rounded-xl p-3.5 border border-gray-700">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1"><Shield size={10} /> Rol</span>
+                  <button
+                    onClick={() => setEditRole(v => !v)}
+                    className="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-bold"
+                  >
+                    <Edit3 size={11} /> {editRole ? 'Cancelar' : 'Cambiar rol'}
+                  </button>
                 </div>
-                <div className="bg-gray-800 p-3 rounded-xl border border-gray-700">
-                  <span className="text-gray-500 text-[10px] uppercase font-bold flex items-center gap-1 mb-1"><Calendar size={10} /> Registro</span>
-                  <p className="text-sm font-medium">{selectedUser.joinedDate || 'N/A'}</p>
-                </div>
-                <div className="bg-gray-800 p-3 rounded-xl border border-gray-700">
-                  <span className="text-gray-500 text-[10px] uppercase font-bold flex items-center gap-1 mb-1"><Phone size={10} /> Teléfono</span>
-                  <p className="text-sm font-medium">{selectedUser.phone || 'N/A'}</p>
-                </div>
-                <div className="bg-gray-800 p-3 rounded-xl border border-gray-700">
-                  <span className="text-gray-500 text-[10px] uppercase font-bold flex items-center gap-1 mb-1"><Globe size={10} /> Ubicación</span>
-                  <p className="text-sm font-medium truncate">{selectedUser.city}, {selectedUser.country}</p>
-                </div>
-              </div>
 
-              {(selectedUser.role === 'partner' || selectedUser.status === 'pending') && (
-                <div className="mb-8">
-                  <h3 className="font-bold text-gray-300 text-sm mb-4 flex items-center gap-2">
-                    <Briefcase size={18} className="text-emerald-500" /> Información del Negocio
-                  </h3>
-                  <div className="bg-gray-800/50 rounded-2xl border border-gray-700 overflow-hidden">
-                    <div className="grid grid-cols-1 divide-y divide-gray-700">
-                      <div className="p-4 flex justify-between items-center">
-                        <div className="flex items-center gap-3"><Building size={16} className="text-gray-500" /><span className="text-xs text-gray-400">Razón Social</span></div>
-                        <span className="text-sm font-bold text-emerald-400">{selectedUser.name}</span>
-                      </div>
-                      <div className="p-4 flex justify-between items-center">
-                        <div className="flex items-center gap-3"><CreditCard size={16} className="text-gray-500" /><span className="text-xs text-gray-400">NIT / ID Fiscal</span></div>
-                        <span className="text-sm font-bold text-gray-200">{selectedUser.documentId || '---'}</span>
-                      </div>
-                      <div className="p-4 flex justify-between items-center">
-                        <div className="flex items-center gap-3"><Tag size={16} className="text-gray-500" /><span className="text-xs text-gray-400">RNT</span></div>
-                        <span className="text-sm font-bold text-gray-200">{selectedUser.rnt || 'No suministrado'}</span>
-                      </div>
-                      <div className="p-4 flex justify-between items-center">
-                        <div className="flex items-center gap-3"><UserIcon size={16} className="text-gray-500" /><span className="text-xs text-gray-400">Responsable</span></div>
-                        <span className="text-sm font-bold text-gray-200">{selectedUser.responsible || 'N/A'}</span>
-                      </div>
-                      <div className="p-4">
-                        <div className="flex items-center gap-3 mb-2"><MapPin size={16} className="text-gray-500" /><span className="text-xs text-gray-400">Dirección Operativa</span></div>
-                        <p className="text-sm font-medium text-gray-300 pl-7">{selectedUser.address || selectedUser.location || 'San Andrés Isla'}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <h3 className="font-bold text-gray-300 text-sm mb-3 flex items-center gap-2">
-                <ShoppingBag size={16} /> Historial de Actividad
-              </h3>
-              <div className="space-y-2 mb-8">
-                {getUserHistory(selectedUser.id, selectedUser.name).length > 0 ? (
-                  getUserHistory(selectedUser.id, selectedUser.name).map((h, i) => (
-                    <div key={i} className="bg-gray-800 p-3 rounded-xl flex justify-between items-center text-sm border border-gray-700">
-                      <div>
-                        <p className="font-bold text-gray-200">{h.tourName}</p>
-                        <p className="text-xs text-gray-500">{h.date}</p>
-                      </div>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                        h.status === 'confirmed' ? 'bg-green-900/30 text-green-500' :
-                        h.status === 'cancelled' ? 'bg-red-900/30 text-red-500' : 'bg-gray-700 text-gray-400'
-                      }`}>
-                        {h.status === 'confirmed' ? 'Confirmado' : h.status}
-                      </span>
-                    </div>
-                  ))
+                {!editRole ? (
+                  <span className={`text-sm font-bold px-2.5 py-1 rounded-lg inline-block ${roleMeta(selected.role).bg} ${roleMeta(selected.role).color}`}>
+                    {roleMeta(selected.role).label}
+                  </span>
                 ) : (
-                  <div className="p-4 bg-gray-800/50 rounded-xl text-center text-xs text-gray-500 italic">
-                    No hay historial de reservas visible.
+                  <div className="space-y-1.5">
+                    {saving && (
+                      <div className="flex items-center gap-2 text-xs text-indigo-400">
+                        <Loader2 size={12} className="animate-spin" /> Guardando...
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {ROLES.map(r => (
+                        <button
+                          key={r.value}
+                          disabled={saving}
+                          onClick={() => handleRoleChange(selected, r.value)}
+                          className={`py-2 rounded-lg text-xs font-bold border transition-colors disabled:opacity-50 ${
+                            selected.role === r.value
+                              ? `${r.bg} ${r.color} border-current`
+                              : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-gray-500'
+                          }`}
+                        >
+                          {r.value === selected.role && <UserCheck size={11} className="inline mr-1" />}
+                          {r.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
 
-              <div className="flex gap-3">
-                <button className="flex-1 py-3 rounded-xl bg-gray-800 border border-gray-700 text-gray-300 font-bold text-sm hover:bg-gray-700 transition-colors">
-                  Editar Perfil
-                </button>
-                <button className="flex-1 py-3 rounded-xl border border-red-900/50 text-red-500 font-bold text-sm hover:bg-red-900/20 transition-colors">
-                  Suspender
-                </button>
+              {/* Info grid */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                  <p className="text-gray-500 flex items-center gap-1 mb-1"><Calendar size={10} /> Registro</p>
+                  <p className="font-bold">{fmtDate(selected.fechaRegistro)}</p>
+                </div>
+                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                  <p className="text-gray-500 mb-1">Auth</p>
+                  <p className="font-bold">{selected.metodoAuth || '—'}</p>
+                </div>
+                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                  <p className="text-gray-500 flex items-center gap-1 mb-1"><Globe size={10} /> País</p>
+                  <p className="font-bold truncate">{selected.pais || '—'}</p>
+                </div>
+                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                  <p className="text-gray-500 mb-1">Estado</p>
+                  <p className={`font-bold ${selected.estado === 'Activo' ? 'text-green-400' : selected.estado === 'Nuevo' ? 'text-sky-400' : 'text-yellow-400'}`}>
+                    {selected.estado}
+                  </p>
+                </div>
+                {selected.telefono && (
+                  <div className="bg-gray-800 rounded-xl p-3 border border-gray-700 col-span-2">
+                    <p className="text-gray-500 flex items-center gap-1 mb-1"><Phone size={10} /> Teléfono</p>
+                    <p className="font-bold">{selected.telefono}</p>
+                  </div>
+                )}
               </div>
+
+              {/* Firebase UID */}
+              {selected.firebaseUid && (
+                <div className="bg-gray-800/60 rounded-xl p-3 border border-gray-700/50">
+                  <p className="text-[10px] text-gray-600 mb-0.5">Firebase UID</p>
+                  <p className="text-[11px] text-gray-500 font-mono break-all">{selected.firebaseUid}</p>
+                </div>
+              )}
+
+              {!selected.firebaseUid && (
+                <div className="flex items-center gap-2 p-2.5 bg-yellow-900/20 border border-yellow-900/40 rounded-xl text-xs text-yellow-500">
+                  <Clock size={13} />
+                  Usuario legacy — no tiene sesión Firebase aún
+                </div>
+              )}
+
             </div>
           </div>
         </div>
-      )}
-
-      {selectedChatUser && (
-        <ChatWindow
-          currentUserRole="admin"
-          currentUserId="admin"
-          targetUser={selectedChatUser}
-          onClose={() => setSelectedChatUser(null)}
-        />
       )}
     </div>
   );

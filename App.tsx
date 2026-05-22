@@ -249,7 +249,7 @@ const App: React.FC = () => {
       case AppRoute.PARTNER_SERVICE_DETAIL: return <PartnerServiceDetail onBack={goBack} onNavigate={navigateTo} data={detailData} />;
       case AppRoute.PARTNER_ACCOMMODATIONS: return <PartnerAccommodations onBack={goBack} />;
       case AppRoute.ADMIN_DASHBOARD: return <AdminDashboard onNavigate={navigateTo} />;
-      case AppRoute.ADMIN_USERS: return <AdminUsers />;
+      case AppRoute.ADMIN_USERS: return <AdminUsers onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_APPROVALS: return <AdminApprovals onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_RESERVATIONS: return <AdminReservations onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_STRUCTURE: return <AdminStructureMap onBack={goBack} onNavigate={navigateTo} />;

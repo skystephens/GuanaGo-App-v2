@@ -12,14 +12,17 @@ import axios from 'axios';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
-import partnerRoutes   from './routes/partnerRoutes.js';
-import healthRoutes    from './routes/healthRoutes.js';
-import tasksRoutes     from './routes/tasks.js';
+import partnerRoutes      from './routes/partnerRoutes.js';
+import healthRoutes       from './routes/healthRoutes.js';
+import tasksRoutes        from './routes/tasks.js';
 import paymentsRoutes, { resultadoPago } from './routes/payments.js';
-import directoryRoutes from './routes/directory.js';
-import hubRoutes       from './routes/hub.js';
-import leadsRoutes     from './routes/leads.js';
-import agentesRoutes   from './routes/agentes.js';
+import directoryRoutes    from './routes/directory.js';
+import hubRoutes          from './routes/hub.js';
+import leadsRoutes        from './routes/leads.js';
+import agentesRoutes      from './routes/agentes.js';
+import firebaseAuthRoutes from './routes/firebaseAuth.js';
+import adminUsersRoutes   from './routes/adminUsers.js';
+import agentRoutes        from './routes/agent.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -100,11 +103,20 @@ app.get('/api/proxy-image', async (req, res) => {
   }
 });
 
+// ── Auth Firebase + perfiles ─────────────────────────────────────────────────
+app.use('/api/firebase-auth', firebaseAuthRoutes);
+
+// ── Admin: gestión de usuarios ───────────────────────────────────────────────
+app.use('/api/admin/users', adminUsersRoutes);
+
 // ── Leads — formulario público de captura ─────────────────────────────────────
 app.use('/api/leads',   leadsRoutes);
 
 // ── Agentes — Jarvis comercial ────────────────────────────────────────────────
 app.use('/api/agentes', agentesRoutes);
+
+// ── Agente IA chat (dashboard admin) ─────────────────────────────────────────
+app.use('/api/agent',   agentRoutes);
 
 // ── Formulario de cotización pública ──────────────────────────────────────────
 const docsPath = join(__dirname, 'docs');
