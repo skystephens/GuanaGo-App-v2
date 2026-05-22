@@ -80,7 +80,13 @@ export async function createVoucher(data) {
   if (data.telefono)       fields['Teléfono']                   = data.telefono;
   if (data.email)          fields['Email']                      = data.email;
   if (data.pax)            fields['Numero de Personas ']        = String(data.pax);
-  if (data.fecha)          fields['Fecha de Inicio']            = data.fecha;
+  if (data.fecha) {
+    // HTML date input returns YYYY-MM-DD; Airtable stores as MM/DD/YYYY
+    const parts = String(data.fecha).split('-');
+    fields['Fecha de Inicio'] = parts.length === 3
+      ? `${parts[1]}/${parts[2]}/${parts[0]}`
+      : data.fecha;
+  }
   if (data.hora)           fields['Hora de Cita']               = data.hora;
   if (data.puntoEncuentro) fields['Punto de Encuentro']         = data.puntoEncuentro;
   if (data.observaciones)  fields['Observaciones Especiales']   = data.observaciones;
