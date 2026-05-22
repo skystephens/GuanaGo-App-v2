@@ -44,35 +44,74 @@ function mapRecord(r) {
 
 // ── GET /api/admin/users ──────────────────────────────────────────────────────
 router.get('/', verifyFirebaseToken, async (req, res) => {
-  try {
-    const { search, pageSize = 200, offset } = req.query;
+  const { search, pageSize = 200, offset } = req.query;
+  const hasAirtable = !!(process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID);
 
-    let url = `${tableUrl()}?maxRecords=${pageSize}`;
-    if (search) {
-      const s = String(search).replace(/'/g, "''");
-      const formula = `OR(SEARCH('${s}',LOWER({Nombre})),SEARCH('${s}',LOWER({Email})))`;
-      url += `&filterByFormula=${encodeURIComponent(formula)}`;
+  // Try Airtable first
+  if (hasAirtable) {
+    try {
+      let url = `${tableUrl()}?maxRecords=${pageSize}`;
+      if (search) {
+        const s = String(search).replace(/'/g, "''");
+        url += `&filterByFormula=${encodeURIComponent(`OR(SEARCH('${s}',LOWER({Nombre})),SEARCH('${s}',LOWER({Email})))`)}`;
+      }
+      if (offset) url += `&offset=${encodeURIComponent(String(offset))}`;
+
+      console.log('[admin/users] Fetching:', url.replace(process.env.AIRTABLE_API_KEY || '', '***'));
+      const response = await fetch(url, { headers: AT_HDRS() });
+      if (!response.ok) {
+        const body = await response.text().catch(() => '');
+        console.error(`[admin/users] Airtable ${response.status} for table "${TABLE}" base "${process.env.AIRTABLE_BASE_ID}": ${body.slice(0, 200)}`);
+        // Fall through to local fallback
+      } else {
+        const data = await response.json();
+        return res.json({
+          success: true,
+          users: (data.records || []).map(mapRecord),
+          total: data.records?.length || 0,
+          offset: data.offset || null,
+          source: TABLE,
+        });
+      }
+    } catch (err) {
+      console.error('[admin/users] fetch error:', err.message);
     }
-    if (offset) url += `&offset=${encodeURIComponent(String(offset))}`;
-
-    const response = await fetch(url, { headers: AT_HDRS() });
-    if (!response.ok) {
-      const body = await response.text().catch(() => '');
-      throw new Error(`Airtable ${response.status}: ${body.slice(0, 300)}`);
-    }
-
-    const data = await response.json();
-    res.json({
-      success: true,
-      users: (data.records || []).map(mapRecord),
-      total: data.records?.length || 0,
-      offset: data.offset || null,
-      source: TABLE,
-    });
-  } catch (err) {
-    console.error('[admin/users] GET error:', err.message);
-    res.status(500).json({ success: false, error: err.message });
   }
+
+  // Fallback: return LOCAL_USERS so the panel is never empty
+  const { getLocalUserByEmail } = await import('../services/userAuthService.js');
+  const LOCAL_EMAILS = ['admin@guanago.travel', 'dev@guanago.travel', 'info@guiasai.com', 'nereams4ever@gmail.com'];
+  const localUsers = LOCAL_EMAILS.map((email, i) => {
+    const u = getLocalUserByEmail(email);
+    return {
+      id: `local-${i}`,
+      nombre: u?.nombre || email.split('@')[0],
+      email,
+      role: u?.rol || 'SuperAdmin',
+      estado: 'Activo',
+      fechaRegistro: null,
+      ultimaInteraccion: null,
+      metodoAuth: 'LOCAL',
+      firebaseUid: null,
+      saldo: 0,
+      telefono: null,
+      pais: null,
+      ciudad: null,
+    };
+  });
+
+  const searchLower = search ? String(search).toLowerCase() : '';
+  const filtered = searchLower
+    ? localUsers.filter(u => u.nombre.toLowerCase().includes(searchLower) || u.email.toLowerCase().includes(searchLower))
+    : localUsers;
+
+  res.json({
+    success: true,
+    users: filtered,
+    total: filtered.length,
+    offset: null,
+    source: 'LOCAL_FALLBACK — revisar AIRTABLE_API_KEY en Render',
+  });
 });
 
 // ── PATCH /api/admin/users/:id/role ──────────────────────────────────────────
