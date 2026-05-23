@@ -4,10 +4,10 @@
 import React, { useEffect, useState } from 'react';
 import {
   TrendingUp, CheckCircle2, Clock, AlertTriangle, Loader2,
-  Target, Activity, ArrowLeft,
+  Target, Activity, ArrowLeft, DatabaseZap, CheckCheck,
 } from 'lucide-react';
 import {
-  suscribirIniciativas, calcularMetricas,
+  suscribirIniciativas, calcularMetricas, migrarDesdeLocalStorage,
   type Iniciativa, type MetricasEstrategia,
 } from '../../services/estrategiaService';
 import { AppRoute } from '../../types';
@@ -33,6 +33,9 @@ const DashboardAvance: React.FC<Props> = ({ onBack }) => {
   const [iniciativas, setIniciativas] = useState<Iniciativa[]>([]);
   const [metricas, setMetricas] = useState<MetricasEstrategia | null>(null);
   const [cargando, setCargando] = useState(true);
+  const [migrando, setMigrando] = useState(false);
+  const [migracionOk, setMigracionOk] = useState<number | null>(null);
+  const hayLocalData = !!localStorage.getItem('guanago_torre_v3');
 
   useEffect(() => {
     const unsub = suscribirIniciativas(data => {
@@ -42,6 +45,17 @@ const DashboardAvance: React.FC<Props> = ({ onBack }) => {
     });
     return () => unsub();
   }, []);
+
+  async function handleMigrar() {
+    setMigrando(true);
+    try {
+      const n = await migrarDesdeLocalStorage();
+      localStorage.removeItem('guanago_torre_v3');
+      setMigracionOk(n);
+    } finally {
+      setMigrando(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -55,6 +69,51 @@ const DashboardAvance: React.FC<Props> = ({ onBack }) => {
           <p className="text-[10px] text-gray-500">Centro 1 · Mesa de Control</p>
         </div>
       </header>
+
+      {/* Banner de migración — solo aparece si hay datos en localStorage */}
+      {(hayLocalData || migracionOk !== null) && (
+        <div className={`mx-4 mt-4 rounded-xl p-4 border ${
+          migracionOk !== null
+            ? 'bg-emerald-950 border-emerald-700'
+            : 'bg-amber-950 border-amber-700'
+        }`}>
+          {migracionOk !== null ? (
+            <div className="flex items-center gap-3">
+              <CheckCheck size={18} className="text-emerald-400 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-emerald-300">
+                  Migración completada
+                </p>
+                <p className="text-xs text-emerald-500 mt-0.5">
+                  {migracionOk} iniciativa(s) movidas a Firestore. Los datos locales fueron eliminados.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <DatabaseZap size={18} className="text-amber-400 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-bold text-amber-300">Torre de Control detectada</p>
+                  <p className="text-xs text-amber-500 mt-0.5">
+                    Hay iniciativas en localStorage. Migralas a Firestore para verlas aquí.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleMigrar}
+                disabled={migrando}
+                className="flex-shrink-0 flex items-center gap-1.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors"
+              >
+                {migrando
+                  ? <><Loader2 size={13} className="animate-spin" /> Migrando…</>
+                  : <><DatabaseZap size={13} /> Migrar ahora</>
+                }
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="px-4 py-5 space-y-5 pb-10">
         {cargando ? (
