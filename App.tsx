@@ -94,6 +94,8 @@ import AdminAliados from './pages/admin/AdminAliados';
 import AdminAppArquitectura from './pages/admin/AdminAppArquitectura';
 import AdminPreviewRoles from './pages/admin/AdminPreviewRoles';
 import AdminEstrategia from './pages/admin/AdminEstrategia';
+import DashboardAvance from './pages/admin/DashboardAvance';
+import AdminDinamicas from './pages/admin/AdminDinamicas';
 
 // Unified Panel
 import UnifiedPanel from './components/UnifiedPanel';
@@ -286,6 +288,8 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_PREVIEW_ROLES: return <AdminPreviewRoles onBack={goBack} onNavigate={navigateTo} onPreview={startPreview} />;
       case AppRoute.ADMIN_ESTRATEGIA: return <AdminEstrategia onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_TAXI_ZONE_EDITOR: return <AdminTaxiZoneEditor onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_DASHBOARD_AVANCE: return <DashboardAvance onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_DINAMICAS: return <AdminDinamicas onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };

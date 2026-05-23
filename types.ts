@@ -330,6 +330,8 @@ export enum AppRoute {
   ADMIN_PREVIEW_ROLES = 'ADMIN_PREVIEW_ROLES',
   ADMIN_ESTRATEGIA = 'ADMIN_ESTRATEGIA',
   ADMIN_TAXI_ZONE_EDITOR = 'ADMIN_TAXI_ZONE_EDITOR',
+  ADMIN_DASHBOARD_AVANCE = 'ADMIN_DASHBOARD_AVANCE',
+  ADMIN_DINAMICAS = 'ADMIN_DINAMICAS',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';
