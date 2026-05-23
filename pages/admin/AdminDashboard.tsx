@@ -6,7 +6,7 @@ import {
   LayoutGrid, Route, Map, Network, ExternalLink,
   Bot, Send, Loader2, ChevronDown, ChevronUp,
   CheckCircle2, AlertCircle, Receipt, Briefcase, ListChecks,
-  Menu, Wifi, WifiOff, Home, Settings, Globe, Layers,
+  Menu, Wifi, WifiOff, Home, Settings, Globe, Layers, Trophy,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { api } from '../../services/api';
@@ -319,6 +319,8 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       { icon: <Briefcase size={18} />, label: 'Cowork IA', route: AppRoute.ADMIN_COWORK },
       { icon: <ListChecks size={18} />, label: 'Tareas', route: AppRoute.ADMIN_TASKS },
       { icon: <Network size={18} />, label: 'Torre Control', route: AppRoute.ADMIN_TORRE_CONTROL },
+      { icon: <TrendingUp size={18} />, label: 'Avance', route: AppRoute.ADMIN_DASHBOARD_AVANCE },
+      { icon: <Trophy size={18} />, label: 'Dinámicas', route: AppRoute.ADMIN_DINAMICAS },
       { icon: <Map size={18} />, label: 'Mapa Mental', route: AppRoute.ADMIN_MAPA_MENTAL },
       { icon: <Server size={18} />, label: 'Backend', route: AppRoute.ADMIN_BACKEND },
       { icon: <Map size={18} />, label: 'Zonas Taxi', route: AppRoute.ADMIN_TAXI_ZONE_EDITOR },
@@ -573,7 +575,20 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             </div>
           </Section>
 
-          {/* ── 3. Contenido & Cultura ── */}
+          {/* ── 3. Dinámicas & Comunidad ── */}
+          <Section label="Dinámicas & Comunidad" color="orange">
+            <BigButton
+              label="Dinámicas y Embajadores"
+              sub="Concursos · Embajadores residentes y turistas · Rutas Raizal"
+              icon={<Trophy size={20} className="text-orange-400" />}
+              gradient="from-orange-950 via-amber-950 to-orange-950"
+              border="border-orange-700 hover:border-orange-400"
+              pulse="bg-orange-400"
+              onClick={() => onNavigate(AppRoute.ADMIN_DINAMICAS)}
+            />
+          </Section>
+
+          {/* ── 4. Contenido & Cultura ── */}
           <Section label="Contenido & Cultura" color="orange">
             <div className="grid grid-cols-3 gap-2">
               <MiniButton icon={<PackageIcon size={18} className="text-orange-400" />} label="Servicios" onClick={() => onNavigate(AppRoute.ADMIN_SERVICES)} />
@@ -633,6 +648,11 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               icon={<Globe size={18} className="text-cyan-400" />} label="Vista Previa por Rol"
               onClick={() => onNavigate(AppRoute.ADMIN_PREVIEW_ROLES)}
               pulse="bg-cyan-400" gradient="from-cyan-900/50 to-blue-900/50" border="border-cyan-700 hover:border-cyan-500"
+            />
+            <MiniButton
+              icon={<TrendingUp size={18} className="text-teal-400" />} label="Dashboard Avance"
+              onClick={() => onNavigate(AppRoute.ADMIN_DASHBOARD_AVANCE)}
+              pulse="bg-teal-400" gradient="from-teal-900/50 to-cyan-900/50" border="border-teal-700 hover:border-teal-500"
             />
             <MiniButton
               icon={<FileText size={18} className="text-emerald-400" />} label="Documento Estratégico"
