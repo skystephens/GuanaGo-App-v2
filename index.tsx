@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
+import './lib/i18n'; // ← sistema de idiomas ES/EN/PT
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

@@ -97,11 +97,17 @@ import AdminEstrategia from './pages/admin/AdminEstrategia';
 import DashboardAvance from './pages/admin/DashboardAvance';
 import AdminDinamicas from './pages/admin/AdminDinamicas';
 
+// Páginas B2C nuevas (Turista + Residente)
+import ConcursosResidente from './pages/ConcursosResidente';
+import EmbajadorPanel from './pages/EmbajadorPanel';
+import GamificacionTurista from './pages/GamificacionTurista';
+
 // Unified Panel
 import UnifiedPanel from './components/UnifiedPanel';
 import UserProfileButton from './components/UserProfileButton';
 
 import Navigation from './components/Navigation';
+import LanguageSelector from './components/LanguageSelector';
 import GuanaChatbot from './components/GuanaChatbot';
 import CartFloatingBar from './components/CartFloatingBar';
 import DirectoryMapbox from './components/DirectoryMapbox';
@@ -142,17 +148,17 @@ const App: React.FC = () => {
       setCurrentRoute(prevRoute);
       setHistory((prev) => prev.slice(0, -1));
     } else {
-      if (userRole === 'Turista') setCurrentRoute(AppRoute.HOME);
-      else if (userRole === 'Socio' || userRole === 'Aliado' || userRole === 'Operador' || userRole === 'Artista') setCurrentRoute(AppRoute.PROFILE);
+      if (userRole === 'Turista' || userRole === 'Residente') setCurrentRoute(AppRoute.HOME);
+      else if (['Socio', 'Aliado', 'Operador', 'Artista'].includes(userRole as string)) setCurrentRoute(AppRoute.PROFILE);
       else setCurrentRoute(AppRoute.ADMIN_DASHBOARD);
     }
   };
 
   const switchRole = (newRole: UserRole) => {
     authSwitchRole(newRole);
-    if (newRole === 'Turista' || newRole === 'Local') {
+    if (newRole === 'Turista' || newRole === 'Residente' || newRole === 'Local') {
       setCurrentRoute(AppRoute.HOME);
-    } else if (newRole === 'Socio' || newRole === 'Aliado' || newRole === 'Operador' || newRole === 'Artista') {
+    } else if (['Socio', 'Aliado', 'Operador', 'Artista'].includes(newRole as string)) {
       setCurrentRoute(AppRoute.PROFILE);
     } else if (newRole === 'SuperAdmin') {
       setCurrentRoute(AppRoute.ADMIN_DASHBOARD);
@@ -290,11 +296,16 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_TAXI_ZONE_EDITOR: return <AdminTaxiZoneEditor onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_DASHBOARD_AVANCE: return <DashboardAvance onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_DINAMICAS: return <AdminDinamicas onBack={goBack} onNavigate={navigateTo} />;
+      // ── Rutas B2C nuevas ────────────────────────────────────────────────────
+      case AppRoute.CONCURSOS:  return <ConcursosResidente onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.EMBAJADOR:  return <EmbajadorPanel onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.RETOS:      return <GamificacionTurista onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.MI_VIAJE:   return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };
 
-  const isDark = !['tourist', 'Turista', 'Local'].includes(userRole) && currentRoute !== AppRoute.LOGIN && currentRoute !== AppRoute.PARTNER_REGISTER;
+  const isDark = !['tourist', 'Turista', 'Residente', 'Local'].includes(userRole) && currentRoute !== AppRoute.LOGIN && currentRoute !== AppRoute.PARTNER_REGISTER;
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-300
@@ -311,7 +322,8 @@ const App: React.FC = () => {
         {isAuthenticated && (
           <header className={`sticky top-0 z-40 px-6 py-3 border-b
             ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}
-            hidden sm:flex sm:items-center sm:justify-end`}>
+            hidden sm:flex sm:items-center sm:justify-between`}>
+            <LanguageSelector variant="pills" />
             <UserProfileButton
               isAuthenticated={isAuthenticated}
               userName={userName}

@@ -23,6 +23,7 @@ import agentesRoutes      from './routes/agentes.js';
 import firebaseAuthRoutes from './routes/firebaseAuth.js';
 import adminUsersRoutes   from './routes/adminUsers.js';
 import agentRoutes        from './routes/agent.js';
+import dinamicasRoutes    from './routes/dinamicas.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -52,6 +53,7 @@ app.use('/api/health',    healthRoutes);
 app.use('/api/partners',  partnerRoutes);
 app.use('/api/tasks',     tasksRoutes);
 app.use('/api/directory', directoryRoutes);
+app.use('/api/dinamicas', dinamicasRoutes);
 
 // Pagos: /api/payments/create  /api/payments/webhook
 //        /pagar/:ref            /pago-resultado

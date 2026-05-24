@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { User, Award, ShieldCheck, Copy, ExternalLink, Settings, MessageCircle, LogOut, ChevronRight, Mail, Trophy, CreditCard, Ticket, Gift, Zap, Tag, Star, Briefcase, Shield, Loader2, Target, Sparkles, QrCode, Phone, MapPin, X, Globe, UserCheck, IdCard, ArrowLeft, Music } from 'lucide-react';
+import LanguageSelector from '../components/LanguageSelector';
 import { PARTNER_CLIENTS } from '../constants';
 import { AppRoute, UserRole, Client, Campaign, GuanaUser } from '../types';
 import UnifiedPanel from '../components/UnifiedPanel';
@@ -301,7 +302,12 @@ const AccountDashboard: React.FC<AccountDashboardProps> = ({ onLogout, onSwitchR
         </p>
         
         <div className="space-y-4 w-full">
-          <button 
+          {/* Selector de idioma */}
+          <div className="flex justify-center mb-2">
+            <LanguageSelector variant="pills" />
+          </div>
+
+          <button
             onClick={() => setShowAuthGate(true)}
             className="w-full bg-emerald-600 text-white font-black py-5 rounded-[24px] shadow-xl shadow-emerald-100 uppercase text-sm tracking-widest active:scale-95 transition-all"
           >

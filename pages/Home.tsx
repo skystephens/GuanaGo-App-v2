@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapPin, Anchor, Bed, Package as PackageIcon, Car, Globe } from 'lucide-react';
 import { getPrecioB2C, getUnidad } from '../services/pricing';
 import { cachedApi } from '../services/cachedApi';
 import { AppRoute, Tour } from '../types';
 import { GUANA_LOGO } from '../constants';
+import { useAuth } from '../context/AuthContext';
 import CaribbeanNightSection from '../components/CaribbeanNightSection';
 import CocoArtSection from '../components/CocoArtSection';
 import RutaRaizalSection from '../components/RutaRaizalSection';
@@ -14,9 +16,17 @@ interface HomeProps {
 }
 
 const Home: React.FC<HomeProps> = ({ onNavigate }) => {
+  const { t } = useTranslation();
+  const { isAuthenticated, userRole, userName } = useAuth();
   const [services, setServices] = useState<Tour[]>([]);
   const [alojamientos, setAlojamientos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 'Local' es el rol backend para residentes de la isla
+  const isResidente = userRole === 'Residente' || userRole === 'Local';
+  const headline = isAuthenticated
+    ? t(isResidente ? 'home.residentHeadline' : 'home.touristHeadline')
+    : t('home.subtitle');
 
   useEffect(() => {
     fetchData();
@@ -71,10 +81,10 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
 
   const getCategoryLabel = (category: string) => {
      switch (category) {
-        case 'hotel': return 'Hotel';
+        case 'hotel': return t('map.hotels');
         case 'package': return 'Paquete';
-        case 'tour': return 'Tour';
-        case 'taxi': return 'Transporte';
+        case 'tour': return t('nav.tours');
+        case 'taxi': return t('nav.taxi');
         default: return 'Servicio';
      }
   };
@@ -84,17 +94,29 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
       <header className="px-6 md:px-8 lg:px-12 pt-12 pb-4 bg-white flex items-center justify-between">
          <div className="flex items-center gap-3">
            <div className="bg-emerald-50 w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center p-1 border border-emerald-100 shadow-sm">
-              <img src={GUANA_LOGO} alt="GuiaSAI" className="w-full h-full object-contain" />
+              <img src={GUANA_LOGO} alt="GuanaGO" className="w-full h-full object-contain" />
            </div>
            <div>
-              <h1 className="text-xs text-gray-400 font-bold uppercase tracking-wider">Explora SAI</h1>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800 leading-none">GuiaSAI</h2>
+              {isAuthenticated && userName ? (
+                <>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                    {isResidente ? '🌴 Residente' : '✈️ Turista'}
+                  </p>
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-800 leading-none">
+                    {t('home.greeting', { name: userName.split(' ')[0] })}
+                  </h2>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-xs text-gray-400 font-bold uppercase tracking-wider">{t('home.title')}</h1>
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-800 leading-none">GuanaGO</h2>
+                </>
+              )}
            </div>
          </div>
-         {/* Desktop: info adicional */}
          <div className="hidden md:flex items-center gap-4 text-sm text-gray-500">
            <span>🌴 San Andrés Isla</span>
-           <span className="text-emerald-600 font-semibold">Tu guía turística</span>
+           <span className="text-emerald-600 font-semibold">{headline}</span>
          </div>
       </header>
 
@@ -102,7 +124,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         {/* Sección Planifica tu Viaje - Accesos directos a categorías */}
         <div className="mb-8 mt-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm md:text-base font-black text-gray-400 uppercase tracking-widest">Planifica tu Viaje</h3>
+            <h3 className="text-sm md:text-base font-black text-gray-400 uppercase tracking-widest">{headline}</h3>
             <button 
               onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY)}
               className="text-emerald-600 text-xs md:text-sm font-bold hover:underline"
@@ -176,7 +198,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
 
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-black text-gray-800">Tours</h3>
+            <h3 className="text-lg font-black text-gray-800">{t('tours.title')}</h3>
             <button
               onClick={() => onNavigate(AppRoute.TOUR_LIST)}
               className="text-emerald-600 text-xs md:text-sm font-bold hover:underline"
@@ -251,7 +273,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-300">
                        <MapPin size={32} />
                     </div>
-                    <p className="text-gray-400 text-sm font-bold uppercase tracking-widest">No hay servicios activos</p>
+                    <p className="text-gray-400 text-sm font-bold uppercase tracking-widest">{t('common.error')}</p>
                 </div>
               )}
             </div>
@@ -263,8 +285,8 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-black text-gray-800">Alojamientos</h3>
-                <p className="text-[10px] text-gray-400 mt-0.5">Dónde quedarte en San Andrés</p>
+                <h3 className="text-lg font-black text-gray-800">{t('map.hotels')}</h3>
+                <p className="text-[10px] text-gray-400 mt-0.5">{t('home.subtitle')}</p>
               </div>
               <button
                 onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'hotel' })}

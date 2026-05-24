@@ -332,9 +332,15 @@ export enum AppRoute {
   ADMIN_TAXI_ZONE_EDITOR = 'ADMIN_TAXI_ZONE_EDITOR',
   ADMIN_DASHBOARD_AVANCE = 'ADMIN_DASHBOARD_AVANCE',
   ADMIN_DINAMICAS = 'ADMIN_DINAMICAS',
+  // Rutas B2C — Residente
+  CONCURSOS = 'CONCURSOS',
+  EMBAJADOR = 'EMBAJADOR',
+  // Rutas B2C — Turista
+  RETOS = 'RETOS',
+  MI_VIAJE = 'MI_VIAJE',
 }
 
-export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';
+export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Residente' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';
 
 export type TaskStatus = 'pendiente' | 'en_progreso' | 'urgente_pendiente' | 'terminado' | 'bloqueado';
 export type TaskPriority = 'baja' | 'media' | 'alta' | 'critica';
