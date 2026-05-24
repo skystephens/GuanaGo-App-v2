@@ -233,7 +233,7 @@ const AdminTaxiZoneEditor: React.FC<Props> = ({ onBack }) => {
   const activePts = zonePoints[activeZone];
 
   return (
-    <div className="flex flex-col h-screen bg-gray-950 text-gray-100 overflow-hidden">
+    <div className="flex flex-col h-full bg-gray-950 text-gray-100 overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-900 border-b border-gray-800 shrink-0">
         <button onClick={onBack} className="text-gray-500 hover:text-white transition-colors">

@@ -307,6 +307,9 @@ const App: React.FC = () => {
 
   const isDark = !['tourist', 'Turista', 'Residente', 'Local'].includes(userRole) && currentRoute !== AppRoute.LOGIN && currentRoute !== AppRoute.PARTNER_REGISTER;
 
+  // Rutas full-screen que no deben tener el shell normal (padding, nav, scroll, etc.)
+  const isFullScreenRoute = currentRoute === AppRoute.ADMIN_TAXI_ZONE_EDITOR;
+
   return (
     <div className={`min-h-screen font-sans transition-colors duration-300
       ${isDark ? 'bg-gray-950 text-white' : 'bg-gray-100 text-gray-900'}`}>
@@ -318,8 +321,8 @@ const App: React.FC = () => {
         md:shadow-2xl md:border-x
         ${isDark ? 'md:border-gray-800' : 'md:border-gray-200'}`}>
         
-        {/* User Profile Header - Desktop & Tablet */}
-        {isAuthenticated && (
+        {/* User Profile Header - Desktop & Tablet (oculto en rutas full-screen) */}
+        {isAuthenticated && !isFullScreenRoute && (
           <header className={`sticky top-0 z-40 px-6 py-3 border-b
             ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}
             hidden sm:flex sm:items-center sm:justify-between`}>
@@ -333,12 +336,18 @@ const App: React.FC = () => {
             />
           </header>
         )}
-        
-        <main className="min-h-screen pb-20 md:pb-24 relative overflow-auto">
+
+        {/* Main content: rutas full-screen toman el 100% sin padding ni scroll */}
+        <main className={isFullScreenRoute
+          ? 'h-screen overflow-hidden'
+          : 'min-h-screen pb-20 md:pb-24 relative overflow-auto'}>
           {renderScreen()}
         </main>
-        
-        <Navigation currentRoute={currentRoute} onNavigate={navigateTo} role={userRole} isAuthenticated={isAuthenticated} onLogout={handleLogout} />
+
+        {/* Navigation: oculto en rutas full-screen que ya tienen su propio header/back */}
+        {!isFullScreenRoute && (
+          <Navigation currentRoute={currentRoute} onNavigate={navigateTo} role={userRole} isAuthenticated={isAuthenticated} onLogout={handleLogout} />
+        )}
 
         {['tourist', 'Turista', 'Local'].includes(userRole) && (
           <>

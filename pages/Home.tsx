@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import CaribbeanNightSection from '../components/CaribbeanNightSection';
 import CocoArtSection from '../components/CocoArtSection';
 import RutaRaizalSection from '../components/RutaRaizalSection';
+import LanguageSelector from '../components/LanguageSelector';
 // GuanaPointsSection ocultado temporalmente
 
 interface HomeProps {
@@ -114,10 +115,18 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               )}
            </div>
          </div>
-         <div className="hidden md:flex items-center gap-4 text-sm text-gray-500">
-           <span>🌴 San Andrés Isla</span>
-           <span className="text-emerald-600 font-semibold">{headline}</span>
-         </div>
+
+         {/* Lado derecho del header:
+             - Anónimo: selector de idioma (visible en móvil y escritorio)
+             - Autenticado: hint descriptivo solo en escritorio (el selector ya está en el sticky header de App.tsx) */}
+         {!isAuthenticated ? (
+           <LanguageSelector variant="pills" />
+         ) : (
+           <div className="hidden md:flex items-center gap-4 text-sm text-gray-500">
+             <span>🌴 San Andrés Isla</span>
+             <span className="text-emerald-600 font-semibold">{headline}</span>
+           </div>
+         )}
       </header>
 
       <div className="px-6 md:px-8 lg:px-12">
