@@ -1,28 +1,55 @@
 /**
  * Taxi Zones Route — GuanaGO
  * GET  /api/taxi-zones → devuelve los puntos GPS de las 5 zonas guardadas
- * POST /api/taxi-zones → guarda (admin) los puntos desde el editor
+ * POST /api/taxi-zones → guarda los puntos desde el editor
  *
- * Almacenamiento: Firestore  →  config/taxi_zones
+ * Almacenamiento: Airtable base appiReH55Qhrbv4Lk
+ * Estrategia: un solo registro en la tabla Procedimientos_RAG con
+ * campo "Titulo" = "__taxi_zones_config__" y el JSON en "Contenido".
+ * Si no existe el registro, GET devuelve null y POST lo crea.
  */
 
 import express from 'express';
-import admin, { firebaseInitialized } from '../firebaseAdmin.js';
+import { config } from '../config.js';
 
 const router = express.Router();
-const DOC    = 'config/taxi_zones';
+
+const BASE_ID = config.airtable.baseId || 'appiReH55Qhrbv4Lk';
+const TABLE   = 'Procedimientos_RAG';
+const AT_URL  = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE)}`;
+const KEY     = '__taxi_zones_config__';
+
+const headers = () => ({
+  Authorization: `Bearer ${config.airtable.apiKey}`,
+  'Content-Type': 'application/json',
+});
+
+/** Busca el record de config en Airtable. Devuelve { id, zones } o null */
+async function findConfigRecord() {
+  const params = new URLSearchParams({
+    filterByFormula: `{Titulo} = "${KEY}"`,
+    maxRecords: '1',
+  });
+  const res = await fetch(`${AT_URL}?${params}`, { headers: headers() });
+  if (!res.ok) throw new Error(`Airtable GET error ${res.status}`);
+  const data = await res.json();
+  const rec = data.records?.[0];
+  if (!rec) return null;
+  try {
+    return { id: rec.id, zones: JSON.parse(rec.fields['Contenido'] || 'null') };
+  } catch {
+    return { id: rec.id, zones: null };
+  }
+}
 
 // ── GET /api/taxi-zones ───────────────────────────────────────────────────────
 router.get('/', async (req, res) => {
   try {
-    if (!firebaseInitialized) {
-      return res.status(503).json({ success: false, error: 'Firebase no disponible' });
+    const record = await findConfigRecord();
+    if (!record || !record.zones) {
+      return res.json({ success: true, data: null });
     }
-    const snap = await admin.firestore().doc(DOC).get();
-    if (!snap.exists) {
-      return res.json({ success: true, data: null }); // aún no hay zonas guardadas
-    }
-    return res.json({ success: true, data: snap.data() });
+    return res.json({ success: true, data: { zones: record.zones } });
   } catch (err) {
     console.error('[taxi-zones GET]', err.message);
     res.status(500).json({ success: false, error: err.message });
@@ -32,17 +59,38 @@ router.get('/', async (req, res) => {
 // ── POST /api/taxi-zones ──────────────────────────────────────────────────────
 router.post('/', async (req, res) => {
   try {
-    if (!firebaseInitialized) {
-      return res.status(503).json({ success: false, error: 'Firebase no disponible' });
-    }
     const { zones } = req.body;
     if (!zones || typeof zones !== 'object') {
       return res.status(400).json({ success: false, error: '"zones" requerido' });
     }
-    await admin.firestore().doc(DOC).set({
-      zones,
-      updatedAt: new Date().toISOString(),
-    });
+
+    const jsonString = JSON.stringify(zones);
+    const existing   = await findConfigRecord();
+
+    if (existing) {
+      // Actualizar registro existente
+      const upd = await fetch(`${AT_URL}/${existing.id}`, {
+        method: 'PATCH',
+        headers: headers(),
+        body: JSON.stringify({ fields: { Contenido: jsonString } }),
+      });
+      if (!upd.ok) throw new Error(`Airtable PATCH error ${upd.status}`);
+    } else {
+      // Crear nuevo registro
+      const cre = await fetch(AT_URL, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          fields: {
+            Titulo:    KEY,
+            Contenido: jsonString,
+          },
+          typecast: true,
+        }),
+      });
+      if (!cre.ok) throw new Error(`Airtable POST error ${cre.status}`);
+    }
+
     console.log(`[taxi-zones] zonas guardadas — ${Object.keys(zones).length} zonas`);
     return res.json({ success: true });
   } catch (err) {
