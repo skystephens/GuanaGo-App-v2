@@ -76,6 +76,11 @@ const AdminTaxiZoneEditor: React.FC<Props> = ({ onBack }) => {
     map.addControl(new mapboxgl.ScaleControl({ unit: 'metric' }), 'bottom-left');
 
     map.on('load', () => {
+      // Forzar recálculo de dimensiones — Mapbox a veces inicializa con altura
+      // incorrecta cuando el contenedor usa flexbox con h-full
+      map.resize();
+      requestAnimationFrame(() => map.resize());
+
       ZONE_IDS.forEach(zid => {
         map.addSource(`poly-${zid}`, { type: 'geojson', data: geoEmpty() });
         map.addLayer({ id: `fill-${zid}`, type: 'fill', source: `poly-${zid}`,
@@ -125,7 +130,17 @@ const AdminTaxiZoneEditor: React.FC<Props> = ({ onBack }) => {
     });
 
     mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; mapLoaded.current = false; };
+
+    // ResizeObserver: mantiene el mapa sincronizado con el contenedor
+    const observer = new ResizeObserver(() => map.resize());
+    if (mapContainerRef.current) observer.observe(mapContainerRef.current);
+
+    return () => {
+      observer.disconnect();
+      map.remove();
+      mapRef.current = null;
+      mapLoaded.current = false;
+    };
   }, []);
 
   // ── Agregar punto ─────────────────────────────────────────────────────────
