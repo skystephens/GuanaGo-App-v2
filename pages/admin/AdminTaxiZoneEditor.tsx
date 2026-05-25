@@ -8,8 +8,12 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { ArrowLeft, Copy, Check, Trash2, CornerDownLeft, Map } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Trash2, CornerDownLeft, Map, Save, Loader2 } from 'lucide-react';
 import { AppRoute } from '../../types';
+
+const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  ? 'http://localhost:5000'
+  : '';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_API_KEY || '';
 
@@ -44,7 +48,9 @@ const AdminTaxiZoneEditor: React.FC<Props> = ({ onBack }) => {
   const [zonePoints, setZonePoints] = useState<Record<ZoneId, Point[]>>(emptyPoints());
   const [showExport, setShowExport] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [statusMsg, setStatusMsg] = useState('Selecciona una zona y haz clic en el mapa');
+  const [statusMsg, setStatusMsg] = useState('Cargando zonas guardadas…');
+  const [saving, setSaving] = useState(false);
+  const [saveOk, setSaveOk] = useState(false);
 
   // Refs para acceder a valores actuales en callbacks del mapa
   const activeZoneRef = useRef<ZoneId>('z1');
@@ -78,7 +84,33 @@ const AdminTaxiZoneEditor: React.FC<Props> = ({ onBack }) => {
           paint: { 'line-color': ZONES_META[zid].hex, 'line-width': 2 } });
       });
       mapLoaded.current = true;
-      setStatusMsg('Listo — haz clic en el mapa para trazar Z1');
+
+      // ── Cargar zonas guardadas del servidor ─────────────────────────────────
+      fetch(`${API_BASE}/api/taxi-zones`)
+        .then(r => r.json())
+        .then(data => {
+          if (!data.success || !data.data?.zones) {
+            setStatusMsg('Listo — no hay zonas guardadas, haz clic para trazar');
+            return;
+          }
+          const loaded = data.data.zones as Record<ZoneId, Point[]>;
+          setZonePoints(loaded);
+          zonePointsRef.current = loaded;
+          ZONE_IDS.forEach(zid => {
+            const pts = loaded[zid] || [];
+            if (pts.length >= 2) {
+              const src = map.getSource(`poly-${zid}`) as mapboxgl.GeoJSONSource;
+              src?.setData({
+                type: 'Feature', properties: {},
+                geometry: { type: 'Polygon', coordinates: [[...pts, pts[0]]] },
+              });
+            }
+            pts.forEach(([lng, lat], i) => addMarkerForPoint(zid, lng, lat, i + 1));
+          });
+          const total = ZONE_IDS.reduce((s, z) => s + (loaded[z]?.length || 0), 0);
+          setStatusMsg(`✓ ${total} puntos restaurados del servidor`);
+        })
+        .catch(() => setStatusMsg('Listo — haz clic en el mapa para trazar'));
     });
 
     map.on('click', (e) => {
@@ -229,6 +261,36 @@ const AdminTaxiZoneEditor: React.FC<Props> = ({ onBack }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // ── Guardar zonas en Firestore → el mapa público las leerá en tiempo real ──
+  const saveToBackend = async () => {
+    const hasPoints = ZONE_IDS.some(z => zonePoints[z].length >= 3);
+    if (!hasPoints) {
+      setStatusMsg('⚠️ Necesitas al menos 3 puntos en alguna zona');
+      return;
+    }
+    setSaving(true);
+    setSaveOk(false);
+    try {
+      const res = await fetch(`${API_BASE}/api/taxi-zones`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zones: zonePoints }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSaveOk(true);
+        setStatusMsg('✅ Zonas guardadas y publicadas en el mapa de taxi');
+        setTimeout(() => setSaveOk(false), 3000);
+      } else {
+        setStatusMsg('❌ Error al guardar: ' + data.error);
+      }
+    } catch {
+      setStatusMsg('❌ Error de conexión al guardar');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const totalPoints = ZONE_IDS.reduce((s, z) => s + zonePoints[z].length, 0);
   const activePts = zonePoints[activeZone];
 
@@ -246,10 +308,22 @@ const AdminTaxiZoneEditor: React.FC<Props> = ({ onBack }) => {
         <div className="flex-1" />
         <span className="text-xs text-gray-600">{totalPoints} pts totales</span>
         <button
-          onClick={() => setShowExport(true)}
-          className="bg-teal-900 hover:bg-teal-800 text-teal-300 border border-teal-700 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+          onClick={saveToBackend}
+          disabled={saving}
+          className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+            saveOk
+              ? 'bg-green-900 text-green-300 border border-green-700'
+              : 'bg-emerald-800 hover:bg-emerald-700 text-emerald-200 border border-emerald-600 disabled:opacity-50'
+          }`}
         >
-          Exportar código TSX →
+          {saving ? <Loader2 size={12} className="animate-spin" /> : saveOk ? <Check size={12} /> : <Save size={12} />}
+          {saving ? 'Guardando…' : saveOk ? '¡Publicado!' : 'Guardar y publicar'}
+        </button>
+        <button
+          onClick={() => setShowExport(true)}
+          className="bg-gray-800 hover:bg-gray-700 text-gray-400 border border-gray-700 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+        >
+          Exportar TSX
         </button>
       </div>
 
@@ -333,6 +407,25 @@ const AdminTaxiZoneEditor: React.FC<Props> = ({ onBack }) => {
 
           {/* Acciones */}
           <div className="p-2.5 border-t border-gray-800 flex flex-col gap-2 shrink-0">
+
+            {/* ★ Guardar y publicar */}
+            <button
+              onClick={saveToBackend}
+              disabled={saving}
+              className={`w-full text-xs font-bold py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                saveOk
+                  ? 'bg-green-900 text-green-300 border border-green-700'
+                  : 'bg-emerald-800 hover:bg-emerald-700 text-emerald-200 border border-emerald-600 disabled:opacity-50'
+              }`}
+            >
+              {saving
+                ? <><Loader2 size={12} className="animate-spin" /> Guardando…</>
+                : saveOk
+                  ? <><Check size={12} /> ¡Publicado!</>
+                  : <><Save size={12} /> Guardar y publicar</>
+              }
+            </button>
+
             <button
               onClick={closeCurrentPolygon}
               className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 text-xs font-semibold py-2 rounded-lg transition-colors flex items-center justify-center gap-2"

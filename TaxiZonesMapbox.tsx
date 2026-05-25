@@ -12,8 +12,25 @@ import { TAXI_ZONES } from '../constants';
 
 // Token se configura en .env como VITE_MAPBOX_API_KEY
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_API_KEY || '';
+const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  ? 'http://localhost:5000'
+  : '';
 
 mapboxgl.accessToken = MAPBOX_TOKEN;
+
+// Tipo de zona para uso interno
+type ZonePolygon = { coordinates: number[][][]; center: [number, number] };
+
+/** Convierte los puntos crudos del editor → formato GeoJSON listo para Mapbox */
+function pointsToPolygon(pts: number[][]): ZonePolygon | null {
+  if (!pts || pts.length < 3) return null;
+  const cx = pts.reduce((s, p) => s + p[0], 0) / pts.length;
+  const cy = pts.reduce((s, p) => s + p[1], 0) / pts.length;
+  return {
+    coordinates: [[...pts, pts[0]]],   // GeoJSON polygon cierra el anillo
+    center: [cx, cy] as [number, number],
+  };
+}
 
 interface TaxiZonesMapboxProps {
   selectedZoneId: string;
@@ -303,10 +320,71 @@ const ZONE_POLYGONS: Record<string, { coordinates: number[][][]; center: [number
 
 const TaxiZonesMapbox: React.FC<TaxiZonesMapboxProps> = ({ selectedZoneId, onSelectZone }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const mapRef         = useRef<mapboxgl.Map | null>(null);
+  const labelsRef      = useRef<mapboxgl.Marker[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Inicializar mapa
+  // activeZones: empieza con el fallback hardcoded, se reemplaza con datos del backend
+  const [activeZones, setActiveZones] = useState<Record<string, ZonePolygon>>(ZONE_POLYGONS);
+  const activeZonesRef = useRef<Record<string, ZonePolygon>>(ZONE_POLYGONS);
+
+  // ── Fetch zonas desde Firestore vía backend ────────────────────────────────
+  // Se ejecuta una vez que el mapa ya cargó para poder actualizar las fuentes
+  useEffect(() => {
+    if (!mapLoaded) return;
+    fetch(`${API_BASE}/api/taxi-zones`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success || !data.data?.zones) return;
+
+        const raw = data.data.zones as Record<string, number[][]>;
+        const converted: Record<string, ZonePolygon> = {};
+        for (const [zid, pts] of Object.entries(raw)) {
+          const poly = pointsToPolygon(pts);
+          if (poly) converted[zid] = poly;
+        }
+        if (!Object.keys(converted).length) return;
+
+        // Actualizar fuentes GeoJSON en el mapa ya cargado
+        const map = mapRef.current;
+        if (map) {
+          Object.entries(converted).forEach(([zoneId, zone]) => {
+            const src = map.getSource(`zone-${zoneId}`) as mapboxgl.GeoJSONSource | undefined;
+            src?.setData({
+              type: 'Feature',
+              properties: { id: zoneId },
+              geometry: { type: 'Polygon', coordinates: zone.coordinates },
+            });
+          });
+
+          // Actualizar labels: quitar los viejos y poner nuevos
+          labelsRef.current.forEach((m: mapboxgl.Marker) => m.remove());
+          labelsRef.current = [];
+          Object.entries(converted).forEach(([zoneId, zone]) => {
+            const zoneInfo = TAXI_ZONES.find((z: { id: string }) => z.id === zoneId);
+            if (!zoneInfo) return;
+            const color    = ZONE_HEX[zoneId] || '#888';
+            const shortName = zoneInfo.name.replace('Zona ', 'Z').split(' - ')[0];
+            const el = document.createElement('div');
+            el.style.cssText = `
+              background:rgba(255,255,255,0.92);padding:3px 8px;border-radius:8px;
+              font-size:11px;font-weight:700;box-shadow:0 1px 6px rgba(0,0,0,.25);
+              border:2px solid ${color};white-space:nowrap;pointer-events:none;color:#111;`;
+            el.textContent = shortName;
+            const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+              .setLngLat(zone.center)
+              .addTo(map);
+            labelsRef.current.push(marker);
+          });
+        }
+
+        setActiveZones(converted);
+        activeZonesRef.current = converted;
+      })
+      .catch(() => { /* usa fallback hardcoded silenciosamente */ });
+  }, [mapLoaded]);
+
+  // ── Inicializar mapa ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
@@ -323,8 +401,8 @@ const TaxiZonesMapbox: React.FC<TaxiZonesMapboxProps> = ({ selectedZoneId, onSel
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
 
     map.on('load', () => {
-      setMapLoaded(true);
-
+      // Inicializa fuentes y capas con el fallback hardcoded;
+      // el useEffect anterior las actualizará con datos reales del backend.
       Object.entries(ZONE_POLYGONS).forEach(([zoneId, zone]) => {
         const color = ZONE_HEX[zoneId] || '#888';
 
@@ -337,115 +415,82 @@ const TaxiZonesMapbox: React.FC<TaxiZonesMapboxProps> = ({ selectedZoneId, onSel
           },
         });
 
-        // Relleno semi-transparente
         map.addLayer({
           id: `zone-fill-${zoneId}`,
           type: 'fill',
           source: `zone-${zoneId}`,
-          paint: {
-            'fill-color': color,
-            'fill-opacity': 0.38,
-          },
+          paint: { 'fill-color': color, 'fill-opacity': 0.38 },
         });
 
-        // Borde de zona
         map.addLayer({
           id: `zone-border-${zoneId}`,
           type: 'line',
           source: `zone-${zoneId}`,
-          paint: {
-            'line-color': color,
-            'line-width': 2,
-            'line-opacity': 0.9,
-          },
+          paint: { 'line-color': color, 'line-width': 2, 'line-opacity': 0.9 },
         });
 
-        // Click para seleccionar
-        map.on('click', `zone-fill-${zoneId}`, () => {
-          onSelectZone(zoneId);
-        });
-
-        map.on('mouseenter', `zone-fill-${zoneId}`, () => {
-          map.getCanvas().style.cursor = 'pointer';
-        });
-        map.on('mouseleave', `zone-fill-${zoneId}`, () => {
-          map.getCanvas().style.cursor = '';
-        });
+        map.on('click', `zone-fill-${zoneId}`, () => onSelectZone(zoneId));
+        map.on('mouseenter', `zone-fill-${zoneId}`, () => { map.getCanvas().style.cursor = 'pointer'; });
+        map.on('mouseleave', `zone-fill-${zoneId}`, () => { map.getCanvas().style.cursor = ''; });
       });
 
-      // Labels flotantes por zona
+      // Labels iniciales (fallback)
       Object.entries(ZONE_POLYGONS).forEach(([zoneId, zone]) => {
-        const zoneInfo = TAXI_ZONES.find(z => z.id === zoneId);
+        const zoneInfo = TAXI_ZONES.find((z: { id: string }) => z.id === zoneId);
         if (!zoneInfo) return;
-        const color = ZONE_HEX[zoneId] || '#888';
+        const color    = ZONE_HEX[zoneId] || '#888';
         const shortName = zoneInfo.name.replace('Zona ', 'Z').split(' - ')[0];
-
         const el = document.createElement('div');
         el.style.cssText = `
-          background: rgba(255,255,255,0.92);
-          padding: 3px 8px;
-          border-radius: 8px;
-          font-size: 11px;
-          font-weight: 700;
-          box-shadow: 0 1px 6px rgba(0,0,0,0.25);
-          border: 2px solid ${color};
-          white-space: nowrap;
-          pointer-events: none;
-          color: #111;
-        `;
+          background:rgba(255,255,255,0.92);padding:3px 8px;border-radius:8px;
+          font-size:11px;font-weight:700;box-shadow:0 1px 6px rgba(0,0,0,.25);
+          border:2px solid ${color};white-space:nowrap;pointer-events:none;color:#111;`;
         el.textContent = shortName;
-
-        new mapboxgl.Marker({ element: el, anchor: 'center' })
+        const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
           .setLngLat(zone.center)
           .addTo(map);
+        labelsRef.current.push(marker);
       });
+
+      setMapLoaded(true); // dispara el fetch del backend
     });
 
     mapRef.current = map;
-
     return () => {
+      labelsRef.current.forEach((m: mapboxgl.Marker) => m.remove());
+      labelsRef.current = [];
       map.remove();
       mapRef.current = null;
     };
   }, []);
 
-  // Resaltar zona seleccionada
+  // ── Resaltar zona seleccionada ──────────────────────────────────────────────
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
     const map = mapRef.current;
+    const zones = activeZonesRef.current;
 
-    Object.entries(ZONE_POLYGONS).forEach(([zoneId]) => {
-      const isSelected = zoneId === selectedZoneId;
+    Object.keys(zones).forEach(zoneId => {
+      const isSelected  = zoneId === selectedZoneId;
       const hasSelection = !!selectedZoneId;
 
       if (map.getLayer(`zone-fill-${zoneId}`)) {
-        map.setPaintProperty(
-          `zone-fill-${zoneId}`,
-          'fill-opacity',
-          isSelected ? 0.65 : hasSelection ? 0.12 : 0.38
-        );
+        map.setPaintProperty(`zone-fill-${zoneId}`, 'fill-opacity',
+          isSelected ? 0.65 : hasSelection ? 0.12 : 0.38);
       }
-
       if (map.getLayer(`zone-border-${zoneId}`)) {
         map.setPaintProperty(`zone-border-${zoneId}`, 'line-width', isSelected ? 4 : 2);
-        map.setPaintProperty(
-          `zone-border-${zoneId}`,
-          'line-color',
-          isSelected ? '#ffffff' : (ZONE_HEX[zoneId] || '#888')
-        );
+        map.setPaintProperty(`zone-border-${zoneId}`, 'line-color',
+          isSelected ? '#ffffff' : (ZONE_HEX[zoneId] || '#888'));
       }
     });
 
-    if (selectedZoneId && ZONE_POLYGONS[selectedZoneId]) {
-      map.flyTo({
-        center: ZONE_POLYGONS[selectedZoneId].center,
-        zoom: 12.5,
-        duration: 700,
-      });
+    if (selectedZoneId && zones[selectedZoneId]) {
+      map.flyTo({ center: zones[selectedZoneId].center, zoom: 12.5, duration: 700 });
     } else if (!selectedZoneId) {
       map.flyTo({ center: SAN_ANDRES_CENTER, zoom: DEFAULT_ZOOM, duration: 700 });
     }
-  }, [selectedZoneId, mapLoaded]);
+  }, [selectedZoneId, mapLoaded, activeZones]);
 
   return (
     <div className="relative w-full rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
