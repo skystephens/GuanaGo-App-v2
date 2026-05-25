@@ -270,10 +270,11 @@ function AgenteVouchers({ vouchers }: { vouchers: VoucherRecord[] }) {
 
 // ─── Voucher Card ─────────────────────────────────────────────────────────────
 
-function VoucherCard({ voucher, onSelect, onUpdateEstado }: {
+function VoucherCard({ voucher, onSelect, onUpdateEstado, onEdit }: {
   voucher: VoucherRecord;
   onSelect: (v: VoucherRecord) => void;
   onUpdateEstado: (id: string, estado: string) => void;
+  onEdit: (v: VoucherRecord) => void;
 }) {
   const cfg = ESTADO_CFG[voucher.estado] ?? ESTADO_CFG['Pendiente'];
 
@@ -347,14 +348,23 @@ function VoucherCard({ voucher, onSelect, onUpdateEstado }: {
         >
           <ChevronRight size={12} /> Compartir enlace
         </button>
-        <select
-          value={voucher.estado}
-          onChange={e => { e.stopPropagation(); onUpdateEstado(voucher.id, e.target.value); }}
-          className="text-[10px] bg-gray-100 border border-gray-200 rounded-lg px-1.5 py-1 text-gray-600 focus:outline-none focus:border-orange-500"
-          onClick={e => e.stopPropagation()}
-        >
-          {ESTADOS.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={e => { e.stopPropagation(); onEdit(voucher); }}
+            className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-orange-100 flex items-center justify-center transition-colors"
+            title="Editar voucher"
+          >
+            <Pencil size={12} className="text-gray-500 hover:text-orange-600" />
+          </button>
+          <select
+            value={voucher.estado}
+            onChange={e => { e.stopPropagation(); onUpdateEstado(voucher.id, e.target.value); }}
+            className="text-[10px] bg-gray-100 border border-gray-200 rounded-lg px-1.5 py-1 text-gray-600 focus:outline-none focus:border-orange-500"
+            onClick={e => e.stopPropagation()}
+          >
+            {ESTADOS.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
       </div>
     </div>
   );
@@ -362,11 +372,10 @@ function VoucherCard({ voucher, onSelect, onUpdateEstado }: {
 
 // ─── Modal detalle ─────────────────────────────────────────────────────────────
 
-function VoucherModal({ voucher, onClose, onUpdateEstado, onEdit }: {
+function VoucherModal({ voucher, onClose, onUpdateEstado }: {
   voucher: VoucherRecord;
   onClose: () => void;
   onUpdateEstado: (id: string, estado: string) => void;
-  onEdit: (v: VoucherRecord) => void;
 }) {
   const [showEstados, setShowEstados] = useState(false);
   const cfg = ESTADO_CFG[voucher.estado] ?? ESTADO_CFG['Pendiente'];
@@ -480,15 +489,6 @@ function VoucherModal({ voucher, onClose, onUpdateEstado, onEdit }: {
               CÓMO LLEGAR AL PUNTO
             </a>
           )}
-
-          {/* CTA: Editar voucher */}
-          <button
-            onClick={() => { onClose(); onEdit(voucher); }}
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm border border-orange-400 text-orange-400 hover:bg-orange-500/10 transition-colors"
-          >
-            <Pencil size={15} />
-            EDITAR VOUCHER
-          </button>
 
         </div>
 
@@ -1197,6 +1197,7 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
                 voucher={v}
                 onSelect={setSelected}
                 onUpdateEstado={handleUpdateEstado}
+                onEdit={setEditingVoucher}
               />
             ))}
           </div>
@@ -1225,7 +1226,6 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
           voucher={selected}
           onClose={() => setSelected(null)}
           onUpdateEstado={handleUpdateEstado}
-          onEdit={v => { setSelected(null); setEditingVoucher(v); }}
         />
       )}
       {showForm && (
