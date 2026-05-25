@@ -96,7 +96,9 @@ export async function createVoucher(data) {
   const res = await fetch(tableUrl(), {
     method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify({ fields }),
+    // typecast: true → Airtable acepta valores nuevos en Single Select
+    // sin lanzar "Insufficient permissions to create new select option"
+    body: JSON.stringify({ fields, typecast: true }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -110,7 +112,8 @@ export async function updateVoucherStatus(recordId, estado) {
   const res = await fetch(tableUrl(recordId), {
     method: 'PATCH',
     headers: getHeaders(),
-    body: JSON.stringify({ fields: { 'Estado de la Reserva': estado } }),
+    // typecast: true por si el valor de estado no coincide exactamente con las opciones de Airtable
+    body: JSON.stringify({ fields: { 'Estado de la Reserva': estado }, typecast: true }),
   });
   if (!res.ok) throw new Error(`Airtable error ${res.status}`);
   return mapRecord(await res.json());
