@@ -10,7 +10,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   ArrowLeft, Search, Plus, Loader2, Bot, Send, ChevronDown, ChevronUp,
   Sparkles, CheckCircle2, Clock, XCircle, RefreshCw, MapPin, Users,
-  Calendar, Phone, Mail, Eye, X, ChevronRight, FileText,
+  Calendar, Phone, Mail, Eye, X, ChevronRight, FileText, Pencil,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 
@@ -37,6 +37,7 @@ interface VoucherRecord {
   estadoVoucher: string;
   telefono: string;
   email: string;
+  tourId: string;
   ultimaModificacion: string;
 }
 
@@ -361,10 +362,11 @@ function VoucherCard({ voucher, onSelect, onUpdateEstado }: {
 
 // ─── Modal detalle ─────────────────────────────────────────────────────────────
 
-function VoucherModal({ voucher, onClose, onUpdateEstado }: {
+function VoucherModal({ voucher, onClose, onUpdateEstado, onEdit }: {
   voucher: VoucherRecord;
   onClose: () => void;
   onUpdateEstado: (id: string, estado: string) => void;
+  onEdit: (v: VoucherRecord) => void;
 }) {
   const [showEstados, setShowEstados] = useState(false);
   const cfg = ESTADO_CFG[voucher.estado] ?? ESTADO_CFG['Pendiente'];
@@ -479,6 +481,14 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
             </a>
           )}
 
+          {/* CTA: Editar voucher */}
+          <button
+            onClick={() => { onClose(); onEdit(voucher); }}
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm border border-orange-400 text-orange-400 hover:bg-orange-500/10 transition-colors"
+          >
+            <Pencil size={15} />
+            EDITAR VOUCHER
+          </button>
 
         </div>
 
@@ -734,6 +744,262 @@ function NuevoVoucherModal({ onClose, onSaved }: {
   );
 }
 
+// ─── Formulario editar voucher ────────────────────────────────────────────────
+
+function EditarVoucherModal({ voucher, onClose, onSaved }: {
+  voucher: VoucherRecord;
+  onClose: () => void;
+  onSaved: (v: VoucherRecord) => void;
+}) {
+  const [form, setForm] = useState<VoucherFormData>({
+    titular:        voucher.titular        || '',
+    reservaNum:     voucher.reservaNum     || '',
+    telefono:       voucher.telefono       || '',
+    email:          voucher.email          || '',
+    pax:            voucher.pax            || '',
+    fecha:          voucher.fecha          || '',
+    hora:           voucher.hora           || '',
+    puntoEncuentro: voucher.puntoEncuentro || '',
+    observaciones:  voucher.observaciones  || '',
+    tourName:       voucher.tourName       || '',
+    tourId:         voucher.tourId         || '',
+    estado:         voucher.estado         || 'Pendiente',
+  });
+  const [saving, setSaving]         = useState(false);
+  const [error, setError]           = useState('');
+  const [servicios, setServicios]   = useState<Servicio[]>([]);
+  const [loadingServ, setLoadingServ] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API}/api/reservations/vouchers/civitatis-servicios`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setServicios(d.data || []); })
+      .catch(() => {})
+      .finally(() => setLoadingServ(false));
+  }, []);
+
+  const set = (k: keyof VoucherFormData, v: string) =>
+    setForm(f => ({ ...f, [k]: v }));
+
+  const handleTourChange = (id: string) => {
+    const s = servicios.find(x => x.id === id);
+    setForm(f => ({ ...f, tourId: id, tourName: s?.nombre || '' }));
+  };
+
+  const handleSave = async () => {
+    if (!form.titular || !form.reservaNum || !form.fecha || !form.tourName) {
+      setError('Completa: Titular, Reserva #, Tour y Fecha');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      const res = await fetch(`${API}/api/reservations/vouchers/${voucher.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al guardar');
+      onSaved(data.data);
+    } catch (e: any) {
+      setError(e.message || 'Error al guardar');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70" onClick={onClose}>
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
+          <div className="flex items-center gap-2">
+            <Pencil size={16} className="text-orange-400" />
+            <h2 className="font-bold text-white">Editar Voucher</h2>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700">
+            <X size={13} className="text-gray-400" />
+          </button>
+        </div>
+
+        <div className="px-5 py-4 space-y-3 max-h-[70vh] overflow-y-auto">
+
+          {/* Titular */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Titular *</label>
+            <input
+              type="text"
+              value={form.titular}
+              onChange={e => set('titular', e.target.value)}
+              placeholder="Nombre del cliente"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-600"
+            />
+          </div>
+
+          {/* Reserva # */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Reserva # *</label>
+            <input
+              type="text"
+              value={form.reservaNum}
+              onChange={e => set('reservaNum', e.target.value)}
+              placeholder="Ej: CIV-2026-00123"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-600"
+            />
+          </div>
+
+          {/* Tour / Servicio */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Tour / Servicio *</label>
+            {loadingServ ? (
+              <div className="flex items-center gap-2 py-2 text-xs text-gray-500">
+                <Loader2 size={13} className="animate-spin text-orange-400" /> Cargando servicios…
+              </div>
+            ) : (
+              <select
+                value={form.tourId}
+                onChange={e => handleTourChange(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-600"
+              >
+                <option value="">— Selecciona un tour —</option>
+                {servicios.map(s => (
+                  <option key={s.id} value={s.id}>{s.nombre}</option>
+                ))}
+              </select>
+            )}
+            {/* Si el tour actual no está en el dropdown, lo mostramos como referencia */}
+            {!loadingServ && form.tourId === '' && form.tourName && (
+              <p className="mt-1 text-[10px] text-gray-500">Tour actual: <span className="text-orange-400">{form.tourName}</span></p>
+            )}
+          </div>
+
+          {/* Fecha / Hora / Pax */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-1">
+              <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Fecha *</label>
+              <input
+                type="date"
+                value={form.fecha}
+                onChange={e => set('fecha', e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-2 py-2 text-sm text-white focus:outline-none focus:border-orange-600"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Hora</label>
+              <input
+                type="time"
+                value={form.hora}
+                onChange={e => set('hora', e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-2 py-2 text-sm text-white focus:outline-none focus:border-orange-600"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Pax</label>
+              <input
+                type="number"
+                min="1"
+                value={form.pax}
+                onChange={e => set('pax', e.target.value)}
+                placeholder="1"
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-2 py-2 text-sm text-white focus:outline-none focus:border-orange-600"
+              />
+            </div>
+          </div>
+
+          {/* Teléfono / Email */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Teléfono</label>
+              <input
+                type="tel"
+                value={form.telefono}
+                onChange={e => set('telefono', e.target.value)}
+                placeholder="+57 …"
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-600"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Email</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => set('email', e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-600"
+              />
+            </div>
+          </div>
+
+          {/* Punto de encuentro */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Punto de Encuentro</label>
+            <select
+              value={form.puntoEncuentro}
+              onChange={e => set('puntoEncuentro', e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-600"
+            >
+              <option value="">Seleccionar…</option>
+              {PUNTOS.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+
+          {/* Observaciones */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Observaciones</label>
+            <textarea
+              value={form.observaciones}
+              onChange={e => set('observaciones', e.target.value)}
+              rows={3}
+              placeholder="Necesidades especiales, alergias, solicitudes del cliente…"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-orange-600"
+            />
+          </div>
+
+          {/* Estado */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-gray-600 mb-1">Estado</label>
+            <div className="flex gap-2 flex-wrap">
+              {ESTADOS.map(s => {
+                const c = ESTADO_CFG[s];
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => set('estado', s)}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[10px] font-bold border transition-colors ${
+                      form.estado === s
+                        ? `${c.bg} ${c.text} border-current/30`
+                        : 'bg-gray-800 text-gray-500 border-gray-700'
+                    }`}
+                  >
+                    {c.icon} {c.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {error && <p className="text-xs text-red-400 font-bold">{error}</p>}
+        </div>
+
+        <div className="px-5 py-4 border-t border-gray-800 flex gap-3">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-500 border border-gray-700 hover:border-gray-600">
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-orange-600 hover:bg-orange-500 text-white disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {saving ? <Loader2 size={14} className="animate-spin" /> : <Pencil size={14} />}
+            {saving ? 'Guardando…' : 'Guardar cambios'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => {
@@ -744,6 +1010,7 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
   const [sortFecha, setSortFecha]         = useState<'asc' | 'desc'>('desc');
   const [selected, setSelected]           = useState<VoucherRecord | null>(null);
   const [showForm, setShowForm]           = useState(false);
+  const [editingVoucher, setEditingVoucher] = useState<VoucherRecord | null>(null);
   const [updatingId, setUpdatingId]       = useState<string | null>(null);
 
   const loadVouchers = useCallback(async () => {
@@ -782,6 +1049,11 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
   const handleVoucherSaved = (newV: VoucherRecord) => {
     setVouchers(prev => [newV, ...prev]);
     setShowForm(false);
+  };
+
+  const handleVoucherUpdated = (updated: VoucherRecord) => {
+    setVouchers(prev => prev.map(v => v.id === updated.id ? updated : v));
+    setEditingVoucher(null);
   };
 
   // Filtros + orden por fecha
@@ -953,12 +1225,20 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
           voucher={selected}
           onClose={() => setSelected(null)}
           onUpdateEstado={handleUpdateEstado}
+          onEdit={v => { setSelected(null); setEditingVoucher(v); }}
         />
       )}
       {showForm && (
         <NuevoVoucherModal
           onClose={() => setShowForm(false)}
           onSaved={handleVoucherSaved}
+        />
+      )}
+      {editingVoucher && (
+        <EditarVoucherModal
+          voucher={editingVoucher}
+          onClose={() => setEditingVoucher(null)}
+          onSaved={handleVoucherUpdated}
         />
       )}
     </div>

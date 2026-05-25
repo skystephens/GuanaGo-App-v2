@@ -41,6 +41,7 @@ function mapRecord(record) {
                         (Array.isArray(f['Nombre del Servicio (from Tipo de Tour)'])
                           ? f['Nombre del Servicio (from Tipo de Tour)'][0]
                           : '') || '',
+    tourId:             (Array.isArray(f['Tipo de Tour']) ? f['Tipo de Tour'][0] : '') || '',
     estado:             rawEstado || 'Pendiente',
     estadoVoucher:      sel(f['Estado_Voucher']),
     telefono:           f['Teléfono']             || '',
@@ -116,6 +117,41 @@ export async function updateVoucherStatus(recordId, estado) {
     body: JSON.stringify({ fields: { 'Estado de la Reserva': estado }, typecast: true }),
   });
   if (!res.ok) throw new Error(`Airtable error ${res.status}`);
+  return mapRecord(await res.json());
+}
+
+/** Actualizar campos completos de un voucher */
+export async function updateVoucher(recordId, data) {
+  const fields = {};
+
+  if (data.titular     !== undefined) fields['Nombre del Cliente']        = data.titular;
+  if (data.reservaNum  !== undefined) fields['Reserva #']                 = data.reservaNum;
+  if (data.telefono    !== undefined) fields['Teléfono']                  = data.telefono;
+  if (data.email       !== undefined) fields['Email']                     = data.email;
+  if (data.pax         !== undefined) fields['Numero de Personas ']       = String(data.pax);
+  if (data.hora        !== undefined) fields['Hora de Cita']              = data.hora;
+  if (data.puntoEncuentro !== undefined) fields['Punto de Encuentro']     = data.puntoEncuentro;
+  if (data.observaciones  !== undefined) fields['Observaciones Especiales'] = data.observaciones;
+  if (data.notasAdicionales !== undefined) fields['Notas adicionales']    = data.notasAdicionales;
+  if (data.estado      !== undefined) fields['Estado de la Reserva']      = data.estado;
+  if (data.tourId      !== undefined) fields['Tipo de Tour']              = [String(data.tourId)];
+
+  if (data.fecha !== undefined) {
+    const parts = String(data.fecha).split('-');
+    fields['Fecha de Inicio'] = parts.length === 3
+      ? `${parts[1]}/${parts[2]}/${parts[0]}`
+      : data.fecha;
+  }
+
+  const res = await fetch(tableUrl(recordId), {
+    method: 'PATCH',
+    headers: getHeaders(),
+    body: JSON.stringify({ fields, typecast: true }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `Airtable error ${res.status}`);
+  }
   return mapRecord(await res.json());
 }
 

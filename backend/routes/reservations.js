@@ -49,6 +49,16 @@ router.post('/vouchers', async (req, res, next) => {
   }
 });
 
+// Actualizar voucher completo (edición)
+router.patch('/vouchers/:id', async (req, res, next) => {
+  try {
+    const voucher = await vouchersService.updateVoucher(req.params.id, req.body);
+    res.json({ success: true, data: voucher });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Actualizar estado de voucher
 router.patch('/vouchers/:id/estado', async (req, res, next) => {
   try {
