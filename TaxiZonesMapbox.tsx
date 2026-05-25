@@ -13,7 +13,7 @@ import { TAXI_ZONES } from '../constants';
 // Token se configura en .env como VITE_MAPBOX_API_KEY
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_API_KEY || '';
 const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-  ? 'http://localhost:5000'
+  ? 'http://localhost:3001'
   : '';
 
 mapboxgl.accessToken = MAPBOX_TOKEN;

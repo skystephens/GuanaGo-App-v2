@@ -27,7 +27,7 @@ const headers = () => ({
 /** Busca el record de config en Airtable. Devuelve { id, zones } o null */
 async function findConfigRecord() {
   const params = new URLSearchParams({
-    filterByFormula: `{Titulo} = "${KEY}"`,
+    filterByFormula: `{Título} = "${KEY}"`,
     maxRecords: '1',
   });
   const res = await fetch(`${AT_URL}?${params}`, { headers: headers() });
@@ -36,7 +36,7 @@ async function findConfigRecord() {
   const rec = data.records?.[0];
   if (!rec) return null;
   try {
-    return { id: rec.id, zones: JSON.parse(rec.fields['Contenido'] || 'null') };
+    return { id: rec.id, zones: JSON.parse(rec.fields['Contenido_Markdown'] || 'null') };
   } catch {
     return { id: rec.id, zones: null };
   }
@@ -72,7 +72,7 @@ router.post('/', async (req, res) => {
       const upd = await fetch(`${AT_URL}/${existing.id}`, {
         method: 'PATCH',
         headers: headers(),
-        body: JSON.stringify({ fields: { Contenido: jsonString } }),
+        body: JSON.stringify({ fields: { 'Contenido_Markdown': jsonString } }),
       });
       if (!upd.ok) throw new Error(`Airtable PATCH error ${upd.status}`);
     } else {
@@ -82,8 +82,9 @@ router.post('/', async (req, res) => {
         headers: headers(),
         body: JSON.stringify({
           fields: {
-            Titulo:    KEY,
-            Contenido: jsonString,
+            'Título':             KEY,
+            'Tipo':               'SOP',
+            'Contenido_Markdown': jsonString,
           },
           typecast: true,
         }),

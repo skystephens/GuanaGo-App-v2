@@ -12,7 +12,7 @@ import { ArrowLeft, Copy, Check, Trash2, CornerDownLeft, Map, Save, Loader2 } fr
 import { AppRoute } from '../../types';
 
 const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-  ? 'http://localhost:5000'
+  ? 'http://localhost:3001'
   : '';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_API_KEY || '';
