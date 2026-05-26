@@ -8,7 +8,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { ArrowLeft, Copy, Check, Trash2, CornerDownLeft, Map, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Trash2, CornerDownLeft, Map, Save, Loader2, Upload } from 'lucide-react';
 import { AppRoute } from '../../types';
 
 const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -47,6 +47,10 @@ const AdminTaxiZoneEditor: React.FC<Props> = ({ onBack }) => {
   const [activeZone, setActiveZone] = useState<ZoneId>('z1');
   const [zonePoints, setZonePoints] = useState<Record<ZoneId, Point[]>>(emptyPoints());
   const [showExport, setShowExport] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [importText, setImportText] = useState('');
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [importPreview, setImportPreview] = useState<Record<ZoneId, number> | null>(null);
   const [copied, setCopied] = useState(false);
   const [statusMsg, setStatusMsg] = useState('Cargando zonas guardadas…');
   const [saving, setSaving] = useState(false);
@@ -238,6 +242,98 @@ const AdminTaxiZoneEditor: React.FC<Props> = ({ onBack }) => {
     return () => window.removeEventListener('keydown', handler);
   }, [closeCurrentPolygon, undoLastPoint, switchZone]);
 
+  // ── Parser de código TSX exportado ───────────────────────────────────────
+  function parseTsxCode(code: string): { zones: Record<ZoneId, Point[]>; errors: string[] } {
+    const zones = emptyPoints();
+    const errors: string[] = [];
+
+    for (const zid of ZONE_IDS) {
+      // Buscar el bloque de la zona (ej: "  z1:")
+      const zoneStart = code.indexOf(`  ${zid}:`);
+      if (zoneStart === -1) { errors.push(`${zid.toUpperCase()}: bloque no encontrado`); continue; }
+
+      // Buscar "coordinates: [[" dentro del bloque
+      const coordTag = code.indexOf('coordinates: [[', zoneStart);
+      if (coordTag === -1) { errors.push(`${zid.toUpperCase()}: sin coordenadas`); continue; }
+
+      // Extraer el contenido entre [[ y ]]
+      const innerStart = code.indexOf('[[', coordTag) + 2;
+      const innerEnd   = code.indexOf(']]', innerStart);
+      if (innerEnd === -1) { errors.push(`${zid.toUpperCase()}: formato mal cerrado`); continue; }
+
+      const block = code.slice(innerStart, innerEnd);
+
+      // Extraer todos los pares [lng, lat]
+      const re = /\[\s*(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)\s*\]/g;
+      const points: Point[] = [];
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(block)) !== null) {
+        points.push([parseFloat(m[1]), parseFloat(m[2])]);
+      }
+
+      if (points.length < 3) {
+        if (points.length > 0) errors.push(`${zid.toUpperCase()}: solo ${points.length} punto(s) — necesita ≥3`);
+        continue;
+      }
+
+      // Eliminar punto de cierre (último = primero) si existe
+      const first = points[0];
+      const last  = points[points.length - 1];
+      const isDupe = Math.abs(last[0] - first[0]) < 0.000001 && Math.abs(last[1] - first[1]) < 0.000001;
+      zones[zid] = isDupe ? points.slice(0, -1) : points;
+    }
+
+    return { zones, errors };
+  }
+
+  // ── Cargar zonas importadas en el mapa ────────────────────────────────────
+  const loadImportedZones = useCallback((newPoints: Record<ZoneId, Point[]>) => {
+    // Limpiar todos los marcadores actuales
+    ZONE_IDS.forEach(zid => {
+      markersRef.current[zid].forEach(m => m.remove());
+      markersRef.current[zid] = [];
+    });
+
+    // Actualizar estado y ref
+    setZonePoints(newPoints);
+    zonePointsRef.current = newPoints;
+
+    // Redibujar polígonos y marcadores
+    ZONE_IDS.forEach(zid => {
+      const pts = newPoints[zid];
+      redrawPolygon(zid, pts);
+      pts.forEach(([lng, lat], i) => addMarkerForPoint(zid, lng, lat, i + 1));
+    });
+
+    const total = ZONE_IDS.reduce((s, z) => s + newPoints[z].length, 0);
+    setStatusMsg(`✓ ${total} puntos importados correctamente`);
+    setShowImport(false);
+    setImportText('');
+    setImportErrors([]);
+    setImportPreview(null);
+  }, []);
+
+  // ── Previsualizar mientras el usuario pega ────────────────────────────────
+  const handleImportChange = (code: string) => {
+    setImportText(code);
+    if (!code.trim()) { setImportPreview(null); setImportErrors([]); return; }
+    const { zones, errors } = parseTsxCode(code);
+    setImportErrors(errors);
+    const preview = {} as Record<ZoneId, number>;
+    ZONE_IDS.forEach(zid => { preview[zid] = zones[zid]?.length ?? 0; });
+    setImportPreview(preview);
+  };
+
+  const handleImportConfirm = () => {
+    const { zones, errors } = parseTsxCode(importText);
+    const hasAny = ZONE_IDS.some(z => (zones[z]?.length ?? 0) >= 3);
+    if (!hasAny) {
+      setImportErrors([...errors, '⚠️ No se encontró ninguna zona válida (mínimo 3 puntos)']);
+      return;
+    }
+    loadImportedZones(zones);
+  };
+
   // ── Generar código ────────────────────────────────────────────────────────
   const generateCode = (): string => {
     const pts = zonePoints;
@@ -333,6 +429,12 @@ const AdminTaxiZoneEditor: React.FC<Props> = ({ onBack }) => {
         >
           {saving ? <Loader2 size={12} className="animate-spin" /> : saveOk ? <Check size={12} /> : <Save size={12} />}
           {saving ? 'Guardando…' : saveOk ? '¡Publicado!' : 'Guardar y publicar'}
+        </button>
+        <button
+          onClick={() => { setShowImport(true); setImportText(''); setImportErrors([]); setImportPreview(null); }}
+          className="bg-gray-800 hover:bg-gray-700 text-gray-400 border border-gray-700 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+        >
+          <Upload size={12} /> Importar TSX
         </button>
         <button
           onClick={() => setShowExport(true)}
@@ -467,6 +569,102 @@ const AdminTaxiZoneEditor: React.FC<Props> = ({ onBack }) => {
           </div>
         </div>
       </div>
+
+      {/* Modal de importación */}
+      {showImport && (
+        <div
+          className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4"
+          onClick={e => { if (e.target === e.currentTarget) setShowImport(false); }}
+        >
+          <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+              <div className="flex items-center gap-2">
+                <Upload size={14} className="text-teal-400" />
+                <h2 className="text-sm font-bold text-white">Importar código TSX</h2>
+              </div>
+              <button onClick={() => setShowImport(false)} className="text-gray-500 hover:text-white text-lg leading-none">×</button>
+            </div>
+
+            {/* Instrucción */}
+            <div className="px-4 py-2.5 bg-gray-800/50 border-b border-gray-800">
+              <p className="text-[11px] text-gray-400">
+                Pega el bloque <code className="text-teal-400">ZONE_POLYGONS = &#123;…&#125;</code> exportado previamente.
+                Los puntos se cargarán en el mapa y podrás seguir editando.
+              </p>
+            </div>
+
+            {/* Textarea */}
+            <div className="flex-1 overflow-hidden p-4 flex flex-col gap-3">
+              <textarea
+                value={importText}
+                onChange={e => handleImportChange(e.target.value)}
+                placeholder={`// GuanaGO — Zonas de Taxi San Andrés — generado …\nconst ZONE_POLYGONS: Record<…> = {\n  z1: {\n    coordinates: [[\n      [-81.707538, 12.574111],\n      …\n    ]],\n    …\n  },\n  …\n};`}
+                className="flex-1 min-h-[260px] bg-gray-950 border border-gray-700 rounded-lg px-3 py-2.5 font-mono text-[10px] text-green-300 placeholder-gray-700 resize-none focus:outline-none focus:border-teal-600"
+                spellCheck={false}
+              />
+
+              {/* Preview por zona */}
+              {importPreview && (
+                <div className="flex gap-2 flex-wrap">
+                  {ZONE_IDS.map(zid => {
+                    const pts = importPreview[zid];
+                    const ok  = pts >= 3;
+                    return (
+                      <div
+                        key={zid}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border ${
+                          ok
+                            ? 'bg-green-950 border-green-800 text-green-400'
+                            : pts > 0
+                              ? 'bg-yellow-950 border-yellow-800 text-yellow-500'
+                              : 'bg-gray-800 border-gray-700 text-gray-600'
+                        }`}
+                      >
+                        <div className="w-2 h-2 rounded-full" style={{ background: ZONES_META[zid].hex }} />
+                        {zid.toUpperCase()}
+                        <span className="opacity-70">{pts > 0 ? `${pts} pts` : 'vacío'}</span>
+                        {ok ? '✓' : pts > 0 ? '⚠' : ''}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Errores */}
+              {importErrors.length > 0 && (
+                <div className="bg-red-950/50 border border-red-800/50 rounded-lg px-3 py-2">
+                  {importErrors.map((e, i) => (
+                    <p key={i} className="text-[10px] text-red-400 font-mono">{e}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-2 px-4 py-3 border-t border-gray-800">
+              <button
+                onClick={handleImportConfirm}
+                disabled={!importText.trim()}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold bg-teal-900 text-teal-300 border border-teal-700 hover:bg-teal-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                <Upload size={12} /> Cargar en el mapa
+              </button>
+              <button
+                onClick={() => setShowImport(false)}
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700 transition-colors"
+              >
+                Cancelar
+              </button>
+              <div className="flex-1 flex items-center">
+                <p className="text-[10px] text-gray-600">
+                  Esto reemplazará los puntos actuales en el mapa
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de exportación */}
       {showExport && (
