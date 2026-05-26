@@ -1,55 +1,31 @@
 /**
  * Taxi Zones Route — GuanaGO
- * GET  /api/taxi-zones → devuelve los puntos GPS de las 5 zonas guardadas
- * POST /api/taxi-zones → guarda los puntos desde el editor
+ * GET  /api/taxi-zones → devuelve los polígonos GPS de las 5 zonas
+ * POST /api/taxi-zones → guarda los polígonos desde el editor
  *
- * Almacenamiento: Airtable base appiReH55Qhrbv4Lk
- * Estrategia: un solo registro en la tabla Procedimientos_RAG con
- * campo "Nombre del Sop" = "__taxi_zones_config__" y el JSON en "Contenido".
- * Si no existe el registro, GET devuelve null y POST lo crea.
+ * Almacenamiento: Firestore  →  colección "config" / documento "taxi_zones"
+ * Nada que ver con Airtable — las zonas son config geográfica de la app.
  */
 
 import express from 'express';
-import { config } from '../config.js';
+import admin, { firebaseInitialized } from '../firebaseAdmin.js';
 
 const router = express.Router();
 
-const BASE_ID = config.airtable.baseId || 'appiReH55Qhrbv4Lk';
-const TABLE   = 'Procedimientos_RAG';
-const AT_URL  = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE)}`;
-const KEY     = '__taxi_zones_config__';
-
-const headers = () => ({
-  Authorization: `Bearer ${config.airtable.apiKey}`,
-  'Content-Type': 'application/json',
-});
-
-/** Busca el record de config en Airtable. Devuelve { id, zones } o null */
-async function findConfigRecord() {
-  const params = new URLSearchParams({
-    filterByFormula: `{Nombre del Sop} = "${KEY}"`,
-    maxRecords: '1',
-  });
-  const res = await fetch(`${AT_URL}?${params}`, { headers: headers() });
-  if (!res.ok) throw new Error(`Airtable GET error ${res.status}`);
-  const data = await res.json();
-  const rec = data.records?.[0];
-  if (!rec) return null;
-  try {
-    return { id: rec.id, zones: JSON.parse(rec.fields['Contenido'] || 'null') };
-  } catch {
-    return { id: rec.id, zones: null };
-  }
-}
+const db = () => (firebaseInitialized ? admin.firestore() : null);
+const DOC  = () => db()?.collection('config').doc('taxi_zones');
 
 // ── GET /api/taxi-zones ───────────────────────────────────────────────────────
 router.get('/', async (req, res) => {
   try {
-    const record = await findConfigRecord();
-    if (!record || !record.zones) {
-      return res.json({ success: true, data: null });
-    }
-    return res.json({ success: true, data: { zones: record.zones } });
+    const ref = DOC();
+    if (!ref) return res.json({ success: true, data: null });
+
+    const snap = await ref.get();
+    if (!snap.exists) return res.json({ success: true, data: null });
+
+    const { zones } = snap.data();
+    return res.json({ success: true, data: { zones: zones || null } });
   } catch (err) {
     console.error('[taxi-zones GET]', err.message);
     res.status(500).json({ success: false, error: err.message });
@@ -64,35 +40,16 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ success: false, error: '"zones" requerido' });
     }
 
-    const jsonString = JSON.stringify(zones);
-    const existing   = await findConfigRecord();
+    const ref = DOC();
+    if (!ref) return res.status(503).json({ success: false, error: 'Firestore no disponible' });
 
-    if (existing) {
-      // Actualizar registro existente
-      const upd = await fetch(`${AT_URL}/${existing.id}`, {
-        method: 'PATCH',
-        headers: headers(),
-        body: JSON.stringify({ fields: { 'Contenido': jsonString } }),
-      });
-      if (!upd.ok) throw new Error(`Airtable PATCH error ${upd.status}`);
-    } else {
-      // Crear nuevo registro
-      const cre = await fetch(AT_URL, {
-        method: 'POST',
-        headers: headers(),
-        body: JSON.stringify({
-          fields: {
-            'Nombre del Sop': KEY,
-            'Categoria':      ['Config'],
-            'Contenido':      jsonString,
-          },
-          typecast: true,
-        }),
-      });
-      if (!cre.ok) throw new Error(`Airtable POST error ${cre.status}`);
-    }
+    await ref.set({
+      zones,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
-    console.log(`[taxi-zones] zonas guardadas — ${Object.keys(zones).length} zonas`);
+    const total = Object.keys(zones).length;
+    console.log(`[taxi-zones] ${total} zonas guardadas en Firestore`);
     return res.json({ success: true });
   } catch (err) {
     console.error('[taxi-zones POST]', err.message);
