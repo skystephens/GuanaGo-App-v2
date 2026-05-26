@@ -328,68 +328,6 @@ const TaxiZonesMapbox: React.FC<TaxiZonesMapboxProps> = ({ selectedZoneId, onSel
   const [activeZones, setActiveZones] = useState<Record<string, ZonePolygon>>(ZONE_POLYGONS);
   const activeZonesRef = useRef<Record<string, ZonePolygon>>(ZONE_POLYGONS);
 
-  // ── Fetch zonas desde Firestore vía backend ────────────────────────────────
-  // Se ejecuta una vez que el mapa ya cargó para poder actualizar las fuentes
-  useEffect(() => {
-    if (!mapLoaded) return;
-    fetch(`${API_BASE}/api/taxi-zones`, { cache: 'no-store' })
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then(data => {
-        if (!data.success || !data.data?.zones) {
-          console.warn('[TaxiZones] sin zonas en la respuesta:', data);
-          return;
-        }
-
-        const raw = data.data.zones as Record<string, number[][]>;
-        const converted: Record<string, ZonePolygon> = {};
-        for (const [zid, pts] of Object.entries(raw)) {
-          const poly = pointsToPolygon(pts);
-          if (poly) converted[zid] = poly;
-        }
-        if (!Object.keys(converted).length) return;
-
-        // Actualizar fuentes GeoJSON en el mapa ya cargado
-        const map = mapRef.current;
-        if (map) {
-          Object.entries(converted).forEach(([zoneId, zone]) => {
-            const src = map.getSource(`zone-${zoneId}`) as mapboxgl.GeoJSONSource | undefined;
-            src?.setData({
-              type: 'Feature',
-              properties: { id: zoneId },
-              geometry: { type: 'Polygon', coordinates: zone.coordinates },
-            });
-          });
-
-          // Actualizar labels: quitar los viejos y poner nuevos
-          labelsRef.current.forEach((m: mapboxgl.Marker) => m.remove());
-          labelsRef.current = [];
-          Object.entries(converted).forEach(([zoneId, zone]) => {
-            const zoneInfo = TAXI_ZONES.find((z: { id: string }) => z.id === zoneId);
-            if (!zoneInfo) return;
-            const color    = ZONE_HEX[zoneId] || '#888';
-            const shortName = zoneInfo.name.replace('Zona ', 'Z').split(' - ')[0];
-            const el = document.createElement('div');
-            el.style.cssText = `
-              background:rgba(255,255,255,0.92);padding:3px 8px;border-radius:8px;
-              font-size:11px;font-weight:700;box-shadow:0 1px 6px rgba(0,0,0,.25);
-              border:2px solid ${color};white-space:nowrap;pointer-events:none;color:#111;`;
-            el.textContent = shortName;
-            const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
-              .setLngLat(zone.center)
-              .addTo(map);
-            labelsRef.current.push(marker);
-          });
-        }
-
-        setActiveZones(converted);
-        activeZonesRef.current = converted;
-      })
-      .catch(err => console.error('[TaxiZones] error cargando zonas del backend:', err));
-  }, [mapLoaded]);
-
   // ── Inicializar mapa ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -406,10 +344,31 @@ const TaxiZonesMapbox: React.FC<TaxiZonesMapboxProps> = ({ selectedZoneId, onSel
 
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
 
-    map.on('load', () => {
-      // Inicializa fuentes y capas con el fallback hardcoded;
-      // el useEffect anterior las actualizará con datos reales del backend.
-      Object.entries(ZONE_POLYGONS).forEach(([zoneId, zone]) => {
+    map.on('load', async () => {
+      // ── Intentar cargar zonas del servidor (Firestore) ──────────────────────
+      let zonesToRender: Record<string, ZonePolygon> = ZONE_POLYGONS;
+      try {
+        const r = await fetch(`${API_BASE}/api/taxi-zones`, { cache: 'no-store' });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        if (data.success && data.data?.zones) {
+          const raw = data.data.zones as Record<string, number[][]>;
+          const converted: Record<string, ZonePolygon> = {};
+          for (const [zid, pts] of Object.entries(raw)) {
+            const poly = pointsToPolygon(pts);
+            if (poly) converted[zid] = poly;
+          }
+          if (Object.keys(converted).length > 0) {
+            zonesToRender = converted;
+            console.log(`[TaxiZones] ✅ ${Object.keys(converted).length} zonas cargadas del servidor`);
+          }
+        }
+      } catch (err) {
+        console.warn('[TaxiZones] usando zonas hardcoded (fallback):', err);
+      }
+
+      // ── Inicializar fuentes, capas y labels con las zonas definitivas ────────
+      Object.entries(zonesToRender).forEach(([zoneId, zone]) => {
         const color = ZONE_HEX[zoneId] || '#888';
 
         map.addSource(`zone-${zoneId}`, {
@@ -440,13 +399,13 @@ const TaxiZonesMapbox: React.FC<TaxiZonesMapboxProps> = ({ selectedZoneId, onSel
         map.on('mouseleave', `zone-fill-${zoneId}`, () => { map.getCanvas().style.cursor = ''; });
       });
 
-      // Labels iniciales (fallback)
-      Object.entries(ZONE_POLYGONS).forEach(([zoneId, zone]) => {
+      // Labels
+      Object.entries(zonesToRender).forEach(([zoneId, zone]) => {
         const zoneInfo = TAXI_ZONES.find((z: { id: string }) => z.id === zoneId);
         if (!zoneInfo) return;
-        const color    = ZONE_HEX[zoneId] || '#888';
+        const color     = ZONE_HEX[zoneId] || '#888';
         const shortName = zoneInfo.name.replace('Zona ', 'Z').split(' - ')[0];
-        const el = document.createElement('div');
+        const el        = document.createElement('div');
         el.style.cssText = `
           background:rgba(255,255,255,0.92);padding:3px 8px;border-radius:8px;
           font-size:11px;font-weight:700;box-shadow:0 1px 6px rgba(0,0,0,.25);
@@ -458,7 +417,9 @@ const TaxiZonesMapbox: React.FC<TaxiZonesMapboxProps> = ({ selectedZoneId, onSel
         labelsRef.current.push(marker);
       });
 
-      setMapLoaded(true); // dispara el fetch del backend
+      setActiveZones(zonesToRender);
+      activeZonesRef.current = zonesToRender;
+      setMapLoaded(true);
     });
 
     mapRef.current = map;
