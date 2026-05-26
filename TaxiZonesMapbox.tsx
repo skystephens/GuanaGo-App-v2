@@ -13,7 +13,7 @@ import { TAXI_ZONES } from '../constants';
 // Token se configura en .env como VITE_MAPBOX_API_KEY
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_API_KEY || '';
 const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-  ? 'http://localhost:3001'
+  ? 'http://localhost:5000'
   : '';
 
 mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -332,10 +332,16 @@ const TaxiZonesMapbox: React.FC<TaxiZonesMapboxProps> = ({ selectedZoneId, onSel
   // Se ejecuta una vez que el mapa ya cargó para poder actualizar las fuentes
   useEffect(() => {
     if (!mapLoaded) return;
-    fetch(`${API_BASE}/api/taxi-zones`)
-      .then(r => r.json())
+    fetch(`${API_BASE}/api/taxi-zones`, { cache: 'no-store' })
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then(data => {
-        if (!data.success || !data.data?.zones) return;
+        if (!data.success || !data.data?.zones) {
+          console.warn('[TaxiZones] sin zonas en la respuesta:', data);
+          return;
+        }
 
         const raw = data.data.zones as Record<string, number[][]>;
         const converted: Record<string, ZonePolygon> = {};
@@ -381,7 +387,7 @@ const TaxiZonesMapbox: React.FC<TaxiZonesMapboxProps> = ({ selectedZoneId, onSel
         setActiveZones(converted);
         activeZonesRef.current = converted;
       })
-      .catch(() => { /* usa fallback hardcoded silenciosamente */ });
+      .catch(err => console.error('[TaxiZones] error cargando zonas del backend:', err));
   }, [mapLoaded]);
 
   // ── Inicializar mapa ────────────────────────────────────────────────────────
