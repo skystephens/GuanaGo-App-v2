@@ -24,8 +24,10 @@ router.get('/', async (req, res) => {
     const snap = await ref.get();
     if (!snap.exists) return res.json({ success: true, data: null });
 
-    const { zones } = snap.data();
-    return res.json({ success: true, data: { zones: zones || null } });
+    const { zonesJson } = snap.data();
+    if (!zonesJson) return res.json({ success: true, data: null });
+
+    return res.json({ success: true, data: { zones: JSON.parse(zonesJson) } });
   } catch (err) {
     console.error('[taxi-zones GET]', err.message);
     res.status(500).json({ success: false, error: err.message });
@@ -43,8 +45,9 @@ router.post('/', async (req, res) => {
     const ref = DOC();
     if (!ref) return res.status(503).json({ success: false, error: 'Firestore no disponible' });
 
+    // Firestore no soporta arrays anidados (number[][][]) → guardar como JSON string
     await ref.set({
-      zones,
+      zonesJson: JSON.stringify(zones),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
