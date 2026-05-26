@@ -28,6 +28,7 @@ import hubRoutes      from './backend/routes/hub.js';
 import leadsRoutes       from './backend/routes/leads.js';
 import agentesRoutes     from './backend/routes/agentes.js';
 import adminUsersRoutes  from './backend/routes/adminUsers.js';
+import taxiZonesRoutes   from './backend/routes/taxiZones.js';
 
 // Import middleware
 import { requestLogger } from './backend/middleware/logger.js';
@@ -130,6 +131,9 @@ app.use('/api/chatbot', chatbotRoutes);
 
 // Taxi routes
 app.use('/api/taxis', taxisRoutes);
+
+// Taxi zone editor — guarda/lee polígonos GPS de las 5 zonas
+app.use('/api/taxi-zones', taxiZonesRoutes);
 
 // Tasks routes (Panel de Tareas + Make.com)
 app.use('/api/tasks', tasksRoutes);
