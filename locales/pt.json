@@ -23,8 +23,11 @@
   "nav": {
     "home": "Início",
     "map": "Mapa",
-    "taxi": "Táxi",
+    "taxi": "Táxis",
     "tours": "Tours",
+    "services": "Serviços",
+    "packages": "Pacotes",
+    "accommodations": "Hospedagem",
     "login": "Entrar",
     "myTrip": "Minha viagem",
     "challenges": "Desafios",
