@@ -108,7 +108,8 @@ import UserProfileButton from './components/UserProfileButton';
 
 import Navigation from './components/Navigation';
 import LanguageSelector from './components/LanguageSelector';
-import GuanaChatbot from './components/GuanaChatbot';
+// GuanaChatbot desactivado temporalmente (en revisión) — re-habilitar cuando esté listo
+// import GuanaChatbot from './components/GuanaChatbot';
 import CartFloatingBar from './components/CartFloatingBar';
 import DirectoryMapbox from './components/DirectoryMapbox';
 import { AppRoute, UserRole } from './types';
@@ -352,7 +353,7 @@ const App: React.FC = () => {
         {['tourist', 'Turista', 'Local'].includes(userRole) && (
           <>
             <CartFloatingBar onNavigate={navigateTo} isAuthenticated={isAuthenticated} />
-            <GuanaChatbot />
+            {/* <GuanaChatbot /> — desactivado temporalmente, disponible en panel admin */}
           </>
         )}
 
