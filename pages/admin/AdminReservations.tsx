@@ -7,12 +7,12 @@
  *   Misma base appij4vUx7GZEwf5x usada por GuiaSAI y GuanaGO
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   ArrowLeft, Calendar, Users, DollarSign, Loader2, AlertCircle,
   CheckCircle2, XCircle, Clock, RefreshCw, Plus, Search,
-  MapPin, Phone, Mail, Hash, ChevronDown, X, Ticket, FileText,
-  ArrowUpDown,
+  MapPin, Phone, Mail, Hash, ChevronDown, ChevronLeft, ChevronRight,
+  X, Ticket, FileText, ArrowUpDown, CalendarDays,
 } from 'lucide-react';
 import { AppRoute, Reservation } from '../../types';
 import { api } from '../../services/api';
@@ -143,7 +143,7 @@ const statusChip = (status: string) => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
-  const [tab, setTab] = useState<'reservas' | 'vouchers'>('reservas');
+  const [tab, setTab] = useState<'reservas' | 'vouchers' | 'calendario'>('reservas');
 
   // ── Tab 1: Reservas ─────────────────────────────────────────────────────────
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -180,6 +180,12 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
   const [selectedVoucher, setSelected]  = useState<VoucherRecord | null>(null);
   const [sortOrder, setSortOrder]       = useState<'asc' | 'desc'>('desc');
 
+  // ── Calendario ─────────────────────────────────────────────────────────────
+  const [calendarMonth, setCalendarMonth] = useState<Date>(() => {
+    const d = new Date(); d.setDate(1); return d;
+  });
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+
   const loadVouchers = useCallback(async () => {
     setLoadingVou(true);
     try {
@@ -207,15 +213,53 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
     }
   }, []);
 
-  // Cargar reservas al montar; vouchers solo cuando se abre el tab
+  // Cargar reservas al montar; vouchers cuando se abre el tab vouchers o calendario
   useEffect(() => { loadReservations(); }, [loadReservations]);
 
   useEffect(() => {
-    if (tab === 'vouchers' && !vouchersLoaded) {
+    if ((tab === 'vouchers' || tab === 'calendario') && !vouchersLoaded) {
       loadVouchers();
       loadServicios();
     }
   }, [tab, vouchersLoaded, loadVouchers, loadServicios]);
+
+  // ── Eventos de calendario (merge reservas + vouchers) ─────────────────────
+  type CalEvent = {
+    id: string; date: string; time: string;
+    title: string; client: string; pax: string;
+    status: string; tipo: 'reserva' | 'voucher';
+  };
+
+  const calendarEvents = useMemo((): CalEvent[] => {
+    // Normaliza cualquier formato de fecha a 'YYYY-MM-DD'
+    const toYMD = (raw: string): string => {
+      if (!raw) return '';
+      if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+      const dmY = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (dmY) return `${dmY[3]}-${dmY[2]}-${dmY[1]}`;
+      const d = new Date(raw);
+      return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+    };
+    const fromRes: CalEvent[] = reservations
+      .filter(r => r.date)
+      .map(r => ({
+        id: r.id, date: toYMD(r.date), time: '',
+        title: r.tourName, client: r.clientName,
+        pax: String(r.people || ''), status: r.status, tipo: 'reserva' as const,
+      }))
+      .filter(e => e.date);
+    const fromVou: CalEvent[] = vouchers
+      .filter(v => v.fecha)
+      .map(v => ({
+        id: v.id, date: toYMD(v.fecha), time: v.hora || '',
+        title: v.tourName, client: v.titular,
+        pax: v.pax, status: v.estado, tipo: 'voucher' as const,
+      }))
+      .filter(e => e.date);
+    return [...fromRes, ...fromVou].sort((a, b) =>
+      a.date !== b.date ? a.date.localeCompare(b.date) : a.time.localeCompare(b.time)
+    );
+  }, [reservations, vouchers]);
 
   // ── Form helpers ───────────────────────────────────────────────────────────
   const setField = (key: keyof VoucherFormData, value: string) =>
@@ -321,7 +365,10 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
           <p className="text-xs text-gray-400 mt-0.5">Centro unificado · reservas directas y vouchers</p>
         </div>
         <button
-          onClick={() => tab === 'reservas' ? loadReservations() : loadVouchers()}
+          onClick={() => {
+            if (tab === 'reservas') loadReservations();
+            else { loadVouchers(); loadServicios(); }
+          }}
           className="p-2 hover:bg-gray-900 rounded-lg transition-colors text-gray-400"
         >
           <RefreshCw size={16} className={(loadingRes || loadingVou) ? 'animate-spin' : ''} />
@@ -367,6 +414,17 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
               {vStats.total}
             </span>
           )}
+        </button>
+        <button
+          onClick={() => setTab('calendario')}
+          className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-colors flex items-center justify-center gap-1.5 ${
+            tab === 'calendario'
+              ? 'border-violet-500 text-violet-400'
+              : 'border-transparent text-gray-500 hover:text-gray-300'
+          }`}
+        >
+          <CalendarDays size={14} />
+          Calendario
         </button>
       </div>
 
@@ -578,6 +636,242 @@ const AdminReservations: React.FC<AdminReservationsProps> = ({ onBack }) => {
           )}
         </div>
       )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          TAB 3 — CALENDARIO DE RESERVAS
+      ══════════════════════════════════════════════════════════════════════ */}
+      {tab === 'calendario' && (() => {
+        const year  = calendarMonth.getFullYear();
+        const month = calendarMonth.getMonth();
+        const daysInMonth  = new Date(year, month + 1, 0).getDate();
+        const firstWeekDay = new Date(year, month, 1).getDay();
+        // Convertir a semana lunes-based (0=Lu … 6=Do)
+        const startOffset  = (firstWeekDay + 6) % 7;
+        const totalCells   = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+        const todayYMD     = new Date().toISOString().slice(0, 10);
+
+        // Mapa de eventos por día
+        const eventsByDay = calendarEvents.reduce<Record<string, typeof calendarEvents>>((acc, ev) => {
+          if (!acc[ev.date]) acc[ev.date] = [];
+          acc[ev.date].push(ev);
+          return acc;
+        }, {});
+
+        // Función para pintar la bolita de estado
+        const dotColor = (ev: { tipo: string; status: string }) => {
+          if (ev.tipo === 'reserva') {
+            return ev.status === 'confirmed' ? 'bg-green-400' : ev.status === 'cancelled' ? 'bg-red-400' : 'bg-yellow-400';
+          }
+          const ok  = ['Realizado','Reserva Confirmada','Abono Realizado','CONFIRMADO','REALIZADO','COMPLETADO'];
+          const bad = ['Cancelado','No llego el cliente','CANCELADO'];
+          return ok.includes(ev.status) ? 'bg-emerald-400' : bad.includes(ev.status) ? 'bg-red-400' : 'bg-orange-400';
+        };
+
+        // Eventos del día seleccionado
+        const dayEvents = selectedDay ? (eventsByDay[selectedDay] || []) : [];
+
+        // Próximas 30 reservas desde hoy
+        const upcoming = calendarEvents
+          .filter(e => e.date >= todayYMD)
+          .slice(0, 30);
+
+        return (
+          <div className="px-4 pt-5 pb-8 space-y-5">
+
+            {/* ── Navegación de mes ───────────────────────────────────────── */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => { const d = new Date(calendarMonth); d.setMonth(d.getMonth() - 1); setCalendarMonth(d); setSelectedDay(null); }}
+                className="p-2 hover:bg-gray-800 rounded-xl transition-colors text-gray-400 hover:text-white"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <h2 className="text-base font-bold capitalize text-white">
+                {calendarMonth.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}
+              </h2>
+              <button
+                onClick={() => { const d = new Date(calendarMonth); d.setMonth(d.getMonth() + 1); setCalendarMonth(d); setSelectedDay(null); }}
+                className="p-2 hover:bg-gray-800 rounded-xl transition-colors text-gray-400 hover:text-white"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+
+            {/* ── Cabecera días de semana ─────────────────────────────────── */}
+            <div className="grid grid-cols-7 text-center">
+              {['Lu','Ma','Mi','Ju','Vi','Sa','Do'].map(d => (
+                <div key={d} className="text-[10px] font-bold text-gray-500 uppercase py-1">{d}</div>
+              ))}
+            </div>
+
+            {/* ── Grid del mes ────────────────────────────────────────────── */}
+            <div className="grid grid-cols-7 gap-1">
+              {Array.from({ length: totalCells }).map((_, idx) => {
+                const dayNum = idx - startOffset + 1;
+                if (dayNum < 1 || dayNum > daysInMonth) {
+                  return <div key={idx} className="aspect-square" />;
+                }
+                const ymd  = `${year}-${String(month + 1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+                const evs  = eventsByDay[ymd] || [];
+                const isToday    = ymd === todayYMD;
+                const isSelected = ymd === selectedDay;
+                const hasPast    = ymd < todayYMD;
+
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedDay(prev => prev === ymd ? null : ymd)}
+                    className={`aspect-square flex flex-col items-center justify-start pt-1 rounded-xl text-xs transition-all relative
+                      ${isSelected  ? 'bg-violet-600 text-white ring-2 ring-violet-400' :
+                        isToday     ? 'bg-violet-950 text-violet-300 ring-1 ring-violet-600' :
+                        hasPast     ? 'text-gray-600 hover:bg-gray-900' :
+                                      'text-gray-300 hover:bg-gray-800'}
+                    `}
+                  >
+                    <span className={`font-bold text-[11px] ${isToday && !isSelected ? 'text-violet-300' : ''}`}>
+                      {dayNum}
+                    </span>
+                    {/* Puntos de eventos */}
+                    {evs.length > 0 && (
+                      <div className="flex gap-0.5 mt-0.5 flex-wrap justify-center">
+                        {evs.slice(0, 3).map((ev, i) => (
+                          <div key={i} className={`w-1.5 h-1.5 rounded-full ${dotColor(ev)}`} />
+                        ))}
+                        {evs.length > 3 && (
+                          <span className="text-[8px] text-gray-400 font-bold">+{evs.length - 3}</span>
+                        )}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Leyenda */}
+            <div className="flex gap-4 flex-wrap text-[10px] text-gray-500">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"/>Confirmado/Realizado</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block"/>Pendiente</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block"/>Cancelado</span>
+            </div>
+
+            {/* ── Eventos del día seleccionado ────────────────────────────── */}
+            {selectedDay && (
+              <div className="bg-gray-900 border border-violet-800/40 rounded-2xl overflow-hidden">
+                <div className="px-4 py-3 bg-violet-950/50 border-b border-violet-800/30 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-violet-300 flex items-center gap-2">
+                    <CalendarDays size={14} />
+                    {new Date(selectedDay + 'T12:00:00').toLocaleDateString('es-CO', {
+                      weekday: 'long', day: 'numeric', month: 'long',
+                    })}
+                  </h3>
+                  <span className="text-[10px] bg-violet-900/60 text-violet-300 px-2 py-0.5 rounded-full font-bold">
+                    {dayEvents.length} evento{dayEvents.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                {dayEvents.length === 0 ? (
+                  <div className="px-4 py-6 text-center text-gray-600 text-sm">Sin reservas este día</div>
+                ) : (
+                  <div className="divide-y divide-gray-800">
+                    {dayEvents.map(ev => {
+                      const isVoucher = ev.tipo === 'voucher';
+                      return (
+                        <div key={ev.id} className="px-4 py-3 flex items-start gap-3">
+                          <div className={`w-1 self-stretch rounded-full flex-shrink-0 ${dotColor(ev)}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm font-semibold text-white truncate">{ev.title || '—'}</p>
+                              <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded flex-shrink-0 ${
+                                isVoucher ? 'bg-orange-900/50 text-orange-400' : 'bg-blue-900/50 text-blue-400'
+                              }`}>
+                                {isVoucher ? 'Voucher' : 'Reserva'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-400 mt-0.5">{ev.client || '—'}</p>
+                            <div className="flex gap-3 mt-1 text-[10px] text-gray-500">
+                              {ev.time && <span className="flex items-center gap-1"><Clock size={10}/>{ev.time}</span>}
+                              {ev.pax  && <span className="flex items-center gap-1"><Users size={10}/>{ev.pax} pax</span>}
+                              <span className={`flex items-center gap-1 font-medium ${dotColor(ev).replace('bg-','text-')}`}>
+                                {ev.status}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Próximas reservas (30 días) ─────────────────────────────── */}
+            <div>
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <Clock size={13} /> Próximas reservas
+                <span className="text-gray-600 font-normal normal-case tracking-normal">
+                  ({upcoming.length} en los próximos días)
+                </span>
+              </h3>
+
+              {(loadingRes || loadingVou) ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 size={24} className="animate-spin text-violet-400" />
+                </div>
+              ) : upcoming.length === 0 ? (
+                <div className="text-center text-gray-600 py-8 text-sm">
+                  No hay reservas futuras registradas
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {upcoming.map(ev => {
+                    const evDate = new Date(ev.date + 'T12:00:00');
+                    const isToday = ev.date === todayYMD;
+                    const isTomorrow = ev.date === new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+                    const dayLabel = isToday ? '🟢 Hoy'
+                      : isTomorrow ? '🟡 Mañana'
+                      : evDate.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
+                    const isVoucher = ev.tipo === 'voucher';
+                    return (
+                      <button
+                        key={ev.id}
+                        onClick={() => { setSelectedDay(ev.date); setCalendarMonth(new Date(evDate.getFullYear(), evDate.getMonth(), 1)); }}
+                        className="w-full text-left bg-gray-900 border border-gray-800 hover:border-violet-700/50 rounded-xl px-4 py-3 transition-colors flex items-center gap-3"
+                      >
+                        {/* Fecha pill */}
+                        <div className="flex-shrink-0 bg-gray-800 rounded-lg px-2.5 py-1.5 text-center min-w-[52px]">
+                          <p className="text-[10px] text-gray-400 font-bold capitalize">
+                            {evDate.toLocaleDateString('es-CO', { month: 'short' })}
+                          </p>
+                          <p className="text-lg font-black text-white leading-none">{evDate.getDate()}</p>
+                        </div>
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                              isVoucher ? 'bg-orange-900/50 text-orange-400' : 'bg-blue-900/50 text-blue-400'
+                            }`}>
+                              {isVoucher ? 'Voucher' : 'Reserva'}
+                            </span>
+                            <span className="text-[10px] font-semibold text-gray-400">{dayLabel}</span>
+                          </div>
+                          <p className="text-sm font-semibold text-white truncate mt-0.5">{ev.title || '—'}</p>
+                          <p className="text-xs text-gray-500 truncate">{ev.client}</p>
+                        </div>
+                        {/* Hora + pax */}
+                        <div className="flex-shrink-0 text-right">
+                          {ev.time && <p className="text-xs font-bold text-gray-300">{ev.time}</p>}
+                          {ev.pax  && <p className="text-[10px] text-gray-500">{ev.pax} pax</p>}
+                          <div className={`mt-1 w-2 h-2 rounded-full ml-auto ${dotColor(ev)}`} />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+          </div>
+        );
+      })()}
 
       {/* ── New Voucher Form Modal ─────────────────────────────────────────── */}
       {showForm && (
