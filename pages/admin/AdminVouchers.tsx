@@ -10,7 +10,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   ArrowLeft, Search, Plus, Loader2, Bot, Send, ChevronDown, ChevronUp,
   Sparkles, CheckCircle2, Clock, XCircle, RefreshCw, MapPin, Users,
-  Calendar, Phone, Mail, Eye, X, ChevronRight, FileText, Pencil,
+  Calendar, Phone, Mail, Eye, X, ChevronRight, FileText, Pencil, Copy,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 
@@ -270,11 +270,12 @@ function AgenteVouchers({ vouchers }: { vouchers: VoucherRecord[] }) {
 
 // ─── Voucher Card ─────────────────────────────────────────────────────────────
 
-function VoucherCard({ voucher, onSelect, onUpdateEstado, onEdit }: {
+function VoucherCard({ voucher, onSelect, onUpdateEstado, onEdit, onDuplicate }: {
   voucher: VoucherRecord;
   onSelect: (v: VoucherRecord) => void;
   onUpdateEstado: (id: string, estado: string) => void;
   onEdit: (v: VoucherRecord) => void;
+  onDuplicate: (v: VoucherRecord) => void;
 }) {
   const cfg = ESTADO_CFG[voucher.estado] ?? ESTADO_CFG['Pendiente'];
 
@@ -304,6 +305,14 @@ function VoucherCard({ voucher, onSelect, onUpdateEstado, onEdit }: {
         <p className="text-[9px] text-gray-400 uppercase font-bold tracking-widest mb-0.5">Titular de Reserva</p>
         <p className="text-sm font-bold text-gray-900 uppercase truncate">{voucher.titular || '—'}</p>
       </div>
+
+      {/* Teléfono (solo admin — no aparece en VoucherModal) */}
+      {voucher.telefono && (
+        <div className="px-4 pb-1 flex items-center gap-1.5">
+          <Phone size={11} className="text-gray-400 flex-shrink-0" />
+          <p className="text-xs text-gray-500 font-medium truncate">{voucher.telefono}</p>
+        </div>
+      )}
 
       {/* Grid datos */}
       <div className="grid grid-cols-2 gap-2 px-4 py-2">
@@ -349,6 +358,13 @@ function VoucherCard({ voucher, onSelect, onUpdateEstado, onEdit }: {
           <ChevronRight size={12} /> Compartir enlace
         </button>
         <div className="flex items-center gap-1.5">
+          <button
+            onClick={e => { e.stopPropagation(); onDuplicate(voucher); }}
+            className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-blue-100 flex items-center justify-center transition-colors"
+            title="Duplicar voucher"
+          >
+            <Copy size={12} className="text-gray-500 hover:text-blue-600" />
+          </button>
           <button
             onClick={e => { e.stopPropagation(); onEdit(voucher); }}
             className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-orange-100 flex items-center justify-center transition-colors"
@@ -1012,6 +1028,7 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
   const [showForm, setShowForm]           = useState(false);
   const [editingVoucher, setEditingVoucher] = useState<VoucherRecord | null>(null);
   const [updatingId, setUpdatingId]       = useState<string | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
 
   const loadVouchers = useCallback(async () => {
     setLoading(true);
@@ -1054,6 +1071,39 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
   const handleVoucherUpdated = (updated: VoucherRecord) => {
     setVouchers(prev => prev.map(v => v.id === updated.id ? updated : v));
     setEditingVoucher(null);
+  };
+
+  const handleDuplicate = async (original: VoucherRecord) => {
+    setDuplicatingId(original.id);
+    try {
+      const body: VoucherFormData = {
+        titular:        original.titular,
+        reservaNum:     `COPIA-${original.reservaNum}`,
+        telefono:       original.telefono        || '',
+        email:          original.email           || '',
+        pax:            original.pax             || '',
+        fecha:          original.fecha           || '',
+        hora:           original.hora            || '',
+        puntoEncuentro: original.puntoEncuentro  || '',
+        observaciones:  original.observaciones   || '',
+        tourName:       original.tourName        || '',
+        tourId:         original.tourId          || '',
+        estado:         'Pendiente',
+      };
+      const res = await fetch(`${API}/api/reservations/vouchers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (res.ok && data.data) {
+        setVouchers(prev => [data.data, ...prev]);
+      }
+    } catch {
+      // silencioso
+    } finally {
+      setDuplicatingId(null);
+    }
   };
 
   // Filtros + orden por fecha
@@ -1198,6 +1248,7 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
                 onSelect={setSelected}
                 onUpdateEstado={handleUpdateEstado}
                 onEdit={setEditingVoucher}
+                onDuplicate={handleDuplicate}
               />
             ))}
           </div>
