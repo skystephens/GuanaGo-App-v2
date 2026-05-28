@@ -874,7 +874,7 @@ function ModuloEstrategia({ onNavigate }: { onNavigate: (r: AppRoute, d?: any) =
 type CheckStatus = 'idle' | 'checking' | 'ok' | 'warn' | 'error';
 interface SysCheck { label: string; status: CheckStatus; detail: string; }
 
-function ModuloSistema() {
+function ModuloSistema({ onNavigate }: { onNavigate: (r: AppRoute, d?: any) => void }) {
   const [checks, setChecks] = useState<SysCheck[]>([
     { label: 'Backend API',     status: 'idle', detail: 'guanago-backend.onrender.com' },
     { label: 'Airtable',        status: 'idle', detail: 'base appiReH55Qhrbv4Lk' },
@@ -962,6 +962,22 @@ function ModuloSistema() {
         ))}
       </div>
 
+      {/* Acceso rápido a herramientas de admin */}
+      <div className="mt-4 bg-gray-800/60 border border-gray-700 rounded-xl overflow-hidden">
+        <div className="px-3 py-2 border-b border-gray-700">
+          <div className="text-xs font-semibold text-gray-400">Herramientas</div>
+        </div>
+        <button onClick={() => onNavigate(AppRoute.ADMIN_TRADUCCION)}
+          className="w-full flex items-center gap-3 px-3 py-3 hover:bg-gray-700/50 transition-colors text-left">
+          <span className="text-lg">🌍</span>
+          <div className="flex-1">
+            <div className="text-xs font-semibold text-gray-200">Centro de Traducciones</div>
+            <div className="text-[10px] text-gray-500">Traduce servicios EN/PT con Claude Haiku</div>
+          </div>
+          <ChevronRight size={13} className="text-gray-600" />
+        </button>
+      </div>
+
       <div className="mt-4 bg-gray-800/60 border border-gray-700 rounded-xl p-4">
         <div className="text-xs font-semibold text-gray-400 mb-3">Variables de entorno</div>
         {[
@@ -1043,7 +1059,7 @@ export default function GuanaGOCommandCenter({ onBack, onNavigate }: Props) {
         {activeTab === 'rag'        && <ModuloRAG />}
         {activeTab === 'ecosistema' && <ModuloEcosistema />}
         {activeTab === 'estrategia' && <ModuloEstrategia onNavigate={onNavigate} />}
-        {activeTab === 'sistema'    && <ModuloSistema />}
+        {activeTab === 'sistema'    && <ModuloSistema onNavigate={onNavigate} />}
       </div>
     </div>
   );

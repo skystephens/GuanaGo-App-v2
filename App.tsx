@@ -74,6 +74,7 @@ import AdminSkyPanel from './pages/admin/AdminSkyPanel';
 import AdminCowork from './pages/admin/AdminCowork';
 import AdminTaxiZoneEditor from './pages/admin/AdminTaxiZoneEditor';
 import GuanaGOCommandCenter from './pages/admin/GuanaGOCommandCenter';
+import AdminTraduccion from './pages/admin/AdminTraduccion';
 
 // Artista Portal
 import ArtistaPortal from './pages/ArtistaPortal';
@@ -298,6 +299,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_TAXI_ZONE_EDITOR: return <AdminTaxiZoneEditor onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_DASHBOARD_AVANCE: return <DashboardAvance onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_DINAMICAS: return <AdminDinamicas onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_TRADUCCION: return <AdminTraduccion onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.COMMAND_CENTER: return <GuanaGOCommandCenter onBack={goBack} onNavigate={navigateTo} />;
       // ── Rutas B2C nuevas ────────────────────────────────────────────────────
       case AppRoute.CONCURSOS:  return <ConcursosResidente onBack={goBack} onNavigate={navigateTo} />;
