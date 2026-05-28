@@ -143,10 +143,10 @@ function AgenteBriefing({ onNavigate }: { onNavigate: (r: AppRoute) => void }) {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={e => { e.stopPropagation(); onNavigate(AppRoute.ADMIN_TORRE_CONTROL); }}
+            onClick={e => { e.stopPropagation(); onNavigate(AppRoute.COMMAND_CENTER); }}
             className="text-[10px] text-violet-400 hover:text-violet-200 px-2 py-0.5 rounded border border-violet-700 hover:border-violet-500 transition-colors"
           >
-            Sesión completa
+            Command Center
           </button>
           {expanded ? <ChevronUp size={14} className="text-violet-500" /> : <ChevronDown size={14} className="text-violet-500" />}
         </div>
@@ -315,18 +315,11 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       { icon: <PackageIcon size={18} />, label: 'Servicios', route: AppRoute.ADMIN_SERVICES },
       { icon: <Music size={18} />, label: 'Caribbean', route: AppRoute.ADMIN_CARIBBEAN },
     ]},
-    { label: 'TRABAJO', items: [
+    { label: 'PROYECTO', items: [
+      { icon: <Layers size={18} />, label: 'Command Center', route: AppRoute.COMMAND_CENTER },
       { icon: <Briefcase size={18} />, label: 'Cowork IA', route: AppRoute.ADMIN_COWORK },
-      { icon: <ListChecks size={18} />, label: 'Tareas', route: AppRoute.ADMIN_TASKS },
-      { icon: <Network size={18} />, label: 'Torre Control', route: AppRoute.ADMIN_TORRE_CONTROL },
-      { icon: <TrendingUp size={18} />, label: 'Avance', route: AppRoute.ADMIN_DASHBOARD_AVANCE },
       { icon: <Trophy size={18} />, label: 'Dinámicas', route: AppRoute.ADMIN_DINAMICAS },
-      { icon: <Map size={18} />, label: 'Mapa Mental', route: AppRoute.ADMIN_MAPA_MENTAL },
-      { icon: <Server size={18} />, label: 'Backend', route: AppRoute.ADMIN_BACKEND },
       { icon: <Map size={18} />, label: 'Zonas Taxi', route: AppRoute.ADMIN_TAXI_ZONE_EDITOR },
-    ]},
-    { label: 'CONFIG', items: [
-      { icon: <Settings size={18} />, label: 'Control Panel', route: AppRoute.ADMIN_CONTROL_PANEL },
     ]},
   ];
 
@@ -412,8 +405,8 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         ══════════════════════════════════════════════ */}
         <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={() => onNavigate(AppRoute.ADMIN_TASKS)}
-            className="bg-gray-800 p-3.5 rounded-xl border border-gray-700 hover:border-teal-700 transition-colors text-left w-full"
+            onClick={() => onNavigate(AppRoute.COMMAND_CENTER)}
+            className="bg-gray-800 p-3.5 rounded-xl border border-gray-700 hover:border-blue-700 transition-colors text-left w-full"
           >
             <span className="text-gray-500 text-[10px] uppercase font-bold">
               Tareas {atStats ? '· Airtable' : '· Local'}
@@ -604,17 +597,8 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           {/* ── 4. Hub de trabajo ── */}
           <Section label="Hub de trabajo" color="indigo">
             <BigButton
-              label="Cowork IA — B2B"
-              sub={`Cotizador OTA · Asistente · Torre${criticas > 0 ? ` (${criticas} críticas)` : ''} · Cerebro · Dashboard`}
-              icon={<Briefcase size={20} className="text-orange-400" />}
-              gradient="from-orange-950 via-amber-950 to-orange-950"
-              border="border-orange-700 hover:border-orange-400"
-              pulse="bg-orange-400"
-              onClick={() => onNavigate(AppRoute.ADMIN_COWORK)}
-            />
-            <BigButton
               label="Command Center"
-              sub="Tareas · Avance · RAG · Ecosistema · Multi-rol · Airtable live"
+              sub={`Tareas${criticas > 0 ? ` (${criticas} críticas)` : ''} · Avance · RAG · Ecosistema · Sistema`}
               icon={<span className="text-lg">⚡</span>}
               gradient="from-slate-900 via-blue-950 to-slate-900"
               border="border-blue-500 hover:border-blue-300"
@@ -622,57 +606,26 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               onClick={() => onNavigate(AppRoute.COMMAND_CENTER)}
             />
             <BigButton
-              label="SkyPanel Pro"
-              sub="Todos los proyectos · Airtable live · Vista multi-proyecto"
-              icon={<span className="text-lg">🌴</span>}
-              gradient="from-slate-900 via-cyan-950 to-slate-900"
-              border="border-cyan-500 hover:border-cyan-300"
-              pulse="bg-cyan-300"
-              onClick={() => onNavigate(AppRoute.ADMIN_SKY_PANEL)}
+              label="Cowork IA — B2B"
+              sub="Cotizador OTA · Asistente · Tarifas netas agencias"
+              icon={<Briefcase size={20} className="text-orange-400" />}
+              gradient="from-orange-950 via-amber-950 to-orange-950"
+              border="border-orange-700 hover:border-orange-400"
+              pulse="bg-orange-400"
+              onClick={() => onNavigate(AppRoute.ADMIN_COWORK)}
             />
             <div className="grid grid-cols-2 gap-2">
-              <MiniButton icon={<Server size={18} className="text-purple-400" />} label="Backend"
-                onClick={() => onNavigate(AppRoute.ADMIN_BACKEND)}
-                pulse="bg-green-500" gradient="from-purple-900/50 to-blue-900/50" border="border-purple-800 hover:border-purple-600" />
-              <MiniButton icon={<Map size={18} className="text-purple-400" />} label="Estructura" onClick={() => onNavigate(AppRoute.ADMIN_STRUCTURE)} />
+              <MiniButton
+                icon={<Globe size={18} className="text-cyan-400" />} label="Vista por Rol"
+                onClick={() => onNavigate(AppRoute.ADMIN_PREVIEW_ROLES)}
+                pulse="bg-cyan-400" gradient="from-cyan-900/50 to-blue-900/50" border="border-cyan-700 hover:border-cyan-500"
+              />
+              <MiniButton
+                icon={<Map size={18} className="text-cyan-400" />} label="Zonas Taxi"
+                onClick={() => onNavigate(AppRoute.ADMIN_TAXI_ZONE_EDITOR)}
+                pulse="bg-cyan-400" gradient="from-cyan-900/50 to-blue-900/50" border="border-cyan-700 hover:border-cyan-500"
+              />
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              <MiniButton icon={<Network size={18} className="text-teal-400" />} label="Mapa Mental"
-                onClick={() => onNavigate(AppRoute.ADMIN_MAPA_MENTAL)}
-                pulse="bg-teal-400" gradient="from-teal-900/50 to-cyan-900/50" border="border-teal-800 hover:border-teal-500" />
-              <MiniButton icon={<ExternalLink size={18} className="text-teal-300" />} label="Ecosistema"
-                onClick={() => window.open('/mapa-ecosistema.html', '_blank')}
-                pulse="bg-cyan-400" gradient="from-cyan-900/50 to-teal-900/50" border="border-cyan-800 hover:border-cyan-500" />
-              <MiniButton icon={<ListChecks size={18} className="text-green-400" />} label="Tareas"
-                onClick={() => onNavigate(AppRoute.ADMIN_TASKS)}
-                badge={criticas > 0 ? String(criticas) : undefined}
-                pulse="bg-green-400" gradient="from-green-900/50 to-teal-900/50" border="border-green-800 hover:border-green-500" />
-            </div>
-            <MiniButton
-              icon={<Layers size={18} className="text-indigo-400" />} label="Arquitectura de la App"
-              onClick={() => onNavigate(AppRoute.ADMIN_APP_ARQUITECTURA)}
-              pulse="bg-indigo-500" gradient="from-indigo-900/50 to-violet-900/50" border="border-indigo-700 hover:border-indigo-500"
-            />
-            <MiniButton
-              icon={<Globe size={18} className="text-cyan-400" />} label="Vista Previa por Rol"
-              onClick={() => onNavigate(AppRoute.ADMIN_PREVIEW_ROLES)}
-              pulse="bg-cyan-400" gradient="from-cyan-900/50 to-blue-900/50" border="border-cyan-700 hover:border-cyan-500"
-            />
-            <MiniButton
-              icon={<TrendingUp size={18} className="text-teal-400" />} label="Dashboard Avance"
-              onClick={() => onNavigate(AppRoute.ADMIN_DASHBOARD_AVANCE)}
-              pulse="bg-teal-400" gradient="from-teal-900/50 to-cyan-900/50" border="border-teal-700 hover:border-teal-500"
-            />
-            <MiniButton
-              icon={<FileText size={18} className="text-emerald-400" />} label="Documento Estratégico"
-              onClick={() => onNavigate(AppRoute.ADMIN_ESTRATEGIA)}
-              pulse="bg-emerald-400" gradient="from-emerald-900/50 to-teal-900/50" border="border-emerald-700 hover:border-emerald-500"
-            />
-            <MiniButton
-              icon={<Map size={18} className="text-cyan-400" />} label="Editor Zonas Taxi"
-              onClick={() => onNavigate(AppRoute.ADMIN_TAXI_ZONE_EDITOR)}
-              pulse="bg-cyan-400" gradient="from-cyan-900/50 to-blue-900/50" border="border-cyan-700 hover:border-cyan-500"
-            />
           </Section>
 
         </div>
