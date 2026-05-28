@@ -29,19 +29,23 @@ const AT_URL    = `https://api.airtable.com/v0/${AT_BASE}`;
 type Tab = 'tareas' | 'avance' | 'rag' | 'ecosistema' | 'estrategia' | 'sistema';
 type AccessLevel = 'sky' | 'marta' | 'admin';
 
-const STATUS_CFG: Record<TaskStatus, { label: string; color: string; bg: string; border: string; dot: string }> = {
-  pendiente:   { label: 'Pendiente',   color: 'text-gray-400',    bg: 'bg-gray-800/60',    border: 'border-gray-700',    dot: '#6b7280' },
-  en_progreso: { label: 'En progreso', color: 'text-blue-400',    bg: 'bg-blue-900/30',    border: 'border-blue-700/50', dot: '#3b82f6' },
-  completado:  { label: 'Completado',  color: 'text-emerald-400', bg: 'bg-emerald-900/30', border: 'border-emerald-700/50', dot: '#10b981' },
-  bloqueado:   { label: 'Bloqueado',   color: 'text-red-400',     bg: 'bg-red-900/30',     border: 'border-red-700/50',  dot: '#ef4444' },
+const STATUS_CFG: Record<string, { label: string; color: string; bg: string; border: string; dot: string }> = {
+  pendiente:         { label: 'Pendiente',   color: 'text-gray-400',    bg: 'bg-gray-800/60',    border: 'border-gray-700',        dot: '#6b7280' },
+  en_progreso:       { label: 'En progreso', color: 'text-blue-400',    bg: 'bg-blue-900/30',    border: 'border-blue-700/50',     dot: '#3b82f6' },
+  completado:        { label: 'Completado',  color: 'text-emerald-400', bg: 'bg-emerald-900/30', border: 'border-emerald-700/50',  dot: '#10b981' },
+  terminado:         { label: 'Terminado',   color: 'text-emerald-400', bg: 'bg-emerald-900/30', border: 'border-emerald-700/50',  dot: '#10b981' },
+  bloqueado:         { label: 'Bloqueado',   color: 'text-red-400',     bg: 'bg-red-900/30',     border: 'border-red-700/50',      dot: '#ef4444' },
+  urgente_pendiente: { label: 'Urgente',     color: 'text-orange-400',  bg: 'bg-orange-900/30',  border: 'border-orange-700/50',   dot: '#f97316' },
 };
+const STATUS_FALLBACK = STATUS_CFG['pendiente'];
 
-const PRIO_CFG: Record<TaskPriority, { label: string; color: string; dot: string }> = {
+const PRIO_CFG: Record<string, { label: string; color: string; dot: string }> = {
   critica: { label: 'Crítica', color: 'text-red-400',    dot: 'bg-red-500' },
   alta:    { label: 'Alta',    color: 'text-orange-400', dot: 'bg-orange-400' },
   media:   { label: 'Media',   color: 'text-yellow-400', dot: 'bg-yellow-400' },
   baja:    { label: 'Baja',    color: 'text-gray-500',   dot: 'bg-gray-600' },
 };
+const PRIO_FALLBACK = PRIO_CFG['media'];
 
 const CAT_COLORS: Record<string, string> = {
   frontend: 'text-blue-300', backend: 'text-purple-300', comercial: 'text-green-300',
@@ -205,7 +209,9 @@ function ModuloTareas({ access }: { access: AccessLevel }) {
       {/* Filtros por status */}
       <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1 scrollbar-none">
         {([['all', 'Todas', tasks.length]] as [string, string, number][])
-          .concat(Object.entries(STATUS_CFG).map(([k, v]) => [k, v.label, counts[k] || 0]))
+          .concat((['pendiente', 'en_progreso', 'bloqueado', 'completado', 'terminado', 'urgente_pendiente'] as string[])
+            .filter(k => counts[k] > 0)
+            .map(k => [k, STATUS_CFG[k]?.label ?? k, counts[k] || 0]))
           .map(([key, label, count]) => (
             <button
               key={key}
@@ -313,12 +319,13 @@ function TaskCard({ task, canEdit, onStatusChange, onDelete, onUpdate }: {
   const [editing,  setEditing]  = useState(false);
   const [draft,    setDraft]    = useState({ titulo: task.titulo, descripcion: task.descripcion || '' });
 
-  const sc = STATUS_CFG[task.status];
-  const pc = PRIO_CFG[task.prioridad];
+  const sc = STATUS_CFG[task.status] ?? STATUS_FALLBACK;
+  const pc = PRIO_CFG[task.prioridad] ?? PRIO_FALLBACK;
 
-  const NEXT_STATUS: Record<TaskStatus, TaskStatus> = {
+  const NEXT_STATUS: Record<string, TaskStatus> = {
     pendiente: 'en_progreso', en_progreso: 'completado',
-    completado: 'pendiente', bloqueado: 'pendiente',
+    completado: 'pendiente',  terminado: 'pendiente',
+    bloqueado: 'pendiente',   urgente_pendiente: 'en_progreso',
   };
 
   return (
@@ -385,10 +392,10 @@ function TaskCard({ task, canEdit, onStatusChange, onDelete, onUpdate }: {
               {canEdit && (
                 <div className="flex gap-2 flex-wrap">
                   <button
-                    onClick={() => onStatusChange(task, NEXT_STATUS[task.status])}
+                    onClick={() => onStatusChange(task, NEXT_STATUS[task.status] ?? 'pendiente')}
                     className={`text-[11px] font-semibold px-3 py-1.5 rounded-lg border ${sc.bg} ${sc.color} ${sc.border}`}
                   >
-                    → {STATUS_CFG[NEXT_STATUS[task.status]].label}
+                    → {(STATUS_CFG[NEXT_STATUS[task.status]] ?? STATUS_FALLBACK).label}
                   </button>
                   {task.status !== 'bloqueado' && (
                     <button onClick={() => onStatusChange(task, 'bloqueado')}
@@ -481,10 +488,12 @@ function ModuloAvance() {
       {/* Por status */}
       <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-4 mb-4">
         <div className="text-xs font-semibold text-gray-400 mb-3">Por estado</div>
-        {Object.entries(STATUS_CFG).map(([k, v]) => (
-          <ProgressBar key={k} value={stats.byStatus[k] || 0} max={stats.total} label={v.label}
-            color={k === 'completado' ? 'bg-emerald-500' : k === 'en_progreso' ? 'bg-blue-500' : k === 'bloqueado' ? 'bg-red-500' : 'bg-gray-600'} />
-        ))}
+        {(['pendiente', 'en_progreso', 'completado', 'terminado', 'bloqueado', 'urgente_pendiente'] as string[])
+          .filter(k => (stats.byStatus[k] || 0) > 0)
+          .map(k => (
+            <ProgressBar key={k} value={stats.byStatus[k] || 0} max={stats.total} label={STATUS_CFG[k]?.label ?? k}
+              color={k === 'completado' || k === 'terminado' ? 'bg-emerald-500' : k === 'en_progreso' ? 'bg-blue-500' : k === 'bloqueado' ? 'bg-red-500' : k === 'urgente_pendiente' ? 'bg-orange-500' : 'bg-gray-600'} />
+          ))}
       </div>
 
       {/* Por categoría */}
