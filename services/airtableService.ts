@@ -901,12 +901,26 @@ export async function getServices(category?: string) {
     const precioOTA      = parsePrecio(f['Precio_OTA']       || f['Precio OTA']      || f['Precio Neto']   || f['PrecioOTA'] || 0);
     const precioAliado   = parsePrecio(f['Precio_Aliado']    || f['Precio Aliado']   || f['PrecioAliado']  || 0);
 
+    // Campos de traducción (campo ES como fallback si el idioma no tiene traducción)
+    const nombre_ES = f['Servicio']       || f['Nombre alternativo'] || f['Nombre'] || '';
+    const desc_ES   = f['Descripcion']    || f['Itinerario'] || '';
+    const nombre_EN = f['Servicio_EN']    || nombre_ES;
+    const desc_EN   = f['Descripcion_EN'] || desc_ES;
+    const nombre_PT = f['Servicio_PT']    || nombre_ES;
+    const desc_PT   = f['Descripcion_PT'] || desc_ES;
+
     return {
       id: record.id,
-      // Nombre del servicio
-      title: f['Servicio'] || f['Nombre alternativo'] || f['Nombre'] || '',
-      name: f['Servicio'] || f['Nombre alternativo'] || f['Nombre'] || '',
-      nombre: f['Servicio'] || f['Nombre alternativo'] || f['Nombre'] || '',
+      // Nombre del servicio — siempre en español como base
+      title: nombre_ES,
+      name:  nombre_ES,
+      nombre: nombre_ES,
+
+      // Traducciones (usadas por getLocalizedTitle/Description)
+      title_EN: nombre_EN,
+      title_PT: nombre_PT,
+      description_EN: desc_EN,
+      description_PT: desc_PT,
 
       // Categoría
       category: category,
@@ -914,9 +928,9 @@ export async function getServices(category?: string) {
       type: f['Tipo de Servicio'] || 'Tour',
       tipo: f['Tipo de Servicio'] || 'Tour',
 
-      // Descripción
-      description: f['Descripcion'] || f['Itinerario'] || '',
-      descripcion: f['Descripcion'] || f['Itinerario'] || '',
+      // Descripción — siempre en español como base
+      description: desc_ES,
+      descripcion: desc_ES,
 
       // Tarifa base
       price: precio,
@@ -3111,4 +3125,26 @@ export async function deleteProcedimientoRAG(recordId: string): Promise<boolean>
     console.error('❌ deleteProcedimientoRAG:', e);
     return false;
   }
+}
+
+// ── Helpers de localización ───────────────────────────────────────────────────
+
+/**
+ * Devuelve el título del servicio en el idioma activo.
+ * Uso: getLocalizedTitle(service, i18n.language)
+ */
+export function getLocalizedTitle(service: any, lang: string): string {
+  if (lang.startsWith('en') && service.title_EN) return service.title_EN;
+  if (lang.startsWith('pt') && service.title_PT) return service.title_PT;
+  return service.title || service.name || service.nombre || '';
+}
+
+/**
+ * Devuelve la descripción del servicio en el idioma activo.
+ * Uso: getLocalizedDescription(service, i18n.language)
+ */
+export function getLocalizedDescription(service: any, lang: string): string {
+  if (lang.startsWith('en') && service.description_EN) return service.description_EN;
+  if (lang.startsWith('pt') && service.description_PT) return service.description_PT;
+  return service.description || service.descripcion || '';
 }

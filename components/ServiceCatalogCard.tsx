@@ -1,6 +1,8 @@
 import React from 'react';
 import { MapPin, Star, ChevronRight } from 'lucide-react';
 import { Tour } from '../types';
+import { useTranslation } from 'react-i18next';
+import { getLocalizedTitle, getLocalizedDescription } from '../services/airtableService';
 
 const FALLBACK: Record<string, string> = {
   tour:    'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=80',
@@ -35,6 +37,7 @@ const ServiceCatalogCard: React.FC<ServiceCatalogCardProps> = ({
   onViewDetails,
   priceCOP = false,
 }) => {
+  const { i18n } = useTranslation();
   const category = service.category || 'tour';
   const badge    = BADGE[category] || { label: category, color: 'bg-gray-500' };
   const imageUrl =
@@ -42,7 +45,7 @@ const ServiceCatalogCard: React.FC<ServiceCatalogCardProps> = ({
     (service.images && service.images[0]) ||
     FALLBACK[category] ||
     FALLBACK.tour;
-  const title    = service.title || (service as any).nombre || 'Servicio turístico';
+  const title = getLocalizedTitle(service, i18n.language) || (service as any).nombre || 'Servicio turístico';
   const location = (service as any).location || 'San Andrés Isla';
   const price    = service.price || 0;
   const _accType = ((service.accommodationType || (service as any).tipo || '') as string).toLowerCase();
@@ -86,7 +89,7 @@ const ServiceCatalogCard: React.FC<ServiceCatalogCardProps> = ({
         </div>
 
         {service.description && (
-          <p className="text-gray-500 text-xs line-clamp-2 leading-relaxed">{service.description}</p>
+          <p className="text-gray-500 text-xs line-clamp-2 leading-relaxed">{getLocalizedDescription(service, i18n.language)}</p>
         )}
 
         {/* ── Precio + CTA ─── */}
