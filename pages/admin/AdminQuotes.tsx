@@ -1123,7 +1123,14 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                   <input
                     type="date"
                     value={formData.fechaInicio}
-                    onChange={(e) => setFormData({ ...formData, fechaInicio: e.target.value })}
+                    onChange={(e) => {
+                      const newStart = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        fechaInicio: newStart,
+                        fechaFin: prev.fechaFin && prev.fechaFin < newStart ? '' : prev.fechaFin,
+                      }));
+                    }}
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
                   />
                 </div>
@@ -1134,6 +1141,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                   <input
                     type="date"
                     value={formData.fechaFin}
+                    min={formData.fechaInicio || undefined}
                     onChange={(e) => setFormData({ ...formData, fechaFin: e.target.value })}
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
                   />
@@ -1378,12 +1386,16 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
                                   <label className="block text-[10px] text-gray-500 mb-1">Fecha</label>
-                                  <input type="date" value={editingItemData.fecha || ''} onChange={e => setEditingItemData({ ...editingItemData, fecha: e.target.value })} className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm" />
+                                  <input type="date" value={editingItemData.fecha || ''} onChange={e => {
+                                    const newStart = e.target.value;
+                                    const currentEnd = editingItemData.fechaFin || item.fechaFin || '';
+                                    setEditingItemData({ ...editingItemData, fecha: newStart, fechaFin: currentEnd && currentEnd < newStart ? '' : currentEnd });
+                                  }} className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm" />
                                 </div>
                                 {item.servicioTipo === 'hotel' && (
                                   <div>
                                     <label className="block text-[10px] text-gray-500 mb-1">Fecha Fin</label>
-                                    <input type="date" value={editingItemData.fechaFin || item.fechaFin || ''} onChange={e => setEditingItemData({ ...editingItemData, fechaFin: e.target.value })} className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm" />
+                                    <input type="date" min={editingItemData.fecha || item.fecha || undefined} value={editingItemData.fechaFin || item.fechaFin || ''} onChange={e => setEditingItemData({ ...editingItemData, fechaFin: e.target.value })} className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm" />
                                   </div>
                                 )}
                               </div>
