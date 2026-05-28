@@ -1302,16 +1302,92 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
     return (
       <div className="min-h-screen bg-gray-950 text-white p-6">
+
+        {/* ── Modal editar header — fixed, fuera del flujo ── */}
+        {editingHeader && (
+          <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4"
+               onClick={e => { if (e.target === e.currentTarget) setEditingHeader(false); }}>
+            <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-base font-bold">Editar datos de la cotización</h3>
+                <button onClick={() => setEditingHeader(false)} className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400"><X className="w-4 h-4" /></button>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Nombre cliente / grupo *</label>
+                  <input value={headerForm.nombre} onChange={e => setHeaderForm(p => ({...p, nombre: e.target.value}))}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Teléfono</label>
+                    <input value={headerForm.telefono} onChange={e => setHeaderForm(p => ({...p, telefono: e.target.value}))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Email</label>
+                    <input value={headerForm.email} onChange={e => setHeaderForm(p => ({...p, email: e.target.value}))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Fecha inicio</label>
+                    <input type="date" value={headerForm.fechaInicio} onChange={e => setHeaderForm(p => ({...p, fechaInicio: e.target.value}))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Fecha fin</label>
+                    <input type="date" value={headerForm.fechaFin} min={headerForm.fechaInicio} onChange={e => setHeaderForm(p => ({...p, fechaFin: e.target.value}))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {(['adultos', 'ninos', 'bebes'] as const).map(field => (
+                    <div key={field}>
+                      <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">
+                        {field === 'adultos' ? 'Adultos 18+' : field === 'ninos' ? 'Niños 4-17' : 'Bebés 0-3'}
+                      </label>
+                      <input type="number" min="0" value={headerForm[field]}
+                        onChange={e => setHeaderForm(p => ({...p, [field]: parseInt(e.target.value) || 0}))}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Etiqueta de opción</label>
+                  <input placeholder='Ej: "Opción A", "Hotel Económico"' value={headerForm.opcion}
+                    onChange={e => setHeaderForm(p => ({...p, opcion: e.target.value}))}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-600" />
+                  <p className="text-[10px] text-gray-600 mt-1">Para agrupar alternativas: "Opción A · Hotel Prixma", "Opción B · Hotel Coral"</p>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-5">
+                <button onClick={handleSaveHeader} disabled={savingHeader || !headerForm.nombre.trim()}
+                  className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl transition-colors">
+                  {savingHeader ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  Guardar cambios
+                </button>
+                <button onClick={() => setEditingHeader(false)} className="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-300 transition-colors">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <button onClick={() => setView('list')} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
+          <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+
+            {/* Izquierda: volver + nombre + botón editar */}
+            <div className="flex items-start gap-4">
+              <button onClick={() => setView('list')} className="p-2 hover:bg-gray-800 rounded-lg transition-colors mt-1">
                 <ArrowLeft className="w-6 h-6" />
               </button>
               <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-3xl font-bold">{selectedCotizacion.nombre}</h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-2xl font-bold">{selectedCotizacion.nombre}</h1>
                   {(selectedCotizacion as any).opcion && (
                     <span className="px-2 py-0.5 bg-purple-900/50 border border-purple-700/50 text-purple-300 rounded-full text-xs font-semibold">
                       {(selectedCotizacion as any).opcion}
@@ -1319,156 +1395,64 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                   )}
                   <button
                     onClick={handleOpenEditHeader}
-                    title="Editar datos del cliente y fechas"
-                    className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-500 hover:text-white transition-colors"
+                    title="Editar nombre, fechas y pasajeros"
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white text-xs font-medium transition-colors"
                   >
-                    <Pencil className="w-4 h-4" />
+                    <Pencil className="w-3 h-3" /> Editar
                   </button>
                 </div>
-                <p className="text-gray-400">
-                  {safeDate(selectedCotizacion.fechaInicio)?.toLocaleDateString() ?? '—'} - {safeDate(selectedCotizacion.fechaFin)?.toLocaleDateString() ?? '—'}
+                <p className="text-gray-400 text-sm mt-0.5">
+                  {safeDate(selectedCotizacion.fechaInicio)?.toLocaleDateString('es-CO') ?? '—'}
+                  {' – '}
+                  {safeDate(selectedCotizacion.fechaFin)?.toLocaleDateString('es-CO') ?? '—'}
                   {' · '}
-                  {(selectedCotizacion.adultos ?? 0) + (selectedCotizacion.ninos ?? 0) + (selectedCotizacion.bebes ?? 0)} pax
+                  <span className="font-medium text-gray-300">
+                    {(selectedCotizacion.adultos ?? 0)} adultos
+                    {(selectedCotizacion.ninos ?? 0) > 0 && `, ${selectedCotizacion.ninos} niños`}
+                    {(selectedCotizacion.bebes ?? 0) > 0 && `, ${selectedCotizacion.bebes} bebés`}
+                  </span>
+                  {selectedCotizacion.telefono && (
+                    <span className="ml-2 text-gray-500">· {selectedCotizacion.telefono}</span>
+                  )}
                 </p>
               </div>
             </div>
 
-            {/* Modal edición header */}
-            {editingHeader && (
-              <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={e => { if (e.target === e.currentTarget) setEditingHeader(false); }}>
-                <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-base font-bold">Editar datos de la cotización</h3>
-                    <button onClick={() => setEditingHeader(false)} className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400"><X className="w-4 h-4" /></button>
-                  </div>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Nombre cliente / grupo *</label>
-                      <input value={headerForm.nombre} onChange={e => setHeaderForm(p => ({...p, nombre: e.target.value}))}
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Teléfono</label>
-                        <input value={headerForm.telefono} onChange={e => setHeaderForm(p => ({...p, telefono: e.target.value}))}
-                          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Email</label>
-                        <input value={headerForm.email} onChange={e => setHeaderForm(p => ({...p, email: e.target.value}))}
-                          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Fecha inicio</label>
-                        <input type="date" value={headerForm.fechaInicio} onChange={e => setHeaderForm(p => ({...p, fechaInicio: e.target.value}))}
-                          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Fecha fin</label>
-                        <input type="date" value={headerForm.fechaFin} min={headerForm.fechaInicio} onChange={e => setHeaderForm(p => ({...p, fechaFin: e.target.value}))}
-                          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      {(['adultos', 'ninos', 'bebes'] as const).map(field => (
-                        <div key={field}>
-                          <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">{field === 'adultos' ? 'Adultos 18+' : field === 'ninos' ? 'Niños 4-17' : 'Bebés 0-3'}</label>
-                          <input type="number" min="0" value={headerForm[field]} onChange={e => setHeaderForm(p => ({...p, [field]: parseInt(e.target.value) || 0}))}
-                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
-                        </div>
-                      ))}
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Etiqueta de opción (ej: "Opción A", "Hotel Económico")</label>
-                      <input placeholder="Dejar vacío si es la única cotización" value={headerForm.opcion} onChange={e => setHeaderForm(p => ({...p, opcion: e.target.value}))}
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-600" />
-                      <p className="text-[10px] text-gray-600 mt-1">Útil para agrupar alternativas: "Opción A · Hotel Prixma", "Opción B · Hotel Coral"</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 mt-5">
-                    <button onClick={handleSaveHeader} disabled={savingHeader || !headerForm.nombre.trim()}
-                      className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl transition-colors">
-                      {savingHeader ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                      Guardar
-                    </button>
-                    <button onClick={() => setEditingHeader(false)} className="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-300 transition-colors">
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className="flex items-center gap-3">
-              {/* 📅 Itinerario */}
-              <button
-                onClick={() => setShowItinerario(true)}
-                title="Abrir planificador de itinerario"
-                className="flex items-center gap-2 px-4 py-3 bg-teal-700 hover:bg-teal-600 rounded-lg transition-colors font-medium"
-              >
-                <CalendarDays className="w-5 h-5" />
-                Itinerario
+            {/* Derecha: acciones */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button onClick={() => setShowItinerario(true)} title="Itinerario"
+                className="flex items-center gap-2 px-3 py-2 bg-teal-700 hover:bg-teal-600 rounded-lg transition-colors font-medium text-sm">
+                <CalendarDays className="w-4 h-4" /> Itinerario
               </button>
-              {/* 💳 Generar Link de Pago PayU */}
-              <button
-                onClick={() => { setPayResult(null); setPayAmount(String(selectedCotizacion.precioTotal || '')); setShowPayModal(true); }}
-                title="Generar link de pago PayU para cobrarle al cliente"
-                className="flex items-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors font-medium"
-              >
-                <CreditCard className="w-5 h-5" />
-                Cobrar
+              <button onClick={() => { setPayResult(null); setPayAmount(String(selectedCotizacion.precioTotal || '')); setShowPayModal(true); }}
+                title="Generar link de pago"
+                className="flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors font-medium text-sm">
+                <CreditCard className="w-4 h-4" /> Cobrar
               </button>
-              <button
-                onClick={() => {
-                  const url = `https://www.guanago.travel/cotizacion/${selectedCotizacion?.id}`;
-                  navigator.clipboard.writeText(url).then(() => alert('✅ Link copiado: ' + url));
-                }}
-                title="Copiar link público para compartir con el cliente"
-                className="flex items-center gap-2 px-4 py-3 bg-purple-700 hover:bg-purple-600 rounded-lg transition-colors font-medium"
-              >
-                <Link2 className="w-5 h-5" />
-                Copiar Link
+              <button onClick={() => { const url = `https://www.guanago.travel/cotizacion/${selectedCotizacion?.id}`; navigator.clipboard.writeText(url).then(() => alert('✅ Link copiado: ' + url)); }}
+                className="flex items-center gap-2 px-3 py-2 bg-purple-700 hover:bg-purple-600 rounded-lg transition-colors font-medium text-sm">
+                <Link2 className="w-4 h-4" /> Link
               </button>
-              <button
-                onClick={handlePreview}
-                className="flex items-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors font-medium"
-              >
-                <Eye className="w-5 h-5" />
-                Preview
+              <button onClick={handlePreview}
+                className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors font-medium text-sm">
+                <Eye className="w-4 h-4" /> Preview
               </button>
-              <button
-                onClick={handleDownloadPDF}
-                disabled={generatingPDF}
-                className="flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {generatingPDF ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Generando...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-5 h-5" />
-                    Descargar PDF
-                  </>
-                )}
+              <button onClick={handleDownloadPDF} disabled={generatingPDF}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium text-sm disabled:opacity-50">
+                {generatingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                {generatingPDF ? 'Generando…' : 'PDF'}
               </button>
-              <button
-                onClick={handleSendQuote}
-                disabled={!canSendQuote}
-                className="flex items-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 rounded-lg transition-colors font-medium"
-              >
-                <Send className="w-5 h-5" />
-                Enviar
+              <button onClick={handleSendQuote} disabled={!canSendQuote}
+                className="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors font-medium text-sm disabled:opacity-50">
+                <Send className="w-4 h-4" /> Enviar
               </button>
             </div>
-            {!canSendQuote && (
-              <p className="text-xs text-gray-400 mt-2">
-                Completa email y teléfono del cliente y agrega al menos un servicio antes de enviar.
-              </p>
-            )}
           </div>
+          {!canSendQuote && (
+            <p className="text-xs text-gray-500 mb-4">
+              Completa email y teléfono del cliente y agrega al menos un servicio antes de enviar.
+            </p>
+          )}
 
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Columna izquierda: Info + Items */}
@@ -1578,8 +1562,8 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                 </span>
                               </div>
 
-                              {/* Edición de imágenes (solo ítems libres) */}
-                              {item.esPersonalizado && (
+                              {/* Edición de imágenes (ítems libres o cualquiera con imágenes) */}
+                              {(item.esPersonalizado || (item.images && item.images.length > 0)) && (
                                 <div>
                                   <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Imágenes ({(editingItemData.images ?? item.images ?? []).length}/4)</p>
                                   <div className="flex gap-2 flex-wrap">
@@ -1629,8 +1613,18 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                               </div>
                             </div>
                           ) : (
-                            // ── MODO VISUALIZACIÓN (fila tabla Excel) ──
-                            <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-x-3 items-center px-3 py-2.5">
+                            // ── MODO VISUALIZACIÓN ──
+                            <div className="px-3 py-2.5">
+                              {/* Miniaturas de imágenes (si existen) */}
+                              {item.images && item.images.length > 0 && (
+                                <div className="flex gap-1.5 mb-2 flex-wrap">
+                                  {item.images.map((url, idx) => (
+                                    <img key={idx} src={url} alt="" className="w-12 h-12 rounded-lg object-cover border border-gray-700 cursor-pointer hover:opacity-80"
+                                      onClick={() => window.open(url, '_blank')} />
+                                  ))}
+                                </div>
+                              )}
+                              <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-x-3 items-center">
                               {/* Nombre */}
                               <div className="min-w-0 overflow-hidden">
                                 <div className="flex items-center gap-1.5 overflow-hidden">
@@ -1745,12 +1739,13 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
                               {/* Acciones */}
                               <div className="w-16 flex items-center justify-end gap-0.5">
-                                <button onClick={() => handleStartEditItem(item)} title="Editar" className="p-1.5 text-gray-600 hover:text-blue-400 rounded transition-colors">
-                                  <Calendar className="w-3.5 h-3.5" />
+                                <button onClick={() => handleStartEditItem(item)} title="Editar fechas / precio / imágenes" className="p-1.5 text-gray-600 hover:text-blue-400 rounded transition-colors">
+                                  <Pencil className="w-3.5 h-3.5" />
                                 </button>
                                 <button onClick={() => handleDeleteItem(item.id)} title="Eliminar" className="p-1.5 text-gray-600 hover:text-red-400 rounded transition-colors">
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
+                              </div>
                               </div>
                             </div>
                           )}
