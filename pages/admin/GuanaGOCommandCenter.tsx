@@ -705,73 +705,166 @@ function ModuloEcosistema() {
 
 // ── Módulo Estrategia ─────────────────────────────────────────────────────────
 
-function ModuloEstrategia() {
-  const PHASES = [
-    { label: 'Sem 1 — May 27–Jun 1', color: 'border-red-600', title: 'Escrutinio + Contenido',
-      items: ['Terminar escrutinio electoral', 'Poblar RAG: meta 35 registros', 'Cotización grupal volley', 'Command Center activo'] },
-    { label: 'Sem 2 — Jun 2–8', color: 'border-yellow-600', title: 'Código + Aliados',
-      items: ['Code al día en GitHub', 'Fix bugs (CotizacionView + imágenes)', 'Onboarding 5 aliados activos', 'Actualizar CLAUDE.md'] },
-    { label: 'Sem 3 — Jun 9–15', color: 'border-green-600', title: 'MVP Turista',
-      items: ['Chatbot conectado a RAG', 'PWA manifest habilitado', '50 registros RAG', 'Primera versión turista live'] },
-    { label: 'Jun 20 — Soft launch', color: 'border-blue-600', title: 'Lanzamiento turista',
-      items: ['guanago.travel instalable como PWA', '5 aliados activos', 'Pagos mock funcionando'] },
-    { label: 'Jun 30 — Público', color: 'border-purple-600', title: 'Lanzamiento oficial',
-      items: ['Pasarela Wompi/PayU real', 'Perfil residente activo', 'WhatsApp Business GuanaGO'] },
-  ];
+interface DocEntry {
+  id: string;
+  title: string;
+  subtitle: string;
+  desc: string;
+  url: string;
+  color: string;
+  emoji: string;
+}
 
-  const LINKS = [
-    { label: 'CLAUDE.md GuanaGO', href: '', icon: '📋', desc: 'Contexto maestro del proyecto' },
-    { label: 'Airtable Base', href: 'https://airtable.com/appiReH55Qhrbv4Lk', icon: '🗄️', desc: 'Base de datos principal' },
-    { label: 'guanago.travel', href: 'https://guanago.travel', icon: '🌊', desc: 'App en producción' },
-    { label: 'Render Backend', href: 'https://dashboard.render.com', icon: '⚡', desc: 'Backend en Render' },
-    { label: 'GitHub Repo', href: 'https://github.com/skystephens/GuanaGo-App-v2', icon: '🐙', desc: 'Código fuente' },
-  ];
+const ESTRATEGIA_DOCS: DocEntry[] = [
+  { id: 'canvas',     title: 'Lean Canvas',          subtitle: 'Modelo de negocio · 9 bloques',         desc: '4 segmentos, propuesta de valor única, ventaja injusta.',             url: '/docs/16may-lean-canvas.html',         color: '#38BDF8', emoji: '🎯' },
+  { id: 'economico',  title: 'Modelo Económico',      subtitle: 'GuanaPoints · Proyección · LTV/CAC',    desc: 'GuanaPoints, CAC por canal, LTV/CAC 28x, proyección $16M COP/mes.',   url: '/docs/16may-modelo-economico.html',    color: '#4ADE80', emoji: '💰' },
+  { id: 'avance',     title: 'Avance Estratégico',    subtitle: 'Diagnóstico · Sprints · Visión',         desc: 'Estado del proyecto, sprints de desarrollo y decisiones mayo 2026.',  url: '/docs/09may-avance-estrategico.html',  color: '#00E5CC', emoji: '📊' },
+  { id: 'paquetes',   title: 'Paquetes & Promos',     subtitle: 'Explorer · Cultural · VIP',              desc: '$180K / $280K / $480K. Sistema de aprobación y distribución.',         url: '/docs/16may-paquetes-promos.html',     color: '#F5831F', emoji: '🛍️' },
+  { id: 'embajadores',title: 'Embajadores',           subtitle: '3 perfiles · Mecánica · Beneficios',    desc: 'Raizal, Residente OCCRE y Freelancer. 4 niveles de embajador.',        url: '/docs/16may-embajadores.html',         color: '#FFB74D', emoji: '🤝' },
+  { id: 'onboarding', title: 'Onboarding Aliados',    subtitle: 'Flujo · Categorías · Pitch',             desc: '5 min, $0, 20% comisión, activo en 24h. Guía para socios.',           url: '/docs/16may-onboarding-aliados.html',  color: '#A78BFA', emoji: '🚀' },
+];
 
-  const today = new Date();
-  const launch = new Date('2026-06-30');
+const PHASES = [
+  { label: 'Sem 1 — May 27–Jun 1', color: 'border-red-600',    title: 'Escrutinio + Contenido', items: ['Terminar escrutinio electoral', 'Poblar RAG: meta 35 registros', 'Cotización grupal volley', 'Command Center activo'] },
+  { label: 'Sem 2 — Jun 2–8',      color: 'border-yellow-600', title: 'Código + Aliados',        items: ['Code al día en GitHub', 'Fix bugs (CotizacionView + imágenes)', 'Onboarding 5 aliados activos'] },
+  { label: 'Sem 3 — Jun 9–15',     color: 'border-green-600',  title: 'MVP Turista',              items: ['Chatbot conectado a RAG', 'PWA manifest habilitado', '50 registros RAG'] },
+  { label: 'Jun 20 — Soft launch', color: 'border-blue-600',   title: 'Lanzamiento turista',      items: ['guanago.travel instalable como PWA', '5 aliados activos'] },
+  { label: 'Jun 30 — Público',     color: 'border-purple-600', title: 'Lanzamiento oficial',       items: ['Pasarela Wompi/PayU real', 'Perfil residente activo', 'WhatsApp Business GuanaGO'] },
+];
+
+const QUICK_LINKS = [
+  { label: 'Airtable Base',  href: 'https://airtable.com/appiReH55Qhrbv4Lk', icon: '🗄️', desc: 'Base de datos principal' },
+  { label: 'guanago.travel', href: 'https://guanago.travel',                  icon: '🌊', desc: 'App en producción' },
+  { label: 'GitHub Repo',    href: 'https://github.com/skystephens/GuanaGo-App-v2', icon: '🐙', desc: 'Código fuente' },
+  { label: 'Render',         href: 'https://dashboard.render.com',             icon: '⚡', desc: 'Backend deploy' },
+  { label: 'Ecosistema',     href: '/mapa-ecosistema.html',                    icon: '🗺️', desc: 'Mapa del ecosistema' },
+];
+
+function ModuloEstrategia({ onNavigate }: { onNavigate: (r: AppRoute, d?: any) => void }) {
+  const [docModal, setDocModal] = useState<DocEntry | null>(null);
+  const [section, setSection]   = useState<'docs' | 'roadmap' | 'links'>('docs');
+
+  const today    = new Date();
+  const launch   = new Date('2026-06-30');
   const daysLeft = Math.max(0, Math.ceil((launch.getTime() - today.getTime()) / 86400000));
 
   return (
     <div>
-      {/* Countdown */}
-      <div className="bg-blue-950/30 border border-blue-800/40 rounded-xl p-4 mb-4 text-center">
-        <div className="text-3xl font-bold text-blue-400">{daysLeft}</div>
-        <div className="text-xs text-gray-500 mt-0.5">días al lanzamiento oficial — 30 jun 2026</div>
+      {/* Iframe modal */}
+      {docModal && (
+        <div className="fixed inset-0 z-50 bg-gray-950/95 flex flex-col">
+          {/* Modal header */}
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-800 flex-shrink-0">
+            <span className="text-base">{docModal.emoji}</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold text-gray-100 truncate">{docModal.title}</div>
+              <div className="text-[10px] text-gray-500">{docModal.subtitle}</div>
+            </div>
+            <a href={docModal.url} target="_blank" rel="noreferrer"
+              className="text-[11px] text-blue-400 border border-blue-800/50 px-2.5 py-1.5 rounded-lg hover:border-blue-600 flex items-center gap-1">
+              <ChevronRight size={11} /> Nueva pestaña
+            </a>
+            <button onClick={() => setDocModal(null)}
+              className="w-8 h-8 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-white">
+              <X size={14} />
+            </button>
+          </div>
+          <iframe
+            src={docModal.url}
+            className="flex-1 w-full border-0"
+            title={docModal.title}
+            loading="lazy"
+          />
+        </div>
+      )}
+
+      {/* Countdown + nav section */}
+      <div className="flex gap-2 mb-4">
+        <div className="flex-1 bg-blue-950/30 border border-blue-800/40 rounded-xl p-3 text-center">
+          <div className="text-2xl font-bold text-blue-400">{daysLeft}</div>
+          <div className="text-[10px] text-gray-500">días al lanzamiento</div>
+        </div>
+        <button
+          onClick={() => onNavigate(AppRoute.ADMIN_MAPA_MENTAL)}
+          className="flex-1 bg-teal-950/40 border border-teal-800/40 hover:border-teal-600/60 rounded-xl p-3 text-center transition-colors"
+        >
+          <div className="text-xl mb-0.5">🗺️</div>
+          <div className="text-[10px] font-semibold text-teal-400">Mapa Mental</div>
+          <div className="text-[9px] text-gray-600">ReactFlow · full</div>
+        </button>
       </div>
 
-      {/* Links */}
-      <div className="bg-gray-800/60 border border-gray-700 rounded-xl overflow-hidden mb-4">
-        <div className="px-3 py-2 border-b border-gray-700">
-          <div className="text-xs font-semibold text-gray-400">Accesos rápidos</div>
-        </div>
-        {LINKS.map((l, i) => (
-          <a key={i} href={l.href || '#'} target={l.href ? '_blank' : undefined} rel="noreferrer"
-            className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-700/50 border-b border-gray-800 last:border-0 transition-colors">
-            <span className="text-base">{l.icon}</span>
-            <div className="flex-1">
-              <div className="text-xs font-semibold text-gray-200">{l.label}</div>
-              <div className="text-[10px] text-gray-500">{l.desc}</div>
-            </div>
-            <ChevronRight size={12} className="text-gray-600" />
-          </a>
+      {/* Section tabs */}
+      <div className="flex gap-1 mb-4 bg-gray-800/40 rounded-xl p-1">
+        {([['docs', '📄 Documentos'], ['roadmap', '🗓️ Roadmap'], ['links', '🔗 Links']] as [typeof section, string][]).map(([id, label]) => (
+          <button key={id} onClick={() => setSection(id)}
+            className={`flex-1 text-[11px] font-semibold py-1.5 rounded-lg transition-all ${
+              section === id ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300'
+            }`}>
+            {label}
+          </button>
         ))}
       </div>
 
-      {/* Roadmap */}
-      <div className="text-xs font-semibold text-gray-400 mb-3">Roadmap — Junio 2026</div>
-      <div className="flex flex-col gap-3">
-        {PHASES.map((p, i) => (
-          <div key={i} className={`border-l-2 ${p.color} pl-3`}>
-            <div className="text-[10px] text-gray-500 uppercase tracking-wider">{p.label}</div>
-            <div className="text-xs font-semibold text-gray-200 mt-0.5 mb-1.5">{p.title}</div>
-            {p.items.map((item, j) => (
-              <div key={j} className="flex items-center gap-1.5 text-[11px] text-gray-400 py-0.5">
-                <Circle size={8} className="text-gray-700 flex-shrink-0" /> {item}
-              </div>
+      {/* Documentos estratégicos */}
+      {section === 'docs' && (
+        <div>
+          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-3 font-semibold">
+            Canvas y documentos del modelo de negocio
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {ESTRATEGIA_DOCS.map(doc => (
+              <button
+                key={doc.id}
+                onClick={() => setDocModal(doc)}
+                className="text-left bg-gray-800/60 border border-gray-700 hover:border-gray-500 rounded-xl p-3 transition-all active:scale-95"
+              >
+                <div className="text-xl mb-2">{doc.emoji}</div>
+                <div className="text-xs font-bold text-gray-100 leading-tight mb-1">{doc.title}</div>
+                <div className="text-[10px] text-gray-500 leading-tight">{doc.subtitle}</div>
+                <div
+                  className="mt-2 h-0.5 rounded-full w-8"
+                  style={{ background: doc.color }}
+                />
+              </button>
             ))}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* Roadmap */}
+      {section === 'roadmap' && (
+        <div className="flex flex-col gap-3">
+          {PHASES.map((p, i) => (
+            <div key={i} className={`border-l-2 ${p.color} pl-3`}>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider">{p.label}</div>
+              <div className="text-xs font-semibold text-gray-200 mt-0.5 mb-1.5">{p.title}</div>
+              {p.items.map((item, j) => (
+                <div key={j} className="flex items-center gap-1.5 text-[11px] text-gray-400 py-0.5">
+                  <Circle size={8} className="text-gray-700 flex-shrink-0" /> {item}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Links rápidos */}
+      {section === 'links' && (
+        <div className="bg-gray-800/60 border border-gray-700 rounded-xl overflow-hidden">
+          {QUICK_LINKS.map((l, i) => (
+            <a key={i} href={l.href} target="_blank" rel="noreferrer"
+              className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-700/50 border-b border-gray-800 last:border-0 transition-colors">
+              <span className="text-base w-6 text-center">{l.icon}</span>
+              <div className="flex-1">
+                <div className="text-xs font-semibold text-gray-200">{l.label}</div>
+                <div className="text-[10px] text-gray-500">{l.desc}</div>
+              </div>
+              <ChevronRight size={12} className="text-gray-600" />
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -949,7 +1042,7 @@ export default function GuanaGOCommandCenter({ onBack, onNavigate }: Props) {
         {activeTab === 'avance'     && <ModuloAvance />}
         {activeTab === 'rag'        && <ModuloRAG />}
         {activeTab === 'ecosistema' && <ModuloEcosistema />}
-        {activeTab === 'estrategia' && <ModuloEstrategia />}
+        {activeTab === 'estrategia' && <ModuloEstrategia onNavigate={onNavigate} />}
         {activeTab === 'sistema'    && <ModuloSistema />}
       </div>
     </div>
