@@ -139,7 +139,7 @@ export function generateQuoteHTML(
 
             return `
             <!-- ── Tiquete aéreo ${index + 1} ── -->
-            <div style="background:white;border:2px solid #bfdbfe;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+            <div class="service-card" style="background:white;border:2px solid #bfdbfe;border-radius:12px;overflow:hidden;margin-bottom:16px;">
               <!-- header azul -->
               <div style="background:linear-gradient(135deg,#1d4ed8,#2563eb);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;">
                 <div style="display:flex;align-items:center;gap:10px;">
@@ -216,7 +216,7 @@ export function generateQuoteHTML(
 
           return `
           <!-- ── Tarjeta servicio ${index + 1} ── -->
-          <div style="background:white;border:2px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+          <div class="service-card" style="background:white;border:2px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:16px;">
 
             ${showPhotoGrid ? `<!-- Grid fotos -->
             <div style="display:flex;gap:4px;padding:10px 10px 0;">
@@ -408,9 +408,21 @@ export async function downloadQuotePDF(
       })
     );
 
+    // Obtener posición de cada tarjeta ANTES de remover el contenedor
+    const CANVAS_SCALE   = 2;
+    const containerRect  = container.getBoundingClientRect();
+    const cardBounds = Array.from(container.querySelectorAll<HTMLElement>('.service-card'))
+      .map(el => {
+        const r = el.getBoundingClientRect();
+        return {
+          topPx:    Math.round((r.top    - containerRect.top)  * CANVAS_SCALE),
+          bottomPx: Math.round((r.bottom - containerRect.top)  * CANVAS_SCALE),
+        };
+      });
+
     // Capturar como imagen
     const canvas = await html2canvas(container, {
-      scale: 2,
+      scale: CANVAS_SCALE,
       useCORS: true,
       allowTaint: false,
       logging: false,
@@ -420,30 +432,50 @@ export async function downloadQuotePDF(
     // Remover elemento temporal
     document.body.removeChild(container);
 
-    // Crear PDF
-    const imgWidth = 210; // A4 width in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
-    const pdf = new jsPDF({
-      orientation: imgHeight > imgWidth ? 'portrait' : 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
+    // Dimensiones
+    const imgWidth   = 210;                                  // mm — ancho A4
+    const PAGE_H_MM  = 297;                                  // mm — alto A4
+    const pxToMm     = imgWidth / canvas.width;              // factor de conversión
+    const pageHeightPx = Math.round(PAGE_H_MM / pxToMm);    // píxeles que caben en una página
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    
-    // Si la imagen es más alta que una página, dividir en múltiples páginas
-    let heightLeft = imgHeight;
-    let position = 0;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-    heightLeft -= 297; // A4 height
+    // ── Algoritmo de corte inteligente ─────────────────────────────────────────
+    // Construye puntos de corte evitando partir una tarjeta por la mitad.
+    const breakPoints: number[] = [0];
+    while (true) {
+      const lastBreak = breakPoints[breakPoints.length - 1];
+      let nextCut = lastBreak + pageHeightPx;
+      if (nextCut >= canvas.height) break;
 
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= 297;
+      // ¿El corte cae dentro de alguna tarjeta?
+      const splitCard = cardBounds.find(c => c.topPx < nextCut && c.bottomPx > nextCut);
+      if (splitCard) {
+        // Retroceder hasta el borde superior de esa tarjeta
+        const safeBreak = splitCard.topPx;
+        // Si la tarjeta es más alta que la página completa, cortar igual (evitar loop infinito)
+        nextCut = safeBreak > lastBreak ? safeBreak : lastBreak + pageHeightPx;
+      }
+      breakPoints.push(nextCut);
+    }
+
+    // ── Generar páginas a partir de los cortes ────────────────────────────────
+    for (let i = 0; i < breakPoints.length; i++) {
+      if (i > 0) pdf.addPage();
+
+      const startY        = breakPoints[i];
+      const endY          = i < breakPoints.length - 1 ? breakPoints[i + 1] : canvas.height;
+      const sliceHeightPx = endY - startY;
+      const sliceHeightMm = sliceHeightPx * pxToMm;
+
+      // Cortar el canvas en un sub-canvas de esa franja
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width  = canvas.width;
+      pageCanvas.height = sliceHeightPx;
+      const ctx = pageCanvas.getContext('2d')!;
+      ctx.drawImage(canvas, 0, startY, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
+
+      pdf.addImage(pageCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, imgWidth, sliceHeightMm);
     }
 
     // Descargar
@@ -479,7 +511,11 @@ export function previewQuote(
           <title>Cotización ${cotizacion.nombre} - GuíaSAI</title>
           <style>
             body { margin:0; padding:20px; background:#f1f5f9; font-family:Arial,sans-serif; }
-            @media print { body { background:white; padding:0; } .no-print { display:none !important; } }
+            @media print {
+              body { background:white; padding:0; }
+              .no-print { display:none !important; }
+              .service-card { break-inside: avoid; page-break-inside: avoid; }
+            }
           </style>
           <script>
             function openModal(id, imgIndex) {
