@@ -613,6 +613,15 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               onClick={() => onNavigate(AppRoute.ADMIN_COWORK)}
             />
             <BigButton
+              label="Command Center"
+              sub="Tareas · Avance · RAG · Ecosistema · Multi-rol · Airtable live"
+              icon={<span className="text-lg">⚡</span>}
+              gradient="from-slate-900 via-blue-950 to-slate-900"
+              border="border-blue-500 hover:border-blue-300"
+              pulse="bg-blue-400"
+              onClick={() => onNavigate(AppRoute.COMMAND_CENTER)}
+            />
+            <BigButton
               label="SkyPanel Pro"
               sub="Todos los proyectos · Airtable live · Vista multi-proyecto"
               icon={<span className="text-lg">🌴</span>}
