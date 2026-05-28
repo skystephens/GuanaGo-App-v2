@@ -579,7 +579,12 @@ function mapRecordToCotizacionItem(record: any): CotizacionItem {
     subtotal,
     esPersonalizado: f['Es Personalizado'] === true,
     images: (() => {
-      try { return f['Imagenes'] ? JSON.parse(f['Imagenes']) : []; } catch { return []; }
+      const raw = f['Imagenes'];
+      if (!raw) return [];
+      // Airtable Attachment field devuelve array de objetos {id, url, filename, ...}
+      if (Array.isArray(raw)) return raw.map((a: any) => a.url || '').filter(Boolean);
+      // Retrocompat: campo de texto con JSON string (registros viejos)
+      try { const parsed = JSON.parse(raw); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
     })(),
     status: 'disponible' as QuoteItemStatus,
     conflictos: []
@@ -601,8 +606,12 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
   // Ítem libre (no vinculado al catálogo)
   if (item.esPersonalizado !== undefined) fields['Es Personalizado'] = item.esPersonalizado;
 
-  // Imágenes adjuntas (solo ítems libres) — guardadas como JSON en campo de texto
-  if (item.images && item.images.length > 0) fields['Imagenes'] = JSON.stringify(item.images);
+  // Imágenes adjuntas (Attachment field en Airtable — requiere [{url:"https://..."}])
+  // Solo se envían URLs públicas; las data URIs base64 no son aceptadas por Airtable.
+  if (item.images && item.images.length > 0) {
+    const publicUrls = item.images.filter(u => u.startsWith('http'));
+    if (publicUrls.length > 0) fields['Imagenes'] = publicUrls.map(url => ({ url }));
+  }
 
   // Links (solo si existen)
   if (item.cotizacionId?.trim()) fields['ID CotizacionGG'] = [item.cotizacionId];

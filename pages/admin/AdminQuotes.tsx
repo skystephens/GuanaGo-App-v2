@@ -21,6 +21,8 @@ import {
 } from '../../services/quotesService';
 import { cachedApi } from '../../services/cachedApi';
 import { downloadQuotePDF, previewQuote } from '../../services/pdfService';
+import { storage } from '../../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 /** Convierte YYYY-MM-DD a Date local (evita el offset UTC de new Date("YYYY-MM-DD")) */
@@ -610,19 +612,34 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     const files = Array.from(e.target.files || []);
     const remaining = 4 - freeItemForm.images.length;
     if (remaining <= 0) return;
+
     files.slice(0, remaining).forEach(file => {
       const img = new Image();
       const blobUrl = URL.createObjectURL(file);
-      img.onload = () => {
+      img.onload = async () => {
+        // Redimensionar a máx 800px
         const MAX = 800;
         const scale = Math.min(1, MAX / Math.max(img.width, img.height));
         const canvas = document.createElement('canvas');
         canvas.width  = Math.round(img.width  * scale);
         canvas.height = Math.round(img.height * scale);
         canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
         URL.revokeObjectURL(blobUrl);
-        setFreeItemForm(prev => ({ ...prev, images: [...prev.images, dataUrl].slice(0, 4) }));
+
+        try {
+          // Subir a Firebase Storage → obtener URL pública permanente
+          const blob = await new Promise<Blob>(res => canvas.toBlob(b => res(b!), 'image/jpeg', 0.75));
+          const path = `cotizaciones/items/${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`;
+          const storageRef = ref(storage, path);
+          await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
+          const downloadUrl = await getDownloadURL(storageRef);
+          setFreeItemForm(prev => ({ ...prev, images: [...prev.images, downloadUrl].slice(0, 4) }));
+        } catch (err) {
+          console.error('Error subiendo imagen a Firebase Storage:', err);
+          // Fallback: usar base64 (solo sirve para el PDF en esta sesión, no se guardará en Airtable)
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+          setFreeItemForm(prev => ({ ...prev, images: [...prev.images, dataUrl].slice(0, 4) }));
+        }
       };
       img.src = blobUrl;
     });
