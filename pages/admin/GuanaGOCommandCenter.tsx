@@ -1004,13 +1004,14 @@ export default function GuanaGOCommandCenter({ onBack, onNavigate }: Props) {
 
   const access: AccessLevel = isSky ? 'sky' : isMarta ? 'marta' : 'admin';
 
+  // Todos los admins tienen acceso completo al Command Center
   const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode; roles: AccessLevel[] }[] = [
-    { id: 'tareas',     label: 'Tareas',      icon: <CheckSquare size={13} />,  roles: ['sky', 'admin'] },
+    { id: 'tareas',     label: 'Tareas',      icon: <CheckSquare size={13} />,  roles: ['sky', 'admin', 'marta'] },
     { id: 'avance',     label: 'Avance',      icon: <BarChart3 size={13} />,    roles: ['sky', 'marta', 'admin'] },
-    { id: 'rag',        label: 'RAG',         icon: <Brain size={13} />,        roles: ['sky'] },
-    { id: 'ecosistema', label: 'Ecosistema',  icon: <Users size={13} />,        roles: ['sky', 'marta'] },
-    { id: 'estrategia', label: 'Estrategia',  icon: <Target size={13} />,       roles: ['sky', 'marta'] },
-    { id: 'sistema',    label: 'Sistema',     icon: <Activity size={13} />,     roles: ['sky'] },
+    { id: 'rag',        label: 'RAG',         icon: <Brain size={13} />,        roles: ['sky', 'admin', 'marta'] },
+    { id: 'ecosistema', label: 'Ecosistema',  icon: <Users size={13} />,        roles: ['sky', 'marta', 'admin'] },
+    { id: 'estrategia', label: 'Estrategia',  icon: <Target size={13} />,       roles: ['sky', 'marta', 'admin'] },
+    { id: 'sistema',    label: 'Sistema',     icon: <Activity size={13} />,     roles: ['sky', 'admin', 'marta'] },
   ];
 
   const tabs = ALL_TABS.filter(t => t.roles.includes(access));

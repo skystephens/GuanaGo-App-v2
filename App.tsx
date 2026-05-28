@@ -326,19 +326,21 @@ const App: React.FC = () => {
         md:shadow-2xl md:border-x
         ${isDark ? 'md:border-gray-800' : 'md:border-gray-200'}`}>
         
-        {/* User Profile Header - Desktop & Tablet (oculto en rutas full-screen) */}
-        {isAuthenticated && !isFullScreenRoute && (
-          <header className={`sticky top-0 z-40 px-6 py-3 border-b
-            ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}
-            hidden sm:flex sm:items-center sm:justify-between`}>
+        {/* Header global — selector de idioma siempre visible en todas las pantallas */}
+        {!isFullScreenRoute && (
+          <header className={`sticky top-0 z-40 px-4 py-2 border-b
+            ${isDark ? 'bg-gray-800/95 backdrop-blur border-gray-700' : 'bg-white/95 backdrop-blur border-gray-200'}
+            flex items-center justify-between`}>
             <LanguageSelector variant="pills" />
-            <UserProfileButton
-              isAuthenticated={isAuthenticated}
-              userName={userName}
-              userRole={userRole}
-              onNavigate={navigateTo}
-              onLogout={handleLogout}
-            />
+            {isAuthenticated && (
+              <UserProfileButton
+                isAuthenticated={isAuthenticated}
+                userName={userName}
+                userRole={userRole}
+                onNavigate={navigateTo}
+                onLogout={handleLogout}
+              />
+            )}
           </header>
         )}
 

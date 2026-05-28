@@ -317,6 +317,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     ]},
     { label: 'PROYECTO', items: [
       { icon: <Layers size={18} />, label: 'Command Center', route: AppRoute.COMMAND_CENTER },
+      { icon: <Globe size={18} />, label: 'Traducciones', route: AppRoute.ADMIN_TRADUCCION },
       { icon: <Briefcase size={18} />, label: 'Cowork IA', route: AppRoute.ADMIN_COWORK },
       { icon: <Trophy size={18} />, label: 'Dinámicas', route: AppRoute.ADMIN_DINAMICAS },
       { icon: <Map size={18} />, label: 'Zonas Taxi', route: AppRoute.ADMIN_TAXI_ZONE_EDITOR },
@@ -614,7 +615,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               pulse="bg-orange-400"
               onClick={() => onNavigate(AppRoute.ADMIN_COWORK)}
             />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <MiniButton
                 icon={<Globe size={18} className="text-cyan-400" />} label="Vista por Rol"
                 onClick={() => onNavigate(AppRoute.ADMIN_PREVIEW_ROLES)}
@@ -624,6 +625,11 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 icon={<Map size={18} className="text-cyan-400" />} label="Zonas Taxi"
                 onClick={() => onNavigate(AppRoute.ADMIN_TAXI_ZONE_EDITOR)}
                 pulse="bg-cyan-400" gradient="from-cyan-900/50 to-blue-900/50" border="border-cyan-700 hover:border-cyan-500"
+              />
+              <MiniButton
+                icon={<Network size={18} className="text-emerald-400" />} label="Traducciones"
+                onClick={() => onNavigate(AppRoute.ADMIN_TRADUCCION)}
+                pulse="bg-emerald-400" gradient="from-emerald-900/50 to-teal-900/50" border="border-emerald-700 hover:border-emerald-500"
               />
             </div>
           </Section>
