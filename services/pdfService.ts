@@ -185,10 +185,7 @@ export function generateQuoteHTML(
           const activeImages = item.esPersonalizado ? freeItemImages : catalogImages;
           const fallbackUrl = categoryFallback[item.servicioTipo] || categoryFallback['tour'];
           const showPhotoGrid = activeImages.length > 0;
-          // gridImages: 4 slots rellenos con la última imagen real disponible
-          const gridImages: string[] = [...activeImages];
-          while (gridImages.length < 4) gridImages.push(gridImages[gridImages.length - 1] || fallbackUrl);
-          const images = gridImages;
+          const images = activeImages; // solo imágenes reales, sin padding
           const allImages = catalogImages.length > 0 ? catalogImages : [fallbackUrl];
           const fechaDisplay = safeDate(item.fecha)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? 'Por confirmar';
           const fechaFinDisplay = item.fechaFin ? safeDate(item.fechaFin)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? '' : '';
@@ -196,11 +193,13 @@ export function generateQuoteHTML(
           const cardId = `svc-${index}`;
           const modalId = `modal-${index}`;
 
-          // Grid de fotos pequeñas (4 slots siempre)
-          const photoGrid = images.map((url, i) => `
-            <div style="width: calc(25% - 3px); aspect-ratio: 1/1; overflow: hidden; border-radius: 6px; cursor: pointer; flex-shrink: 0;"
+          // Grid de fotos — solo las imágenes reales, sin repetir
+          const realCount = activeImages.length;
+          const slotWidth = realCount === 1 ? '100%' : realCount === 2 ? 'calc(50% - 2px)' : realCount === 3 ? 'calc(33.33% - 3px)' : 'calc(25% - 3px)';
+          const photoGrid = activeImages.map((url, i) => `
+            <div style="width:${slotWidth};aspect-ratio:${realCount === 1 ? '16/7' : '1/1'};overflow:hidden;border-radius:6px;cursor:pointer;flex-shrink:0;"
                  onclick="openModal('${modalId}', ${i})">
-              <img src="${url}" style="width:100%; height:100%; object-fit:cover; display:block; transition:opacity .2s;"
+              <img src="${url}" style="width:100%;height:100%;object-fit:cover;display:block;transition:opacity .2s;"
                    onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"
                    onerror="this.src='${fallbackUrl}'" loading="lazy">
             </div>

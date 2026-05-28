@@ -285,6 +285,16 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [inlinePriceValue, setInlinePriceValue] = useState<string>('');
   const inlinePriceSavingRef = useRef(false); // evita doble-trigger Enter+blur
 
+  // Estado para edición de datos básicos de la cotización (header)
+  const [editingHeader, setEditingHeader] = useState(false);
+  const [headerForm, setHeaderForm]       = useState<{
+    nombre: string; telefono: string; email: string;
+    fechaInicio: string; fechaFin: string;
+    adultos: number; ninos: number; bebes: number;
+    opcion: string;
+  }>({ nombre: '', telefono: '', email: '', fechaInicio: '', fechaFin: '', adultos: 0, ninos: 0, bebes: 0, opcion: '' });
+  const [savingHeader, setSavingHeader]   = useState(false);
+
   // Inline edit personas / cantidad
   const [inlinePersonasId, setInlinePersonasId] = useState<string | null>(null);
   const [inlinePersonasValue, setInlinePersonasValue] = useState('');
@@ -701,6 +711,45 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     }
   };
 
+  const handleOpenEditHeader = () => {
+    if (!selectedCotizacion) return;
+    setHeaderForm({
+      nombre:      selectedCotizacion.nombre      || '',
+      telefono:    selectedCotizacion.telefono    || '',
+      email:       selectedCotizacion.email       || '',
+      fechaInicio: selectedCotizacion.fechaInicio || '',
+      fechaFin:    selectedCotizacion.fechaFin    || '',
+      adultos:     selectedCotizacion.adultos     ?? 0,
+      ninos:       selectedCotizacion.ninos       ?? 0,
+      bebes:       selectedCotizacion.bebes       ?? 0,
+      opcion:      (selectedCotizacion as any).opcion || '',
+    });
+    setEditingHeader(true);
+  };
+
+  const handleSaveHeader = async () => {
+    if (!selectedCotizacion) return;
+    setSavingHeader(true);
+    try {
+      const updates: any = {
+        nombre:      headerForm.nombre.trim()  || selectedCotizacion.nombre,
+        telefono:    headerForm.telefono.trim(),
+        email:       headerForm.email.trim(),
+        fechaInicio: headerForm.fechaInicio,
+        fechaFin:    headerForm.fechaFin,
+        adultos:     headerForm.adultos,
+        ninos:       headerForm.ninos,
+        bebes:       headerForm.bebes,
+      };
+      if (headerForm.opcion) updates.opcion = headerForm.opcion;
+      await updateCotizacion(selectedCotizacion.id, updates);
+      setSelectedCotizacion(prev => prev ? { ...prev, ...updates } : prev);
+      setEditingHeader(false);
+    } finally {
+      setSavingHeader(false);
+    }
+  };
+
   const handleStartEditItem = (item: CotizacionItem) => {
     setEditingItemId(item.id);
     setEditingItemData({
@@ -742,6 +791,8 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       subtotal: newSubtotal,
       ...(editingItemData.servicioNombre && editingItemData.servicioNombre !== currentItem.servicioNombre
         ? { servicioNombre: editingItemData.servicioNombre } : {}),
+      // Imágenes: solo si cambiaron (ítems libres)
+      ...(editingItemData.images !== undefined ? { images: editingItemData.images } : {}),
     };
     const saved = await updateCotizacionItem(itemId, patchFields);
     if (!saved) {
@@ -1259,12 +1310,96 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 <ArrowLeft className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-3xl font-bold">{selectedCotizacion.nombre}</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-3xl font-bold">{selectedCotizacion.nombre}</h1>
+                  {(selectedCotizacion as any).opcion && (
+                    <span className="px-2 py-0.5 bg-purple-900/50 border border-purple-700/50 text-purple-300 rounded-full text-xs font-semibold">
+                      {(selectedCotizacion as any).opcion}
+                    </span>
+                  )}
+                  <button
+                    onClick={handleOpenEditHeader}
+                    title="Editar datos del cliente y fechas"
+                    className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-500 hover:text-white transition-colors"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                </div>
                 <p className="text-gray-400">
                   {safeDate(selectedCotizacion.fechaInicio)?.toLocaleDateString() ?? '—'} - {safeDate(selectedCotizacion.fechaFin)?.toLocaleDateString() ?? '—'}
+                  {' · '}
+                  {(selectedCotizacion.adultos ?? 0) + (selectedCotizacion.ninos ?? 0) + (selectedCotizacion.bebes ?? 0)} pax
                 </p>
               </div>
             </div>
+
+            {/* Modal edición header */}
+            {editingHeader && (
+              <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={e => { if (e.target === e.currentTarget) setEditingHeader(false); }}>
+                <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-base font-bold">Editar datos de la cotización</h3>
+                    <button onClick={() => setEditingHeader(false)} className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400"><X className="w-4 h-4" /></button>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Nombre cliente / grupo *</label>
+                      <input value={headerForm.nombre} onChange={e => setHeaderForm(p => ({...p, nombre: e.target.value}))}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Teléfono</label>
+                        <input value={headerForm.telefono} onChange={e => setHeaderForm(p => ({...p, telefono: e.target.value}))}
+                          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Email</label>
+                        <input value={headerForm.email} onChange={e => setHeaderForm(p => ({...p, email: e.target.value}))}
+                          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Fecha inicio</label>
+                        <input type="date" value={headerForm.fechaInicio} onChange={e => setHeaderForm(p => ({...p, fechaInicio: e.target.value}))}
+                          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Fecha fin</label>
+                        <input type="date" value={headerForm.fechaFin} min={headerForm.fechaInicio} onChange={e => setHeaderForm(p => ({...p, fechaFin: e.target.value}))}
+                          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {(['adultos', 'ninos', 'bebes'] as const).map(field => (
+                        <div key={field}>
+                          <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">{field === 'adultos' ? 'Adultos 18+' : field === 'ninos' ? 'Niños 4-17' : 'Bebés 0-3'}</label>
+                          <input type="number" min="0" value={headerForm[field]} onChange={e => setHeaderForm(p => ({...p, [field]: parseInt(e.target.value) || 0}))}
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-600" />
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Etiqueta de opción (ej: "Opción A", "Hotel Económico")</label>
+                      <input placeholder="Dejar vacío si es la única cotización" value={headerForm.opcion} onChange={e => setHeaderForm(p => ({...p, opcion: e.target.value}))}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-600" />
+                      <p className="text-[10px] text-gray-600 mt-1">Útil para agrupar alternativas: "Opción A · Hotel Prixma", "Opción B · Hotel Coral"</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-5">
+                    <button onClick={handleSaveHeader} disabled={savingHeader || !headerForm.nombre.trim()}
+                      className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl transition-colors">
+                      {savingHeader ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                      Guardar
+                    </button>
+                    <button onClick={() => setEditingHeader(false)} className="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-300 transition-colors">
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="flex items-center gap-3">
               {/* 📅 Itinerario */}
               <button
@@ -1442,6 +1577,52 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                   ${((editingItemData.valorUnitario ?? item.valorUnitario) * (editingItemData.personas ?? item.personas) * (editingItemData.cantidad ?? item.cantidad)).toLocaleString('es-CO')}
                                 </span>
                               </div>
+
+                              {/* Edición de imágenes (solo ítems libres) */}
+                              {item.esPersonalizado && (
+                                <div>
+                                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Imágenes ({(editingItemData.images ?? item.images ?? []).length}/4)</p>
+                                  <div className="flex gap-2 flex-wrap">
+                                    {(editingItemData.images ?? item.images ?? []).map((url, idx) => (
+                                      <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-700">
+                                        <img src={url} alt="" className="w-full h-full object-cover" />
+                                        <button
+                                          onClick={() => setEditingItemData(p => ({ ...p, images: (p.images ?? item.images ?? []).filter((_, i) => i !== idx) }))}
+                                          className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-[10px] hover:bg-red-500"
+                                        >✕</button>
+                                      </div>
+                                    ))}
+                                    {(editingItemData.images ?? item.images ?? []).length < 4 && (
+                                      <label className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-600 hover:border-gray-400 flex items-center justify-center cursor-pointer text-gray-500 hover:text-gray-300 transition-colors">
+                                        <span className="text-xl">+</span>
+                                        <input type="file" accept="image/*" multiple className="hidden" onChange={async e => {
+                                          const files = Array.from(e.target.files || []);
+                                          const current = editingItemData.images ?? item.images ?? [];
+                                          const slots = 4 - current.length;
+                                          const newUrls: string[] = [];
+                                          for (const file of files.slice(0, slots)) {
+                                            try {
+                                              const blob = await new Promise<Blob>(res => {
+                                                const img = new Image(); const bUrl = URL.createObjectURL(file);
+                                                img.onload = () => { const MAX=800; const s=Math.min(1,MAX/Math.max(img.width,img.height)); const c=document.createElement('canvas'); c.width=Math.round(img.width*s); c.height=Math.round(img.height*s); c.getContext('2d')!.drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(bUrl); c.toBlob(b=>res(b!),'image/jpeg',0.75); };
+                                                img.src = bUrl;
+                                              });
+                                              const { ref: sRef, uploadBytes, getDownloadURL } = await import('firebase/storage');
+                                              const { storage: st } = await import('../../lib/firebase');
+                                              const r = sRef(st, `cotizaciones/items/${Date.now()}_edit_${file.name.replace(/[^a-z0-9.]/gi,'_')}`);
+                                              await uploadBytes(r, blob, { contentType: 'image/jpeg' });
+                                              newUrls.push(await getDownloadURL(r));
+                                            } catch { /* skip */ }
+                                          }
+                                          if (newUrls.length) setEditingItemData(p => ({ ...p, images: [...(p.images ?? item.images ?? []), ...newUrls].slice(0, 4) }));
+                                          e.target.value = '';
+                                        }} />
+                                      </label>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
                               <div className="flex gap-2">
                                 <button onClick={() => handleSaveEditItem(item.id)} className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-white text-sm font-semibold transition-colors">Guardar</button>
                                 <button onClick={handleCancelEditItem} className="flex-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm font-semibold transition-colors">Cancelar</button>
