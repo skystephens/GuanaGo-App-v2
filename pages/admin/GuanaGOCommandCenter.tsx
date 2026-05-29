@@ -26,7 +26,7 @@ const AT_KEY    = import.meta.env.VITE_AIRTABLE_API_KEY;
 const AT_BASE   = import.meta.env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
 const AT_URL    = `https://api.airtable.com/v0/${AT_BASE}`;
 
-type Tab = 'tareas' | 'avance' | 'rag' | 'ecosistema' | 'estrategia' | 'sistema';
+type Tab = 'tareas' | 'avance' | 'rag' | 'ecosistema' | 'estrategia' | 'sistema' | 'traduccion';
 type AccessLevel = 'sky' | 'marta' | 'admin';
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; border: string; dot: string }> = {
@@ -869,6 +869,118 @@ function ModuloEstrategia({ onNavigate }: { onNavigate: (r: AppRoute, d?: any) =
   );
 }
 
+// ── Módulo Traducciones ───────────────────────────────────────────────────────
+
+function ModuloTraduccion({ onNavigate }: { onNavigate: (r: AppRoute, d?: any) => void }) {
+  const [status, setStatus]     = useState<any>(null);
+  const [loading, setLoading]   = useState(true);
+  const [running, setRunning]   = useState(false);
+  const [msg, setMsg]           = useState('');
+  const [limit, setLimit]       = useState(10);
+
+  const loadStatus = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await fetch('/api/translate/status');
+      setStatus(await r.json());
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { loadStatus(); }, [loadStatus]);
+
+  const translate = async (lang: 'EN' | 'PT' | 'ALL') => {
+    setRunning(true);
+    setMsg(`Traduciendo con Claude Haiku (lote ${limit})…`);
+    try {
+      const r = await fetch('/api/translate/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lang, limit }),
+      });
+      const d = await r.json();
+      setMsg(`✅ ${d.ok} traducidos · ${d.errors} errores`);
+      loadStatus();
+    } catch (e: any) {
+      setMsg(`❌ ${e.message}`);
+    } finally { setRunning(false); }
+  };
+
+  return (
+    <div>
+      {/* Acceso rápido a la vista completa */}
+      <button
+        onClick={() => onNavigate(AppRoute.ADMIN_TRADUCCION)}
+        className="w-full flex items-center gap-3 bg-blue-950/40 border border-blue-800/40 hover:border-blue-600 rounded-xl p-3 mb-4 transition-colors text-left"
+      >
+        <Globe size={18} className="text-blue-400 flex-shrink-0" />
+        <div className="flex-1">
+          <div className="text-sm font-semibold text-blue-300">Abrir Centro de Traducciones completo</div>
+          <div className="text-[10px] text-gray-500">Ver todos los registros, editar manualmente, progreso detallado</div>
+        </div>
+        <ChevronRight size={14} className="text-gray-600" />
+      </button>
+
+      {/* KPIs */}
+      {loading ? (
+        <div className="flex items-center justify-center h-16 text-gray-500 text-sm">
+          <Loader2 size={14} className="animate-spin mr-2" /> Cargando…
+        </div>
+      ) : status ? (
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {(['EN', 'PT'] as const).map(l => {
+            const s = status[l];
+            return (
+              <div key={l} className="bg-gray-800/60 border border-gray-700 rounded-xl p-3">
+                <div className="flex justify-between text-xs mb-2">
+                  <span className="font-semibold">{l === 'EN' ? '🇬🇧 English' : '🇧🇷 Português'}</span>
+                  <span className={s.pct === 100 ? 'text-emerald-400 font-bold' : 'text-yellow-400 font-bold'}>{s.pct}%</span>
+                </div>
+                <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden mb-1">
+                  <div className={`h-full rounded-full ${l === 'EN' ? 'bg-blue-500' : 'bg-green-500'}`} style={{ width: `${s.pct}%` }} />
+                </div>
+                <div className="text-[10px] text-gray-500">{s.translated}/{status.total} · {s.pending} pendientes</div>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {/* Controles batch */}
+      <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-4">
+        <div className="text-xs font-semibold text-gray-300 mb-3 flex items-center gap-1.5">
+          <Zap size={12} className="text-yellow-400" /> Traducción automática con Claude
+        </div>
+        <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
+          Lote de
+          <select value={limit} onChange={e => setLimit(Number(e.target.value))}
+            className="bg-gray-700 border border-gray-600 rounded-lg px-2 py-1 text-white text-xs focus:outline-none">
+            {[5, 10, 20, 30, 50].map(n => <option key={n} value={n}>{n}</option>)}
+          </select>
+          registros
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          {(['EN', 'PT', 'ALL'] as const).map(l => (
+            <button key={l} onClick={() => translate(l)} disabled={running}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-50 transition-colors ${
+                l === 'EN' ? 'bg-blue-700 hover:bg-blue-600 text-white' :
+                l === 'PT' ? 'bg-green-700 hover:bg-green-600 text-white' :
+                'bg-purple-700 hover:bg-purple-600 text-white'
+              }`}>
+              {running ? <Loader2 size={11} className="animate-spin" /> : <Globe size={11} />}
+              {l === 'ALL' ? 'EN + PT' : `Traducir ${l}`}
+            </button>
+          ))}
+          <button onClick={loadStatus} disabled={loading} className="px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-xs text-gray-300 disabled:opacity-50">
+            <RefreshCw size={11} className={loading ? 'animate-spin' : ''} />
+          </button>
+        </div>
+        {msg && <p className="mt-3 text-xs text-gray-400 border-t border-gray-700 pt-2">{msg}</p>}
+      </div>
+    </div>
+  );
+}
+
 // ── Módulo Sistema ─────────────────────────────────────────────────────────────
 
 type CheckStatus = 'idle' | 'checking' | 'ok' | 'warn' | 'error';
@@ -1004,14 +1116,14 @@ export default function GuanaGOCommandCenter({ onBack, onNavigate }: Props) {
 
   const access: AccessLevel = isSky ? 'sky' : isMarta ? 'marta' : 'admin';
 
-  // Todos los admins tienen acceso completo al Command Center
   const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode; roles: AccessLevel[] }[] = [
-    { id: 'tareas',     label: 'Tareas',      icon: <CheckSquare size={13} />,  roles: ['sky', 'admin', 'marta'] },
-    { id: 'avance',     label: 'Avance',      icon: <BarChart3 size={13} />,    roles: ['sky', 'marta', 'admin'] },
-    { id: 'rag',        label: 'RAG',         icon: <Brain size={13} />,        roles: ['sky', 'admin', 'marta'] },
-    { id: 'ecosistema', label: 'Ecosistema',  icon: <Users size={13} />,        roles: ['sky', 'marta', 'admin'] },
-    { id: 'estrategia', label: 'Estrategia',  icon: <Target size={13} />,       roles: ['sky', 'marta', 'admin'] },
-    { id: 'sistema',    label: 'Sistema',     icon: <Activity size={13} />,     roles: ['sky', 'admin', 'marta'] },
+    { id: 'tareas',      label: 'Tareas',       icon: <CheckSquare size={13} />, roles: ['sky', 'admin', 'marta'] },
+    { id: 'avance',      label: 'Avance',       icon: <BarChart3 size={13} />,   roles: ['sky', 'marta', 'admin'] },
+    { id: 'rag',         label: 'RAG',          icon: <Brain size={13} />,       roles: ['sky', 'admin', 'marta'] },
+    { id: 'ecosistema',  label: 'Ecosistema',   icon: <Users size={13} />,       roles: ['sky', 'marta', 'admin'] },
+    { id: 'estrategia',  label: 'Estrategia',   icon: <Target size={13} />,      roles: ['sky', 'marta', 'admin'] },
+    { id: 'traduccion',  label: 'Traducciones', icon: <Globe size={13} />,       roles: ['sky', 'admin', 'marta'] },
+    { id: 'sistema',     label: 'Sistema',      icon: <Activity size={13} />,    roles: ['sky', 'admin', 'marta'] },
   ];
 
   const tabs = ALL_TABS.filter(t => t.roles.includes(access));
@@ -1055,12 +1167,13 @@ export default function GuanaGOCommandCenter({ onBack, onNavigate }: Props) {
 
       {/* Contenido */}
       <div className="px-4 py-4 pb-10">
-        {activeTab === 'tareas'     && <ModuloTareas access={access} />}
-        {activeTab === 'avance'     && <ModuloAvance />}
-        {activeTab === 'rag'        && <ModuloRAG />}
-        {activeTab === 'ecosistema' && <ModuloEcosistema />}
-        {activeTab === 'estrategia' && <ModuloEstrategia onNavigate={onNavigate} />}
-        {activeTab === 'sistema'    && <ModuloSistema onNavigate={onNavigate} />}
+        {activeTab === 'tareas'      && <ModuloTareas access={access} />}
+        {activeTab === 'avance'      && <ModuloAvance />}
+        {activeTab === 'rag'         && <ModuloRAG />}
+        {activeTab === 'ecosistema'  && <ModuloEcosistema />}
+        {activeTab === 'estrategia'  && <ModuloEstrategia onNavigate={onNavigate} />}
+        {activeTab === 'traduccion'  && <ModuloTraduccion onNavigate={onNavigate} />}
+        {activeTab === 'sistema'     && <ModuloSistema onNavigate={onNavigate} />}
       </div>
     </div>
   );
