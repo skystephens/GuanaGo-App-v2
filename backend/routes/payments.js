@@ -290,24 +290,78 @@ router.post('/webhook', express.urlencoded({ extended: true }), async (req, res)
   const entityId = match?.[1];
 
   if (entityId && state_pol === '4') {
-    try {
-      const AT_KEY  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
-      const AT_BASE = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
+    const AT_KEY  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+    const AT_BASE = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
+    const AT_HDR  = { 'Authorization': `Bearer ${AT_KEY}`, 'Content-Type': 'application/json' };
+    const AT      = (table) => `https://api.airtable.com/v0/${AT_BASE}/${encodeURIComponent(table)}`;
 
-      await fetch(`https://api.airtable.com/v0/${AT_BASE}/CotizacionesGG/${entityId}`, {
+    // Número de reserva: GG-{año}-{últimos 4 del transaction_id}
+    const year    = new Date().getFullYear();
+    const txSuffix = (transaction_id || Date.now().toString()).slice(-4).toUpperCase();
+    const numReserva = `GG-${year}-${txSuffix}`;
+
+    // 1. Actualizar CotizacionesGG con todos los datos del pago
+    try {
+      await fetch(`${AT('CotizacionesGG')}/${entityId}`, {
         method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${AT_KEY}`, 'Content-Type': 'application/json' },
+        headers: AT_HDR,
         body: JSON.stringify({
           fields: {
-            'Estado': 'Pagado',
-            'PayU Reference':    reference_sale,
-            'PayU Transaction':  transaction_id || '',
+            'Estado':              'Pagado',
+            'PayU_Reference':      reference_sale,
+            'PayU_Transaction_ID': transaction_id || '',
+            'Valor_Pagado':        parseFloat(value || '0'),
+            'Numero_Reserva':      numReserva,
           },
         }),
       });
-      console.log(`✅ Cotización ${entityId} marcada Pagado en Airtable`);
+      console.log(`✅ CotizacionesGG/${entityId} → Pagado · Reserva ${numReserva}`);
     } catch (err) {
-      console.error('❌ Airtable update error:', err.message);
+      console.error('❌ CotizacionesGG update error:', err.message);
+    }
+
+    // 2. Crear registro en tabla Pagos
+    try {
+      const metodoPago = req.body.payment_method_name || req.body.lapPaymentMethod || 'PayU';
+      const emailPagador = req.body.email_buyer || req.body.payer_email || '';
+
+      await fetch(AT('Pagos'), {
+        method: 'POST',
+        headers: AT_HDR,
+        body: JSON.stringify({
+          fields: {
+            'ID':          numReserva,
+            'Monto':       parseFloat(value || '0'),
+            'Metodo_Pago': metodoPago,
+            'Estado':      'Completado',
+            'Fecha_Pago':  new Date().toISOString(),
+            'Referencia':  reference_sale,
+          },
+        }),
+      });
+      console.log(`✅ Pago registrado en tabla Pagos: ${numReserva}`);
+    } catch (err) {
+      console.error('❌ Pagos create error:', err.message);
+    }
+
+    // 3. Disparar webhook Make (si está configurado) para email + Google Drive
+    const MAKE_WEBHOOK_PAGOS = process.env.MAKE_WEBHOOK_PAGOS;
+    if (MAKE_WEBHOOK_PAGOS) {
+      fetch(MAKE_WEBHOOK_PAGOS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cotizacion_id:   entityId,
+          reference_sale,
+          transaction_id,
+          valor:           parseFloat(value || '0'),
+          moneda:          currency,
+          metodo_pago:     req.body.payment_method_name || '',
+          email_comprador: req.body.email_buyer || '',
+          numero_reserva:  numReserva,
+          fecha_pago:      new Date().toISOString(),
+        }),
+      }).catch(e => console.error('⚠️ Make webhook pagos error:', e.message));
     }
   }
 
