@@ -26,7 +26,7 @@ const AT_KEY    = import.meta.env.VITE_AIRTABLE_API_KEY;
 const AT_BASE   = import.meta.env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
 const AT_URL    = `https://api.airtable.com/v0/${AT_BASE}`;
 
-type Tab = 'tareas' | 'avance' | 'rag' | 'ecosistema' | 'estrategia' | 'sistema' | 'traduccion';
+type Tab = 'tareas' | 'avance' | 'rag' | 'ecosistema' | 'estrategia' | 'sistema' | 'traduccion' | 'docs';
 type AccessLevel = 'sky' | 'marta' | 'admin';
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; border: string; dot: string }> = {
@@ -981,6 +981,140 @@ function ModuloTraduccion({ onNavigate }: { onNavigate: (r: AppRoute, d?: any) =
   );
 }
 
+// ── Módulo Docs ───────────────────────────────────────────────────────────────
+
+interface DocFile {
+  slug: string; nombre: string; ruta: string; titulo: string;
+  carpeta: string; categoria: string; tamaño: number; modificado: string;
+}
+
+const CAT_COLOR: Record<string, string> = {
+  'Roadmap':       'bg-yellow-900/40 text-yellow-300',
+  'Aliados':       'bg-emerald-900/40 text-emerald-300',
+  'Pagos':         'bg-green-900/40 text-green-300',
+  'Integraciones': 'bg-blue-900/40 text-blue-300',
+  'DevOps':        'bg-purple-900/40 text-purple-300',
+  'Arquitectura':  'bg-cyan-900/40 text-cyan-300',
+  'Contexto':      'bg-orange-900/40 text-orange-300',
+  'Alojamientos':  'bg-teal-900/40 text-teal-300',
+  'Otros':         'bg-gray-800 text-gray-400',
+};
+
+function ModuloDocs() {
+  const [docs, setDocs]       = useState<DocFile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch]   = useState('');
+  const [catFilter, setCat]   = useState('');
+  const [selected, setSelected] = useState<{ slug: string; contenido: string; titulo: string } | null>(null);
+  const [loadingDoc, setLD]   = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const r = await fetch('/api/docs');
+        const d = await r.json();
+        setDocs(d.files || []);
+      } catch { /* ignore */ }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  const openDoc = async (slug: string, titulo: string) => {
+    setLD(true);
+    try {
+      const r = await fetch(`/api/docs/${encodeURIComponent(slug)}`);
+      const d = await r.json();
+      setSelected({ slug, contenido: d.contenido || '', titulo });
+    } finally { setLD(false); }
+  };
+
+  const categorias = [...new Set(docs.map(d => d.categoria))].sort();
+
+  const filtered = docs.filter(d => {
+    const matchSearch = !search ||
+      d.titulo.toLowerCase().includes(search.toLowerCase()) ||
+      d.nombre.toLowerCase().includes(search.toLowerCase()) ||
+      d.categoria.toLowerCase().includes(search.toLowerCase());
+    const matchCat = !catFilter || d.categoria === catFilter;
+    return matchSearch && matchCat;
+  });
+
+  if (selected) {
+    return (
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <button onClick={() => setSelected(null)}
+            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white px-2 py-1.5 bg-gray-800 rounded-lg transition-colors">
+            <ArrowLeft size={12} /> Volver
+          </button>
+          <span className="text-xs text-gray-500 truncate flex-1">{selected.titulo}</span>
+        </div>
+        <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 overflow-auto max-h-[70vh]">
+          <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono leading-relaxed">
+            {selected.contenido}
+          </pre>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex gap-2 mb-3">
+        <div className="relative flex-1">
+          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" />
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Buscar docs..."
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-7 pr-3 py-2 text-xs text-gray-200 placeholder-gray-600 focus:outline-none focus:border-blue-600" />
+        </div>
+        <select value={catFilter} onChange={e => setCat(e.target.value)}
+          className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-2 text-xs text-gray-300 focus:outline-none focus:border-blue-600">
+          <option value="">Todas</option>
+          {categorias.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center h-24 text-gray-500 text-sm">
+          <Loader2 size={16} className="animate-spin mr-2" /> Cargando...
+        </div>
+      ) : (
+        <>
+          <div className="text-[11px] text-gray-500 mb-3">{filtered.length} de {docs.length} archivos</div>
+          <div className="space-y-1.5">
+            {filtered.map(doc => (
+              <button key={doc.slug} onClick={() => openDoc(doc.slug, doc.titulo)}
+                className="w-full text-left bg-gray-800/60 border border-gray-700 hover:border-gray-500 rounded-xl px-3 py-2.5 transition-colors">
+                <div className="flex items-start gap-2">
+                  <FileText size={12} className="text-gray-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold text-gray-200 truncate leading-tight">{doc.titulo}</div>
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${CAT_COLOR[doc.categoria] || CAT_COLOR.Otros}`}>
+                        {doc.categoria}
+                      </span>
+                      <span className="text-[9px] text-gray-600">{doc.carpeta} · {doc.nombre}</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={12} className="text-gray-600 flex-shrink-0 mt-0.5" />
+                </div>
+              </button>
+            ))}
+          </div>
+          {loadingDoc && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 flex items-center gap-3 text-sm text-gray-300">
+                <Loader2 size={16} className="animate-spin" /> Cargando documento...
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Módulo Sistema ─────────────────────────────────────────────────────────────
 
 type CheckStatus = 'idle' | 'checking' | 'ok' | 'warn' | 'error';
@@ -1124,6 +1258,7 @@ export default function GuanaGOCommandCenter({ onBack, onNavigate }: Props) {
     { id: 'estrategia',  label: 'Estrategia',   icon: <Target size={13} />,      roles: ['sky', 'marta', 'admin'] },
     { id: 'traduccion',  label: 'Traducciones', icon: <Globe size={13} />,       roles: ['sky', 'admin', 'marta'] },
     { id: 'sistema',     label: 'Sistema',      icon: <Activity size={13} />,    roles: ['sky', 'admin', 'marta'] },
+    { id: 'docs',        label: 'Docs',         icon: <FileText size={13} />,    roles: ['sky', 'admin', 'marta'] },
   ];
 
   const tabs = ALL_TABS.filter(t => t.roles.includes(access));
@@ -1174,6 +1309,7 @@ export default function GuanaGOCommandCenter({ onBack, onNavigate }: Props) {
         {activeTab === 'estrategia'  && <ModuloEstrategia onNavigate={onNavigate} />}
         {activeTab === 'traduccion'  && <ModuloTraduccion onNavigate={onNavigate} />}
         {activeTab === 'sistema'     && <ModuloSistema onNavigate={onNavigate} />}
+        {activeTab === 'docs'        && <ModuloDocs />}
       </div>
     </div>
   );

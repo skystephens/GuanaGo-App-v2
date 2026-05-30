@@ -26,6 +26,7 @@ import agentRoutes        from './routes/agent.js';
 import dinamicasRoutes    from './routes/dinamicas.js';
 import taxiZonesRoutes    from './routes/taxiZones.js';
 import translateRoutes    from './routes/translate.js';
+import docsRoutes        from './routes/docs.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -58,6 +59,7 @@ app.use('/api/directory', directoryRoutes);
 app.use('/api/dinamicas',   dinamicasRoutes);
 app.use('/api/taxi-zones', taxiZonesRoutes);
 app.use('/api/translate',  translateRoutes);
+app.use('/api/docs',       docsRoutes);
 
 // Pagos: /api/payments/create  /api/payments/webhook
 //        /pagar/:ref            /pago-resultado

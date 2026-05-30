@@ -17,6 +17,7 @@ import type { Reservation } from '../../types';
 
 interface DashboardProps {
   onNavigate: (route: AppRoute) => void;
+  onPreview?: (role: import('../../types').UserRole) => void;
 }
 
 interface BriefingMsg {
@@ -231,7 +232,7 @@ function AgenteBriefing({ onNavigate }: { onNavigate: (r: AppRoute) => void }) {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
+const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => {
   const [recentReservations, setRecentReservations] = useState<Reservation[]>([]);
   const [loadingRes, setLoadingRes] = useState(false);
   const [pendingApprovals, setPendingApprovals] = useState<number | null>(null);
@@ -631,6 +632,43 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 onClick={() => onNavigate(AppRoute.ADMIN_TRADUCCION)}
                 pulse="bg-emerald-400" gradient="from-emerald-900/50 to-teal-900/50" border="border-emerald-700 hover:border-emerald-500"
               />
+            </div>
+
+            {/* ── Preview rápido de perfiles ── */}
+            <div className="mt-2 bg-gray-800/40 border border-gray-700 rounded-xl p-3">
+              <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                🧪 Test de perfiles (sin cambiar sesión)
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => onNavigate(AppRoute.PARTNER_DASHBOARD_PRO)}
+                  className="flex items-center gap-2 px-3 py-2 bg-emerald-900/30 border border-emerald-700/50 hover:border-emerald-500 rounded-lg text-xs text-emerald-300 font-semibold transition-colors"
+                >
+                  <Handshake size={13} /> Panel Aliado
+                </button>
+                <button
+                  onClick={() => onPreview?.('Aliado')}
+                  className="flex items-center gap-2 px-3 py-2 bg-emerald-900/50 border border-emerald-600/50 hover:border-emerald-400 rounded-lg text-xs text-emerald-200 font-semibold transition-colors"
+                  title="Simula la sesión completa como Aliado"
+                >
+                  <Globe size={13} /> Como Aliado
+                </button>
+                <button
+                  onClick={() => onPreview?.('Turista')}
+                  className="flex items-center gap-2 px-3 py-2 bg-blue-900/30 border border-blue-700/50 hover:border-blue-500 rounded-lg text-xs text-blue-300 font-semibold transition-colors"
+                >
+                  <Globe size={13} /> Como Turista
+                </button>
+                <button
+                  onClick={() => onPreview?.('Residente')}
+                  className="flex items-center gap-2 px-3 py-2 bg-purple-900/30 border border-purple-700/50 hover:border-purple-500 rounded-lg text-xs text-purple-300 font-semibold transition-colors"
+                >
+                  <Globe size={13} /> Como Residente
+                </button>
+              </div>
+              <p className="text-[10px] text-gray-600 mt-2">
+                "Panel Aliado" → navega sin cambiar rol · "Como Aliado" → simula sesión completa con barra de salida
+              </p>
             </div>
           </Section>
 
