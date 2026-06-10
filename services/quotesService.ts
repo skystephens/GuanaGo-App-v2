@@ -239,9 +239,9 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
         items.push({
           id: record.id,
           cotizacionId,
-          servicioId: f.Servicio?.[0] || undefined,
+          servicioId: f['AlojamientosTuristicos_SAI']?.[0] || f.Servicio?.[0] || undefined,
           servicioNombre: f.Nombre || '',
-          servicioTipo: (f['Tipo de Servicio'] || 'otro') as CotizacionItem['servicioTipo'],
+          servicioTipo: (f['AlojamientosTuristicos_SAI']?.[0] ? 'hotel' : (f['Tipo de Servicio'] || 'otro')) as CotizacionItem['servicioTipo'],
           fecha: '',
           adultos: 0, ninos: 0, bebes: 0,
           valorUnitario: valorGuardado,
@@ -561,9 +561,9 @@ function mapRecordToCotizacionItem(record: any): CotizacionItem {
   return {
     id: record.id,
     cotizacionId: f.CotizacionesGG?.[0] || '',
-    servicioId: f.ServiciosTuristicos_SAI?.[0] || f.Servicio?.[0] || undefined,
+    servicioId: f['AlojamientosTuristicos_SAI']?.[0] || f.ServiciosTuristicos_SAI?.[0] || f.Servicio?.[0] || undefined,
     servicioNombre: f.Nombre || servicioData.Servicio || servicioData.nombre || '',
-    servicioTipo: (f['Tipo de Servicio'] || servicioData.category || servicioData.Categoria || 'tour') as CotizacionItem['servicioTipo'],
+    servicioTipo: (f['AlojamientosTuristicos_SAI']?.[0] ? 'hotel' : (f['Tipo de Servicio'] || servicioData.category || servicioData.Categoria || 'tour')) as CotizacionItem['servicioTipo'],
     fecha: f['Fecha Inicio'] || '',
     fechaFin: f['Fecha Fin'] || '',
     horarioInicio: servicioData['Horario Inicio'] || '',
@@ -615,12 +615,16 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
 
   // Links (solo si existen)
   if (item.cotizacionId?.trim()) fields['ID CotizacionGG'] = [item.cotizacionId];
-  // Alojamientos vienen de AlojamientosTuristicos_SAI — no se pueden linkear en campo Servicio
-  // que apunta a ServiciosTuristicos_SAI. Solo se guarda el link para tours/taxis.
   const isAlojamiento = (item.servicioTipo || '').toLowerCase().includes('hotel') ||
                         (item.servicioTipo || '').toLowerCase().includes('alojamiento');
-  if (item.servicioId?.trim() && !isAlojamiento) {
-    fields['Servicio'] = [item.servicioId];
+  if (item.servicioId?.trim()) {
+    if (isAlojamiento) {
+      // Linked record al campo que apunta a AlojamientosTuristicos_SAI
+      fields['AlojamientosTuristicos_SAI'] = [item.servicioId];
+    } else {
+      // Linked record al campo que apunta a ServiciosTuristicos_SAI
+      fields['Servicio'] = [item.servicioId];
+    }
   }
 
   return fields;
