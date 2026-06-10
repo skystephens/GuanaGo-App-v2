@@ -239,7 +239,7 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
         items.push({
           id: record.id,
           cotizacionId,
-          servicioId: f.Servicio?.[0] || undefined,
+          servicioId: f['Servicio ID'] || f.Servicio?.[0] || undefined,
           servicioNombre: f.Nombre || '',
           servicioTipo: (f['Tipo Item'] || 'otro') as CotizacionItem['servicioTipo'],
           fecha: '',
@@ -561,7 +561,7 @@ function mapRecordToCotizacionItem(record: any): CotizacionItem {
   return {
     id: record.id,
     cotizacionId: f.CotizacionesGG?.[0] || '',
-    servicioId: f.ServiciosTuristicos_SAI?.[0] || f.Servicio?.[0] || undefined,
+    servicioId: f['Servicio ID'] || f.ServiciosTuristicos_SAI?.[0] || f.Servicio?.[0] || undefined,
     servicioNombre: f.Nombre || servicioData.Servicio || servicioData.nombre || '',
     servicioTipo: (f['Tipo Item'] || servicioData.category || servicioData.Categoria || 'tour') as CotizacionItem['servicioTipo'],
     fecha: f['Fecha Inicio'] || '',
@@ -613,12 +613,22 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
     if (publicUrls.length > 0) fields['Imagenes'] = publicUrls.map(url => ({ url }));
   }
 
+  // Tipo del ítem (para identificar alojamientos al cargar)
+  if (item.servicioTipo) fields['Tipo Item'] = item.servicioTipo;
+
   // Links (solo si existen)
   if (item.cotizacionId?.trim()) fields['ID CotizacionGG'] = [item.cotizacionId];
-  // Alojamientos vienen de otra tabla Airtable — no se pueden linkear en campo Servicio
+  // Alojamientos vienen de otra tabla Airtable — no se pueden linkear en campo Servicio (linked record).
+  // Guardamos el ID como texto plano en 'Servicio ID' para poder recuperarlo al cargar.
   const isAlojamiento = (item.servicioTipo || '').toLowerCase().includes('hotel') ||
                         (item.servicioTipo || '').toLowerCase().includes('alojamiento');
-  if (item.servicioId?.trim() && !isAlojamiento) fields['Servicio'] = [item.servicioId];
+  if (item.servicioId?.trim()) {
+    if (isAlojamiento) {
+      fields['Servicio ID'] = item.servicioId; // campo texto, no linked record
+    } else {
+      fields['Servicio'] = [item.servicioId];
+    }
+  }
 
   return fields;
 }

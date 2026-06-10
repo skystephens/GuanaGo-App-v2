@@ -989,18 +989,30 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
   const allCatalogItems = [...services, ...alojamientosAsTour];
 
-  // Items del catálogo que corresponden a un alojamiento:
-  // filtra por servicioId presente en el catálogo de alojamientos ó por tipo 'hotel'.
-  // (Ítems antiguos pueden tener servicioTipo 'otro' aunque vengan de AlojamientosTuristicos_SAI)
+  // Busca el alojamiento coincidente para un ítem: por ID, luego por nombre exacto,
+  // luego por nombre aproximado (para ítems viejos sin Servicio ID guardado en Airtable).
+  const findAlojamiento = (item: CotizacionItem) => {
+    if (item.servicioId) {
+      const byId = alojamientos.find(a => a.id === item.servicioId);
+      if (byId) return byId;
+    }
+    const nombre = item.servicioNombre.toLowerCase().trim();
+    return alojamientos.find(a =>
+      (a.title || a.name || a.nombre || '').toLowerCase().trim() === nombre
+    );
+  };
+
+  // Items que corresponden a un alojamiento del catálogo (por tipo, por ID o por nombre)
   const hotelItemsInQuote = items.filter(item => {
-    if (item.esPersonalizado || !item.servicioId) return false;
-    return item.servicioTipo === 'hotel' || alojamientos.some(a => a.id === item.servicioId);
+    if (item.esPersonalizado) return false;
+    if (item.servicioTipo === 'hotel') return true;
+    return !!findAlojamiento(item);
   });
 
-  // Alojamientos con coordenadas para renderizar círculos en el mapa
+  // Datos para el mapa (incluye items sin coordenadas — el mapa muestra estado vacío en ese caso)
   const accommodationsForMap: MapAccommodation[] = hotelItemsInQuote
     .map(item => {
-      const alo = alojamientos.find(a => a.id === item.servicioId);
+      const alo = findAlojamiento(item);
       return {
         id: item.id,
         title: item.servicioNombre,
