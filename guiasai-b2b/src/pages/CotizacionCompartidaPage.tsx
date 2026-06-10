@@ -6,8 +6,10 @@
  * El agente genera esta URL desde AdminCotizacionBuilder ("Compartir con cliente").
  * El cliente ve cada servicio con foto, descripción y categoría — sin necesidad de auth.
  */
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import mapboxgl from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
 
 const ORANGE = '#FF6600'
 const TEAL = '#2FA9B8'
@@ -35,6 +37,186 @@ const TIPO_CONFIG: Record<string, { icon: string; color: string; label: string }
   Traslado:    { icon: '🚐', color: '#10b981', label: 'Traslado' },
 }
 
+const CIRCLE_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#8b5cf6', '#14b8a6']
+const SAN_ANDRES_CENTER: [number, number] = [-81.7006, 12.5847]
+
+function buildCirclePolygon(centerLng: number, centerLat: number, radiusKm: number, points = 64): [number, number][] {
+  const coords: [number, number][] = []
+  for (let i = 0; i <= points; i++) {
+    const angle = (i / points) * 2 * Math.PI
+    const dy = radiusKm * Math.sin(angle)
+    const dx = radiusKm * Math.cos(angle)
+    const lat = centerLat + dy / 111.32
+    const lng = centerLng + dx / (111.32 * Math.cos((centerLat * Math.PI) / 180))
+    coords.push([lng, lat])
+  }
+  return coords
+}
+
+// ─── Mapa modal ──────────────────────────────────────────────────────────────
+
+interface AloConCoords {
+  id: string
+  title: string
+  latLon: string
+}
+
+function MapaModal({ alojamientos, onClose }: { alojamientos: AloConCoords[]; onClose: () => void }) {
+  const mapContainerRef = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<mapboxgl.Map | null>(null)
+
+  const valid = alojamientos.filter(a => {
+    if (!a.latLon) return false
+    const parts = a.latLon.split(',').map(s => s.trim())
+    return parts.length === 2 && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]))
+  })
+
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return
+    const token = import.meta.env.VITE_MAPBOX_API_KEY || ''
+    if (!token) return
+
+    mapboxgl.accessToken = token
+
+    const map = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: 'mapbox://styles/mapbox/outdoors-v12',
+      center: SAN_ANDRES_CENTER,
+      zoom: 13,
+      attributionControl: false,
+    })
+
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right')
+
+    map.on('load', () => {
+      const bounds = new mapboxgl.LngLatBounds()
+
+      valid.forEach((acc, index) => {
+        const [latStr, lonStr] = acc.latLon.split(',').map(s => s.trim())
+        const lat = parseFloat(latStr)
+        const lng = parseFloat(lonStr)
+        const color = CIRCLE_COLORS[index % CIRCLE_COLORS.length]
+
+        const offsetLat = (Math.random() - 0.5) * 0.0012
+        const offsetLng = (Math.random() - 0.5) * 0.0012
+        const centerLat = lat + offsetLat
+        const centerLng = lng + offsetLng
+
+        const circleCoords = buildCirclePolygon(centerLng, centerLat, 0.32)
+        const sourceId = `alo-${acc.id}-${index}`
+
+        map.addSource(sourceId, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: { title: acc.title },
+            geometry: { type: 'Polygon', coordinates: [circleCoords] },
+          },
+        })
+
+        map.addLayer({ id: `${sourceId}-fill`, type: 'fill', source: sourceId, paint: { 'fill-color': color, 'fill-opacity': 0.25 } })
+        map.addLayer({ id: `${sourceId}-stroke`, type: 'line', source: sourceId, paint: { 'line-color': color, 'line-width': 2.5, 'line-opacity': 0.85 } })
+
+        const el = document.createElement('div')
+        const label = acc.title.length > 22 ? acc.title.slice(0, 20) + '…' : acc.title
+        el.innerHTML = `<span>${label}</span>`
+        el.style.cssText = [
+          `background:${color}`, 'color:white', 'padding:3px 9px', 'border-radius:10px',
+          'font-size:11px', 'font-weight:700', 'white-space:nowrap',
+          'box-shadow:0 2px 8px rgba(0,0,0,0.35)', 'font-family:Poppins,sans-serif', 'pointer-events:none',
+        ].join(';')
+
+        new mapboxgl.Marker({ element: el, anchor: 'bottom' }).setLngLat([centerLng, centerLat]).addTo(map)
+        bounds.extend([lng, lat])
+      })
+
+      if (valid.length > 0) map.fitBounds(bounds, { padding: 90, maxZoom: 15, duration: 800 })
+    })
+
+    mapRef.current = map
+    return () => { map.remove(); mapRef.current = null }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div
+      onClick={e => e.target === e.currentTarget && onClose()}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 50,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '1rem', backgroundColor: 'rgba(0,0,0,0.75)',
+      }}
+    >
+      <div style={{
+        background: '#1a2744', borderRadius: '16px', overflow: 'hidden',
+        width: '100%', maxWidth: '900px', height: '85vh',
+        display: 'flex', flexDirection: 'column',
+      }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0.85rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)', flexShrink: 0,
+        }}>
+          <div>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>📍 Ubicaciones de Alojamientos</div>
+            <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.7rem', marginTop: '0.15rem' }}>
+              {valid.length === 0
+                ? `${alojamientos.length} alojamiento${alojamientos.length !== 1 ? 's' : ''} · sin coordenadas`
+                : `${valid.length} de ${alojamientos.length} con ubicación · áreas aproximadas`}
+            </div>
+          </div>
+          <button onClick={onClose} style={{
+            background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px',
+            color: '#fff', cursor: 'pointer', width: '32px', height: '32px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem',
+          }}>✕</button>
+        </div>
+
+        {/* Leyenda */}
+        {valid.length > 0 && (
+          <div style={{
+            padding: '0.6rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)',
+            display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1.25rem', flexShrink: 0,
+          }}>
+            {valid.map((acc, index) => (
+              <div key={acc.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: CIRCLE_COLORS[index % CIRCLE_COLORS.length], flexShrink: 0 }} />
+                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>{acc.title}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Mapa / estado vacío */}
+        <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+          {alojamientos.length === 0 ? (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', gap: '0.75rem' }}>
+              <div style={{ fontSize: '2.5rem' }}>📍</div>
+              <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600 }}>No hay alojamientos en esta cotización</p>
+            </div>
+          ) : valid.length === 0 ? (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', gap: '0.75rem', padding: '2rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '2.5rem' }}>🗺️</div>
+              <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600 }}>Sin coordenadas disponibles</p>
+              <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.6 }}>
+                Los alojamientos de esta cotización aún no tienen coordenadas configuradas.
+              </p>
+            </div>
+          ) : (
+            <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '0.6rem 1.25rem', background: 'rgba(0,0,0,0.3)', flexShrink: 0 }}>
+          <p style={{ margin: 0, fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)' }}>
+            Las áreas mostradas son aproximadas. La ubicación exacta se comparte al confirmar la reserva.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Componente de tarjeta de servicio ──────────────────────────────────────
 
 interface ItemData {
@@ -56,7 +238,7 @@ interface ItemData {
   extra?: Record<string, any>
 }
 
-function TarjetaServicio({ item, wa, agente }: { item: ItemData; wa: string; agente: string }) {
+function TarjetaServicio({ item, wa }: { item: ItemData; wa: string; agente?: string }) {
   const [imgIdx, setImgIdx] = useState(0)
   const imgs = item.imageUrls?.length ? item.imageUrls : item.imageUrl ? [item.imageUrl] : []
   const cfg = TIPO_CONFIG[item.tipo] || { icon: '🔧', color: '#64748b', label: item.tipo }
@@ -196,6 +378,7 @@ function Chip({ icon, text }: { icon: string; text: string }) {
 
 export default function CotizacionCompartidaPage() {
   const [params] = useSearchParams()
+  const [showMap, setShowMap] = useState(false)
 
   // Decodificar datos del parámetro ?data=
   let data: any = null
@@ -227,6 +410,17 @@ export default function CotizacionCompartidaPage() {
 
   const { cliente, fechaInicio, fechaFin, adultos = 0, ninos = 0, bebes = 0, items = [], cotizacionId } = data
   const paxTotal = adultos + ninos + bebes
+
+  // Alojamientos para el mapa (leen latLon desde extra, que es el spread del servicio)
+  const alojamientosParaMapa: AloConCoords[] = (items as ItemData[])
+    .filter(i => i.tipo === 'Alojamiento')
+    .map((i, idx) => ({
+      id: i.id || String(idx),
+      title: i.nombre,
+      latLon: (i.extra?.latLon || i.extra?.LatLon || i.extra?.lat_lon || '') as string,
+    }))
+
+  const hayAlojamientos = alojamientosParaMapa.length > 0
 
   return (
     <div style={{ fontFamily: "'Poppins','Inter',sans-serif", minHeight: '100vh', background: '#EFF6FF' }}>
@@ -302,8 +496,25 @@ export default function CotizacionCompartidaPage() {
           </div>
         ) : (
           <>
-            <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.15em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1rem' }}>
-              {items.length} servicio{items.length !== 1 ? 's' : ''} incluido{items.length !== 1 ? 's' : ''}
+            {/* Contador de servicios + botón de mapa */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.15em', color: '#94a3b8', textTransform: 'uppercase' }}>
+                {items.length} servicio{items.length !== 1 ? 's' : ''} incluido{items.length !== 1 ? 's' : ''}
+              </div>
+              {hayAlojamientos && (
+                <button
+                  onClick={() => setShowMap(true)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.4rem',
+                    padding: '0.4rem 0.9rem', borderRadius: '99px',
+                    border: `1.5px solid ${TEAL}`, background: 'transparent',
+                    color: TEAL, cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700,
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  🗺️ Ver alojamientos en mapa
+                </button>
+              )}
             </div>
 
             <div style={{ display: 'grid', gap: '1.25rem' }}>
@@ -348,6 +559,11 @@ export default function CotizacionCompartidaPage() {
           <div>RNT 48674 · guiasai.com · +57 315 383 6043</div>
         </div>
       </div>
+
+      {/* Modal del mapa */}
+      {showMap && (
+        <MapaModal alojamientos={alojamientosParaMapa} onClose={() => setShowMap(false)} />
+      )}
     </div>
   )
 }

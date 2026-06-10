@@ -1857,6 +1857,7 @@ export async function getCotizadorAlojamientosSAI(ids?: string[]): Promise<any[]
         telefono: f['Telefono Contacto'] || '',
         operador: normalizeToArray(f['Nombre Operador Aliado'])[0] || '',
         publicado: f['Publicado'] === true,
+        latLon: f['Lat_Lon'] || f['LatLon'] || '',
       }
     })
   } catch (error: any) {
@@ -1997,6 +1998,7 @@ export async function getCotizadorAlojamientos(): Promise<any[]> {
         tieneCocina: f['Tiene Cocina'] === true,
         accesoJacuzzi: f['Acceso a Jacuzzi'] === true,
         accesoPiscina: f['Acceso a Piscina'] === true,
+        latLon: f['Lat_Lon'] || f['LatLon'] || '',
       }
     })
   } catch (error: any) {
