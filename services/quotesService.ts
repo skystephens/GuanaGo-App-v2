@@ -241,7 +241,7 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
           cotizacionId,
           servicioId: f['Servicio ID'] || f.Servicio?.[0] || undefined,
           servicioNombre: f.Nombre || '',
-          servicioTipo: (f['Tipo Item'] || 'otro') as CotizacionItem['servicioTipo'],
+          servicioTipo: (f['Tipo de Servicio'] || 'otro') as CotizacionItem['servicioTipo'],
           fecha: '',
           adultos: 0, ninos: 0, bebes: 0,
           valorUnitario: valorGuardado,
@@ -563,7 +563,7 @@ function mapRecordToCotizacionItem(record: any): CotizacionItem {
     cotizacionId: f.CotizacionesGG?.[0] || '',
     servicioId: f['Servicio ID'] || f.ServiciosTuristicos_SAI?.[0] || f.Servicio?.[0] || undefined,
     servicioNombre: f.Nombre || servicioData.Servicio || servicioData.nombre || '',
-    servicioTipo: (f['Tipo Item'] || servicioData.category || servicioData.Categoria || 'tour') as CotizacionItem['servicioTipo'],
+    servicioTipo: (f['Tipo de Servicio'] || servicioData.category || servicioData.Categoria || 'tour') as CotizacionItem['servicioTipo'],
     fecha: f['Fecha Inicio'] || '',
     fechaFin: f['Fecha Fin'] || '',
     horarioInicio: servicioData['Horario Inicio'] || '',
@@ -614,7 +614,7 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
   }
 
   // Tipo del ítem (para identificar alojamientos al cargar)
-  if (item.servicioTipo) fields['Tipo Item'] = item.servicioTipo;
+  if (item.servicioTipo) fields['Tipo de Servicio'] = item.servicioTipo;
 
   // Links (solo si existen)
   if (item.cotizacionId?.trim()) fields['ID CotizacionGG'] = [item.cotizacionId];
