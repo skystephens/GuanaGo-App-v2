@@ -401,6 +401,25 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     cachedApi.getAlojamientos().then(data => setAlojamientos(data));
   }, []);
 
+  // Diagnóstico del mapa — eliminar cuando el botón funcione
+  useEffect(() => {
+    if (items.length === 0) return;
+    console.log('🗺️ MAP-DEBUG items:', items.map(i => ({
+      nombre: i.servicioNombre, tipo: i.servicioTipo,
+      personalizado: i.esPersonalizado, servicioId: i.servicioId
+    })));
+    console.log('🗺️ MAP-DEBUG alojamientos cargados:', alojamientos.length,
+      alojamientos.slice(0,5).map(a => a.title));
+    console.log('🗺️ MAP-DEBUG hotelItemsInQuote:', items.filter(item => {
+      if (item.esPersonalizado) return false;
+      if (item.servicioTipo === 'hotel') return true;
+      return alojamientos.some(a =>
+        a.id === item.servicioId ||
+        (a.title || '').toLowerCase().trim() === item.servicioNombre.toLowerCase().trim()
+      );
+    }).map(i => i.servicioNombre));
+  }, [items, alojamientos]);
+
   // Recalcular el total cuando cambien los items
   useEffect(() => {
     if (selectedCotizacion && items.length > 0) {
