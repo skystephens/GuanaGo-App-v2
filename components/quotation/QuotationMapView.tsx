@@ -95,7 +95,7 @@ const QuotationMapView: React.FC<QuotationMapViewProps> = ({ accommodations, onC
         const centerLat = lat + offsetLat;
         const centerLng = lng + offsetLng;
 
-        const circleCoords = buildCirclePolygon(centerLng, centerLat, 0.32); // ~320 m radius
+        const circleCoords = buildCirclePolygon(centerLng, centerLat, 0.11); // ~110 m radius
 
         const sourceId = `alo-${acc.id}`;
         map.addSource(sourceId, {

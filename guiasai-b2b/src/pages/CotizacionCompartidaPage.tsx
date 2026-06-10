@@ -102,7 +102,7 @@ function MapaModal({ alojamientos, onClose }: { alojamientos: AloConCoords[]; on
         const centerLat = lat + offsetLat
         const centerLng = lng + offsetLng
 
-        const circleCoords = buildCirclePolygon(centerLng, centerLat, 0.32)
+        const circleCoords = buildCirclePolygon(centerLng, centerLat, 0.11)
         const sourceId = `alo-${acc.id}-${index}`
 
         map.addSource(sourceId, {

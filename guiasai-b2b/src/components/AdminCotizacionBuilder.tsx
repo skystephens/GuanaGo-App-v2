@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
+import mapboxgl from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
 import {
   createCotizacionGG,
   getCotizadorTours,
@@ -102,6 +104,118 @@ function Input({ label, value, onChange, type = 'text', placeholder = '' }: {
 
 // ─── Vista previa estilo voucher ─────────────────────────────────────────────
 
+// ─── Mapa de alojamientos ────────────────────────────────────────────────────
+
+const MAP_CIRCLE_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#8b5cf6', '#14b8a6']
+const SAN_ANDRES_CENTER: [number, number] = [-81.7006, 12.5847]
+
+function buildMapCirclePolygon(centerLng: number, centerLat: number, radiusKm: number, points = 64): [number, number][] {
+  const coords: [number, number][] = []
+  for (let i = 0; i <= points; i++) {
+    const angle = (i / points) * 2 * Math.PI
+    const dy = radiusKm * Math.sin(angle)
+    const dx = radiusKm * Math.cos(angle)
+    const lat = centerLat + dy / 111.32
+    const lng = centerLng + dx / (111.32 * Math.cos((centerLat * Math.PI) / 180))
+    coords.push([lng, lat])
+  }
+  return coords
+}
+
+interface AloConCoords { id: string; title: string; latLon: string }
+
+function MapaAlojamientosModal({ alojamientos, onClose }: { alojamientos: AloConCoords[]; onClose: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<mapboxgl.Map | null>(null)
+
+  const valid = alojamientos.filter(a => {
+    if (!a.latLon) return false
+    const p = a.latLon.split(',').map(s => s.trim())
+    return p.length === 2 && !isNaN(parseFloat(p[0])) && !isNaN(parseFloat(p[1]))
+  })
+
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return
+    const token = import.meta.env.VITE_MAPBOX_API_KEY || ''
+    if (!token) return
+    mapboxgl.accessToken = token
+    const map = new mapboxgl.Map({
+      container: containerRef.current,
+      style: 'mapbox://styles/mapbox/outdoors-v12',
+      center: SAN_ANDRES_CENTER,
+      zoom: 13,
+      attributionControl: false,
+    })
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right')
+    map.on('load', () => {
+      const bounds = new mapboxgl.LngLatBounds()
+      valid.forEach((acc, idx) => {
+        const [latStr, lonStr] = acc.latLon.split(',').map(s => s.trim())
+        const lat = parseFloat(latStr)
+        const lng = parseFloat(lonStr)
+        const color = MAP_CIRCLE_COLORS[idx % MAP_CIRCLE_COLORS.length]
+        const oLat = lat + (Math.random() - 0.5) * 0.0012
+        const oLng = lng + (Math.random() - 0.5) * 0.0012
+        const sid = `m-${acc.id}-${idx}`
+        map.addSource(sid, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [buildMapCirclePolygon(oLng, oLat, 0.11)] } } })
+        map.addLayer({ id: `${sid}-fill`, type: 'fill', source: sid, paint: { 'fill-color': color, 'fill-opacity': 0.25 } })
+        map.addLayer({ id: `${sid}-stroke`, type: 'line', source: sid, paint: { 'line-color': color, 'line-width': 2.5, 'line-opacity': 0.85 } })
+        const el = document.createElement('div')
+        const label = acc.title.length > 22 ? acc.title.slice(0, 20) + '…' : acc.title
+        el.innerHTML = `<span>${label}</span>`
+        el.style.cssText = [`background:${color}`, 'color:white', 'padding:3px 9px', 'border-radius:10px', 'font-size:11px', 'font-weight:700', 'white-space:nowrap', 'box-shadow:0 2px 8px rgba(0,0,0,0.35)', 'font-family:Poppins,sans-serif', 'pointer-events:none'].join(';')
+        new mapboxgl.Marker({ element: el, anchor: 'bottom' }).setLngLat([oLng, oLat]).addTo(map)
+        bounds.extend([lng, lat])
+      })
+      if (valid.length > 0) map.fitBounds(bounds, { padding: 90, maxZoom: 15, duration: 800 })
+    })
+    mapRef.current = map
+    return () => { map.remove(); mapRef.current = null }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backgroundColor: 'rgba(0,0,0,0.75)' }}>
+      <div style={{ background: '#1a2744', borderRadius: '16px', overflow: 'hidden', width: '100%', maxWidth: '900px', height: '85vh', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
+          <div>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>📍 Ubicaciones de Alojamientos</div>
+            <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.7rem', marginTop: '0.15rem' }}>
+              {valid.length === 0 ? `${alojamientos.length} alojamiento${alojamientos.length !== 1 ? 's' : ''} · sin coordenadas` : `${valid.length} de ${alojamientos.length} con ubicación · áreas aproximadas`}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>✕</button>
+        </div>
+        {valid.length > 0 && (
+          <div style={{ padding: '0.6rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1.25rem', flexShrink: 0 }}>
+            {valid.map((acc, idx) => (
+              <div key={acc.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: MAP_CIRCLE_COLORS[idx % MAP_CIRCLE_COLORS.length], flexShrink: 0 }} />
+                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>{acc.title}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+          {valid.length === 0 ? (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', gap: '0.75rem', padding: '2rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '2.5rem' }}>🗺️</div>
+              <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600 }}>Sin coordenadas disponibles</p>
+              <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.6 }}>Agrega el campo Lat_Lon en Airtable para los alojamientos.</p>
+            </div>
+          ) : (
+            <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+          )}
+        </div>
+        <div style={{ padding: '0.6rem 1.25rem', background: 'rgba(0,0,0,0.3)', flexShrink: 0 }}>
+          <p style={{ margin: 0, fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)' }}>Áreas aproximadas. La ubicación exacta se comparte al confirmar la reserva.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Preview de cotización ───────────────────────────────────────────────────
+
 function CotizacionPreview({ cliente, fechaInicio, fechaFin, adultos, ninos, bebes, items, notas, cotizacionId }: {
   cliente: ClienteInfo
   fechaInicio: string
@@ -114,8 +228,17 @@ function CotizacionPreview({ cliente, fechaInicio, fechaFin, adultos, ninos, beb
   cotizacionId: string
 }) {
   const [detalleItem, setDetalleItem] = useState<ItemCotizacion | null>(null)
+  const [showMapModal, setShowMapModal] = useState(false)
   const total = items.reduce((s, i) => s + i.subtotal, 0)
   const paxTotal = adultos + ninos + bebes
+
+  const alojamientosParaMapa: AloConCoords[] = items
+    .filter(i => i.tipo === 'Alojamiento')
+    .map((i, idx) => ({
+      id: i.id || String(idx),
+      title: i.nombre,
+      latLon: (i.extra?.latLon || i.extra?.LatLon || i.extra?.lat_lon || '') as string,
+    }))
 
   return (
     <div style={{
@@ -178,8 +301,23 @@ function CotizacionPreview({ cliente, fechaInicio, fechaFin, adultos, ninos, beb
 
         {/* Items */}
         <div style={{ marginBottom: '1.25rem', paddingBottom: '0.5rem', borderBottom: '1px dashed #e2e8f0' }}>
-          <div style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.14em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-            Servicios incluidos
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+            <div style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.14em', color: '#94a3b8', textTransform: 'uppercase' }}>
+              Servicios incluidos
+            </div>
+            {alojamientosParaMapa.length > 0 && (
+              <button
+                onClick={() => setShowMapModal(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.35rem',
+                  padding: '0.25rem 0.7rem', borderRadius: '99px',
+                  border: `1.5px solid ${TEAL}`, background: 'transparent',
+                  color: TEAL, cursor: 'pointer', fontSize: '0.62rem', fontWeight: 700,
+                }}
+              >
+                🗺️ Ver en mapa
+              </button>
+            )}
           </div>
           {items.length === 0 && (
             <div style={{ color: '#94a3b8', fontSize: '0.82rem', textAlign: 'center', padding: '1rem' }}>
@@ -316,6 +454,11 @@ function CotizacionPreview({ cliente, fechaInicio, fechaFin, adultos, ninos, beb
       {/* Modal de detalle — fuera del contenido imprimible */}
       {detalleItem && (
         <DetalleServicioModal item={detalleItem} onClose={() => setDetalleItem(null)} />
+      )}
+
+      {/* Modal de mapa */}
+      {showMapModal && (
+        <MapaAlojamientosModal alojamientos={alojamientosParaMapa} onClose={() => setShowMapModal(false)} />
       )}
     </div>
   )
