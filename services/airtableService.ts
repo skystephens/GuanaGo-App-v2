@@ -1119,6 +1119,9 @@ export async function getAlojamientosSAI(): Promise<any[]> {
         descripcion: f['Descripcion'] || f['Itinerario'] || '',
         active: true,
         price: parseFloat(f['Precio actualizado'] || f['Precio'] || 0),
+        latLon: f['Lat_Lon'] || f['LatLon'] || f['lat_lon'] || undefined,
+        ubicacion: f['Ubicacion'] || f['ubicacion'] || undefined,
+        tipoAlojamiento: f['Tipo de Alojamiento'] || undefined,
       };
     });
   } catch (error) {

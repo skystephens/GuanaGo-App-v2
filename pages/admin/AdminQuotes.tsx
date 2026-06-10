@@ -3,8 +3,9 @@ import {
   ArrowLeft, Plus, Send, Trash2, Calendar, Users, DollarSign, Clock,
   CheckCircle2, AlertCircle, FileText, Search, Filter, User, Mail, Phone,
   Download, Eye, Loader2, Bot, ChevronDown, ChevronUp, Sparkles, Link2,
-  CreditCard, X, Pencil, Check, CalendarDays,
+  CreditCard, X, Pencil, Check, CalendarDays, MapPin,
 } from 'lucide-react';
+import QuotationMapView, { MapAccommodation } from '../../components/quotation/QuotationMapView';
 import DynamicItineraryBuilder from './DynamicItineraryBuilder';
 import { AppRoute, Cotizacion, CotizacionItem, Tour, QuoteStatus, QUOTE_STATUS_CONFIG } from '../../types';
 import {
@@ -308,6 +309,9 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
   // ── Itinerario ─────────────────────────────────────────────────────────────
   const [showItinerario, setShowItinerario] = useState(false);
+
+  // ── Mapa de alojamientos ───────────────────────────────────────────────────
+  const [showMapView, setShowMapView] = useState(false);
 
   // ── Notas inline ───────────────────────────────────────────────────────────
   const [editingNotas, setEditingNotas]   = useState(false);
@@ -985,6 +989,26 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
   const allCatalogItems = [...services, ...alojamientosAsTour];
 
+  // Items del catálogo que corresponden a un alojamiento:
+  // filtra por servicioId presente en el catálogo de alojamientos ó por tipo 'hotel'.
+  // (Ítems antiguos pueden tener servicioTipo 'otro' aunque vengan de AlojamientosTuristicos_SAI)
+  const hotelItemsInQuote = items.filter(item => {
+    if (item.esPersonalizado || !item.servicioId) return false;
+    return item.servicioTipo === 'hotel' || alojamientos.some(a => a.id === item.servicioId);
+  });
+
+  // Alojamientos con coordenadas para renderizar círculos en el mapa
+  const accommodationsForMap: MapAccommodation[] = hotelItemsInQuote
+    .map(item => {
+      const alo = alojamientos.find(a => a.id === item.servicioId);
+      return {
+        id: item.id,
+        title: item.servicioNombre,
+        latLon: alo?.latLon ?? '',
+        status: item.status,
+      };
+    });
+
   const filteredServices = allCatalogItems.filter(service => {
     const matchesSearch = service.title?.toLowerCase().includes(searchService.toLowerCase()) ||
                          (service as any).nombre?.toLowerCase().includes(searchService.toLowerCase());
@@ -1488,7 +1512,18 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
               {/* Items de la cotización — tabla estilo Excel */}
               <div className="bg-gray-900 p-6 rounded-xl">
-                <h3 className="text-xl font-semibold mb-4">Servicios Incluidos ({items.length})</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold">Servicios Incluidos ({items.length})</h3>
+                  {hotelItemsInQuote.length > 0 && (
+                    <button
+                      onClick={() => setShowMapView(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-900/30 text-emerald-400 border border-emerald-800/50 hover:bg-emerald-800/40 transition-colors"
+                    >
+                      <MapPin className="w-3.5 h-3.5" />
+                      Ver en Mapa ({hotelItemsInQuote.length})
+                    </button>
+                  )}
+                </div>
                 {items.length === 0 ? (
                   <div className="text-center py-8 text-gray-400">
                     <FileText className="w-12 h-12 mx-auto mb-2 text-gray-600" />
@@ -2179,6 +2214,14 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
             </div>
           </div>
         </div>
+
+      {/* ── Modal Mapa de Alojamientos ── */}
+      {showMapView && (
+        <QuotationMapView
+          accommodations={accommodationsForMap}
+          onClose={() => setShowMapView(false)}
+        />
+      )}
 
       {/* ── Panel Itinerario ── */}
       {showItinerario && (
