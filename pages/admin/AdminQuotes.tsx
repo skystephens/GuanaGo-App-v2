@@ -1008,25 +1008,40 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
   const allCatalogItems = [...services, ...alojamientosAsTour];
 
-  // Busca el alojamiento coincidente para un ítem: por ID, luego por nombre exacto,
-  // luego por nombre aproximado (para ítems viejos sin Servicio ID guardado en Airtable).
+  // Palabras clave que identifican ítems de alojamiento
+  const HOTEL_KEYWORDS = ['habitacion', 'habitación', 'hotel', 'hostal', 'posada',
+    'aparta', 'suite', 'alojamiento', 'room', 'casa', 'cabaña', 'cabaña'];
+
+  // Busca el alojamiento coincidente para un ítem: por ID → nombre exacto → nombre parcial
   const findAlojamiento = (item: CotizacionItem) => {
     if (item.servicioId) {
       const byId = alojamientos.find(a => a.id === item.servicioId);
       if (byId) return byId;
     }
     const nombre = item.servicioNombre.toLowerCase().trim();
-    return alojamientos.find(a =>
+    // Match exacto
+    const exact = alojamientos.find(a =>
       (a.title || a.name || a.nombre || '').toLowerCase().trim() === nombre
     );
+    if (exact) return exact;
+    // Match parcial (el nombre del ítem contiene el título del alojamiento o viceversa)
+    return alojamientos.find(a => {
+      const t = (a.title || a.name || a.nombre || '').toLowerCase().trim();
+      return t.length > 4 && (nombre.includes(t) || t.includes(nombre));
+    });
   };
 
-  // Items que corresponden a un alojamiento del catálogo (por tipo, por ID o por nombre)
-  const hotelItemsInQuote = items.filter(item => {
+  // Un ítem es alojamiento si: tipo='hotel', tiene link a alojamiento, nombre coincide
+  // o el nombre contiene palabras clave de alojamiento (fallback para ítems viejos)
+  const isHotelItem = (item: CotizacionItem) => {
     if (item.esPersonalizado) return false;
-    if (item.servicioTipo === 'hotel') return true;
-    return !!findAlojamiento(item);
-  });
+    if (item.servicioTipo === 'hotel' || item.servicioTipo === 'Alojamiento' as any) return true;
+    if (findAlojamiento(item)) return true;
+    const n = item.servicioNombre.toLowerCase();
+    return HOTEL_KEYWORDS.some(k => n.includes(k));
+  };
+
+  const hotelItemsInQuote = items.filter(isHotelItem);
 
   // Datos para el mapa (incluye items sin coordenadas — el mapa muestra estado vacío en ese caso)
   const accommodationsForMap: MapAccommodation[] = hotelItemsInQuote
