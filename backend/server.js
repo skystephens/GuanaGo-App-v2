@@ -12,21 +12,24 @@ import axios from 'axios';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
-import partnerRoutes      from './routes/partnerRoutes.js';
-import healthRoutes       from './routes/healthRoutes.js';
-import tasksRoutes        from './routes/tasks.js';
+import partnerRoutes         from './routes/partnerRoutes.js';
+import healthRoutes           from './routes/healthRoutes.js';
+import tasksRoutes            from './routes/tasks.js';
 import paymentsRoutes, { resultadoPago } from './routes/payments.js';
-import directoryRoutes    from './routes/directory.js';
-import hubRoutes          from './routes/hub.js';
-import leadsRoutes        from './routes/leads.js';
-import agentesRoutes      from './routes/agentes.js';
-import firebaseAuthRoutes from './routes/firebaseAuth.js';
-import adminUsersRoutes   from './routes/adminUsers.js';
-import agentRoutes        from './routes/agent.js';
-import dinamicasRoutes    from './routes/dinamicas.js';
-import taxiZonesRoutes    from './routes/taxiZones.js';
-import translateRoutes    from './routes/translate.js';
-import docsRoutes        from './routes/docs.js';
+import directoryRoutes        from './routes/directory.js';
+import hubRoutes              from './routes/hub.js';
+import leadsRoutes            from './routes/leads.js';
+import agentesRoutes          from './routes/agentes.js';
+import firebaseAuthRoutes     from './routes/firebaseAuth.js';
+import adminUsersRoutes       from './routes/adminUsers.js';
+import agentRoutes            from './routes/agent.js';
+import dinamicasRoutes        from './routes/dinamicas.js';
+import taxiZonesRoutes        from './routes/taxiZones.js';
+import translateRoutes        from './routes/translate.js';
+import docsRoutes             from './routes/docs.js';
+import publicQuoteRoutes      from './routes/publicQuote.js';
+import disponibilidadAdmin    from './routes/disponibilidadAdmin.js';
+import disponibilidadProxy    from './routes/disponibilidadProxy.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -132,6 +135,19 @@ app.get('/cotizar', (req, res) => res.sendFile(join(docsPath, 'cotizar.html')));
 
 // ── Hub interno ───────────────────────────────────────────────────────────────
 app.use('/hub', hubRoutes);
+
+// ── Cotizaciones públicas (link compartido con cliente) ───────────────────────
+app.use('/cotizacion', publicQuoteRoutes);
+
+// ── Disponibilidad de Alojamientos ───────────────────────────────────────────
+// Admin: directorio con todos los alojamientos
+app.use('/disponibilidad-admin', disponibilidadAdmin);
+// API proxy: propietarios leen/guardan sin exponer la API key
+app.use('/api/disponibilidad', disponibilidadProxy);
+// Sirve el HTML del calendario del propietario desde GuanaGo/public/
+app.get('/disponibilidad-propietario', (req, res) => {
+  res.sendFile(join(__dirname, '..', '..', 'public', 'disponibilidad-propietario.html'));
+});
 
 // ── Frontend React (SPA) ──────────────────────────────────────────────────────
 // Sirve el build de Vite. /pagar y /api/* ya están manejados arriba.

@@ -5,14 +5,14 @@ import {
   Mail, Loader2, AlertCircle, RefreshCw, Plus,
   MapPin, Clock, CheckCircle2, XCircle, Hotel,
   Home, Tent, BedDouble, Tag, ChevronDown, ChevronUp,
-  DollarSign, Edit3, TrendingUp, Info,
+  DollarSign, Edit3, TrendingUp, Info, Calendar, Link2, ExternalLink,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
-import { getServices, getAllLeads } from '../../services/airtableService';
+import { getServices, getAllLeads, getAlojamientosSAI } from '../../services/airtableService';
 import { getCotizaciones } from '../../services/quotesService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Tab = 'catalogo' | 'channels' | 'crm' | 'cotizaciones' | 'tarifas';
+type Tab = 'catalogo' | 'channels' | 'crm' | 'cotizaciones' | 'tarifas' | 'disponibilidad';
 type ServiceCategory = 'all' | 'tour' | 'hotel' | 'taxi' | 'package';
 
 interface Service {
@@ -151,6 +151,12 @@ export default function AdminOperaciones({ onBack, onNavigate }: Props) {
   const [quotes, setQuotes]           = useState<any[]>([]);
   const [quotesLoading, setQuotesLoading] = useState(false);
 
+  // ── Disponibilidad Alojamientos ──
+  const [alojDisp, setAlojDisp]               = useState<any[]>([]);
+  const [alojDispLoading, setAlojDispLoading] = useState(false);
+  const [alojDispSearch, setAlojDispSearch]   = useState('');
+  const [copyToast, setCopyToast]             = useState('');
+
   // ── Tarifas Agencias ──
   const [trm, setTrm]                 = useState<number>(loadTrm);
   const [trmInput, setTrmInput]       = useState<string>(String(loadTrm()));
@@ -162,6 +168,7 @@ export default function AdminOperaciones({ onBack, onNavigate }: Props) {
     if ((tab === 'catalogo' || tab === 'channels' || tab === 'tarifas') && services.length === 0) fetchServices();
     if (tab === 'crm' && leads.length === 0) fetchLeads();
     if (tab === 'cotizaciones' && quotes.length === 0) fetchQuotes();
+    if (tab === 'disponibilidad' && alojDisp.length === 0) fetchAlojDisp();
   }, [tab]);
 
   const fetchServices = async () => {
@@ -189,6 +196,31 @@ export default function AdminOperaciones({ onBack, onNavigate }: Props) {
     try { setQuotes((await getCotizaciones()) || []); } catch { setQuotes([]); }
     finally { setQuotesLoading(false); }
   };
+
+  const fetchAlojDisp = async () => {
+    setAlojDispLoading(true);
+    try { setAlojDisp((await getAlojamientosSAI()) || []); }
+    catch { setAlojDisp([]); }
+    finally { setAlojDispLoading(false); }
+  };
+
+  const copyOwnerLink = (id: string) => {
+    const url = `${window.location.origin}/disponibilidad-propietario?id=${id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopyToast('✓ Link copiado — comparte con el propietario');
+      setTimeout(() => setCopyToast(''), 2500);
+    }).catch(() => {
+      const el = document.createElement('textarea');
+      el.value = url; el.style.opacity = '0'; document.body.appendChild(el);
+      el.select(); document.execCommand('copy'); document.body.removeChild(el);
+      setCopyToast('✓ Link copiado'); setTimeout(() => setCopyToast(''), 2500);
+    });
+  };
+
+  const filteredAlojDisp = useMemo(() => {
+    const q = alojDispSearch.toLowerCase();
+    return alojDisp.filter(a => !q || (a.title + a.tipoAlojamiento + a.ubicacion).toLowerCase().includes(q));
+  }, [alojDisp, alojDispSearch]);
 
   // ── Filtered services ──
   const accomTypes = useMemo(() => {
@@ -303,11 +335,12 @@ export default function AdminOperaciones({ onBack, onNavigate }: Props) {
           </button>
         </div>
         <div className="flex gap-1 px-4 pb-3 overflow-x-auto no-scrollbar">
-          <TabBtn id="catalogo"     label="Catálogo"    icon={<Package size={13} />} />
-          <TabBtn id="channels"     label="Channels"    icon={<Globe size={13} />} />
-          <TabBtn id="crm"          label="CRM"          icon={<Users size={13} />} />
-          <TabBtn id="cotizaciones" label="Cotizaciones" icon={<FileText size={13} />} />
-          <TabBtn id="tarifas"      label="Tarifas USD"  icon={<DollarSign size={13} />} />
+          <TabBtn id="catalogo"       label="Catálogo"       icon={<Package size={13} />} />
+          <TabBtn id="channels"       label="Channels"       icon={<Globe size={13} />} />
+          <TabBtn id="crm"            label="CRM"            icon={<Users size={13} />} />
+          <TabBtn id="cotizaciones"   label="Cotizaciones"   icon={<FileText size={13} />} />
+          <TabBtn id="tarifas"        label="Tarifas USD"    icon={<DollarSign size={13} />} />
+          <TabBtn id="disponibilidad" label="Disponibilidad" icon={<Calendar size={13} />} />
         </div>
       </div>
 
@@ -789,6 +822,145 @@ export default function AdminOperaciones({ onBack, onNavigate }: Props) {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════
+          DISPONIBILIDAD ALOJAMIENTOS
+      ════════════════════════════════════════════ */}
+      {tab === 'disponibilidad' && (
+        <div className="px-4 pt-4">
+
+          {/* Banner intro */}
+          <div className="rounded-2xl p-4 mb-4" style={{ background: 'linear-gradient(135deg, rgba(14,116,144,0.2), rgba(15,118,110,0.15))', border: '1px solid rgba(14,116,144,0.35)' }}>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(14,116,144,0.25)' }}>
+                <Calendar size={18} style={{ color: '#22d3ee' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-black text-sm text-white mb-1">Calendarios de Disponibilidad</p>
+                <p className="text-xs leading-relaxed" style={{ color: '#94a3b8' }}>
+                  Gestiona fechas disponibles, bloqueadas y promos de cada alojamiento. Genera links para que los propietarios actualicen su propio calendario.
+                </p>
+                <a
+                  href={`/disponibilidad-admin?key=${import.meta.env.VITE_AIRTABLE_API_KEY || ''}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold"
+                  style={{ color: '#22d3ee' }}
+                >
+                  <ExternalLink size={11} /> Ver directorio completo (admin)
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Search + refresh */}
+          <div className="flex gap-2 mb-4">
+            <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: '#0f172a', border: '1px solid #1e293b' }}>
+              <Search size={14} style={{ color: '#475569' }} />
+              <input
+                value={alojDispSearch}
+                onChange={e => setAlojDispSearch(e.target.value)}
+                placeholder="Buscar alojamiento, tipo o zona..."
+                className="flex-1 bg-transparent text-sm outline-none"
+                style={{ color: '#e2e8f0' }}
+              />
+            </div>
+            <button onClick={fetchAlojDisp} className="p-2.5 rounded-xl" style={{ background: '#0f172a', border: '1px solid #1e293b', color: '#64748b' }}>
+              <RefreshCw size={15} />
+            </button>
+          </div>
+
+          {/* Loading */}
+          {alojDispLoading && (
+            <div className="flex items-center justify-center py-16 gap-3">
+              <Loader2 size={24} className="animate-spin" style={{ color: '#22d3ee' }} />
+              <span className="text-sm" style={{ color: '#64748b' }}>Cargando alojamientos...</span>
+            </div>
+          )}
+
+          {/* Grid de alojamientos */}
+          {!alojDispLoading && (
+            <>
+              <p className="text-xs mb-3" style={{ color: '#475569' }}>
+                {filteredAlojDisp.length} alojamiento{filteredAlojDisp.length !== 1 ? 's' : ''}
+              </p>
+
+              <div className="space-y-3">
+                {filteredAlojDisp.map(a => (
+                  <div key={a.id} className="rounded-xl overflow-hidden" style={{ background: '#0f172a', border: '1px solid #1e293b' }}>
+
+                    {/* Card body */}
+                    <div className="flex gap-3 p-3">
+                      {/* Thumbnail */}
+                      <div className="flex-shrink-0 rounded-xl overflow-hidden" style={{ width: 64, height: 64 }}>
+                        {a.image
+                          ? <img src={a.image} alt={a.title} className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(14,116,144,0.15)' }}>
+                              <Hotel size={22} style={{ color: '#0e7490' }} />
+                            </div>}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-white truncate leading-tight mb-1">{a.title}</p>
+                        <div className="flex flex-wrap gap-1.5 mb-1">
+                          {a.tipoAlojamiento && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                              style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa' }}>
+                              {a.tipoAlojamiento}
+                            </span>
+                          )}
+                          {a.ubicacion && (
+                            <span className="flex items-center gap-0.5 text-[10px]" style={{ color: '#475569' }}>
+                              <MapPin size={9} />{a.ubicacion}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] font-mono" style={{ color: '#334155' }}>{a.id}</p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="grid grid-cols-2 gap-2 px-3 pb-3">
+                      <a
+                        href={`/disponibilidad-propietario?id=${a.id}&k=${import.meta.env.VITE_AIRTABLE_API_KEY || ''}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold"
+                        style={{ background: 'rgba(14,116,144,0.2)', color: '#22d3ee', border: '1px solid rgba(14,116,144,0.4)' }}
+                      >
+                        <Calendar size={12} /> Gestionar
+                      </a>
+                      <button
+                        onClick={() => copyOwnerLink(a.id)}
+                        className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold"
+                        style={{ background: 'transparent', color: '#0e7490', border: '1px solid rgba(14,116,144,0.35)' }}
+                      >
+                        <Link2 size={12} /> Link propietario
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {filteredAlojDisp.length === 0 && !alojDispLoading && (
+                  <div className="text-center py-12">
+                    <Hotel size={36} className="mx-auto mb-3 opacity-20" style={{ color: '#0e7490' }} />
+                    <p className="text-sm" style={{ color: '#475569' }}>
+                      {alojDispSearch ? 'Sin resultados' : 'No se encontraron alojamientos'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Toast de copia */}
+      {copyToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl text-sm font-semibold shadow-2xl"
+          style={{ background: '#1e293b', color: '#22d3ee', border: '1px solid rgba(34,211,238,0.3)', whiteSpace: 'nowrap' }}>
+          {copyToast}
         </div>
       )}
 
