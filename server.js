@@ -28,7 +28,9 @@ import hubRoutes      from './backend/routes/hub.js';
 import leadsRoutes       from './backend/routes/leads.js';
 import agentesRoutes     from './backend/routes/agentes.js';
 import adminUsersRoutes  from './backend/routes/adminUsers.js';
-import taxiZonesRoutes   from './backend/routes/taxiZones.js';
+import taxiZonesRoutes        from './backend/routes/taxiZones.js';
+import disponibilidadAdmin    from './backend/routes/disponibilidadAdmin.js';
+import disponibilidadProxy    from './backend/routes/disponibilidadProxy.js';
 
 // Import middleware
 import { requestLogger } from './backend/middleware/logger.js';
@@ -261,6 +263,13 @@ app.get('/cotizar', (req, res) =>
 );
 app.get('/registro-alojamiento', (req, res) =>
   res.sendFile(path.join(__dirname, 'backend', 'docs', 'alojamiento-registro.html'))
+);
+
+// ==================== DISPONIBILIDAD ALOJAMIENTOS ====================
+app.use('/disponibilidad-admin', disponibilidadAdmin);
+app.use('/api/disponibilidad', disponibilidadProxy);
+app.get('/disponibilidad-propietario', (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'disponibilidad-propietario.html'))
 );
 
 // ==================== SPA FALLBACK ====================
