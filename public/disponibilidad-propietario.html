@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Disponibilidad — GuanaGO</title>
+  <style>
+    :root {
+      --primary: #1D9E75;
+      --primary-light: #E1F5EE;
+      --primary-dark: #0F6E56;
+      --reservado: #378ADD;
+      --reservado-light: #E6F1FB;
+      --bloqueado: #888780;
+      --bloqueado-light: #EEEDE8;
+      --promo: #639922;
+      --promo-light: #EAF3DE;
+      --text: #1a1a1a;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --radius: 12px;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f4f3; color: var(--text); min-height: 100vh; }
+
+    /* ── Header ── */
+    .header { background: var(--primary); color: white; padding: 14px 16px 12px; position: sticky; top: 0; z-index: 100; }
+    .header-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .logo { font-size: 17px; font-weight: 700; letter-spacing: -0.5px; flex-shrink: 0; }
+    .logo span { opacity: 0.65; }
+    .prop-name { font-size: 13px; opacity: 0.88; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .save-btn { background: white; color: var(--primary); border: none; padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; gap: 5px; transition: opacity .15s; }
+    .save-btn:disabled { opacity: .45; cursor: default; }
+    .save-badge { background: var(--primary-dark); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .month-nav { display: flex; align-items: center; justify-content: space-between; }
+    .month-label { font-size: 15px; font-weight: 600; }
+    .nav-btn { background: rgba(255,255,255,.2); border: none; color: white; width: 34px; height: 34px; border-radius: 50%; font-size: 19px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .nav-btn:active { background: rgba(255,255,255,.35); }
+
+    /* ── Calendar ── */
+    .calendar-wrap { padding: 10px 10px 0; }
+    .cal-grid { background: white; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .day-headers { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--primary-light); }
+    .day-header { text-align: center; font-size: 11px; font-weight: 700; color: var(--primary-dark); padding: 7px 0; letter-spacing: .3px; }
+    .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; padding: 5px; }
+    .day-cell { border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; min-height: 44px; transition: transform .1s; user-select: none; position: relative; }
+    .day-cell:active { transform: scale(.90); }
+    .day-cell.empty, .day-cell.past { cursor: default; }
+    .day-cell.empty:active, .day-cell.past:active { transform: none; }
+    .day-num { font-size: 14px; font-weight: 500; line-height: 1; }
+    .day-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 3px; }
+
+    /* States */
+    .day-cell.libre .day-num { color: var(--text); }
+    .day-cell.reservado { background: var(--reservado-light); }
+    .day-cell.reservado .day-num { color: #185FA5; font-weight: 600; }
+    .day-cell.reservado .day-dot { background: var(--reservado); }
+    .day-cell.bloqueado { background: var(--bloqueado-light); }
+    .day-cell.bloqueado .day-num { color: #555; }
+    .day-cell.bloqueado .day-dot { background: var(--bloqueado); }
+    .day-cell.promo { background: var(--promo-light); }
+    .day-cell.promo .day-num { color: #27500A; font-weight: 600; }
+    .day-cell.promo .day-dot { background: var(--promo); }
+    .day-cell.past .day-num { color: #ccc; }
+    .day-cell.today { outline: 2px solid var(--primary); outline-offset: -2px; }
+    .day-cell.sel-start, .day-cell.sel-end { background: var(--primary) !important; outline: none !important; }
+    .day-cell.sel-start .day-num, .day-cell.sel-end .day-num { color: white !important; font-weight: 700; }
+    .day-cell.sel-start .day-dot, .day-cell.sel-end .day-dot { background: rgba(255,255,255,.6); }
+    .day-cell.sel-range { background: var(--primary-light); outline: 1px dashed var(--primary); outline-offset: -1px; }
+    .day-cell.sel-range .day-num { color: var(--primary-dark); font-weight: 600; }
+
+    /* ── Legend ── */
+    .legend { display: flex; gap: 12px; flex-wrap: wrap; padding: 9px 12px; background: white; border-radius: var(--radius); margin: 8px 10px 0; box-shadow: var(--shadow); }
+    .leg { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); }
+    .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Selection hint ── */
+    .sel-hint { margin: 8px 10px 0; background: var(--primary-light); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: var(--primary-dark); font-weight: 500; display: none; }
+    .sel-hint.show { display: block; }
+
+    /* ── Upcoming blocks ── */
+    .section { margin: 10px 10px 0; }
+    .section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 7px; }
+    .block-card { background: white; border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); margin-bottom: 7px; display: flex; align-items: center; gap: 12px; }
+    .block-icon { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .block-icon.reservado { background: var(--reservado-light); }
+    .block-icon.bloqueado { background: var(--bloqueado-light); }
+    .block-icon.promo { background: var(--promo-light); }
+    .block-info { flex: 1; min-width: 0; }
+    .block-info b { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .block-info small { font-size: 12px; color: var(--text-muted); }
+    .block-nights { text-align: right; flex-shrink: 0; }
+    .block-nights b { display: block; font-size: 17px; font-weight: 700; color: var(--primary); line-height: 1; }
+    .block-nights small { font-size: 11px; color: var(--text-muted); }
+    .empty-msg { font-size: 13px; color: var(--text-muted); text-align: center; padding: 14px 0; }
+
+    /* ── Bottom sheet ── */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: none; }
+    .overlay.show { display: block; }
+    .sheet { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 20px 20px 0 0; padding: 0 16px 36px; z-index: 201; transform: translateY(100%); transition: transform .28s cubic-bezier(.4,0,.2,1); max-width: 480px; margin: 0 auto; }
+    .sheet.show { transform: translateY(0); }
+    .sheet-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 12px auto 14px; }
+    .sheet-title { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+    .sheet-dates { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+    .sheet-btns { display: flex; flex-direction: column; gap: 9px; }
+    .sheet-btn { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border-radius: 11px; border: 1.5px solid var(--border); background: none; font-size: 14px; cursor: pointer; text-align: left; width: 100%; }
+    .sheet-btn:active { opacity: .75; }
+    .sheet-btn.bloquear { border-color: var(--bloqueado); }
+    .sheet-btn.bloquear:active { background: var(--bloqueado-light); }
+    .sheet-btn.promo-btn { border-color: var(--promo); }
+    .sheet-btn.promo-btn:active { background: var(--promo-light); }
+    .sheet-btn.liberar { border-color: var(--primary); }
+    .sheet-btn.liberar:active { background: var(--primary-light); }
+    .sheet-btn.cancel-btn { border-color: transparent; color: var(--text-muted); justify-content: center; font-weight: 600; }
+    .btn-icon { font-size: 20px; flex-shrink: 0; }
+    .btn-text b { display: block; font-size: 14px; font-weight: 600; }
+    .btn-text small { font-size: 12px; color: var(--text-muted); }
+    .promo-expand { display: none; padding: 10px 0 2px; }
+    .promo-expand.show { display: block; }
+    .promo-expand label { font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 5px; }
+    .promo-expand input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--promo); border-radius: 10px; font-size: 16px; margin-bottom: 8px; }
+    .promo-confirm { width: 100%; background: var(--promo); color: white; border: none; padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(12px); background: #111; color: white; padding: 10px 22px; border-radius: 22px; font-size: 14px; opacity: 0; transition: all .25s; pointer-events: none; z-index: 300; white-space: nowrap; max-width: 90vw; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Loading / Error ── */
+    .center-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; gap: 14px; padding: 24px; text-align: center; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--primary-light); border-top-color: var(--primary); border-radius: 50%; animation: spin .75s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .center-screen h2 { font-size: 18px; }
+    .center-screen p { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+    .demo-badge { background: #FFF3CD; border: 1px solid #FFC107; color: #856404; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
+    .bottom-space { height: 24px; }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <div class="center-screen">
+    <div class="spinner"></div>
+    <p>Cargando disponibilidad…</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="overlay" id="overlay" onclick="closeSheet()"></div>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Estas fechas…</div>
+  <div class="sheet-dates" id="sheetDates"></div>
+  <div class="sheet-btns">
+    <button class="sheet-btn bloquear" onclick="applyStatus('Bloqueado')">
+      <span class="btn-icon">🔒</span>
+      <div class="btn-text"><b>Bloquear</b><small>Uso personal, mantenimiento o limpieza</small></div>
+    </button>
+    <button class="sheet-btn promo-btn" onclick="togglePromo()">
+      <span class="btn-icon">🏷️</span>
+      <div class="btn-text"><b>Activar promo</b><small>Precio especial para atraer reservas</small></div>
+    </button>
+    <div class="promo-expand" id="promoExpand">
+      <label>Porcentaje de descuento (ej: 20):</label>
+      <input type="number" id="promoInput" min="5" max="60" value="20" inputmode="numeric">
+      <button class="promo-confirm" onclick="applyStatus('Promo')">Confirmar promo ✓</button>
+    </div>
+    <button class="sheet-btn liberar" onclick="applyStatus('Libre')">
+      <span class="btn-icon">✅</span>
+      <div class="btn-text"><b>Marcar disponible</b><small>Liberar estas fechas para reservas</small></div>
+    </button>
+    <button class="sheet-btn cancel-btn" onclick="closeSheet()">Cancelar</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONFIGURACIÓN — ajustar antes de producción
+// ═══════════════════════════════════════════════════════════
+const BASE_ID   = 'appiReH55Qhrbv4Lk';
+const ALOJ_TBL  = 'tblUNglGMsxDZYZPs';  // AlojamientosTuristicos_SAI
+const DISP_TBL  = 'tblcw6FBoo7iQPhDB';  // Disponibilidad_SAI
+
+// Field IDs — Disponibilidad_SAI
+const F_BLOQUE_ID   = 'fld5eSmyq9izWRPbA';
+const F_FECHA_INI   = 'fldpYBC6vkMnDBkYv';
+const F_FECHA_FIN   = 'fldRBuqC1fuH4WjHC';
+const F_ESTADO      = 'flddExbxaRGzoyaeR';
+const F_DESCUENTO   = 'fldgbeX9cL7kce5AP';
+const F_NOTAS       = 'fldLvnA1i4EOreSzP';
+const F_CREADO_POR  = 'fldyuCPxBKkLbmLmq';
+const F_ALOJAMIENTO = 'fldwaAf8p8s3quhc6';
+
+// Field IDs — AlojamientosTuristicos_SAI
+const F_NOMBRE      = 'fldC0HvJST8ZtnuZX';
+const F_CAPACIDAD   = 'fldt6s43OnktwOkPW';
+// ═══════════════════════════════════════════════════════════
+
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DAYS   = ['D','L','M','X','J','V','S'];
+
+const ALOJ_ID  = new URLSearchParams(location.search).get('id');
+const API_KEY  = new URLSearchParams(location.search).get('k') || '';
+// Modos de operación:
+//   IS_ADMIN → tiene id + api key  → llama Airtable directo
+//   IS_PROXY → tiene id, sin key   → usa proxy del backend (propietario)
+//   IS_DEMO  → sin id              → datos de ejemplo
+const IS_ADMIN = !!ALOJ_ID && !!API_KEY;
+const IS_PROXY = !!ALOJ_ID && !API_KEY;
+const IS_DEMO  = !ALOJ_ID;
+
+let st = {
+  aloj: null,
+  blocks: [],    // saved in Airtable
+  pending: [],   // unsaved changes
+  year: new Date().getFullYear(),
+  month: new Date().getMonth(),
+  selStart: null,
+  selEnd: null
+};
+
+// ── API ──────────────────────────────────────────────────
+async function at(method, tbl, params, body) {
+  const url = new URL(`https://api.airtable.com/v0/${BASE_ID}/${tbl}`);
+  if (params) Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+  const r = await fetch(url, {
+    method,
+    headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!r.ok) throw new Error(`AT ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+// ── INIT ─────────────────────────────────────────────────
+async function init() {
+  if (IS_DEMO)  { loadDemo();  return; }
+  if (IS_PROXY) { loadProxy(); return; }
+  loadReal(); // IS_ADMIN: acceso directo con API key
+}
+
+async function loadReal() {
+  try {
+    const rec = await at('GET', `${ALOJ_TBL}/${ALOJ_ID}`);
+    st.aloj = {
+      id: rec.id,
+      nombre: rec.fields[F_NOMBRE] || rec.fields['Name'] || 'Mi Alojamiento',
+      capacidad: rec.fields[F_CAPACIDAD] || ''
+    };
+
+    // Fetch blocks for this alojamiento
+    const disp = await at('GET', DISP_TBL, {
+      filterByFormula: `FIND("${ALOJ_ID}", ARRAYJOIN({Alojamiento}))`,
+      maxRecords: 300
+    });
+    st.blocks = (disp.records || []).map(parseBlock);
+
+    render();
+  } catch(e) {
+    console.error(e);
+    toast('Error al cargar datos — intenta de nuevo');
+  }
+}
+
+// ── Modo propietario: usa proxy del backend (sin exponer API key) ─────────────
+async function loadProxy() {
+  try {
+    const res = await fetch(`/api/disponibilidad/${ALOJ_ID}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    st.aloj   = data.aloj;
+    st.blocks = data.blocks || [];
+    render();
+  } catch(e) {
+    console.error(e);
+    toast('Error al cargar — verifica la URL');
+    // Muestra al menos la interfaz con datos vacíos
+    st.aloj = { id: ALOJ_ID, nombre: 'Mi Alojamiento', capacidad: '' };
+    st.blocks = [];
+    render();
+  }
+}
+
+function parseBlock(r) {
+  return {
+    id: r.id,
+    start: r.fields[F_FECHA_INI] || r.fields['Fecha_inicio'],
+    end:   r.fields[F_FECHA_FIN]  || r.fields['Fecha_fin'],
+    estado: (r.fields[F_ESTADO]  || r.fields['Estado'] || 'Bloqueado'),
+    descuento: r.fields[F_DESCUENTO] || r.fields['Descuento_promo'] || 0,
+    notas: r.fields[F_NOTAS] || r.fields['Notas'] || ''
+  };
+}
+
+function loadDemo() {
+  const y = st.year, m = pad(st.month + 1);
+  st.aloj = { id: ALOJ_ID || 'demo', nombre: 'Mi Alojamiento', capacidad: '4' };
+  st.blocks = [
+    { id: 'b1', start: `${y}-${m}-12`, end: `${y}-${m}-15`, estado: 'Bloqueado', notas: 'Uso personal' },
+    { id: 'b2', start: `${y}-${m}-20`, end: `${y}-${m}-24`, estado: 'Promo', descuento: 25 },
+  ];
+  render();
+}
+
+// ── STATUS HELPERS ────────────────────────────────────────
+// Parsea "YYYY-MM-DD" como fecha local (evita offset UTC)
+function parseLocal(s) {
+  if (!s) return new Date(NaN);
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+function dayStatus(y, m, d) {
+  const dt = new Date(y, m, d);
+  for (const p of st.pending) {
+    if (dt >= parseLocal(p.start) && dt < parseLocal(p.end)) return p.estado;
+  }
+  for (const b of st.blocks) {
+    if (dt >= parseLocal(b.start) && dt < parseLocal(b.end)) return b.estado;
+  }
+  return 'Libre';
+}
+
+// ── RENDER ────────────────────────────────────────────────
+function render() {
+  const pc = st.pending.length;
+  const saveDisabled = pc === 0 ? 'disabled' : '';
+  const demoTag = IS_DEMO  ? '<span class="demo-badge">DEMO</span>'
+    : IS_PROXY ? '<span class="demo-badge" style="background:#e0f2fe;border-color:#0ea5e9;color:#0369a1;">PROPIETARIO</span>'
+    : '';
+
+  show(`
+    <div class="header">
+      <div class="header-top">
+        <div class="logo">Guana<span>GO</span></div>
+        <div class="prop-name">${esc(st.aloj.nombre)}${demoTag}</div>
+        <button class="save-btn" id="saveBtn" onclick="save()" ${saveDisabled}>
+          ${pc > 0 ? `<span class="save-badge">${pc}</span>` : ''}
+          Guardar
+        </button>
+      </div>
+      <div class="month-nav">
+        <button class="nav-btn" onclick="chMonth(-1)">‹</button>
+        <span class="month-label">${MONTHS[st.month]} ${st.year}</span>
+        <button class="nav-btn" onclick="chMonth(1)">›</button>
+      </div>
+    </div>
+    ${renderCal()}
+    ${renderLegend()}
+    ${renderHint()}
+    ${renderBlocks()}
+    <div class="bottom-space"></div>
+  `);
+}
+
+function renderCal() {
+  const y = st.year, m = st.month;
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const firstDow = new Date(y, m, 1).getDay();
+  const today = new Date();
+
+  const headers = DAYS.map(d => `<div class="day-header">${d}</div>`).join('');
+  let cells = '';
+
+  for (let i = 0; i < firstDow; i++) cells += `<div class="day-cell empty"></div>`;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dt = new Date(y, m, d);
+    const isToday = today.getFullYear() === y && today.getMonth() === m && today.getDate() === d;
+    const isPast  = dt < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const status  = dayStatus(y, m, d).toLowerCase();
+
+    let selClass = '';
+    if (st.selStart !== null && !isPast) {
+      const lo = Math.min(st.selStart, st.selEnd ?? st.selStart);
+      const hi = Math.max(st.selStart, st.selEnd ?? st.selStart);
+      if (d === lo) selClass = 'sel-start';
+      else if (d === hi && st.selEnd !== null) selClass = 'sel-end';
+      else if (d > lo && d < hi && st.selEnd !== null) selClass = 'sel-range';
+    }
+
+    const cls = ['day-cell', selClass || status, isToday ? 'today' : '', isPast ? 'past' : ''].filter(Boolean).join(' ');
+    const click = isPast ? '' : `onclick="tap(${d})"`;
+    const dot = (!isPast && status !== 'libre') ? `<span class="day-dot"></span>` : '';
+
+    cells += `<div class="${cls}" ${click}><span class="day-num">${d}</span>${dot}</div>`;
+  }
+
+  return `
+    <div class="calendar-wrap">
+      <div class="cal-grid">
+        <div class="day-headers">${headers}</div>
+        <div class="days-grid">${cells}</div>
+      </div>
+    </div>`;
+}
+
+function renderLegend() {
+  return `<div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--reservado)"></div>Reservado</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--bloqueado)"></div>Bloqueado</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--promo)"></div>Promo</div>
+    <div class="leg"><div class="leg-dot" style="border:1.5px solid #d1d5db"></div>Disponible</div>
+  </div>`;
+}
+
+function renderHint() {
+  if (st.selStart === null) return '<div class="sel-hint">Toca el primer día para seleccionar un rango de fechas</div>';
+  if (st.selEnd === null)   return '<div class="sel-hint show">✓ Ahora toca el último día del rango</div>';
+  return '';
+}
+
+function renderBlocks() {
+  const y = st.year, m = st.month;
+  const items = [...st.blocks, ...st.pending].filter(b => {
+    const s = parseLocal(b.start);
+    return s.getFullYear() === y && s.getMonth() === m;
+  }).sort((a, b) => parseLocal(a.start) - parseLocal(b.start));
+
+  if (!items.length) return `<div class="section"><p class="empty-msg">Sin bloqueos ni promos este mes</p></div>`;
+
+  return `<div class="section">
+    <div class="section-title">Este mes</div>
+    ${items.map(b => {
+      const s = new Date(b.start), e = new Date(b.end);
+      const nights = Math.round((e - s) / 86400000);
+      const est = b.estado.toLowerCase();
+      const icons = { bloqueado: '🔒', promo: '🏷️', reservado: '🛏️', libre: '✅' };
+      const labels = {
+        bloqueado: `Bloqueado${b.notas ? ' — ' + b.notas : ''}`,
+        promo: `Promo ${b.descuento || '?'}% de descuento`,
+        reservado: `Reservado`,
+        libre: `Liberado`
+      };
+      return `<div class="block-card">
+        <div class="block-icon ${est}">${icons[est] || '📅'}</div>
+        <div class="block-info">
+          <b>${labels[est] || b.estado}</b>
+          <small>${s.getDate()} – ${e.getDate()} ${MONTHS[s.getMonth()]}</small>
+        </div>
+        <div class="block-nights"><b>${nights}</b><small>noches</small></div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ── INTERACTION ───────────────────────────────────────────
+function tap(day) {
+  const st_ = dayStatus(st.year, st.month, day);
+  if (st_ === 'Reservado') { toast('Esta fecha tiene una reserva confirmada'); return; }
+
+  if (st.selStart === null) {
+    st.selStart = day; st.selEnd = null; render();
+  } else if (st.selEnd === null && day !== st.selStart) {
+    st.selEnd = day; openSheet(); render();
+  } else {
+    st.selStart = day; st.selEnd = null; render();
+  }
+}
+
+function chMonth(dir) {
+  st.month += dir;
+  if (st.month < 0)  { st.month = 11; st.year--; }
+  if (st.month > 11) { st.month = 0;  st.year++; }
+  st.selStart = st.selEnd = null;
+  render();
+}
+
+// ── SHEET ─────────────────────────────────────────────────
+function openSheet() {
+  const lo = Math.min(st.selStart, st.selEnd), hi = Math.max(st.selStart, st.selEnd);
+  const nights = hi - lo;
+  document.getElementById('sheetDates').textContent =
+    `${lo} al ${hi} de ${MONTHS[st.month]} (${nights} noche${nights !== 1 ? 's' : ''})`;
+  document.getElementById('promoExpand').classList.remove('show');
+  document.getElementById('overlay').classList.add('show');
+  setTimeout(() => document.getElementById('sheet').classList.add('show'), 10);
+}
+
+function closeSheet() {
+  document.getElementById('sheet').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+  st.selStart = st.selEnd = null;
+  render();
+}
+
+function togglePromo() {
+  document.getElementById('promoExpand').classList.toggle('show');
+}
+
+function applyStatus(status) {
+  const lo = Math.min(st.selStart, st.selEnd ?? st.selStart);
+  const hi = Math.max(st.selStart, st.selEnd ?? st.selStart);
+  const y = st.year, m = pad(st.month + 1);
+  const descuento = status === 'Promo' ? (parseInt(document.getElementById('promoInput')?.value) || 20) : 0;
+
+  const block = { start: `${y}-${m}-${pad(lo)}`, end: `${y}-${m}-${pad(hi + 1)}`, estado: status, descuento };
+
+  // Remove overlapping pending blocks
+  st.pending = st.pending.filter(p => new Date(p.end) <= new Date(block.start) || new Date(p.start) >= new Date(block.end));
+  if (status !== 'Libre') st.pending.push(block);
+
+  const msgs = { Bloqueado: `🔒 ${hi - lo + 1} noches bloqueadas`, Promo: `🏷️ Promo ${descuento}% activada`, Libre: `✅ Fechas liberadas` };
+  closeSheet();
+  toast(msgs[status] || 'Cambio aplicado');
+}
+
+// ── SAVE ──────────────────────────────────────────────────
+async function save() {
+  if (!st.pending.length) return;
+  if (IS_DEMO) { toast('⚠️ Modo demo — abre el link que te envió tu agente para guardar'); return; }
+
+  const btn = document.getElementById('saveBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
+
+  try {
+    if (IS_PROXY) {
+      // Propietario: guardar vía proxy del backend
+      for (const b of st.pending) {
+        const res = await fetch(`/api/disponibilidad/${ALOJ_ID}/bloques`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            start:     b.start,
+            end:       b.end,
+            estado:    b.estado,
+            descuento: b.descuento || 0,
+            notas:     b.notas    || '',
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: 'Error desconocido' }));
+          throw new Error(err.error || `HTTP ${res.status}`);
+        }
+        const saved = await res.json();
+        b.id = saved.id; // asignar el ID retornado por Airtable
+      }
+    } else {
+      // Admin: guardar directo a Airtable con API key
+      for (const b of st.pending) {
+        await at('POST', DISP_TBL, null, {
+          records: [{
+            fields: {
+              [F_BLOQUE_ID]:   `${st.aloj.nombre} · ${b.start}`,
+              [F_ALOJAMIENTO]: [{ id: st.aloj.id }],
+              [F_FECHA_INI]:   b.start,
+              [F_FECHA_FIN]:   b.end,
+              [F_ESTADO]:      b.estado,
+              [F_DESCUENTO]:   b.descuento || 0,
+              [F_CREADO_POR]:  'Admin',
+            }
+          }]
+        });
+      }
+    }
+
+    st.blocks = [...st.blocks, ...st.pending];
+    st.pending = [];
+    toast('✓ Disponibilidad guardada');
+    render();
+  } catch(e) {
+    console.error(e);
+    toast('Error al guardar: ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
+  }
+}
+
+// ── UTILS ─────────────────────────────────────────────────
+function show(html) { document.getElementById('app').innerHTML = html; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function pad(n) { return String(n).padStart(2, '0'); }
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── START ─────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

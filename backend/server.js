@@ -144,9 +144,9 @@ app.use('/cotizacion', publicQuoteRoutes);
 app.use('/disponibilidad-admin', disponibilidadAdmin);
 // API proxy: propietarios leen/guardan sin exponer la API key
 app.use('/api/disponibilidad', disponibilidadProxy);
-// Sirve el HTML del calendario del propietario desde GuanaGo/public/
+// Sirve el HTML del calendario del propietario desde codigoGG/public/
 app.get('/disponibilidad-propietario', (req, res) => {
-  res.sendFile(join(__dirname, '..', '..', 'public', 'disponibilidad-propietario.html'));
+  res.sendFile(join(__dirname, '..', 'public', 'disponibilidad-propietario.html'));
 });
 
 // ── Frontend React (SPA) ──────────────────────────────────────────────────────
