@@ -604,7 +604,7 @@ function DetalleServicioModal({ item, onClose }: { item: ItemCotizacion; onClose
               </div>
               <div style={{ fontSize: '1rem', fontWeight: 800, color }}>${item.precio.toLocaleString('es-CO')}</div>
             </div>
-            {item.capacidad > 0 && (
+            {(item.capacidad ?? 0) > 0 && (
               <div style={{ flex: 1, minWidth: '100px', background: '#f8fafc', borderRadius: '10px', padding: '0.65rem 0.85rem', border: '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#64748b', marginBottom: '0.15rem' }}>Capacidad</div>
                 <div style={{ fontSize: '1rem', fontWeight: 800, color: TEXT_DARK }}>{item.capacidad} pax</div>
