@@ -1,0 +1,576 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.w{padding:.5rem 0 2rem;font-family:var(--font-sans,sans-serif)}
+.tabs{display:flex;gap:0;border-bottom:.5px solid var(--color-border-tertiary);margin-bottom:1.25rem;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tb{flex-shrink:0;border:none;border-bottom:2px solid transparent;padding:9px 15px;font-size:12px;font-weight:500;color:var(--color-text-secondary);cursor:pointer;background:none;white-space:nowrap;transition:color .15s,border-color .15s}
+.tb.on{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary)}
+.tb:hover{color:var(--color-text-primary)}
+.pn{display:none}.pn.on{display:block}
+.lbl{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;color:var(--color-text-secondary);margin-bottom:8px;margin-top:16px}
+.lbl:first-child{margin-top:0}
+.sep{height:.5px;background:var(--color-border-tertiary);margin:1rem 0}
+.card{background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:.75rem}
+.hl{border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;display:flex;gap:12px;background:var(--color-background-secondary);margin-bottom:1rem}
+.hl-i{font-size:20px;flex-shrink:0;margin-top:1px}
+.hl-t{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px}
+.hl-b{font-size:12px;color:var(--color-text-secondary);line-height:1.55}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:10px;margin-bottom:1rem}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1rem}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:1rem}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:1rem;text-align:center}
+.mv{font-size:20px;font-weight:500;margin-bottom:2px}
+.ml{font-size:11px;color:var(--color-text-secondary);line-height:1.4}
+table.t{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:1rem}
+.t th{font-size:11px;font-weight:500;color:var(--color-text-secondary);border-bottom:.5px solid var(--color-border-tertiary);padding:7px 9px;text-align:left;white-space:nowrap}
+.t td{padding:7px 9px;border-bottom:.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:top;line-height:1.4}
+.t tr:last-child td{border-bottom:none}
+.g{color:var(--color-text-success);font-weight:500}
+.r{color:var(--color-text-danger);font-weight:500}
+.a{color:var(--color-text-warning);font-weight:500}
+.b{color:var(--color-text-info);font-weight:500}
+.m{color:var(--color-text-secondary)}
+/* chart bars */
+.bar-wrap{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
+.bar-row{display:flex;align-items:center;gap:8px}
+.bar-label{font-size:11px;color:var(--color-text-secondary);width:60px;flex-shrink:0;text-align:right}
+.bar-bg{flex:1;height:20px;background:var(--color-background-secondary);border-radius:4px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:4px;transition:width .5s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:6px}
+.bar-val{font-size:10px;font-weight:500;color:var(--color-background-primary);white-space:nowrap}
+.bar-ext{font-size:10px;color:var(--color-text-secondary);margin-left:6px;white-space:nowrap;width:80px}
+/* slider */
+.sl-row{margin-bottom:10px}
+.sl-h{display:flex;justify-content:space-between;margin-bottom:3px}
+.sl-n{font-size:12px;color:var(--color-text-secondary)}
+.sl-v{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+/* phase badge */
+.phase{display:inline-block;font-size:10px;font-weight:500;padding:2px 9px;border-radius:100px}
+/* kit cards */
+.kit-card{background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px;text-align:center}
+.kit-icon{font-size:28px;margin-bottom:6px}
+.kit-name{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px}
+.kit-cost{font-size:18px;font-weight:500;margin-bottom:2px}
+.kit-note{font-size:11px;color:var(--color-text-secondary);line-height:1.4}
+</style>
+
+<div class="w">
+<div class="tabs">
+  <button class="tb on" onclick="nav(0)">💰 Modelo base</button>
+  <button class="tb" onclick="nav(1)">📦 Kit físico</button>
+  <button class="tb" onclick="nav(2)">📊 Proyección 12m</button>
+  <button class="tb" onclick="nav(3)">⚖️ Break-even</button>
+  <button class="tb" onclick="nav(4)">🪙 Token GP</button>
+  <button class="tb" onclick="nav(5)">🔢 Simulador</button>
+</div>
+
+<!-- ══ 0: MODELO BASE ══════════════════════════════════════════════ -->
+<div class="pn on" id="p0">
+
+  <div class="hl">
+    <span class="hl-i">🎯</span>
+    <div>
+      <div class="hl-t">La premisa del modelo</div>
+      <div class="hl-b">GuanaGO no es solo un directorio — es la infraestructura de distribución turística del archipiélago. Cada reserva, cada GP emitido y cada aliado activo genera ingresos recurrentes. El modelo es sostenible desde el mes 3 con tan solo 8 aliados en plan Activo.</div>
+    </div>
+  </div>
+
+  <div class="lbl">Fuentes de ingreso — 5 streams</div>
+  <table class="t">
+    <thead><tr><th>Stream</th><th>Mecánica</th><th>Precio unitario</th><th>Recurrencia</th></tr></thead>
+    <tbody>
+      <tr><td><b>Membresías aliados</b></td><td class="m">Plan Activo o Premium por aliado</td><td class="g">$49.900 / $129.900</td><td class="g">Mensual</td></tr>
+      <tr><td><b>Comisión por reserva</b></td><td class="m">10–20% de cada reserva procesada vía app</td><td class="g">10–20% del ticket</td><td class="g">Por transacción</td></tr>
+      <tr><td><b>Paquetes turísticos B2C</b></td><td class="m">Explorer $180k · Cultural $280k · VIP $480k</td><td class="g">$180k–$480k</td><td class="a">Por venta</td></tr>
+      <tr><td><b>Servicio IA Marketing</b></td><td class="m">4 posts/mes por aliado Premium</td><td class="a">Incluido en Premium</td><td class="g">Mensual</td></tr>
+      <tr><td><b>GP extra (Fase 2)</b></td><td class="m">Aliados compran GP adicionales a su cuota</td><td class="b">$1 COP / GP</td><td class="a">Variable</td></tr>
+    </tbody>
+  </table>
+
+  <div class="lbl">Estructura de costos operativos mensuales</div>
+  <table class="t">
+    <thead><tr><th>Costo</th><th>Detalle</th><th>Costo fijo/mes</th><th>Tipo</th></tr></thead>
+    <tbody>
+      <tr><td><b>Infraestructura tech</b></td><td class="m">Render + Firebase + Airtable + Mapbox + Make</td><td class="r">~$150.000–$250.000</td><td class="m">Fijo</td></tr>
+      <tr><td><b>Dominios y servicios</b></td><td class="m">Namecheap, correos, herramientas</td><td class="r">~$30.000–$50.000</td><td class="m">Fijo</td></tr>
+      <tr><td><b>Operación Sky (valor hora)</b></td><td class="m">CEO + dev + comercial — costo oportunidad</td><td class="r">~$1.500.000</td><td class="m">Variable</td></tr>
+      <tr><td><b>Kit físico por aliado nuevo</b></td><td class="m">Calcomanía + sticker vitrina + tarjeta (ver tab Kit)</td><td class="r">~$8.000–$15.000/aliado</td><td class="m">Variable</td></tr>
+      <tr><td><b>Pauta digital (opcional)</b></td><td class="m">Meta/Instagram para atraer turistas</td><td class="r">$0–$200.000</td><td class="m">Discrecional</td></tr>
+      <tr><td><b>Total mínimo operativo</b></td><td class="m">Sin pauta, sin kit (solo infraestructura)</td><td class="r"><b>~$230.000/mes</b></td><td class="m">—</td></tr>
+    </tbody>
+  </table>
+
+  <div class="lbl">Los 3 motores que hacen sostenible el modelo</div>
+  <div class="g3">
+    <div class="card" style="border-top:2px solid var(--color-border-success)">
+      <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:5px">🔄 Recurrencia</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.5">Las membresías son cobros mensuales automáticos. Un aliado que entra en agosto sigue pagando en diciembre. La base crece sin que el costo lo haga proporcionalmente.</div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--color-border-info)">
+      <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:5px">📡 Red</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.5">Cada aliado nuevo atrae turistas que visitan a otros aliados. Cada turista que acumula GP regresa. El valor de la plataforma crece con cada nodo que se agrega — efecto de red real.</div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--color-border-warning)">
+      <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:5px">💤 Breakage</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.5">~30% de los GP emitidos nunca se canjean (vencen a los 18 meses). Ese pasivo diferido se convierte en ingreso neto para GuanaGO sin costo adicional. Es el mismo modelo de todas las aerolíneas.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 1: KIT FÍSICO ══════════════════════════════════════════════ -->
+<div class="pn" id="p1">
+
+  <div class="hl">
+    <span class="hl-i">📦</span>
+    <div>
+      <div class="hl-t">Kit físico desde día 1 — el aliado visible en el mundo real</div>
+      <div class="hl-b">El kit físico convierte un aliado digital en un punto de contacto físico en la isla. Cualquier turista que pase frente al negocio puede escanear el QR y activarse en el ecosistema. El kit se produce localmente, se entrega en la activación y tiene costo de impresión bajo.</div>
+    </div>
+  </div>
+
+  <div class="lbl">Componentes del kit</div>
+  <div class="g4">
+    <div class="kit-card">
+      <div class="kit-icon">🏷️</div>
+      <div class="kit-name">Calcomanía QR vitrina</div>
+      <div class="kit-cost" style="color:var(--color-text-success)">$3.000–$5.000</div>
+      <div class="kit-note">Vinil adhesivo 10×10cm. QR con URL dinámica rastreable. "Negocio verificado GuanaGO".</div>
+    </div>
+    <div class="kit-card">
+      <div class="kit-icon">🪧</div>
+      <div class="kit-name">Sticker vitrina grande</div>
+      <div class="kit-cost" style="color:var(--color-text-success)">$4.000–$7.000</div>
+      <div class="kit-note">15×20cm con logo, colores Raizal y texto "Acumula GuanaPoints aquí".</div>
+    </div>
+    <div class="kit-card">
+      <div class="kit-icon">💳</div>
+      <div class="kit-name">Tarjeta aliado</div>
+      <div class="kit-cost" style="color:var(--color-text-success)">$800–$1.500</div>
+      <div class="kit-note">Cartulina 9×5cm. QR al panel del aliado. Datos de contacto GuanaGO.</div>
+    </div>
+    <div class="kit-card">
+      <div class="kit-icon">📱</div>
+      <div class="kit-name">Material digital</div>
+      <div class="kit-cost" style="color:var(--color-text-info)">$0</div>
+      <div class="kit-note">Pack de stories, posts y avatar con marco "Aliado GuanaGO". Listo para WhatsApp e Instagram.</div>
+    </div>
+  </div>
+
+  <div class="lbl">Costo total del kit por aliado</div>
+  <div class="g2">
+    <div class="metric">
+      <div class="mv" style="color:var(--color-text-success)">$8.000–$13.500</div>
+      <div class="ml">Costo producción por kit completo<br>(calcomanía + sticker + tarjeta × 10)</div>
+    </div>
+    <div class="metric">
+      <div class="mv" style="color:var(--color-text-info)">≤ 3 días</div>
+      <div class="ml">Para recuperar el costo del kit con la primera membresía ($49.900)</div>
+    </div>
+  </div>
+
+  <div class="lbl">Fases de despliegue físico</div>
+  <table class="t">
+    <thead><tr><th>Fase</th><th>Momento</th><th>Qué se entrega</th><th>Costo aprox.</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="phase" style="background:var(--color-background-success);color:var(--color-text-success)">Fase 0</span></td>
+        <td class="m">Lanzamiento agosto</td>
+        <td>Material digital completo (stories, post, avatar). QR digital en la app. Certificado PDF "Aliado Verificado".</td>
+        <td class="g">$0 por aliado</td>
+      </tr>
+      <tr>
+        <td><span class="phase" style="background:var(--color-background-info);color:var(--color-text-info)">Fase 1</span></td>
+        <td class="m">Semana 2 agosto (primeros 10 aliados)</td>
+        <td>Kit físico completo: calcomanía QR vitrina + sticker grande + 10 tarjetas aliado.</td>
+        <td class="a">$8.000–$13.500/aliado</td>
+      </tr>
+      <tr>
+        <td><span class="phase" style="background:var(--color-background-warning);color:var(--color-text-warning)">Fase 2</span></td>
+        <td class="m">Sep–Oct (aliados activos 30 días)</td>
+        <td>Kit premium: roll-up de pie 60×150cm + banner externo + calcomanías para mesas interiores.</td>
+        <td class="a">$35.000–$80.000/aliado</td>
+      </tr>
+      <tr>
+        <td><span class="phase" style="background:var(--color-background-secondary);color:var(--color-text-secondary);border:.5px solid var(--color-border-tertiary)">Fase 3</span></td>
+        <td class="m">Dic (temporada alta)</td>
+        <td>Señalética permanente en zonas turísticas: mapa de aliados GuanaGO impreso en puntos clave de la isla.</td>
+        <td class="m">Costo compartido con aliados</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="hl">
+    <span class="hl-i">💡</span>
+    <div>
+      <div class="hl-t">Cómo financiar el kit sin descapitalizarse</div>
+      <div class="hl-b">El kit físico se descuenta del primer mes de membresía. El aliado paga $49.900 (plan Activo) y recibe el kit valorado en $13.500 incluido. Costo neto para GuanaGO: $13.500. Ingreso neto del mes 1: $36.400. A partir del mes 2, el ingreso es $49.900 completo.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 2: PROYECCIÓN 12 MESES ══════════════════════════════════════ -->
+<div class="pn" id="p2">
+
+  <div class="lbl">Supuestos del modelo (ajustables en el simulador)</div>
+  <div class="g4">
+    <div class="metric"><div class="mv" style="color:var(--color-text-success)">20</div><div class="ml">Aliados mes 1 (agosto)</div></div>
+    <div class="metric"><div class="mv" style="color:var(--color-text-info)">+5/mes</div><div class="ml">Crecimiento aliados/mes</div></div>
+    <div class="metric"><div class="mv" style="color:var(--color-text-warning)">70/30</div><div class="ml">Mix Activo / Premium</div></div>
+    <div class="metric"><div class="mv" style="color:var(--color-text-primary)">40</div><div class="ml">Reservas/mes promedio</div></div>
+  </div>
+
+  <div class="lbl">Tabla de proyección mes a mes</div>
+  <div style="overflow-x:auto">
+  <table class="t" id="proj-table">
+    <thead>
+      <tr>
+        <th>Mes</th><th>Aliados</th><th>Membresías</th><th>Comisiones</th><th>Paquetes</th><th>Total ingresos</th><th>Costos op.</th><th>Margen</th>
+      </tr>
+    </thead>
+    <tbody id="proj-body"></tbody>
+  </table>
+  </div>
+
+  <div class="lbl">Evolución del margen — gráfica</div>
+  <div class="bar-wrap" id="proj-bars"></div>
+
+  <div class="lbl">Hitos clave del año</div>
+  <div id="hitos-grid"></div>
+</div>
+
+<!-- ══ 3: BREAK-EVEN ══════════════════════════════════════════════ -->
+<div class="pn" id="p3">
+
+  <div class="lbl">¿Cuántos aliados necesitas para ser sostenible?</div>
+
+  <div class="g3" style="margin-bottom:1.25rem">
+    <div class="metric" style="border:1.5px solid var(--color-border-danger)">
+      <div class="mv r">3</div>
+      <div class="ml">Aliados Activos para cubrir solo infraestructura tech ($150k)</div>
+    </div>
+    <div class="metric" style="border:1.5px solid var(--color-border-warning)">
+      <div class="mv a">8</div>
+      <div class="ml">Aliados Activos para operación básica sostenible ($399.200/mes)</div>
+    </div>
+    <div class="metric" style="border:1.5px solid var(--color-border-success)">
+      <div class="mv g">15</div>
+      <div class="ml">Aliados (mix) para que Sky pueda pagarse un sueldo + reinvertir</div>
+    </div>
+  </div>
+
+  <div class="lbl">Matriz de break-even — ingresos vs. aliados activos</div>
+  <div style="overflow-x:auto">
+  <table class="t">
+    <thead><tr><th>Aliados activos</th><th>Mix Activo/Premium</th><th>Membresías/mes</th><th>+ Comisiones (est.)</th><th>Total ingreso</th><th>¿Cubre costos?</th></tr></thead>
+    <tbody>
+      <tr><td>3</td><td>3/0</td><td class="g">$149.700</td><td class="m">+$50.000</td><td class="g">$199.700</td><td class="r">Solo infra</td></tr>
+      <tr><td>5</td><td>4/1</td><td class="g">$329.500</td><td class="m">+$80.000</td><td class="g">$409.500</td><td class="a">Operación básica</td></tr>
+      <tr><td>8</td><td>6/2</td><td class="g">$558.600</td><td class="m">+$120.000</td><td class="g">$678.600</td><td class="g">✓ Sostenible</td></tr>
+      <tr><td>15</td><td>10/5</td><td class="g">$1.144.000</td><td class="m">+$200.000</td><td class="g">$1.344.000</td><td class="g">✓ + Sueldo Sky</td></tr>
+      <tr><td>20</td><td>14/6</td><td class="g">$1.477.400</td><td class="m">+$300.000</td><td class="g">$1.777.400</td><td class="g">✓ + Reinversión</td></tr>
+      <tr><td>40</td><td>28/12</td><td class="g">$2.955.200</td><td class="m">+$600.000</td><td class="g">$3.555.200</td><td class="g">✓ + Equipo</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="lbl">Análisis del escenario de 200 clientes día 1</div>
+  <div class="hl">
+    <span class="hl-i">🚀</span>
+    <div>
+      <div class="hl-t">200 turistas activos el día 1 — ¿cómo lograrlo y qué genera?</div>
+      <div class="hl-b">200 turistas activos no significa 200 comprando ese día — significa 200 con la app instalada y perfil activo, listos para acumular GP. Con 20 aliados en el mapa desde el primer día y una campaña de lanzamiento (QR en aeropuerto, WhatsApp de GuíaSAI, redes), es un objetivo realista para agosto.</div>
+    </div>
+  </div>
+
+  <table class="t">
+    <thead><tr><th>Supuesto</th><th>Valor</th><th>Ingreso generado ese día</th></tr></thead>
+    <tbody>
+      <tr><td>200 turistas activos con app</td><td class="m">100% instalan, 40% compran día 1</td><td class="g">80 transacciones</td></tr>
+      <tr><td>Ticket promedio por turista</td><td class="m">$45.000 (almuerzo + cóctel promedio)</td><td class="g">$3.600.000 en aliados</td></tr>
+      <tr><td>Comisión GuanaGO (reservas 20%)</td><td class="m">Solo sobre lo reservado vía app (~30%)</td><td class="g">~$216.000 para GuanaGO</td></tr>
+      <tr><td>GP emitidos ese día</td><td class="m">3.600 GP (~$3.600 en pasivo diferido)</td><td class="a">Costo futuro: $1.080 (30% canje)</td></tr>
+      <tr><td>Aliados que reciben tráfico</td><td class="m">20 aliados × 4 turistas promedio</td><td class="g">Cada aliado ve +$180.000 en consumo</td></tr>
+    </tbody>
+  </table>
+
+  <div class="g3">
+    <div class="metric">
+      <div class="mv" style="color:var(--color-text-success)">$216k</div>
+      <div class="ml">Ingreso GuanaGO en el día 1 (solo comisiones reservas)</div>
+    </div>
+    <div class="metric">
+      <div class="mv" style="color:var(--color-text-info)">$3.6M</div>
+      <div class="ml">Flujo económico generado en aliados ese mismo día</div>
+    </div>
+    <div class="metric">
+      <div class="mv" style="color:var(--color-text-warning)">$1.080</div>
+      <div class="ml">Pasivo GP máximo ese día (costo real mínimo)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 4: TOKEN GP ════════════════════════════════════════════════ -->
+<div class="pn" id="p4">
+
+  <div class="lbl">Cómo crear y operar el utility token legalmente en Colombia</div>
+
+  <div class="hl">
+    <span class="hl-i">⚖️</span>
+    <div>
+      <div class="hl-t">Marco legal — no es criptomoneda, es programa de fidelización</div>
+      <div class="hl-b">En Colombia, un utility token de fidelización no requiere licencia del Banco de la República ni registro ante la SFC si: (1) no se puede convertir en efectivo fuera del ecosistema, (2) tiene respaldo en bienes y servicios reales, (3) no promete retorno de inversión. GuanaGO cumple las tres condiciones. El modelo más cercano legalmente es el de puntos de aerolínea o programas de fidelización de supermercados.</div>
+    </div>
+  </div>
+
+  <div class="lbl">Los 4 pasos para crear el token GP</div>
+  <table class="t">
+    <thead><tr><th>Paso</th><th>Acción</th><th>Quién lo hace</th><th>Costo</th><th>Tiempo</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="phase" style="background:var(--color-background-success);color:var(--color-text-success)">1</span></td>
+        <td><b>Reglamento del programa</b><br><span class="m" style="font-size:11px">Documento interno que define: tasa de emisión, umbrales de canje, vencimiento (18 meses), restricciones. Firmado por representante legal GuíaSAI S.A.S.</span></td>
+        <td class="m">Sky + abogado (opcional)</td>
+        <td class="g">$0–$300.000</td>
+        <td class="m">1 semana</td>
+      </tr>
+      <tr>
+        <td><span class="phase" style="background:var(--color-background-success);color:var(--color-text-success)">2</span></td>
+        <td><b>Libro contable (Firestore + Airtable)</b><br><span class="m" style="font-size:11px">Schema de wallets, transactions y canjes ya diseñado. GuíaSAI S.A.S. es el banco emisor centralizado.</span></td>
+        <td class="m">Claude Code</td>
+        <td class="g">$0 (ya en roadmap)</td>
+        <td class="m">Julio 2026</td>
+      </tr>
+      <tr>
+        <td><span class="phase" style="background:var(--color-background-info);color:var(--color-text-info)">3</span></td>
+        <td><b>Términos y condiciones del programa</b><br><span class="m" style="font-size:11px">T&C públicos en guanago.travel/guanapoints. Define: qué es un GP, cómo se gana, cómo se canjea, qué pasa si vence, exclusiones.</span></td>
+        <td class="m">Sky redacta, abogado revisa</td>
+        <td class="a">$200.000–$500.000</td>
+        <td class="m">1 semana</td>
+      </tr>
+      <tr>
+        <td><span class="phase" style="background:var(--color-background-warning);color:var(--color-text-warning)">4</span></td>
+        <td><b>Acuerdo con aliados</b><br><span class="m" style="font-size:11px">Cada aliado firma (digital) el acuerdo de participación en el programa GP: se compromete a aceptar los canjes que ofrece y GuanaGO se compromete a distribuirle el tráfico.</span></td>
+        <td class="m">Contrato digital vía DocuSign o PDF firmado</td>
+        <td class="g">$0 (plantilla)</td>
+        <td class="m">Al activar cada aliado</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="lbl">Economía del token — cómo fluye el valor</div>
+  <table class="t">
+    <thead><tr><th>Actor</th><th>Emite GP</th><th>Recibe GP</th><th>Qué gana</th></tr></thead>
+    <tbody>
+      <tr><td><b>Turista</b></td><td class="m">No emite</td><td class="g">Por compras, reservas, contenido</td><td class="m">Descuentos, experiencias, productos gratis</td></tr>
+      <tr><td><b>Aliado</b></td><td class="g">Por consumo en su negocio</td><td class="m">No recibe GP</td><td class="m">Visibilidad, tráfico, datos de clientes</td></tr>
+      <tr><td><b>Embajador</b></td><td class="m">No emite</td><td class="g">Por referir aliados o turistas</td><td class="m">500 GP por aliado · 100 GP por turista</td></tr>
+      <tr><td><b>GuanaGO</b></td><td class="g">Bonus GP (bienvenida, reservas, reseñas)</td><td class="m">No recibe GP</td><td class="m">Membresías · comisiones · breakage · datos</td></tr>
+    </tbody>
+  </table>
+
+  <div class="lbl">Guardarraíles anti-inflación del token</div>
+  <div class="g2">
+    <div class="card">
+      <div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:5px">🔒 Control de emisión</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.5">GuanaGO controla la tasa de emisión bonus. Si hay inflación de GP (demasiados en circulación), se reduce temporalmente el bonus de bienvenida o reservas. Los GP de consumo (1:1 con $1.000) no se modifican — son contractuales con el aliado.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:5px">⏰ Vencimiento inteligente</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.5">GP vencen a los 18 meses sin movimiento. Notificación a los 15 meses para reactivar. El vencimiento limpia el libro contable y convierte el pasivo diferido en ingreso para GuanaGO (breakage). Es el mismo mecanismo de todas las aerolíneas del mundo.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 5: SIMULADOR ══════════════════════════════════════════════ -->
+<div class="pn" id="p5">
+
+  <div class="lbl">Ajusta los parámetros y ve el modelo en tiempo real</div>
+
+  <div class="sl-row"><div class="sl-h"><span class="sl-n">Aliados en mes 1 (agosto)</span><span class="sl-v" id="sv0">20</span></div><input type="range" min="5" max="60" step="5" value="20" id="s0" oninput="simUpdate()"></div>
+  <div class="sl-row"><div class="sl-h"><span class="sl-n">Aliados nuevos por mes</span><span class="sl-v" id="sv1">5</span></div><input type="range" min="1" max="20" step="1" value="5" id="s1" oninput="simUpdate()"></div>
+  <div class="sl-row"><div class="sl-h"><span class="sl-n">% aliados en plan Premium</span><span class="sl-v" id="sv2">30%</span></div><input type="range" min="0" max="70" step="10" value="30" id="s2" oninput="simUpdate()"></div>
+  <div class="sl-row"><div class="sl-h"><span class="sl-n">Reservas mensuales vía app</span><span class="sl-v" id="sv3">40</span></div><input type="range" min="5" max="300" step="5" value="40" id="s3" oninput="simUpdate()"></div>
+  <div class="sl-row"><div class="sl-h"><span class="sl-n">Ticket promedio por reserva</span><span class="sl-v" id="sv4">$120.000</span></div><input type="range" min="40000" max="500000" step="10000" value="120000" id="s4" oninput="simUpdate()"></div>
+  <div class="sl-row"><div class="sl-h"><span class="sl-n">Paquetes B2C vendidos por mes</span><span class="sl-v" id="sv5">5</span></div><input type="range" min="0" max="50" step="1" value="5" id="s5" oninput="simUpdate()"></div>
+
+  <div class="sep"></div>
+
+  <div class="g4">
+    <div class="metric"><div class="mv g" id="sim-ing">$0</div><div class="ml">Ingresos mes 12</div></div>
+    <div class="metric"><div class="mv r" id="sim-cos">$0</div><div class="ml">Costos mes 12</div></div>
+    <div class="metric"><div class="mv" id="sim-mar" style="color:var(--color-text-primary)">$0</div><div class="ml">Margen mes 12</div></div>
+    <div class="metric"><div class="mv b" id="sim-ali">0</div><div class="ml">Aliados mes 12</div></div>
+  </div>
+
+  <div class="lbl">Proyección mes a mes (simulada)</div>
+  <div class="bar-wrap" id="sim-bars"></div>
+
+  <div class="hl" id="sim-hl">
+    <span class="hl-i">📍</span>
+    <div>
+      <div class="hl-t" id="sim-hl-t">Break-even en mes X</div>
+      <div class="hl-b" id="sim-hl-b">Calculando...</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .w -->
+
+<script>
+function nav(n){
+  document.querySelectorAll('.pn').forEach((p,i)=>p.classList.toggle('on',i===n));
+  document.querySelectorAll('.tb').forEach((b,i)=>b.classList.toggle('on',i===n));
+  if(n===2)buildProjTable();
+  if(n===5)simUpdate();
+}
+
+const fmt=n=>'$'+Math.abs(Math.round(n)).toLocaleString('es-CO');
+const fmtM=n=>(n>=1000000?'$'+(n/1000000).toFixed(1)+'M':fmt(n));
+
+// ── PROYECCIÓN FIJA (tab 2) ───────────────────────────────────────
+function buildProjTable(){
+  // Supuestos fijos para la proyección base
+  const aliados0=20, addPerMes=5, premPct=0.3, actPct=0.7;
+  const reservas=40, ticketRes=120000, paqVentas=5, paqPrecio=280000;
+  const costoFijo=230000, costoSky=1500000, costoKitX=11000;
+
+  const body=document.getElementById('proj-body');
+  const barsEl=document.getElementById('proj-bars');
+  const hEl=document.getElementById('hitos-grid');
+  if(!body||!barsEl)return;
+
+  const meses=['Ago','Sep','Oct','Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul'];
+  let rows='', bars='', maxIng=0, beMonth=-1;
+  const data=[];
+
+  for(let m=0;m<12;m++){
+    const al=aliados0+m*addPerMes;
+    const kitCost=m===0?aliados0*costoKitX:addPerMes*costoKitX;
+    const mem=Math.round(al*(premPct*129900+actPct*49900));
+    const com=Math.round(reservas*ticketRes*0.15*(1+m*0.05));
+    const paq=paqVentas*paqPrecio*(1+m*0.1);
+    const ing=mem+com+paq;
+    const cos=costoFijo+costoSky+kitCost+(m===0?200000:50000);
+    const mar=ing-cos;
+    maxIng=Math.max(maxIng,ing);
+    if(beMonth===-1&&mar>0)beMonth=m;
+    data.push({m,al,mem,com,paq:Math.round(paq),ing,cos,mar,mes:meses[m]});
+  }
+
+  data.forEach(d=>{
+    const marColor=d.mar>=0?'var(--color-text-success)':'var(--color-text-danger)';
+    rows+=`<tr>
+      <td>${d.mes} '${d.m<5?'26':'27'}</td>
+      <td class="b">${d.al}</td>
+      <td class="g">${fmt(d.mem)}</td>
+      <td class="g">${fmt(d.com)}</td>
+      <td class="a">${fmt(d.paq)}</td>
+      <td style="font-weight:500">${fmtM(d.ing)}</td>
+      <td class="r">${fmt(d.cos)}</td>
+      <td style="color:${marColor};font-weight:500">${fmtM(d.mar)}</td>
+    </tr>`;
+
+    const pct=Math.round(d.ing/maxIng*100);
+    const marPct=Math.round(Math.abs(d.mar)/maxIng*100);
+    const marFill=d.mar>=0?'var(--color-text-success)':'var(--color-text-danger)';
+    bars+=`<div class="bar-row">
+      <span class="bar-label">${d.mes}</span>
+      <div class="bar-bg">
+        <div class="bar-fill" style="width:${pct}%;background:var(--color-text-info)">
+          <span class="bar-val">${fmtM(d.ing)}</span>
+        </div>
+      </div>
+      <span class="bar-ext" style="color:${marFill}">${d.mar>=0?'+':'−'}${fmtM(Math.abs(d.mar))}</span>
+    </div>`;
+  });
+
+  body.innerHTML=rows;
+  barsEl.innerHTML=bars;
+
+  const hitos=[
+    {m:beMonth>=0?beMonth:2, color:'var(--color-text-success)', icon:'✅', titulo:'Break-even', desc:`Mes ${beMonth+1} (${meses[beMonth>=0?beMonth:2]}): ingresos superan costos por primera vez.`},
+    {m:4, color:'var(--color-text-info)', icon:'📈', titulo:'50 aliados activos', desc:'Diciembre: 50+ aliados en el mapa. Temporada alta con 2× GP activo.'},
+    {m:8, color:'var(--color-text-warning)', icon:'🪙', titulo:'Fase 2 GP (cuotas)', desc:'Abril: aliados pueden emitir GP directamente según su plan. Nuevo ingreso por GP adicionales.'},
+    {m:11, color:'var(--color-text-danger)', icon:'🏆', titulo:'Marca región', desc:'Julio 2027: GuanaGO reconocida como la plataforma oficial del archipiélago con 90+ aliados.'},
+  ];
+
+  hEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px">'+
+    hitos.map(h=>`<div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px;border-left:3px solid ${h.color}">
+      <div style="font-size:20px;margin-bottom:4px">${h.icon}</div>
+      <div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px">${h.titulo}</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);line-height:1.4">${h.desc}</div>
+    </div>`).join('')+'</div>';
+}
+
+// ── SIMULADOR INTERACTIVO (tab 5) ─────────────────────────────────
+function simUpdate(){
+  const al0=+document.getElementById('s0').value;
+  const addM=+document.getElementById('s1').value;
+  const premP=+document.getElementById('s2').value/100;
+  const res=+document.getElementById('s3').value;
+  const tk=+document.getElementById('s4').value;
+  const paq=+document.getElementById('s5').value;
+
+  document.getElementById('sv0').textContent=al0;
+  document.getElementById('sv1').textContent=addM;
+  document.getElementById('sv2').textContent=Math.round(premP*100)+'%';
+  document.getElementById('sv3').textContent=res;
+  document.getElementById('sv4').textContent=fmt(tk);
+  document.getElementById('sv5').textContent=paq;
+
+  const actP=1-premP;
+  const meses=['Ago','Sep','Oct','Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul'];
+  let maxIng=0, beMonth=-1, ing12=0, cos12=0, ali12=0;
+  const data=[];
+
+  for(let m=0;m<12;m++){
+    const al=al0+m*addM;
+    const kitC=m===0?al0*11000:addM*11000;
+    const mem=Math.round(al*(premP*129900+actP*49900));
+    const com=Math.round(res*tk*0.15*(1+m*0.04));
+    const paqIng=paq*280000*(1+m*0.08);
+    const ing=mem+com+Math.round(paqIng);
+    const cos=230000+1500000+kitC+(m===0?200000:50000);
+    const mar=ing-cos;
+    maxIng=Math.max(maxIng,ing);
+    if(beMonth===-1&&mar>0)beMonth=m;
+    data.push({ing,cos,mar,al,mes:meses[m]});
+    if(m===11){ing12=ing;cos12=cos;ali12=al;}
+  }
+
+  document.getElementById('sim-ing').textContent=fmtM(ing12);
+  document.getElementById('sim-cos').textContent=fmtM(cos12);
+  const mar12=ing12-cos12;
+  const mEl=document.getElementById('sim-mar');
+  mEl.textContent=(mar12>=0?'+':'-')+fmtM(Math.abs(mar12));
+  mEl.style.color=mar12>=0?'var(--color-text-success)':'var(--color-text-danger)';
+  document.getElementById('sim-ali').textContent=ali12;
+
+  const barsEl=document.getElementById('sim-bars');
+  barsEl.innerHTML=data.map(d=>{
+    const pct=maxIng>0?Math.round(d.ing/maxIng*100):0;
+    const marFill=d.mar>=0?'var(--color-text-success)':'var(--color-text-danger)';
+    return`<div class="bar-row">
+      <span class="bar-label">${d.mes}</span>
+      <div class="bar-bg">
+        <div class="bar-fill" style="width:${pct}%;background:var(--color-text-info)">
+          <span class="bar-val">${fmtM(d.ing)}</span>
+        </div>
+      </div>
+      <span class="bar-ext" style="color:${marFill}">${d.mar>=0?'+':'-'}${fmtM(Math.abs(d.mar))}</span>
+    </div>`;
+  }).join('');
+
+  const hlT=document.getElementById('sim-hl-t');
+  const hlB=document.getElementById('sim-hl-b');
+  if(beMonth>=0){
+    hlT.textContent=`✅ Break-even en el mes ${beMonth+1} (${meses[beMonth]})`;
+    hlB.textContent=`Con ${al0+beMonth*addM} aliados activos los ingresos superan los costos operativos. Mes 12 proyecta ${fmtM(ing12)} en ingresos con ${ali12} aliados y margen de ${fmtM(Math.abs(mar12))}.`;
+  } else {
+    hlT.textContent='⚠️ Break-even no alcanzado en 12 meses';
+    hlB.textContent='Aumenta los aliados iniciales o la cantidad de nuevos por mes para alcanzar el break-even antes del mes 12.';
+  }
+}
+
+buildProjTable();
+</script>
