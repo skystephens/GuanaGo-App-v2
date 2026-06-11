@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, QrCode, Zap, Crown, Check, X, Users, TrendingUp,
   Wifi, Star, Gift, ChevronDown, ChevronUp, MessageCircle,
   Calendar, Camera, FileText, BarChart3, Smartphone, Globe,
-  Pencil, Save, Plus, Trash2,
+  Pencil, Save, Plus, Trash2, CalendarDays, Hotel, ChevronLeft, ChevronRight,
+  ExternalLink, Loader2, RefreshCw,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
+import { getAlojamientosSAI } from '../../services/airtableService';
 
 type BeneficioRow = { id: string; label: string; basico: boolean; activo: boolean; premium: boolean };
 
@@ -34,7 +36,7 @@ interface Props {
   onNavigate: (route: AppRoute) => void;
 }
 
-type Tab = 'planes' | 'estrategia' | 'guanapoints' | 'wifi';
+type Tab = 'planes' | 'estrategia' | 'guanapoints' | 'wifi' | 'disponibilidad';
 
 // ─── Planes ───────────────────────────────────────────────────────────────────
 
@@ -271,10 +273,72 @@ const WIFI_PASOS = [
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+// ─── Helpers de disponibilidad ────────────────────────────────────────────────
+
+const ESTADO_COLOR: Record<string, string> = {
+  Libre:     '#34d399',
+  Bloqueado: '#ef4444',
+  Promo:     '#f59e0b',
+  Reservado: '#60a5fa',
+};
+
+function diasDelMes(year: number, month: number): number {
+  return new Date(year, month, 0).getDate();
+}
+
+function blockDays(start: string, end: string, year: number, month: number): number[] {
+  const s = new Date(start); const e = new Date(end);
+  const total = diasDelMes(year, month);
+  const days: number[] = [];
+  for (let d = 1; d <= total; d++) {
+    const cur = new Date(year, month - 1, d);
+    if (cur >= s && cur <= e) days.push(d);
+  }
+  return days;
+}
+
+// ─── Component ───────────────────────────────────────────────────────────────
+
 const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
   const [tab, setTab] = useState<Tab>('planes');
   const [planOpen, setPlanOpen] = useState<string | null>('Activo');
   const [tierOpen, setTierOpen] = useState<string | null>('Turista');
+
+  // ── Disponibilidad global ──────────────────────────────────────────────────
+  const now = new Date();
+  const [dispYear,  setDispYear]  = useState(now.getFullYear());
+  const [dispMonth, setDispMonth] = useState(now.getMonth() + 1);
+  const [dispAloj,  setDispAloj]  = useState<any[]>([]);
+  const [dispBlocks, setDispBlocks] = useState<Record<string, any[]>>({});
+  const [dispLoading, setDispLoading] = useState(false);
+
+  const mesStr = `${dispYear}-${String(dispMonth).padStart(2, '0')}`;
+  const mesLabel = new Date(dispYear, dispMonth - 1, 1)
+    .toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+
+  const prevMes = () => { if (dispMonth === 1) { setDispYear(y => y - 1); setDispMonth(12); } else setDispMonth(m => m - 1); };
+  const nextMes = () => { if (dispMonth === 12) { setDispYear(y => y + 1); setDispMonth(1);  } else setDispMonth(m => m + 1); };
+
+  const loadDisp = async () => {
+    setDispLoading(true);
+    try {
+      const [alojList, globalRes] = await Promise.all([
+        getAlojamientosSAI(),
+        fetch(`/api/disponibilidad/global?mes=${mesStr}`).then(r => r.json()),
+      ]);
+      setDispAloj(alojList || []);
+      const map: Record<string, any[]> = {};
+      for (const g of (globalRes.alojamientos || [])) {
+        map[g.alojId] = g.blocks;
+      }
+      setDispBlocks(map);
+    } catch { /* silencioso */ }
+    finally { setDispLoading(false); }
+  };
+
+  useEffect(() => {
+    if (tab === 'disponibilidad') loadDisp();
+  }, [tab, mesStr]);
 
   // ── Editor de beneficios ───────────────────────────────────────────────────
   const [beneficios, setBeneficios] = useState<BeneficioRow[]>(BENEFICIOS_DEFAULT);
@@ -302,6 +366,7 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
     { id: 'estrategia', label: 'Estrategia', icon: BarChart3 },
     { id: 'guanapoints', label: 'GuanaPoints', icon: Gift },
     { id: 'wifi', label: 'WiFi Captivo', icon: Wifi },
+    { id: 'disponibilidad', label: 'Disponibilidad', icon: CalendarDays },
   ];
 
   const totalIngresoPotencial = (aliados: number) =>
@@ -832,6 +897,120 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               </div>
             </div>
           </>
+        )}
+
+        {/* ── TAB: DISPONIBILIDAD GLOBAL ─────────────────────────────── */}
+        {tab === 'disponibilidad' && (
+          <div>
+            {/* Navegador de mes */}
+            <div className="flex items-center justify-between mb-4">
+              <button onClick={prevMes} className="p-2 rounded-xl hover:bg-gray-800 transition-colors">
+                <ChevronLeft size={16} className="text-gray-400" />
+              </button>
+              <p className="text-sm font-black capitalize" style={{ color: '#22d3ee' }}>{mesLabel}</p>
+              <button onClick={nextMes} className="p-2 rounded-xl hover:bg-gray-800 transition-colors">
+                <ChevronRight size={16} className="text-gray-400" />
+              </button>
+              <button onClick={loadDisp} className="p-2 rounded-xl hover:bg-gray-800 transition-colors ml-1">
+                <RefreshCw size={14} className={`text-gray-500 ${dispLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+
+            {/* Leyenda */}
+            <div className="flex flex-wrap gap-3 mb-4">
+              {Object.entries(ESTADO_COLOR).map(([estado, color]) => (
+                <div key={estado} className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+                  <span className="text-[10px] text-gray-400">{estado}</span>
+                </div>
+              ))}
+            </div>
+
+            {dispLoading && (
+              <div className="flex items-center justify-center py-16 gap-3">
+                <Loader2 size={22} className="animate-spin text-teal-400" />
+                <span className="text-sm text-gray-500">Cargando disponibilidad...</span>
+              </div>
+            )}
+
+            {!dispLoading && (
+              <div className="space-y-3">
+                {dispAloj.length === 0 && (
+                  <div className="text-center py-10">
+                    <Hotel size={32} className="mx-auto mb-2 text-gray-700" />
+                    <p className="text-sm text-gray-500">Sin alojamientos cargados</p>
+                  </div>
+                )}
+
+                {dispAloj.map(a => {
+                  const blocks = dispBlocks[a.id] || [];
+                  const total  = diasDelMes(dispYear, dispMonth);
+                  // Mapa día → color
+                  const dayMap: Record<number, string> = {};
+                  for (const b of blocks) {
+                    for (const d of blockDays(b.start, b.end, dispYear, dispMonth)) {
+                      dayMap[d] = ESTADO_COLOR[b.estado] || '#94a3b8';
+                    }
+                  }
+                  const hasBlocks = blocks.length > 0;
+
+                  return (
+                    <div key={a.id} className="rounded-xl overflow-hidden"
+                      style={{ background: '#0f172a', border: '1px solid #1e293b' }}>
+
+                      {/* Cabecera */}
+                      <div className="flex items-center gap-3 px-3 pt-3 pb-2">
+                        {a.image
+                          ? <img src={a.image} alt={a.title} className="w-8 h-8 rounded-lg object-cover shrink-0" />
+                          : <div className="w-8 h-8 rounded-lg bg-teal-900/30 flex items-center justify-center shrink-0">
+                              <Hotel size={14} className="text-teal-500" />
+                            </div>
+                        }
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-white truncate">{a.title}</p>
+                          {a.tipoAlojamiento && (
+                            <p className="text-[10px] text-gray-500">{a.tipoAlojamiento}</p>
+                          )}
+                        </div>
+                        <a
+                          href={`/disponibilidad-propietario?id=${a.id}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="p-1.5 rounded-lg hover:bg-teal-900/30 transition-colors"
+                        >
+                          <ExternalLink size={12} className="text-teal-500" />
+                        </a>
+                      </div>
+
+                      {/* Mini calendario de días */}
+                      <div className="px-3 pb-3">
+                        <div className="flex flex-wrap gap-0.5">
+                          {Array.from({ length: total }, (_, i) => i + 1).map(d => (
+                            <div
+                              key={d}
+                              title={`Día ${d}`}
+                              className="rounded-sm flex items-center justify-center"
+                              style={{
+                                width: 18, height: 18,
+                                background: dayMap[d] || 'rgba(255,255,255,0.05)',
+                                fontSize: 8,
+                                color: dayMap[d] ? '#000' : '#475569',
+                                fontWeight: dayMap[d] ? 700 : 400,
+                              }}
+                            >
+                              {d}
+                            </div>
+                          ))}
+                        </div>
+                        {!hasBlocks && (
+                          <p className="text-[10px] text-gray-600 mt-1.5">Sin bloques registrados este mes</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         )}
 
       </div>

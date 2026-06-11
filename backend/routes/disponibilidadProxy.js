@@ -34,6 +34,49 @@ const atHeaders = () => ({
   'Content-Type': 'application/json',
 });
 
+// ── GET /api/disponibilidad/global?mes=YYYY-MM ───────────────────────────────
+// Admin: todos los bloques del mes agrupados por alojamiento
+router.get('/global', async (req, res) => {
+  const mes = req.query.mes || new Date().toISOString().slice(0, 7); // 'YYYY-MM'
+  const [year, month] = mes.split('-').map(Number);
+  const firstDay = `${mes}-01`;
+  const lastDay  = new Date(year, month, 0).toISOString().slice(0, 10);
+
+  try {
+    // Todos los bloques que se solapan con el mes pedido
+    const params = new URLSearchParams({
+      filterByFormula: `AND(IS_BEFORE({${F_FECHA_INI}}, "${lastDay}"), IS_AFTER({${F_FECHA_FIN}}, "${firstDay}"))`,
+      maxRecords: '500',
+      returnFieldsByFieldId: 'true',
+    });
+    const dispRes = await fetch(`${AT_URL}/${BASE_ID}/${DISP_TBL}?${params}`, { headers: atHeaders() });
+    if (!dispRes.ok) return res.status(502).json({ error: 'Error al consultar Airtable' });
+    const dispData = await dispRes.json();
+
+    // Agrupar por alojamiento
+    const grouped = {};
+    for (const r of (dispData.records || [])) {
+      const f = r.fields || {};
+      const linked = f[F_ALOJAMIENTO];
+      const alojId = Array.isArray(linked) ? linked[0]?.id || linked[0] : linked || 'sin-aloj';
+      if (!grouped[alojId]) grouped[alojId] = { alojId, blocks: [] };
+      grouped[alojId].blocks.push({
+        id:        r.id,
+        start:     f[F_FECHA_INI] || '',
+        end:       f[F_FECHA_FIN] || '',
+        estado:    f[F_ESTADO]    || 'Bloqueado',
+        descuento: f[F_DESCUENTO] || 0,
+        notas:     f[F_NOTAS]     || '',
+      });
+    }
+
+    res.json({ mes, alojamientos: Object.values(grouped) });
+  } catch (err) {
+    console.error('❌ disponibilidadProxy GET /global:', err.message);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
 // ── GET /api/disponibilidad/:alojId ─────────────────────────────────────────
 // Retorna info del alojamiento + lista de bloques
 router.get('/:alojId', async (req, res) => {

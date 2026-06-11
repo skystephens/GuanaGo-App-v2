@@ -1,5 +1,5 @@
-import React from 'react';
-import { Eye, ArrowLeft, User, Store, Anchor, Mic, MapPin } from 'lucide-react';
+import React, { useState } from 'react';
+import { Eye, ArrowLeft, User, Store, Anchor, Mic, MapPin, Home, X, ExternalLink } from 'lucide-react';
 import { AppRoute, UserRole } from '../../types';
 
 interface Props {
@@ -67,6 +67,63 @@ const ROLES: RoleCard[] = [
 ];
 
 const AdminPreviewRoles: React.FC<Props> = ({ onBack, onPreview }) => {
+  const [ownerPreview, setOwnerPreview] = useState(false);
+  const [ownerAlojId, setOwnerAlojId] = useState('');
+
+  const ownerUrl = ownerAlojId.startsWith('rec')
+    ? `/disponibilidad-propietario?id=${ownerAlojId}`
+    : `/disponibilidad-propietario`;
+
+  if (ownerPreview) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white flex flex-col">
+        {/* Barra flotante de retorno */}
+        <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-2.5 bg-teal-900/95 backdrop-blur border-b border-teal-700">
+          <button
+            onClick={() => setOwnerPreview(false)}
+            className="flex items-center gap-2 text-sm font-bold text-white hover:text-teal-200 transition-colors"
+          >
+            <X size={16} /> Cerrar vista de propietario
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-teal-300 truncate">
+              Vista: Dueño de Alojamiento
+              {ownerAlojId.startsWith('rec') ? ` · ${ownerAlojId}` : ' · DEMO'}
+            </p>
+          </div>
+          <a
+            href={ownerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs text-teal-300 hover:text-white"
+          >
+            <ExternalLink size={12} /> Abrir
+          </a>
+        </div>
+
+        {/* Selector de alojamiento */}
+        <div className="px-4 py-2 bg-gray-900/80 border-b border-gray-800 flex items-center gap-2">
+          <label className="text-xs text-gray-400 shrink-0">ID de alojamiento:</label>
+          <input
+            value={ownerAlojId}
+            onChange={e => setOwnerAlojId(e.target.value)}
+            placeholder="recXXXXXXXXXXXXXX  (vacío = modo demo)"
+            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-teal-500"
+          />
+        </div>
+
+        {/* Iframe */}
+        <iframe
+          key={ownerUrl}
+          src={ownerUrl}
+          className="flex-1 w-full border-0"
+          style={{ minHeight: 'calc(100vh - 96px)' }}
+          title="Vista Dueño de Alojamiento"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 text-white p-4 md:p-6">
       {/* Header */}
@@ -118,6 +175,29 @@ const AdminPreviewRoles: React.FC<Props> = ({ onBack, onPreview }) => {
             <Eye size={16} className="text-gray-400 group-hover:text-white shrink-0 transition-colors" />
           </button>
         ))}
+
+        {/* Dueño de Alojamiento — vista especial (iframe, sin cambiar sesión) */}
+        <button
+          onClick={() => setOwnerPreview(true)}
+          className="w-full text-left rounded-2xl border bg-gradient-to-br from-teal-900 to-cyan-950
+            border-teal-700 hover:border-teal-400
+            p-4 flex items-center gap-4 transition-all duration-200
+            hover:scale-[1.01] active:scale-[0.99] group"
+        >
+          <div className="shrink-0 w-12 h-12 rounded-xl bg-black/30 flex items-center justify-center">
+            <Home size={28} className="text-teal-300" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-white text-sm">Dueño de Alojamiento</div>
+            <div className="text-xs text-gray-300 mt-0.5 leading-relaxed">
+              Calendario de disponibilidad — gestiona fechas, bloqueos y promos de su propiedad
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-0.5">
+            <Eye size={16} className="text-gray-400 group-hover:text-white shrink-0 transition-colors" />
+            <span className="text-[9px] text-teal-500 font-bold">iframe</span>
+          </div>
+        </button>
       </div>
     </div>
   );
