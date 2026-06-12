@@ -7,8 +7,10 @@ import {
   Bot, Send, Loader2, ChevronDown, ChevronUp,
   CheckCircle2, AlertCircle, Receipt, Briefcase, ListChecks,
   Menu, Wifi, WifiOff, Home, Settings, Globe, Layers, Trophy,
+  CalendarDays, Crown, Gift, BarChart3,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
+import { setInitialSection } from './AdminAliados';
 import { api } from '../../services/api';
 import { getTareas } from '../../services/airtableService';
 import type { Reservation } from '../../types';
@@ -549,15 +551,25 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
 
           {/* ── 2b. Aliados & Red ── */}
           <Section label="Aliados & Red" color="orange">
-            <BigButton
-              label="Estrategia Aliados"
-              sub="Planes Básico · Activo · Premium · GuanaPoints · WiFi Captivo · Embudos"
-              icon={<Handshake size={20} className="text-orange-400" />}
-              gradient="from-orange-950 via-teal-950 to-orange-950"
-              border="border-orange-600 hover:border-orange-400"
-              pulse="bg-orange-400"
-              onClick={() => onNavigate(AppRoute.ADMIN_ALIADOS)}
-            />
+            <div className="grid grid-cols-1 gap-2">
+              {([
+                { id: 'disponibilidad', label: 'Disponibilidad',    icon: <CalendarDays size={16} className="text-cyan-400" />,   cls: 'border-cyan-800 hover:border-cyan-500',     grad: 'from-cyan-900/50 to-teal-900/50' },
+                { id: 'planes',         label: 'Planes Membresía',  icon: <Crown size={16} className="text-orange-400" />,         cls: 'border-orange-800 hover:border-orange-500', grad: 'from-orange-900/50 to-amber-900/50' },
+                { id: 'guanapoints',    label: 'GuanaPoints',       icon: <Gift size={16} className="text-yellow-400" />,          cls: 'border-yellow-800 hover:border-yellow-500', grad: 'from-yellow-900/40 to-amber-900/40' },
+                { id: 'estrategia',     label: 'Estrategia',        icon: <BarChart3 size={16} className="text-indigo-400" />,     cls: 'border-indigo-800 hover:border-indigo-500', grad: 'from-indigo-900/50 to-blue-900/50' },
+                { id: 'wifi',           label: 'WiFi Captivo',      icon: <Wifi size={16} className="text-teal-400" />,            cls: 'border-teal-800 hover:border-teal-500',     grad: 'from-teal-900/50 to-emerald-900/50' },
+              ] as const).map(sec => (
+                <button
+                  key={sec.id}
+                  onClick={() => { setInitialSection(sec.id); onNavigate(AppRoute.ADMIN_ALIADOS); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border bg-gradient-to-r ${sec.grad} ${sec.cls} transition-all text-left`}
+                >
+                  {sec.icon}
+                  <span className="text-sm font-bold text-white">{sec.label}</span>
+                  <ChevronRight size={14} className="text-gray-600 ml-auto shrink-0" />
+                </button>
+              ))}
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <MiniButton
                 icon={<Map size={18} className="text-teal-400" />} label="Negocios Locales"

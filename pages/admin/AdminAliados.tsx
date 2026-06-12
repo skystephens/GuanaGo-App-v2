@@ -314,8 +314,13 @@ const COLOR_MAP: Record<string, { icon: string; bg: string; border: string }> = 
   teal:   { icon: 'text-teal-400',   bg: 'bg-teal-900/20',   border: 'border-teal-800/30'   },
 };
 
+let _pendingSection: string | null = null;
+export function setInitialSection(s: string) { _pendingSection = s; }
+
 const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
-  const [section, setSection] = useState<string | null>(null);
+  const [section, setSection] = useState<string | null>(() => {
+    const s = _pendingSection; _pendingSection = null; return s;
+  });
   const [planOpen, setPlanOpen] = useState<string | null>('Activo');
   const [tierOpen, setTierOpen] = useState<string | null>('Turista');
 
