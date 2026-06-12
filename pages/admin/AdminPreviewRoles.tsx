@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { Eye, ArrowLeft, User, Store, Anchor, Mic, MapPin, Home, X, ExternalLink } from 'lucide-react';
+import {
+  Eye, ArrowLeft, User, Store, Anchor, Mic, MapPin,
+  Home, X, ExternalLink, Briefcase, CalendarCheck,
+} from 'lucide-react';
 import { AppRoute, UserRole } from '../../types';
 
 interface Props {
@@ -66,42 +69,85 @@ const ROLES: RoleCard[] = [
   },
 ];
 
-const AdminPreviewRoles: React.FC<Props> = ({ onBack, onPreview }) => {
-  const [ownerPreview, setOwnerPreview] = useState(false);
-  const [ownerAlojId, setOwnerAlojId] = useState('');
+// ── Barra de control reutilizable para los iframes ────────────────────────────
+interface IframeBarProps {
+  label: string;
+  subLabel: string;
+  barColor: string;
+  url: string;
+  onClose: () => void;
+  children?: React.ReactNode;
+}
 
+const IframeBar: React.FC<IframeBarProps> = ({ label, subLabel, barColor, url, onClose, children }) => (
+  <div className="min-h-screen bg-gray-950 text-white flex flex-col">
+    <div
+      className="sticky top-0 z-50 flex items-center gap-3 px-4 py-2.5 backdrop-blur border-b"
+      style={{ background: barColor, borderColor: `${barColor}88` }}
+    >
+      <button
+        onClick={onClose}
+        className="flex items-center gap-2 text-sm font-bold text-white hover:opacity-80 transition-opacity"
+      >
+        <X size={16} /> Cerrar
+      </button>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-bold text-white">{label}</p>
+        <p className="text-[10px] text-white/70 truncate">{subLabel}</p>
+      </div>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-1 text-xs text-white/80 hover:text-white transition-colors"
+      >
+        <ExternalLink size={12} /> Abrir
+      </a>
+    </div>
+    {children}
+    <iframe
+      key={url}
+      src={url}
+      className="flex-1 w-full border-0"
+      style={{ minHeight: 'calc(100vh - 96px)' }}
+      title={label}
+    />
+  </div>
+);
+
+// ── Componente principal ──────────────────────────────────────────────────────
+
+const AdminPreviewRoles: React.FC<Props> = ({ onBack, onPreview }) => {
+  // Dueño de alojamiento
+  const [ownerPreview, setOwnerPreview]   = useState(false);
+  const [ownerAlojId, setOwnerAlojId]     = useState('');
+
+  // Agencia B2B (GuiaSAI)
+  const [b2bPreview, setB2bPreview]       = useState(false);
+
+  // Canal de reservas turista
+  const [channelPreview, setChannelPreview] = useState(false);
+  const [channelAlojId, setChannelAlojId]   = useState('');
+
+  // ── URLs de los iframes ─────────────────────────────────────────────────────
   const ownerUrl = ownerAlojId.startsWith('rec')
     ? `/disponibilidad-propietario?id=${ownerAlojId}`
     : `/disponibilidad-propietario`;
 
+  const channelUrl = channelAlojId.startsWith('rec')
+    ? `/?alojId=${channelAlojId}`
+    : `/`;
+
+  // ── Vista: Dueño de alojamiento ─────────────────────────────────────────────
   if (ownerPreview) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white flex flex-col">
-        {/* Barra flotante de retorno */}
-        <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-2.5 bg-teal-900/95 backdrop-blur border-b border-teal-700">
-          <button
-            onClick={() => setOwnerPreview(false)}
-            className="flex items-center gap-2 text-sm font-bold text-white hover:text-teal-200 transition-colors"
-          >
-            <X size={16} /> Cerrar vista de propietario
-          </button>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-teal-300 truncate">
-              Vista: Dueño de Alojamiento
-              {ownerAlojId.startsWith('rec') ? ` · ${ownerAlojId}` : ' · DEMO'}
-            </p>
-          </div>
-          <a
-            href={ownerUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-teal-300 hover:text-white"
-          >
-            <ExternalLink size={12} /> Abrir
-          </a>
-        </div>
-
-        {/* Selector de alojamiento */}
+      <IframeBar
+        label="Dueño de Alojamiento"
+        subLabel={ownerAlojId.startsWith('rec') ? ownerAlojId : 'DEMO — sin ID real'}
+        barColor="rgba(15,118,110,0.95)"
+        url={ownerUrl}
+        onClose={() => setOwnerPreview(false)}
+      >
         <div className="px-4 py-2 bg-gray-900/80 border-b border-gray-800 flex items-center gap-2">
           <label className="text-xs text-gray-400 shrink-0">ID de alojamiento:</label>
           <input
@@ -111,19 +157,48 @@ const AdminPreviewRoles: React.FC<Props> = ({ onBack, onPreview }) => {
             className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-teal-500"
           />
         </div>
-
-        {/* Iframe */}
-        <iframe
-          key={ownerUrl}
-          src={ownerUrl}
-          className="flex-1 w-full border-0"
-          style={{ minHeight: 'calc(100vh - 96px)' }}
-          title="Vista Dueño de Alojamiento"
-        />
-      </div>
+      </IframeBar>
     );
   }
 
+  // ── Vista: Agencia B2B (GuiaSAI) ────────────────────────────────────────────
+  if (b2bPreview) {
+    return (
+      <IframeBar
+        label="Agencia B2B · GuiaSAI"
+        subLabel="Portal de cotizaciones y reservas para agencias de viajes"
+        barColor="rgba(79,70,229,0.95)"
+        url="/agencias/"
+        onClose={() => setB2bPreview(false)}
+      />
+    );
+  }
+
+  // ── Vista: Canal de Reservas (turista) ──────────────────────────────────────
+  if (channelPreview) {
+    return (
+      <IframeBar
+        label="Canal de Reservas GuanaGO"
+        subLabel={channelAlojId.startsWith('rec') ? `Alojamiento ${channelAlojId}` : 'Vista turista — inicio de la app'}
+        barColor="rgba(234,88,12,0.95)"
+        url={channelUrl}
+        onClose={() => setChannelPreview(false)}
+      >
+        <div className="px-4 py-2 bg-gray-900/80 border-b border-gray-800 flex items-center gap-2">
+          <label className="text-xs text-gray-400 shrink-0">ID alojamiento:</label>
+          <input
+            value={channelAlojId}
+            onChange={e => setChannelAlojId(e.target.value)}
+            placeholder="recXXXXXXXXXXXXXX  (vacío = inicio)"
+            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-orange-500"
+          />
+          <span className="text-[10px] text-gray-600 shrink-0">Enter para recargar</span>
+        </div>
+      </IframeBar>
+    );
+  }
+
+  // ── Vista: lista de roles ────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-950 text-white p-4 md:p-6">
       {/* Header */}
@@ -149,14 +224,14 @@ const AdminPreviewRoles: React.FC<Props> = ({ onBack, onPreview }) => {
       <div className="mb-5 rounded-xl border border-indigo-800 bg-indigo-950/50 p-3 flex items-start gap-3">
         <Eye size={16} className="text-indigo-400 mt-0.5 shrink-0" />
         <p className="text-xs text-indigo-300 leading-relaxed">
-          Al activar una vista previa verás la app exactamente como la ve ese usuario.
-          Una barra flotante en la parte inferior te permitirá volver al panel de SuperAdmin
-          en cualquier momento.
+          Los 5 roles inferiores cambian la vista dentro de la app React (sin cerrar sesión).
+          Las 3 tarjetas de canal abren vistas especiales en un iframe para no afectar tu sesión.
         </p>
       </div>
 
-      {/* Role cards */}
-      <div className="grid gap-3">
+      {/* Sección: App GuanaGO — roles internos */}
+      <p className="text-[10px] font-black text-gray-500 uppercase mb-2 mt-1">App GuanaGO — roles internos</p>
+      <div className="grid gap-3 mb-5">
         {ROLES.map((card) => (
           <button
             key={card.role}
@@ -175,8 +250,59 @@ const AdminPreviewRoles: React.FC<Props> = ({ onBack, onPreview }) => {
             <Eye size={16} className="text-gray-400 group-hover:text-white shrink-0 transition-colors" />
           </button>
         ))}
+      </div>
 
-        {/* Dueño de Alojamiento — vista especial (iframe, sin cambiar sesión) */}
+      {/* Sección: Canales externos — iframes */}
+      <p className="text-[10px] font-black text-gray-500 uppercase mb-2">Canales externos — iframe</p>
+      <div className="grid gap-3">
+
+        {/* Agencia B2B / GuiaSAI */}
+        <button
+          onClick={() => setB2bPreview(true)}
+          className="w-full text-left rounded-2xl border bg-gradient-to-br from-indigo-900 to-violet-950
+            border-indigo-700 hover:border-indigo-400
+            p-4 flex items-center gap-4 transition-all duration-200
+            hover:scale-[1.01] active:scale-[0.99] group"
+        >
+          <div className="shrink-0 w-12 h-12 rounded-xl bg-black/30 flex items-center justify-center">
+            <Briefcase size={28} className="text-indigo-300" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-white text-sm">Agencia B2B · GuiaSAI</div>
+            <div className="text-xs text-gray-300 mt-0.5 leading-relaxed">
+              Portal /agencias/ — cotizaciones, tarifas netas y reservas para agencias de viajes
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-0.5 shrink-0">
+            <Eye size={16} className="text-gray-400 group-hover:text-white transition-colors" />
+            <span className="text-[9px] text-indigo-500 font-bold">iframe</span>
+          </div>
+        </button>
+
+        {/* Canal de Reservas GuanaGO (turista) */}
+        <button
+          onClick={() => setChannelPreview(true)}
+          className="w-full text-left rounded-2xl border bg-gradient-to-br from-orange-900 to-amber-950
+            border-orange-700 hover:border-orange-400
+            p-4 flex items-center gap-4 transition-all duration-200
+            hover:scale-[1.01] active:scale-[0.99] group"
+        >
+          <div className="shrink-0 w-12 h-12 rounded-xl bg-black/30 flex items-center justify-center">
+            <CalendarCheck size={28} className="text-orange-300" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-white text-sm">Canal de Reservas GuanaGO</div>
+            <div className="text-xs text-gray-300 mt-0.5 leading-relaxed">
+              Vista turista — cómo ve disponibilidad y solicita reserva por nuestro canal directo
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-0.5 shrink-0">
+            <Eye size={16} className="text-gray-400 group-hover:text-white transition-colors" />
+            <span className="text-[9px] text-orange-500 font-bold">iframe</span>
+          </div>
+        </button>
+
+        {/* Dueño de Alojamiento */}
         <button
           onClick={() => setOwnerPreview(true)}
           className="w-full text-left rounded-2xl border bg-gradient-to-br from-teal-900 to-cyan-950
@@ -193,11 +319,12 @@ const AdminPreviewRoles: React.FC<Props> = ({ onBack, onPreview }) => {
               Calendario de disponibilidad — gestiona fechas, bloqueos y promos de su propiedad
             </div>
           </div>
-          <div className="flex flex-col items-center gap-0.5">
-            <Eye size={16} className="text-gray-400 group-hover:text-white shrink-0 transition-colors" />
+          <div className="flex flex-col items-center gap-0.5 shrink-0">
+            <Eye size={16} className="text-gray-400 group-hover:text-white transition-colors" />
             <span className="text-[9px] text-teal-500 font-bold">iframe</span>
           </div>
         </button>
+
       </div>
     </div>
   );
