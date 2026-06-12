@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import {
   Eye, ArrowLeft, User, Store, Anchor, Mic, MapPin,
-  Home, X, ExternalLink, Briefcase, CalendarCheck,
+  Home, X, ExternalLink, Briefcase, CalendarCheck, BedDouble, Sailboat,
 } from 'lucide-react';
 import { AppRoute, UserRole } from '../../types';
 
 interface Props {
   onBack: () => void;
   onNavigate: (route: AppRoute) => void;
-  onPreview: (role: UserRole) => void;
+  onPreview: (role: UserRole, route?: AppRoute) => void;
 }
 
 interface RoleCard {
@@ -235,7 +235,7 @@ const AdminPreviewRoles: React.FC<Props> = ({ onBack, onPreview }) => {
         {ROLES.map((card) => (
           <button
             key={card.role}
-            onClick={() => onPreview(card.role)}
+            onClick={() => onPreview(card.role, AppRoute.PROFILE)}
             className={`w-full text-left rounded-2xl border bg-gradient-to-br ${card.gradient} ${card.border}
               p-4 flex items-center gap-4 transition-all duration-200
               hover:scale-[1.01] active:scale-[0.99] group`}
@@ -250,6 +250,46 @@ const AdminPreviewRoles: React.FC<Props> = ({ onBack, onPreview }) => {
             <Eye size={16} className="text-gray-400 group-hover:text-white shrink-0 transition-colors" />
           </button>
         ))}
+
+        {/* Dueño de Alojamiento (app interna) */}
+        <button
+          onClick={() => onPreview('Aliado' as UserRole, AppRoute.PARTNER_ACCOMMODATIONS)}
+          className="w-full text-left rounded-2xl border bg-gradient-to-br from-teal-900 to-cyan-950
+            border-teal-700 hover:border-teal-400
+            p-4 flex items-center gap-4 transition-all duration-200
+            hover:scale-[1.01] active:scale-[0.99] group"
+        >
+          <div className="shrink-0 w-12 h-12 rounded-xl bg-black/30 flex items-center justify-center">
+            <BedDouble size={28} className="text-teal-300" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-white text-sm">Dueño de Alojamiento</div>
+            <div className="text-xs text-gray-300 mt-0.5 leading-relaxed">
+              Panel de gestión de alojamientos — ficha, fotos, disponibilidad, reservas
+            </div>
+          </div>
+          <Eye size={16} className="text-gray-400 group-hover:text-white shrink-0 transition-colors" />
+        </button>
+
+        {/* Dueño de Servicio Turístico (app interna) */}
+        <button
+          onClick={() => onPreview('Aliado' as UserRole, AppRoute.PARTNER_MY_SERVICES)}
+          className="w-full text-left rounded-2xl border bg-gradient-to-br from-amber-900 to-orange-950
+            border-amber-700 hover:border-amber-400
+            p-4 flex items-center gap-4 transition-all duration-200
+            hover:scale-[1.01] active:scale-[0.99] group"
+        >
+          <div className="shrink-0 w-12 h-12 rounded-xl bg-black/30 flex items-center justify-center">
+            <Sailboat size={28} className="text-amber-300" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-white text-sm">Dueño de Servicio Turístico</div>
+            <div className="text-xs text-gray-300 mt-0.5 leading-relaxed">
+              Mis servicios — tours, actividades, slots de disponibilidad y solicitudes de reserva
+            </div>
+          </div>
+          <Eye size={16} className="text-gray-400 group-hover:text-white shrink-0 transition-colors" />
+        </button>
       </div>
 
       {/* Sección: Canales externos — iframes */}

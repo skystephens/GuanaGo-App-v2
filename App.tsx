@@ -170,15 +170,11 @@ const App: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
-  const startPreview = (role: UserRole) => {
+  const startPreview = (role: UserRole, route?: AppRoute) => {
     setPreviewOriginalRole(userRole as UserRole);
     setPreviewMode(true);
     authSwitchRole(role);
-    if (role === 'Turista' || role === 'Local') {
-      setCurrentRoute(AppRoute.HOME);
-    } else {
-      setCurrentRoute(AppRoute.PROFILE);
-    }
+    setCurrentRoute(route ?? AppRoute.PROFILE);
     setHistory([]);
     window.scrollTo(0, 0);
   };
