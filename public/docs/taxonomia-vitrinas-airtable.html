@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO · Taxonomía de Vitrinas & Embudo de Ofertas</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+:root{
+  --bg:#06101c;--s1:#0b1929;--s2:#0f2038;--s3:#132645;
+  --teal:#00d4b8;--td:rgba(0,212,184,.12);
+  --coral:#ff6060;--cd:rgba(255,96,96,.12);
+  --gold:#ffb703;--gd:rgba(255,183,3,.11);
+  --green:#4ade80;--grd:rgba(74,222,128,.10);
+  --purple:#b388ff;--purd:rgba(179,136,255,.11);
+  --sky:#38bdf8;--skyd:rgba(56,189,248,.11);
+  --orange:#fb923c;--ord:rgba(251,146,60,.11);
+  --pink:#f472b6;--pinkd:rgba(244,114,182,.11);
+  --txt:#ddf0fa;--muted:#5c8099;
+  --border:rgba(0,212,184,.13);--bs:rgba(255,255,255,.055);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden;}
+code{font-family:'Space Mono',monospace;font-size:11px;background:rgba(255,255,255,.07);padding:2px 6px;border-radius:3px;color:var(--teal);}
+
+/* HEADER */
+.hdr{padding:44px 48px 32px;border-bottom:1px solid var(--bs);
+  background:linear-gradient(150deg,var(--bg) 40%,#071a2f 100%);}
+.hdr-eye{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;
+  text-transform:uppercase;color:var(--teal);margin-bottom:10px;}
+.hdr h1{font-size:clamp(24px,3.5vw,40px);font-weight:700;line-height:1.1;margin-bottom:10px;}
+.hdr h1 em{font-style:normal;color:var(--teal);}
+.hdr p{font-size:14px;color:var(--muted);max-width:680px;line-height:1.6;}
+
+/* TABS */
+.tabs{display:flex;gap:3px;padding:16px 48px 0;border-bottom:1px solid var(--bs);overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:9px 16px;font-size:12px;font-weight:600;border:1px solid transparent;
+  border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;white-space:nowrap;
+  background:transparent;color:var(--muted);transition:all .2s;font-family:'Space Grotesk',sans-serif;}
+.tab:hover{color:var(--txt);background:rgba(255,255,255,.03);}
+.tab.on{background:var(--s1);color:var(--txt);border-color:var(--bs);}
+.tab[data-c="t"].on{color:var(--teal);border-top-color:var(--teal);}
+.tab[data-c="c"].on{color:var(--coral);border-top-color:var(--coral);}
+.tab[data-c="g"].on{color:var(--gold);border-top-color:var(--gold);}
+.tab[data-c="gr"].on{color:var(--green);border-top-color:var(--green);}
+.tab[data-c="p"].on{color:var(--purple);border-top-color:var(--purple);}
+
+/* PANELS */
+.pnl{display:none;padding:32px 48px 60px;}
+.pnl.on{display:block;}
+
+/* SECTION HEADING */
+.sh{margin-bottom:20px;}
+.sh .ey{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:6px;}
+.sh h2{font-size:clamp(18px,2.5vw,26px);font-weight:700;line-height:1.2;}
+.sh p{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.55;max-width:720px;}
+
+/* PILL */
+.pill{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;
+  font-family:'Space Mono',monospace;font-weight:700;white-space:nowrap;}
+.pt{background:rgba(0,212,184,.15);color:var(--teal);}
+.pc{background:rgba(255,96,96,.15);color:var(--coral);}
+.pg{background:rgba(255,183,3,.15);color:var(--gold);}
+.pgr{background:rgba(74,222,128,.15);color:var(--green);}
+.pp{background:rgba(179,136,255,.15);color:var(--purple);}
+.psk{background:rgba(56,189,248,.15);color:var(--sky);}
+.por{background:rgba(251,146,60,.15);color:var(--orange);}
+.ppk{background:rgba(244,114,182,.15);color:var(--pink);}
+.pn{background:rgba(255,255,255,.07);color:var(--muted);}
+
+/* TAXONOMY TREE */
+.tree{margin-bottom:32px;}
+.family{background:var(--s1);border:1px solid var(--bs);border-radius:14px;
+  margin-bottom:14px;overflow:hidden;}
+.fam-head{padding:16px 20px;display:flex;align-items:center;gap:12px;
+  cursor:pointer;user-select:none;border-bottom:1px solid var(--bs);}
+.fam-icon{font-size:22px;flex-shrink:0;}
+.fam-title{font-size:15px;font-weight:700;flex:1;}
+.fam-pills{display:flex;flex-wrap:wrap;gap:5px;margin-left:auto;}
+.fam-chevron{font-size:14px;color:var(--muted);transition:transform .25s;flex-shrink:0;}
+.fam-body{display:none;padding:0;}
+.fam-body.open{display:block;}
+.family.open .fam-chevron{transform:rotate(180deg);}
+.subtypes{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0;}
+.subtype{padding:14px 20px;border-right:1px solid var(--bs);border-bottom:1px solid var(--bs);}
+.subtype:last-child{border-right:none;}
+.st-icon{font-size:18px;margin-bottom:6px;}
+.st-name{font-size:13px;font-weight:700;margin-bottom:4px;}
+.st-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:8px;}
+.st-cta{font-size:10px;font-family:'Space Mono',monospace;margin-top:6px;}
+.st-cta.wpp{color:#25d366;}
+.st-cta.res{color:var(--teal);}
+.st-cta.cat{color:var(--gold);}
+.st-cta.dir{color:var(--sky);}
+.st-fields{margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;}
+
+/* AIRTABLE MAP TABLE */
+.tw{overflow-x:auto;border-radius:12px;border:1px solid var(--bs);margin-bottom:24px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:var(--s2);padding:10px 14px;text-align:left;font-weight:600;
+  font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);
+  border-bottom:1px solid var(--bs);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--bs);transition:background .15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:rgba(255,255,255,.02);}
+tbody td{padding:10px 14px;vertical-align:top;line-height:1.5;font-size:13px;}
+.green-row{background:rgba(74,222,128,.04)!important;}
+.yellow-row{background:rgba(255,183,3,.04)!important;}
+.red-row{background:rgba(255,96,96,.04)!important;}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;
+  font-family:'Space Mono',monospace;padding:2px 8px;border-radius:20px;font-weight:700;}
+.b-exists{background:rgba(74,222,128,.15);color:var(--green);}
+.b-extend{background:rgba(255,183,3,.15);color:var(--gold);}
+.b-create{background:rgba(255,96,96,.15);color:var(--coral);}
+.b-reuse{background:rgba(0,212,184,.15);color:var(--teal);}
+
+/* FUNNEL */
+.funnel{max-width:720px;margin-bottom:32px;}
+.f-stage{display:grid;grid-template-columns:32px 1fr auto;gap:12px;align-items:stretch;
+  background:var(--s1);border:1px solid var(--bs);border-bottom:none;padding:14px 18px;}
+.f-stage:first-child{border-radius:12px 12px 0 0;}
+.f-stage:last-child{border-radius:0 0 12px 12px;border-bottom:1px solid var(--bs);}
+.f-stage:not(:first-child){margin-top:-1px;}
+.f-stage:hover{background:var(--s2);}
+.f-n{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;
+  color:var(--teal);opacity:.3;display:flex;align-items:center;justify-content:center;}
+.f-t{font-size:14px;font-weight:700;margin-bottom:3px;}
+.f-d{font-size:12px;color:var(--muted);line-height:1.5;}
+.f-side{display:flex;align-items:center;}
+
+/* SCENARIO FLOW */
+.sc{background:var(--s1);border:1px solid var(--bs);border-radius:12px;
+  padding:18px;margin-bottom:12px;}
+.sc-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.sc-head h3{font-size:14px;font-weight:700;flex:1;}
+.sc-steps{display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
+.ss{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);
+  border-radius:5px;padding:4px 9px;font-size:11px;}
+.sa{color:var(--teal);font-size:14px;font-weight:700;}
+
+/* INS */
+.ins-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  gap:12px;margin-bottom:24px;}
+.ins{border-radius:10px;padding:14px;border-left:3px solid;}
+.ins p{font-size:13px;line-height:1.55;}
+.ins .il{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:6px;color:var(--muted);}
+.it{background:var(--td);border-color:var(--teal);}
+.ic{background:var(--cd);border-color:var(--coral);}
+.ig{background:var(--gd);border-color:var(--gold);}
+.igr{background:var(--grd);border-color:var(--green);}
+.ip{background:var(--purd);border-color:var(--purple);}
+
+/* CAMPO NUEVO */
+.field-new{background:var(--s1);border:1px solid var(--bs);border-radius:10px;
+  padding:14px 18px;margin-bottom:10px;}
+.fn-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.fn-head h3{font-size:14px;font-weight:700;flex:1;}
+.fn-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+.ff{background:var(--s2);border-radius:8px;padding:10px 12px;}
+.ff-name{font-family:'Space Mono',monospace;font-size:11px;color:var(--teal);margin-bottom:3px;}
+.ff-type{font-size:10px;color:var(--muted);margin-bottom:2px;}
+.ff-note{font-size:11px;color:var(--txt);}
+
+@media(max-width:640px){
+  .hdr,.tabs,.pnl{padding-left:18px;padding-right:18px;}
+  .subtypes{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-eye">GuanaGO · Arquitectura de Vitrinas · Base de Datos Real · Junio 2026</div>
+  <h1>Taxonomía completa de vitrinas<br>& <em>Embudo de Ofertas</em></h1>
+  <p>Mapa de las 2 familias × 11 tipos × 26 subtipos de negocios que aparecen en el mapa. Qué tablas Airtable existentes usa cada uno sin romper nada, qué campos hay que añadir, y el embudo Make.com que alimenta con descuentos tanto al turista en la isla como al que planea viajar.</p>
+</div>
+
+<div class="tabs">
+  <button class="tab on" data-c="t" onclick="sw(this,'taxonomia')">🗂 Taxonomía Completa</button>
+  <button class="tab" data-c="c" onclick="sw(this,'airtable')">🗄 Mapa Airtable Real</button>
+  <button class="tab" data-c="g" onclick="sw(this,'embudo')">💰 Embudo de Ofertas</button>
+  <button class="tab" data-c="gr" onclick="sw(this,'make')">⚙️ Escenarios Make</button>
+  <button class="tab" data-c="p" onclick="sw(this,'campos')">➕ Campos a Agregar</button>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PANEL 1: TAXONOMÍA COMPLETA
+══════════════════════════════════════════════ -->
+<div class="pnl on" id="p-taxonomia">
+  <div class="sh">
+    <div class="ey" style="color:var(--teal)">Sección 01</div>
+    <h2>Las 2 Familias · 11 Tipos · 26 Subtipos</h2>
+    <p>Familia A tiene fecha, cupo y checkout PayU. Familia B informa, muestra catálogo y deriva al canal de compra del negocio. Todas generan GuanaPoints. Haz clic en cada familia para expandir.</p>
+  </div>
+
+  <div class="tree">
+
+    <!-- ── FAMILIA A: TURISMO RESERVABLE ── -->
+    <div class="family open" id="fam-a">
+      <div class="fam-head" onclick="toggleFam('fam-a')">
+        <div class="fam-icon">🏖</div>
+        <div>
+          <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--teal);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">Familia A · Turismo Reservable</div>
+          <div class="fam-title">Servicios con fecha, cupo y pago directo en GuanaGO</div>
+        </div>
+        <div class="fam-pills">
+          <span class="pill pt">PayU checkout</span>
+          <span class="pill pgr">Voucher QR</span>
+          <span class="pill pg">GP automático</span>
+        </div>
+        <div class="fam-chevron">▼</div>
+      </div>
+      <div class="fam-body open">
+        <div class="subtypes">
+          <div class="subtype" style="border-top:3px solid var(--teal)">
+            <div class="st-icon">🏨</div>
+            <div class="st-name">Alojamiento</div>
+            <div class="st-desc">Hotel, posada, cabaña, apartahotel, casa turística, hostal, glamping, finca. Calendario de disponibilidad + precios por número de huéspedes.</div>
+            <div class="st-cta res">→ CTA: Reservar · seleccionar fechas · PayU</div>
+            <div class="st-fields">
+              <span class="pill pt">AlojamientosTuristicos_SAI</span>
+              <span class="pill pn">Disponibilidad_SAI</span>
+            </div>
+          </div>
+          <div class="subtype" style="border-top:3px solid var(--teal)">
+            <div class="st-icon">🤿</div>
+            <div class="st-name">Tour Acuático / Náutico</div>
+            <div class="st-desc">Buceo, snorkel, hopping de islas, kayak, velero, jet ski, glassbottom, pesca artesanal. Cupo en tiempo real + horarios.</div>
+            <div class="st-cta res">→ CTA: Reservar · fecha + hora · PayU</div>
+            <div class="st-fields">
+              <span class="pill pt">ServiciosTuristicos_SAI</span>
+            </div>
+          </div>
+          <div class="subtype" style="border-top:3px solid var(--teal)">
+            <div class="st-icon">🧗</div>
+            <div class="st-name">Tour Terrestre / Aventura</div>
+            <div class="st-desc">City tour, recorrido en moto, senderismo, parapente, bicicleta. Guía incluido o no. Punto de encuentro.</div>
+            <div class="st-cta res">→ CTA: Reservar · seleccionar fecha</div>
+            <div class="st-fields">
+              <span class="pill pt">ServiciosTuristicos_SAI</span>
+            </div>
+          </div>
+          <div class="subtype" style="border-top:3px solid var(--teal)">
+            <div class="st-icon">🥥</div>
+            <div class="st-name">Experiencia Cultural / Artesanía</div>
+            <div class="st-desc">Taller Coco ART, clases de cocina Raizal, música, historia oral, tejido. Cupo limitado por taller. Bono +100 GP.</div>
+            <div class="st-cta res">→ CTA: Reservar taller · PayU</div>
+            <div class="st-fields">
+              <span class="pill pt">ServiciosTuristicos_SAI</span>
+            </div>
+          </div>
+          <div class="subtype" style="border-top:3px solid var(--teal)">
+            <div class="st-icon">🚗</div>
+            <div class="st-name">Taxi / Traslado</div>
+            <div class="st-desc">Transfer aeropuerto, taxi turístico, mototaxi, transfer hotel-playa, excursión en taxi. Calculadora de tarifa por zona.</div>
+            <div class="st-cta res">→ CTA: Solicitar · WhatsApp · o reservar</div>
+            <div class="st-fields">
+              <span class="pill pt">Taxis_Traslados</span>
+            </div>
+          </div>
+          <div class="subtype" style="border-top:3px solid var(--sky)">
+            <div class="st-icon">🎵</div>
+            <div class="st-name">Eventos / Entretenimiento</div>
+            <div class="st-desc">Caribbean Night RIMM, concierto, festival, show en vivo, noche temática. Entrada, transfer y mesa VIP como opciones.</div>
+            <div class="st-cta res">→ CTA: Comprar entrada · paquete completo</div>
+            <div class="st-fields">
+              <span class="pill psk">Rimm_musicos</span>
+              <span class="pill pt">ServiciosTuristicos_SAI</span>
+            </div>
+          </div>
+          <div class="subtype" style="border-top:3px solid var(--purple)">
+            <div class="st-icon">💆</div>
+            <div class="st-name">Salud / Bienestar / Deporte</div>
+            <div class="st-desc">Spa, masajes, yoga en playa, recuperación deportiva (aliado Jaison), fotografía profesional de aventura. Requiere cita.</div>
+            <div class="st-cta res">→ CTA: Agendar cita · WhatsApp</div>
+            <div class="st-fields">
+              <span class="pill pt">ServiciosTuristicos_SAI</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FAMILIA B: COMERCIO LOCAL ── -->
+    <div class="family" id="fam-b">
+      <div class="fam-head" onclick="toggleFam('fam-b')">
+        <div class="fam-icon">🏪</div>
+        <div>
+          <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">Familia B · Comercio Local</div>
+          <div class="fam-title">Negocios que informan, muestran catálogo y derivan — sin fecha obligatoria</div>
+        </div>
+        <div class="fam-pills">
+          <span class="pill pg">Catálogo visual</span>
+          <span class="pill ppk">→ WhatsApp / dirección</span>
+          <span class="pill pgr">GP por visita</span>
+        </div>
+        <div class="fam-chevron">▼</div>
+      </div>
+      <div class="fam-body">
+        <div class="subtypes">
+
+          <!-- GASTRONOMÍA -->
+          <div class="subtype" style="border-top:3px solid var(--coral)">
+            <div class="st-icon">🍽</div>
+            <div class="st-name">Restaurante / Cocina completa</div>
+            <div class="st-desc">Cocina Raizal, mariscos, internacional. Menú con platos y precios. Reserva de mesa opcional. Platos Raizal marcados 🌴.</div>
+            <div class="st-cta wpp">→ CTA: Ver menú · Reservar mesa · WhatsApp</div>
+            <div class="st-fields"><span class="pill pn">Directorio_Mapa + nueva: Menu_Items</span></div>
+          </div>
+          <div class="subtype" style="border-top:3px solid var(--coral)">
+            <div class="st-icon">🍔</div>
+            <div class="st-name">Comida rápida / Kiosco / Cevichería</div>
+            <div class="st-desc">Arepas, empanadas, ceviche, fresh fish, crab soup para llevar. Horario, ubicación y precio de los combos del día.</div>
+            <div class="st-cta dir">→ CTA: Ver ubicación en mapa · Dirección</div>
+            <div class="st-fields"><span class="pill pn">Directorio_Mapa + Menu_Items</span></div>
+          </div>
+          <div class="subtype" style="border-top:3px solid var(--coral)">
+            <div class="st-icon">🍹</div>
+            <div class="st-name">Bar / Barcito / Nightlife</div>
+            <div class="st-desc">Cocteles, cervezas, tragos locales. Horario, cover si lo hay, próximos eventos. Opción de reservar mesa de grupo.</div>
+            <div class="st-cta wpp">→ CTA: Reservar mesa de grupo · WhatsApp</div>
+            <div class="st-fields"><span class="pill pn">Directorio_Mapa</span></div>
+          </div>
+
+          <!-- RETAIL -->
+          <div class="subtype" style="border-top:3px solid var(--orange)">
+            <div class="st-icon">👗</div>
+            <div class="st-name">Ropa / Moda / Boutique</div>
+            <div class="st-desc">Ropa de playa, moda local, diseño colombiano. Catálogo con foto + precio + tallas disponibles. Reserva de piezas por WhatsApp.</div>
+            <div class="st-cta wpp">→ CTA: Ver catálogo · WhatsApp para apartar</div>
+            <div class="st-fields"><span class="pill pn">Directorio_Mapa + nueva: Catalogo_Productos</span></div>
+          </div>
+          <div class="subtype" style="border-top:3px solid var(--orange)">
+            <div class="st-icon">💊</div>
+            <div class="st-name">Perfumería / Cosméticos / Duty Free</div>
+            <div class="st-desc">Perfumes importados, cosméticos, zona franca. Lista de marcas disponibles, precio referencial en USD/COP. "Pregunta por X".</div>
+            <div class="st-cta wpp">→ CTA: WhatsApp · consultar disponibilidad</div>
+            <div class="st-fields"><span class="pill pn">Directorio_Mapa + Catalogo_Productos</span></div>
+          </div>
+          <div class="subtype" style="border-top:3px solid var(--orange)">
+            <div class="st-icon">🏷</div>
+            <div class="st-name">Souvenirs / Artesanías industriales</div>
+            <div class="st-desc">Recuerdos de la isla, miniaturas, imanes, camisetas. Catálogo visual básico con precios. Diferente al artesano cultural (Fam. A).</div>
+            <div class="st-cta dir">→ CTA: Ver ubicación · Horario de atención</div>
+            <div class="st-fields"><span class="pill pn">Directorio_Mapa + Catalogo_Productos</span></div>
+          </div>
+
+          <!-- SERVICIOS COTIDIANOS -->
+          <div class="subtype" style="border-top:3px solid var(--sky)">
+            <div class="st-icon">🛒</div>
+            <div class="st-name">Supermercado / Abarrotes / Minimarket</div>
+            <div class="st-desc">Horario ampliado, acepta tarjeta, delivery si lo tienen. Productos especiales (ron de la isla, productos Raizal). No requiere catálogo.</div>
+            <div class="st-cta dir">→ CTA: Ver horario · Cómo llegar</div>
+            <div class="st-fields"><span class="pill pn">Directorio_Mapa</span></div>
+          </div>
+          <div class="subtype" style="border-top:3px solid var(--sky)">
+            <div class="st-icon">💇</div>
+            <div class="st-name">Belleza / Peluquería / Estética</div>
+            <div class="st-desc">Corte, peinado, uñas, cejas. Precios de servicios, horario y reserva de cita por WhatsApp o formulario simple.</div>
+            <div class="st-cta wpp">→ CTA: Agendar cita · WhatsApp</div>
+            <div class="st-fields"><span class="pill pn">Directorio_Mapa</span></div>
+          </div>
+          <div class="subtype" style="border-top:3px solid var(--sky)">
+            <div class="st-icon">🔧</div>
+            <div class="st-name">Alquiler de equipos / Bicicletas / Motos</div>
+            <div class="st-desc">Bicicletas, motos, equipos de snorkel, patines. Precio por hora/día. Puede cruzar a Fam. A si requiere reserva con pago.</div>
+            <div class="st-cta wpp">→ CTA: Consultar disponibilidad · WhatsApp</div>
+            <div class="st-fields"><span class="pill pn">Directorio_Mapa</span></div>
+          </div>
+
+          <!-- SERVICIOS PROFESIONALES -->
+          <div class="subtype" style="border-top:3px solid var(--purple)">
+            <div class="st-icon">📸</div>
+            <div class="st-name">Fotografía / Video turístico</div>
+            <div class="st-desc">Fotógrafo en playa, sesión de viaje, video reels. Portfolio, precios de paquetes, galería de muestra.</div>
+            <div class="st-cta wpp">→ CTA: Ver portfolio · WhatsApp para cotizar</div>
+            <div class="st-fields"><span class="pill pn">Directorio_Mapa + Catalogo_Productos</span></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LÓGICA CTA POR TIPO -->
+  <div class="sh" style="margin-top:8px">
+    <div class="ey" style="color:var(--gold)">Lógica de CTA</div>
+    <h2>Qué botón/acción muestra cada vitrina</h2>
+    <p>El campo <code>Tipo_Aliado</code> + <code>Subtipo</code> en Directorio_Mapa define qué componente React renderiza y qué CTA aparece.</p>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Familia</th><th>Tipo / Subtipo</th><th>CTA Principal</th><th>CTA Secundario</th><th>GP emitido</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill pt">A</span></td><td>Alojamiento</td><td>Reservar → PayU</td><td>Consultar por WhatsApp</td><td>+1 GP/$1.000</td></tr>
+        <tr><td><span class="pill pt">A</span></td><td>Tour (cualquier tipo)</td><td>Reservar → PayU</td><td>Llamar / WhatsApp</td><td>+1 GP/$1.000</td></tr>
+        <tr><td><span class="pill pt">A</span></td><td>Experiencia Cultural</td><td>Reservar taller → PayU</td><td>Ver video del artesano</td><td>+100 GP bono</td></tr>
+        <tr><td><span class="pill pt">A</span></td><td>Taxi / Traslado</td><td>Solicitar → WhatsApp/form</td><td>Calculadora de tarifa</td><td>+1 GP/$1.000</td></tr>
+        <tr><td><span class="pill pt">A</span></td><td>Evento / Música</td><td>Comprar entrada → PayU</td><td>Ver artistas / fecha</td><td>+1 GP/$1.000</td></tr>
+        <tr><td><span class="pill pt">A</span></td><td>Spa / Bienestar</td><td>Agendar cita → form/WA</td><td>Ver precios</td><td>+1 GP/$1.000</td></tr>
+        <tr><td><span class="pill pg">B</span></td><td>Restaurante</td><td>Ver menú + Reservar mesa</td><td>WhatsApp / Dirección</td><td>+15 GP check-in</td></tr>
+        <tr><td><span class="pill pg">B</span></td><td>Bar / Nightlife</td><td>Ver info + Reservar mesa</td><td>WhatsApp</td><td>+15 GP check-in</td></tr>
+        <tr><td><span class="pill pg">B</span></td><td>Ropa / Moda</td><td>Ver catálogo visual</td><td>WhatsApp para apartar</td><td>+15 GP check-in</td></tr>
+        <tr><td><span class="pill pg">B</span></td><td>Perfumería / Duty Free</td><td>Ver disponibilidad</td><td>WhatsApp / Ir al local</td><td>+15 GP check-in</td></tr>
+        <tr><td><span class="pill pg">B</span></td><td>Souvenirs</td><td>Ver catálogo + precios</td><td>Cómo llegar</td><td>+15 GP check-in</td></tr>
+        <tr><td><span class="pill pg">B</span></td><td>Supermercado</td><td>Ver horario</td><td>Cómo llegar (mapa)</td><td>+10 GP check-in</td></tr>
+        <tr><td><span class="pill pg">B</span></td><td>Belleza / Peluquería</td><td>Agendar cita (WhatsApp)</td><td>Ver precios</td><td>+15 GP check-in</td></tr>
+        <tr><td><span class="pill pg">B</span></td><td>Alquiler de equipos</td><td>Consultar disponibilidad</td><td>WhatsApp</td><td>+15 GP check-in</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PANEL 2: MAPA AIRTABLE REAL
+══════════════════════════════════════════════ -->
+<div class="pnl" id="p-airtable">
+  <div class="sh">
+    <div class="ey" style="color:var(--coral)">Sección 02</div>
+    <h2>Tablas reales del base <code>appiReH55Qhrbv4Lk</code></h2>
+    <p>Qué tabla existente sirve a cada tipo de vitrina, si hay que añadir campos o crear tabla nueva, y si es seguro usarla sin afectar flujos actuales.</p>
+  </div>
+
+  <div class="ins-grid" style="margin-bottom:28px">
+    <div class="ins igr">
+      <div class="il">🟢 Existe y sirve tal cual</div>
+      <p>La tabla ya tiene los campos necesarios para ese tipo de vitrina. Solo conectar.</p>
+    </div>
+    <div class="ins ig">
+      <div class="il">🟡 Existe — agregar campos</div>
+      <p>La tabla existe y tiene la base correcta, pero hay que agregar campos nuevos sin borrar los existentes.</p>
+    </div>
+    <div class="ins ic">
+      <div class="il">🔴 Crear tabla nueva</div>
+      <p>No existe ninguna tabla adecuada. Se crea desde la UI de Airtable (Make no puede crear tablas).</p>
+    </div>
+    <div class="ins it">
+      <div class="il">🔵 Reutilizar con link</div>
+      <p>Tabla auxiliar que se enlaza desde Directorio_Mapa para enriquecer el microsite.</p>
+    </div>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Tipo de Vitrina</th><th>Tabla Principal</th><th>Estado</th><th>Tablas de apoyo</th><th>Impacto en flujos actuales</th></tr></thead>
+      <tbody>
+        <tr class="green-row">
+          <td>🏨 Alojamiento</td>
+          <td><code>AlojamientosTuristicos_SAI</code><br><code>tblUNglGMsxDZYZPs</code></td>
+          <td><span class="badge b-exists">🟢 Lista</span></td>
+          <td><code>Disponibilidad_SAI</code></td>
+          <td>Cero impacto — tabla productiva, solo leer</td>
+        </tr>
+        <tr class="green-row">
+          <td>🤿 Tour / Náutico / Terrestre</td>
+          <td><code>ServiciosTuristicos_SAI</code><br><code>tblTp0v7EoCjNHU4W</code></td>
+          <td><span class="badge b-exists">🟢 Lista</span></td>
+          <td>—</td>
+          <td>Cero impacto — campo <code>Tipo_de_Servicio</code> ya discrimina</td>
+        </tr>
+        <tr class="green-row">
+          <td>🥥 Experiencia Cultural</td>
+          <td><code>ServiciosTuristicos_SAI</code></td>
+          <td><span class="badge b-exists">🟢 Lista</span></td>
+          <td><code>Onboarding_Aliados</code> (contexto IA)</td>
+          <td>Cero impacto — usar <code>Tipo_de_Servicio = cultural</code></td>
+        </tr>
+        <tr class="green-row">
+          <td>🚗 Taxi / Traslado</td>
+          <td><code>Taxis_Traslados</code><br><code>tblLefq5XdqF45VwL</code></td>
+          <td><span class="badge b-exists">🟢 Lista</span></td>
+          <td>—</td>
+          <td>Cero impacto — tabla dedicada</td>
+        </tr>
+        <tr class="green-row">
+          <td>🎵 Evento / Música</td>
+          <td><code>Rimm_musicos</code> + <code>ServiciosTuristicos_SAI</code></td>
+          <td><span class="badge b-exists">🟢 Lista</span></td>
+          <td><code>Productos_Artista</code></td>
+          <td>Cero impacto — ya en producción</td>
+        </tr>
+        <tr class="yellow-row">
+          <td>🍽 Restaurante (con menú)</td>
+          <td><code>Directorio_Mapa</code><br><code>tblbrq0U77RAjgG9N</code></td>
+          <td><span class="badge b-extend">🟡 + campos</span></td>
+          <td><strong>Nueva tabla:</strong> <code>Menu_Items</code></td>
+          <td>Agregar <code>Subtipo</code>, <code>Horario_Atencion</code>, <code>Acepta_Reserva_Mesa</code> a Directorio_Mapa</td>
+        </tr>
+        <tr class="yellow-row">
+          <td>🍹 Bar / Nightlife</td>
+          <td><code>Directorio_Mapa</code></td>
+          <td><span class="badge b-extend">🟡 + campos</span></td>
+          <td>—</td>
+          <td>Agregar <code>Cover_Entrada</code>, <code>Proximo_Evento</code> a Directorio_Mapa</td>
+        </tr>
+        <tr class="yellow-row">
+          <td>💆 Spa / Bienestar / Deporte</td>
+          <td><code>ServiciosTuristicos_SAI</code></td>
+          <td><span class="badge b-extend">🟡 + campos</span></td>
+          <td>—</td>
+          <td>Agregar <code>Requiere_Cita</code> — campo nuevo sin romper nada existente</td>
+        </tr>
+        <tr class="yellow-row">
+          <td>👗 Ropa / Perfumería / Souvenirs</td>
+          <td><code>Directorio_Mapa</code></td>
+          <td><span class="badge b-extend">🟡 + tabla</span></td>
+          <td><strong>Nueva tabla:</strong> <code>Catalogo_Productos</code></td>
+          <td>Solo agregar registros nuevos en Directorio_Mapa con la categoría correcta</td>
+        </tr>
+        <tr class="yellow-row">
+          <td>🛒 Supermercado / Servicios cotidianos</td>
+          <td><code>Directorio_Mapa</code></td>
+          <td><span class="badge b-extend">🟡 + campos</span></td>
+          <td>—</td>
+          <td>Agregar <code>Acepta_Tarjeta</code>, <code>Tiene_Delivery</code> a Directorio_Mapa</td>
+        </tr>
+        <tr class="green-row">
+          <td>💰 Promociones / Descuentos</td>
+          <td><code>Promociones</code><br><code>tblBNPE6dwvqbhZde</code></td>
+          <td><span class="badge b-exists">🟢 Lista</span></td>
+          <td><code>Directorio_Mapa</code> (via link <code>AliadoID</code>)</td>
+          <td>Tabla productiva — ya tiene sync a Firestore via Make</td>
+        </tr>
+        <tr class="green-row">
+          <td>📣 Contenido editorial / Redes</td>
+          <td><code>Contenido_Redes</code><br><code>tbl2clkc9P7BuY831</code></td>
+          <td><span class="badge b-exists">🟢 Lista</span></td>
+          <td>—</td>
+          <td>Tabla ya preparada para Make — campo <code>AlinadoID</code> existe</td>
+        </tr>
+        <tr class="green-row">
+          <td>🌴 GuanaPoints / Transacciones</td>
+          <td><code>GUANA_Transacciones</code><br><code>tbldeRzkrNZbsC4Xc</code></td>
+          <td><span class="badge b-exists">🟢 Lista</span></td>
+          <td><code>Perfiles_Usuarios</code> (campo <code>GuanaPoints</code>)</td>
+          <td>Cero impacto — log de puntos, solo append</td>
+        </tr>
+        <tr class="green-row">
+          <td>📲 Notificaciones push / Email</td>
+          <td><code>Notificaciones_Queue</code><br><code>tblA1GkQIno4ViU8W</code></td>
+          <td><span class="badge b-exists">🟢 Lista</span></td>
+          <td>—</td>
+          <td>Cola central — ya funciona con Make cada 15 min</td>
+        </tr>
+        <tr class="red-row">
+          <td>🍽 Menú digital de platos</td>
+          <td>—</td>
+          <td><span class="badge b-create">🔴 Crear nueva</span></td>
+          <td>Linked a <code>Directorio_Mapa</code></td>
+          <td>Tabla nueva: <code>Menu_Items</code> — ningún proceso actual afectado</td>
+        </tr>
+        <tr class="red-row">
+          <td>👗 Catálogo de productos retail</td>
+          <td>—</td>
+          <td><span class="badge b-create">🔴 Crear nueva</span></td>
+          <td>Linked a <code>Directorio_Mapa</code></td>
+          <td>Tabla nueva: <code>Catalogo_Productos</code> — ningún proceso actual afectado</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="ins-grid">
+    <div class="ins it">
+      <div class="il">Tabla clave: Directorio_Mapa</div>
+      <p><code>tblbrq0U77RAjgG9N</code> es el hub central. Ya tiene <code>Categoria</code>, <code>Es_Aliado_GuanaGO</code>, <code>Promociones</code> (link), <code>Promo_Activa</code>. Agregar <code>Subtipo</code> y <code>Tipo_CTA</code> y sirve para todas las familias.</p>
+    </div>
+    <div class="ins igr">
+      <div class="il">Tabla clave: Promociones</div>
+      <p><code>tblBNPE6dwvqbhZde</code> ya existe con <code>Descuento_Pct</code>, <code>Vencimiento</code>, <code>AliadoID</code> (link a Directorio_Mapa). <strong>Esta es la fuente del embudo de ofertas.</strong> Solo hay que activarla en Make.</p>
+    </div>
+    <div class="ins ig">
+      <div class="il">Tabla clave: Perfiles_Usuarios</div>
+      <p><code>tblC6teRhWovnSzic</code> tiene <code>TipoPerfil</code> (Turista / Residente / Empresa), <code>GuanaPoints</code>, <code>Sector_SAI</code> y <code>PlanActual</code>. Permite segmentar ofertas por tipo de usuario.</p>
+    </div>
+    <div class="ins ip">
+      <div class="il">Tabla clave: Notificaciones_Queue</div>
+      <p><code>tblA1GkQIno4ViU8W</code> tiene <code>Canal</code> (WhatsApp, push, email), <code>Destinatario_Tipo</code> y <code>Estado</code>. Es la cola de entrega del embudo — cualquier oferta se deposita aquí y Make la distribuye.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PANEL 3: EMBUDO DE OFERTAS
+══════════════════════════════════════════════ -->
+<div class="pnl" id="p-embudo">
+  <div class="sh">
+    <div class="ey" style="color:var(--gold)">Sección 03</div>
+    <h2>Embudo de Ofertas — De la tabla Promociones al turista</h2>
+    <p>El embudo alimenta dos audiencias: turistas en la isla (necesitan actuar hoy) y turistas que planean viajar (necesitan inspiración y urgencia futura). Usa tablas que ya existen.</p>
+  </div>
+
+  <!-- LAS DOS AUDIENCIAS -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px;">
+    <div class="ins igr">
+      <div class="il">🏝 Audiencia 1 · Turista en la isla</div>
+      <p><strong>Quién:</strong> Turista con app instalada, ya en San Andrés.<br><strong>Necesidad:</strong> Oferta para HOY o esta semana.<br><strong>Canal:</strong> Push FCM + in-app banner + WhatsApp si se registró.<br><strong>Urgencia:</strong> Alta — vencimiento en horas o días.</p>
+    </div>
+    <div class="ins ip">
+      <div class="il">✈️ Audiencia 2 · Turista planificando viaje</div>
+      <p><strong>Quién:</strong> Lead en tabla <code>Leads</code> con <code>Fechas_del_Viaje</code> futuras.<br><strong>Necesidad:</strong> Ofertas para cuando llegue + paquetes anticipados.<br><strong>Canal:</strong> Email + WhatsApp.<br><strong>Urgencia:</strong> Media — 30/60/90 días antes del viaje.</p>
+    </div>
+  </div>
+
+  <!-- FUNNEL VISUAL -->
+  <div style="font-size:13px;font-family:'Space Mono',monospace;text-transform:uppercase;
+    letter-spacing:1px;color:var(--muted);margin-bottom:14px;">Flujo completo del embudo</div>
+  <div class="funnel">
+    <div class="f-stage">
+      <div class="f-n">01</div>
+      <div>
+        <div class="f-t">Aliado crea la promoción</div>
+        <div class="f-d">Desde su panel Partner, el aliado llena: título, descripción, tipo (descuento % / 2x1 / incluye extra), vencimiento, y qué servicio aplica. Se registra en <code>Promociones</code> con <code>Estado = borrador</code>.</div>
+      </div>
+      <div class="f-side"><span class="pill pn">Promociones tblBNPE6</span></div>
+    </div>
+    <div class="f-stage">
+      <div class="f-n">02</div>
+      <div>
+        <div class="f-t">Sky aprueba (o auto-aprueba con reglas)</div>
+        <div class="f-d">Sky cambia <code>Estado → activa</code> en Airtable. Opcionalmente: auto-aprobar si el aliado tiene plan Premium y la promo no supera un % máximo. Make escucha el cambio de estado.</div>
+      </div>
+      <div class="f-side"><span class="pill pt">Make Watch trigger</span></div>
+    </div>
+    <div class="f-stage">
+      <div class="f-n">03</div>
+      <div>
+        <div class="f-t">Make identifica las dos audiencias</div>
+        <div class="f-d">Make consulta <code>Perfiles_Usuarios</code> y <code>Leads</code>:<br>— Audiencia 1: <code>TipoPerfil = Turista</code> + <code>Estado = activo</code> (en la isla ahora)<br>— Audiencia 2: <code>Leads.Fechas_del_Viaje</code> en los próximos 90 días</div>
+      </div>
+      <div class="f-side"><span class="pill pg">Segmentación</span></div>
+    </div>
+    <div class="f-stage">
+      <div class="f-n">04</div>
+      <div>
+        <div class="f-t">Construye el mensaje personalizado por canal</div>
+        <div class="f-d">Para push: corto, urgente, emoji. Para email: imagen del aliado + descripción + CTA "Reserva ahora". Para WhatsApp: texto directo + link al microsite del aliado.</div>
+      </div>
+      <div class="f-side"><span class="pill psk">Contenido dinámico</span></div>
+    </div>
+    <div class="f-stage">
+      <div class="f-n">05</div>
+      <div>
+        <div class="f-t">Deposita en Notificaciones_Queue</div>
+        <div class="f-d">Cada mensaje va como un record en <code>Notificaciones_Queue</code> con <code>Canal</code>, <code>Destinatario_ID</code>, <code>Mensaje</code> y <code>Estado = pendiente</code>. El escenario de envío corre cada 15 min.</div>
+      </div>
+      <div class="f-side"><span class="pill pt">Notificaciones_Queue</span></div>
+    </div>
+    <div class="f-stage">
+      <div class="f-n">06</div>
+      <div>
+        <div class="f-t">Entrega multi-canal</div>
+        <div class="f-d">FCM push → app. WhatsApp Cloud API → número de usuario. Email → SendGrid/Alegra. Cada envío actualiza <code>Estado → enviado</code> con timestamp.</div>
+      </div>
+      <div class="f-side"><span class="pill pgr">Entrega</span></div>
+    </div>
+    <div class="f-stage">
+      <div class="f-n">07</div>
+      <div>
+        <div class="f-t">Turista click → microsite del aliado → reserva o visita</div>
+        <div class="f-d">El link lleva a <code>guanago.travel/[slug]</code>. Si reserva: PayU → GP automáticos. Si solo visita: check-in en mapa → +15 GP. La promo registra <code>uso_count</code>.</div>
+      </div>
+      <div class="f-side"><span class="pill pg">+GP · caja registradora</span></div>
+    </div>
+  </div>
+
+  <!-- TIPOS DE PROMO -->
+  <div class="sh" style="margin-top:8px">
+    <div class="ey" style="color:var(--gold)">Tipos de promociones soportadas</div>
+    <h2>Qué puede ofrecer cada aliado</h2>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Tipo de promo</th><th>Ejemplo concreto</th><th>Familia</th><th>Campo en Promociones</th><th>GP para el turista</th></tr></thead>
+      <tbody>
+        <tr><td>% de descuento</td><td>"20% off en tour de snorkel hoy"</td><td>A</td><td><code>Descuento_Pct = 20</code></td><td>GP sobre precio final</td></tr>
+        <tr><td>2×1</td><td>"2 entradas al precio de 1 esta noche"</td><td>A/B</td><td><code>Tipo = 2x1</code></td><td>+20 GP bono promo</td></tr>
+        <tr><td>Extra incluido</td><td>"Cena + postre de regalo al reservar hoy"</td><td>B</td><td><code>Tipo = extra_incluido</code></td><td>+15 GP</td></tr>
+        <tr><td>Double Points</td><td>"Esta semana gana el doble de GP con nosotros"</td><td>A/B</td><td><code>Tipo = double_gp</code></td><td>×2 GP habitual</td></tr>
+        <tr><td>Flash 24h</td><td>"Solo hoy: alquiler moto $40.000"</td><td>B</td><td><code>Vencimiento = hoy</code></td><td>GP normales + urgencia</td></tr>
+        <tr><td>Pre-viaje</td><td>"Reserva con 30 días de anticipación y ahorra 15%"</td><td>A</td><td><code>Tipo = antelacion</code></td><td>GP + bono anticipación</td></tr>
+        <tr><td>Paquete combo</td><td>"Tour + almuerzo Raizal + foto: $180.000 todo"</td><td>A+B</td><td><code>Tipo = combo</code> + links</td><td>GP de todos los aliados</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PANEL 4: MAKE SCENARIOS
+══════════════════════════════════════════════ -->
+<div class="pnl" id="p-make">
+  <div class="sh">
+    <div class="ey" style="color:var(--green)">Sección 04</div>
+    <h2>Escenarios Make.com para el embudo</h2>
+    <p>Todos usan tablas existentes. Ninguno toca flujos activos de pago o cotizaciones.</p>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">💰</span>
+      <h3>Escenario: Promo aprobada → Segmentar audiencias → Notificar</h3>
+      <span class="pill pgr">Prioridad Alta</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">Watch Promociones: Estado → activa</span><span class="sa">→</span>
+      <span class="ss">Leer datos aliado (Directorio_Mapa via AliadoID)</span><span class="sa">→</span>
+      <span class="ss">Query Perfiles_Usuarios: TipoPerfil=Turista + activo</span><span class="sa">→</span>
+      <span class="ss">Query Leads: Fechas_del_Viaje ≤ 90 días</span><span class="sa">→</span>
+      <span class="ss">Router por canal (push / WhatsApp / email)</span><span class="sa">→</span>
+      <span class="ss">Create records Notificaciones_Queue</span><span class="sa">→</span>
+      <span class="ss">Update Promo: notificados_count++</span>
+    </div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">📅</span>
+      <h3>Escenario: Cron diario 8am → Promos del día → Flash push</h3>
+      <span class="pill pgr">Prioridad Alta</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">Cron 8:00 am diario</span><span class="sa">→</span>
+      <span class="ss">Buscar Promociones activas que vencen HOY</span><span class="sa">→</span>
+      <span class="ss">Para cada promo: construir mensaje urgente</span><span class="sa">→</span>
+      <span class="ss">Depositar en Notificaciones_Queue (Canal=push)</span><span class="sa">→</span>
+      <span class="ss">FCM broadcast a turistas activos en isla</span>
+    </div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">✈️</span>
+      <h3>Escenario: Cron semanal → Leads pre-viaje → Email de inspiración</h3>
+      <span class="pill pg">Prioridad Media</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">Cron lunes 9:00 am</span><span class="sa">→</span>
+      <span class="ss">Query Leads: Fechas_del_Viaje entre hoy + 7 y hoy + 90</span><span class="sa">→</span>
+      <span class="ss">Query Promociones: Estado=activa + no vence en 48h</span><span class="sa">→</span>
+      <span class="ss">Query Directorio_Mapa: aliados Premium destacados</span><span class="sa">→</span>
+      <span class="ss">Armar email HTML "Tu viaje se acerca — estas ofertas te esperan"</span><span class="sa">→</span>
+      <span class="ss">Depositar en Notificaciones_Queue (Canal=email)</span>
+    </div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">🗺</span>
+      <h3>Escenario: Nuevo aliado Familia B → Microsite + Directorio_Mapa → Pin en mapa</h3>
+      <span class="pill psk">Prioridad Media</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">Nuevo record Directorio_Mapa: Es_Aliado=true</span><span class="sa">→</span>
+      <span class="ss">Auto-generar ID_Slug (si vacío)</span><span class="sa">→</span>
+      <span class="ss">Crear doc Firestore /aliados/{slug} (solo campos públicos)</span><span class="sa">→</span>
+      <span class="ss">Si tiene Catalogo_Productos: sync a Firestore /aliados/{slug}/catalogo</span><span class="sa">→</span>
+      <span class="ss">Si tiene Menu_Items: sync a Firestore /aliados/{slug}/menu</span><span class="sa">→</span>
+      <span class="ss">Crear post bienvenida en Contenido_Redes (Estado=Aprobado)</span>
+    </div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">⭐</span>
+      <h3>Escenario: Check-in en mapa → GP inmediatos → Push confirmación</h3>
+      <span class="pill pg">Prioridad Media</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">Firestore trigger: nuevo check-in usuario</span><span class="sa">→</span>
+      <span class="ss">Identificar aliado del POI (Directorio_Mapa)</span><span class="sa">→</span>
+      <span class="ss">Sumar GP en Perfiles_Usuarios.GuanaPoints</span><span class="sa">→</span>
+      <span class="ss">Log en GUANA_Transacciones: Tipo=check_in, Monto=+15</span><span class="sa">→</span>
+      <span class="ss">Push: "¡Ganaste 15 GP en [nombre aliado]! 🌴"</span><span class="sa">→</span>
+      <span class="ss">Si promo activa del aliado: mostrar en notif</span>
+    </div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">🔄</span>
+      <h3>Escenario: Promo vencida → Desactivar + Log + Reporte aliado</h3>
+      <span class="pill pn">Mantenimiento</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">Cron: cada hora</span><span class="sa">→</span>
+      <span class="ss">Buscar Promociones: Vencimiento < ahora + Estado = activa</span><span class="sa">→</span>
+      <span class="ss">Update Estado → vencida</span><span class="sa">→</span>
+      <span class="ss">Actualizar Firestore: promo_activa = false</span><span class="sa">→</span>
+      <span class="ss">Email aliado: "Tu promo terminó — X personas la vieron, Y hicieron click"</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PANEL 5: CAMPOS A AGREGAR
+══════════════════════════════════════════════ -->
+<div class="pnl" id="p-campos">
+  <div class="sh">
+    <div class="ey" style="color:var(--purple)">Sección 05</div>
+    <h2>Campos a agregar y tablas a crear</h2>
+    <p>Sin romper nada existente. Todos los campos nuevos son opcionales o tienen valores default. Las dos tablas nuevas se crean manualmente en la UI de Airtable.</p>
+  </div>
+
+  <div class="field-new">
+    <div class="fn-head">
+      <span style="font-size:20px">🗄</span>
+      <h3>Tabla: <code>Directorio_Mapa</code> — Agregar campos</h3>
+      <span class="badge b-extend">🟡 Extender</span>
+    </div>
+    <div class="fn-fields">
+      <div class="ff">
+        <div class="ff-name">Subtipo</div>
+        <div class="ff-type">singleSelect</div>
+        <div class="ff-note">restaurante / bar / ropa / perfumeria / souvenirs / supermercado / belleza / alquiler / fotografia / otro</div>
+      </div>
+      <div class="ff">
+        <div class="ff-name">Tipo_Familia</div>
+        <div class="ff-type">singleSelect</div>
+        <div class="ff-note">A_reservable / B_comercio — define qué vitrina renderiza AliadoPage.tsx</div>
+      </div>
+      <div class="ff">
+        <div class="ff-name">Tipo_CTA</div>
+        <div class="ff-type">singleSelect</div>
+        <div class="ff-note">checkout_payu / whatsapp / formulario / catalogo / direccion — controla el botón principal</div>
+      </div>
+      <div class="ff">
+        <div class="ff-name">Horario_Atencion</div>
+        <div class="ff-type">singleLineText</div>
+        <div class="ff-note">Ej: "Lun-Sab 9am-9pm · Dom 10am-6pm"</div>
+      </div>
+      <div class="ff">
+        <div class="ff-name">Acepta_Reserva_Mesa</div>
+        <div class="ff-type">checkbox</div>
+        <div class="ff-note">Para restaurantes — activa el formulario de reserva de mesa</div>
+      </div>
+      <div class="ff">
+        <div class="ff-name">Acepta_Tarjeta</div>
+        <div class="ff-type">checkbox</div>
+        <div class="ff-note">Supermercados y comercios — info útil para el turista</div>
+      </div>
+      <div class="ff">
+        <div class="ff-name">Tiene_Delivery</div>
+        <div class="ff-type">checkbox</div>
+        <div class="ff-note">Restaurantes y supermercados que entregan</div>
+      </div>
+      <div class="ff">
+        <div class="ff-name">WhatsApp_Link</div>
+        <div class="ff-type">url</div>
+        <div class="ff-note">wa.me/+57XXXXXXXXXX?text=Hola%20[nombre] — generado automáticamente por Make</div>
+      </div>
+      <div class="ff">
+        <div class="ff-name">Raizal_Owned</div>
+        <div class="ff-type">checkbox</div>
+        <div class="ff-note">Badge 🌴 en la vitrina — ya existe como campo implícito, formalizar</div>
+      </div>
+      <div class="ff">
+        <div class="ff-name">Cover_Entrada</div>
+        <div class="ff-type">currency</div>
+        <div class="ff-note">Para bares y eventos — precio de entrada si aplica</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="field-new">
+    <div class="fn-head">
+      <span style="font-size:20px">🍽</span>
+      <h3>Tabla nueva: <code>Menu_Items</code> — Crear manualmente en UI</h3>
+      <span class="badge b-create">🔴 Crear nueva</span>
+    </div>
+    <div class="fn-fields">
+      <div class="ff"><div class="ff-name">Aliado_ID</div><div class="ff-type">Link → Directorio_Mapa</div><div class="ff-note">Qué negocio tiene este plato</div></div>
+      <div class="ff"><div class="ff-name">Nombre_Plato</div><div class="ff-type">singleLineText</div><div class="ff-note">Nombre del plato/bebida/combo</div></div>
+      <div class="ff"><div class="ff-name">Descripcion</div><div class="ff-type">multilineText</div><div class="ff-note">Ingredientes principales, notas</div></div>
+      <div class="ff"><div class="ff-name">Precio</div><div class="ff-type">currency (COP)</div><div class="ff-note">Precio actual</div></div>
+      <div class="ff"><div class="ff-name">Categoria_Menu</div><div class="ff-type">singleSelect</div><div class="ff-note">Entrada / Principal / Postre / Bebida / Especial_Raizal</div></div>
+      <div class="ff"><div class="ff-name">Foto_URL</div><div class="ff-type">url (Cloudinary)</div><div class="ff-note">Imagen del plato</div></div>
+      <div class="ff"><div class="ff-name">Es_Plato_Raizal</div><div class="ff-type">checkbox</div><div class="ff-note">Activa badge 🌴 en el menú digital</div></div>
+      <div class="ff"><div class="ff-name">Disponible</div><div class="ff-type">checkbox</div><div class="ff-note">Si está disponible hoy — el aliado lo controla</div></div>
+      <div class="ff"><div class="ff-name">Promo_Activa</div><div class="ff-type">singleLineText</div><div class="ff-note">Texto corto de promo si aplica: "2x1 hoy"</div></div>
+    </div>
+  </div>
+
+  <div class="field-new">
+    <div class="fn-head">
+      <span style="font-size:20px">👗</span>
+      <h3>Tabla nueva: <code>Catalogo_Productos</code> — Crear manualmente en UI</h3>
+      <span class="badge b-create">🔴 Crear nueva</span>
+    </div>
+    <div class="fn-fields">
+      <div class="ff"><div class="ff-name">Aliado_ID</div><div class="ff-type">Link → Directorio_Mapa</div><div class="ff-note">Qué negocio tiene este producto</div></div>
+      <div class="ff"><div class="ff-name">Nombre_Producto</div><div class="ff-type">singleLineText</div><div class="ff-note">Nombre visible al turista</div></div>
+      <div class="ff"><div class="ff-name">Descripcion</div><div class="ff-type">multilineText</div><div class="ff-note">Materiales, tallas, variantes</div></div>
+      <div class="ff"><div class="ff-name">Precio</div><div class="ff-type">currency (COP)</div><div class="ff-note">Precio regular</div></div>
+      <div class="ff"><div class="ff-name">Precio_Promo</div><div class="ff-type">currency (COP)</div><div class="ff-note">Precio con descuento si aplica — vacío si no</div></div>
+      <div class="ff"><div class="ff-name">Categoria</div><div class="ff-type">singleSelect</div><div class="ff-note">ropa / perfumeria / artesania / souvenir / accesorio / otro</div></div>
+      <div class="ff"><div class="ff-name">Fotos[]</div><div class="ff-type">multipleAttachments</div><div class="ff-note">Hasta 5 fotos del producto</div></div>
+      <div class="ff"><div class="ff-name">Disponible</div><div class="ff-type">checkbox</div><div class="ff-note">En stock / disponible ahora</div></div>
+      <div class="ff"><div class="ff-name">Etiquetas</div><div class="ff-type">multipleSelects</div><div class="ff-note">nuevo / oferta / popular / raizal / zona_franca</div></div>
+      <div class="ff"><div class="ff-name">WA_Consulta_Text</div><div class="ff-type">singleLineText</div><div class="ff-note">Texto pre-llenado WA: "Hola, vi [nombre] en GuanaGO, ¿está disponible?"</div></div>
+    </div>
+  </div>
+
+  <div class="field-new">
+    <div class="fn-head">
+      <span style="font-size:20px">💰</span>
+      <h3>Tabla: <code>Promociones</code> — Agregar campos de métricas</h3>
+      <span class="badge b-extend">🟡 Extender</span>
+    </div>
+    <div class="fn-fields">
+      <div class="ff"><div class="ff-name">Audiencia_Target</div><div class="ff-type">multipleSelects</div><div class="ff-note">en_isla / pre_viaje / ambas — controla la segmentación</div></div>
+      <div class="ff"><div class="ff-name">Canal_Distribucion</div><div class="ff-type">multipleSelects</div><div class="ff-note">push / email / whatsapp / in_app_banner / redes</div></div>
+      <div class="ff"><div class="ff-name">Notificados_Count</div><div class="ff-type">number</div><div class="ff-note">Cuántos usuarios recibieron la notif (auto por Make)</div></div>
+      <div class="ff"><div class="ff-name">Clicks_Count</div><div class="ff-type">number</div><div class="ff-note">Cuántos hicieron click al microsite (tracking)</div></div>
+      <div class="ff"><div class="ff-name">Reservas_Generadas</div><div class="ff-type">number</div><div class="ff-note">Conversiones directas atribuibles a la promo</div></div>
+      <div class="ff"><div class="ff-name">GP_Bono_Extra</div><div class="ff-type">number</div><div class="ff-note">GP adicionales que se emiten por usar esta promo (ej: +20)</div></div>
+      <div class="ff"><div class="ff-name">Imagen_Promo_URL</div><div class="ff-type">url (Cloudinary)</div><div class="ff-note">Imagen para el post en redes y notificación push</div></div>
+    </div>
+  </div>
+
+  <div class="ins-grid" style="margin-top:8px">
+    <div class="ins it">
+      <div class="il">⚠️ Recordatorio Airtable MCP</div>
+      <p><code>create_table</code> no existe en el MCP — las tablas <code>Menu_Items</code> y <code>Catalogo_Productos</code> se crean manualmente en la UI de Airtable. Luego se comparte el <code>tblXXXX</code> ID para conectar desde Make y el backend.</p>
+    </div>
+    <div class="ins igr">
+      <div class="il">Campos Directorio_Mapa nuevos = safe</div>
+      <p>Todos los campos nuevos son opcionales (no tienen validación requerida). Los 31 registros existentes no se rompen — simplemente quedan vacíos en los campos nuevos hasta ser llenados.</p>
+    </div>
+    <div class="ins ic">
+      <div class="il">⚠️ Campos privados — nunca exponer</div>
+      <p><code>Comision_Pactada</code>, <code>Saldo_Puntos_Empresa</code>, <code>Wallet_Hedera</code> en Directorio_Mapa. El endpoint público del backend debe filtrarlos en cada query antes de enviar a Firestore.</p>
+    </div>
+  </div>
+</div>
+
+<footer style="padding:20px 48px;border-top:1px solid var(--bs);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+  <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--teal)">🌴 GuanaGO · guanago.travel · Taxonomía de Vitrinas v1</div>
+  <div style="font-size:11px;color:var(--muted)">GuíaSAI S.A.S. · RNT 48674 · NIT 901013739-9 · San Andrés Islas · Junio 2026</div>
+</footer>
+
+<script>
+function sw(btn,id){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.pnl').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('p-'+id).classList.add('on');
+}
+function toggleFam(id){
+  const el=document.getElementById(id);
+  const body=el.querySelector('.fam-body');
+  const open=body.classList.contains('open');
+  body.classList.toggle('open',!open);
+  el.classList.toggle('open',!open);
+}
+</script>
+</body>
+</html>

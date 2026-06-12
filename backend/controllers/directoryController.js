@@ -16,6 +16,17 @@ const CACHE_TTL_MS = 55 * 60 * 1000; // 55 min (por debajo del TTL de URLs firma
 // Cache en memoria para no saturar Airtable en cada request
 let memCache = { data: null, ts: 0 };
 
+/** Genera un slug URL-safe desde el nombre comercial (fallback si ID_Slug está vacío) */
+function generarSlug(nombre) {
+  return (nombre || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')  // eliminar tildes
+    .replace(/[^a-z0-9\s-]/g, '')     // solo alfanumérico
+    .trim()
+    .replace(/\s+/g, '-');            // espacios → guión
+}
+
 /** Normaliza un record de Airtable al shape que espera el frontend */
 function normalizeRecord(r) {
   const f = r.fields ?? {};
@@ -28,8 +39,13 @@ function normalizeRecord(r) {
   else if (typeof f.Imagen === 'string') image = f.Imagen;
   else if (Array.isArray(f.Foto) && f.Foto[0]?.url) image = f.Foto[0].url;
 
+  const name = f.Nombre ?? f.Name ?? '';
+
   return {
     id:          r.id,
+    slug:        f.ID_Slug      ?? f.Slug        ?? generarSlug(name),
+    whatsapp:    f.WhatsApp     ?? f.Whatsapp    ?? '',
+    raizal:      f.Raizal_Owned === true || f.Raizal === true,
     name:        f.Nombre       ?? f.Name        ?? '',
     category:    f.Categoria    ?? f.Category    ?? 'General',
     latitude:    lat,
@@ -137,6 +153,31 @@ export const getDirectory = async (req, res, next) => {
     }
 
     res.json({ success: true, data: result, total: result.length, source });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── GET /api/directory/slug/:slug ─────────────────────────────────────────────
+// Busca un negocio por su slug (ID_Slug en Airtable o generado desde el nombre).
+// Usado por los micrositios públicos /aliado/:slug
+
+export const getPlaceBySlug = async (req, res, next) => {
+  try {
+    const { apiKey, baseId } = config.airtable;
+    if (!apiKey || !baseId) {
+      return res.status(503).json({ success: false, error: 'Airtable no configurado' });
+    }
+
+    const slug = (req.params.slug || '').toLowerCase();
+    const { data } = await getAll(apiKey, baseId);
+    const place = data.find(p => p.slug === slug);
+
+    if (!place) {
+      return res.status(404).json({ success: false, error: 'Aliado no encontrado' });
+    }
+
+    res.json({ success: true, data: place });
   } catch (err) {
     next(err);
   }

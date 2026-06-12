@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO · Sistema Operativo del Aliado</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root {
+  --bg:      #060d18;
+  --s1:      #0c1829;
+  --s2:      #101f34;
+  --s3:      #152540;
+  --teal:    #00d4b8;
+  --teal2:   #00a896;
+  --td:      rgba(0,212,184,.13);
+  --coral:   #ff6060;
+  --cd:      rgba(255,96,96,.13);
+  --gold:    #ffb703;
+  --gd:      rgba(255,183,3,.12);
+  --green:   #56e39f;
+  --grd:     rgba(86,227,159,.10);
+  --purple:  #b388ff;
+  --purd:    rgba(179,136,255,.12);
+  --blue:    #63b3ed;
+  --bld:     rgba(99,179,237,.11);
+  --sky:     #38bdf8;
+  --txt:     #ddeef8;
+  --muted:   #5d8098;
+  --border:  rgba(0,212,184,.14);
+  --bsoft:   rgba(255,255,255,.055);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden;min-height:100vh;}
+::selection{background:var(--td);}
+code{font-family:'Space Mono',monospace;font-size:11px;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px;color:var(--teal);}
+strong{font-weight:700;}
+
+/* ─── COVER ─── */
+.cover{
+  min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  padding:60px 56px;position:relative;overflow:hidden;
+  background:linear-gradient(160deg,var(--bg) 30%,#071825 70%,#040e14 100%);
+}
+.cover::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 70% at 85% 30%,rgba(0,212,184,.06),transparent),
+             radial-gradient(ellipse 40% 50% at 10% 80%,rgba(255,183,3,.04),transparent);
+  pointer-events:none;
+}
+.cv-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--td);border:1px solid rgba(0,212,184,.3);
+  border-radius:20px;padding:5px 14px;
+  font-family:'Space Mono',monospace;font-size:10px;
+  color:var(--teal);letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:20px;width:fit-content;
+}
+.cover h1{
+  font-size:clamp(32px,5vw,56px);font-weight:700;
+  line-height:1.05;margin-bottom:16px;
+  background:linear-gradient(135deg,var(--txt) 40%,var(--teal) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.cover p{font-size:16px;color:var(--muted);max-width:560px;line-height:1.65;margin-bottom:36px;}
+.cv-stats{display:flex;flex-wrap:wrap;gap:32px;}
+.cstat .n{font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:var(--teal);}
+.cstat .l{font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:1px;}
+.scroll-hint{
+  position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;
+  letter-spacing:1px;text-transform:uppercase;
+}
+.scroll-arrow{width:24px;height:24px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);animation:bounce 1.4s ease-in-out infinite;}
+@keyframes bounce{0%,100%{transform:rotate(45deg) translateY(0);}50%{transform:rotate(45deg) translateY(6px);}}
+
+/* ─── SECTION WRAPPER ─── */
+.section{padding:64px 56px;border-top:1px solid var(--bsoft);position:relative;}
+.section:first-of-type{border-top:none;}
+.s-label{
+  font-family:'Space Mono',monospace;font-size:10px;
+  letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;
+}
+.s-title{font-size:clamp(22px,3vw,34px);font-weight:700;line-height:1.15;margin-bottom:8px;}
+.s-sub{font-size:14px;color:var(--muted);max-width:640px;line-height:1.6;margin-bottom:36px;}
+
+/* ─── TIMELINE VERTICAL ─── */
+.timeline{position:relative;padding-left:40px;}
+.timeline::before{
+  content:'';position:absolute;left:14px;top:8px;bottom:8px;
+  width:2px;background:linear-gradient(180deg,var(--teal),var(--gold),var(--teal));
+  opacity:.25;
+}
+.tl-item{position:relative;margin-bottom:0;}
+.tl-item:last-child .tl-body{border-bottom:none;}
+.tl-dot{
+  position:absolute;left:-33px;top:22px;
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:700;z-index:1;
+}
+.tl-body{
+  background:var(--s1);border:1px solid var(--bsoft);
+  border-radius:14px;padding:22px 24px;
+  margin-bottom:12px;transition:border-color .2s;
+}
+.tl-body:hover{border-color:rgba(0,212,184,.25);}
+.tl-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;}
+.tl-icon{font-size:22px;flex-shrink:0;}
+.tl-num{
+  font-family:'Space Mono',monospace;font-size:10px;
+  letter-spacing:1px;margin-bottom:4px;
+}
+.tl-name{font-size:16px;font-weight:700;}
+.tl-sub{font-size:13px;color:var(--muted);line-height:1.5;}
+.tl-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+.tl-tasks{margin-top:12px;list-style:none;}
+.tl-tasks li{
+  font-size:12px;color:var(--muted);
+  padding:5px 0;border-bottom:1px solid var(--bsoft);
+  display:flex;align-items:flex-start;gap:8px;
+}
+.tl-tasks li:last-child{border-bottom:none;}
+.tl-tasks li::before{content:'→';color:var(--teal);flex-shrink:0;}
+.tl-tasks li.sky::before{color:var(--sky);}
+.tl-tasks li.gold::before{color:var(--gold);}
+.tl-tasks li.green::before{color:var(--green);}
+.tl-tasks li.coral::before{color:var(--coral);}
+
+/* ─── PILL ─── */
+.pill{display:inline-block;font-size:10px;padding:2px 9px;border-radius:20px;font-family:'Space Mono',monospace;font-weight:700;white-space:nowrap;}
+.pt{background:rgba(0,212,184,.15);color:var(--teal);}
+.pc{background:rgba(255,96,96,.15);color:var(--coral);}
+.pg{background:rgba(255,183,3,.15);color:var(--gold);}
+.pgr{background:rgba(86,227,159,.15);color:var(--green);}
+.pp{background:rgba(179,136,255,.15);color:var(--purple);}
+.pb{background:rgba(99,179,237,.15);color:var(--blue);}
+.pn{background:rgba(255,255,255,.07);color:var(--muted);}
+
+/* ─── VITRINA GRID ─── */
+.vitrina-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;}
+.vitrina-card{
+  background:var(--s1);border:1px solid var(--bsoft);
+  border-radius:14px;overflow:hidden;transition:all .25s;
+}
+.vitrina-card:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,212,184,.08);}
+.vc-header{padding:16px 18px 12px;border-bottom:1px solid var(--bsoft);}
+.vc-type{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.vc-name{font-size:16px;font-weight:700;}
+.vc-img{
+  height:90px;display:flex;align-items:center;justify-content:center;
+  font-size:36px;position:relative;overflow:hidden;
+}
+.vc-body{padding:14px 18px;}
+.vc-features{list-style:none;}
+.vc-features li{font-size:12px;color:var(--muted);padding:3px 0;display:flex;gap:6px;}
+.vc-features li::before{content:'✓';flex-shrink:0;}
+.vc-footer{padding:12px 18px;border-top:1px solid var(--bsoft);display:flex;justify-content:space-between;align-items:center;}
+.vc-gp{font-family:'Space Mono',monospace;font-size:11px;color:var(--gold);}
+
+/* ─── CAMPAIGN FUNNEL ─── */
+.funnel{display:flex;flex-direction:column;gap:0;max-width:640px;margin-bottom:28px;}
+.f-step{
+  display:grid;grid-template-columns:48px 1fr auto;
+  gap:14px;align-items:stretch;
+  background:var(--s1);border:1px solid var(--bsoft);
+  border-radius:0;padding:14px 18px;
+  border-bottom:none;position:relative;transition:border-color .2s;
+}
+.f-step:first-child{border-radius:12px 12px 0 0;}
+.f-step:last-child{border-radius:0 0 12px 12px;border-bottom:1px solid var(--bsoft);}
+.f-step:hover{border-color:rgba(0,212,184,.2);}
+.f-step:not(:first-child){margin-top:-1px;}
+.f-icon{font-size:22px;display:flex;align-items:center;justify-content:center;}
+.f-content .fn{font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:1px;margin-bottom:4px;}
+.f-content .ft{font-size:14px;font-weight:700;}
+.f-content .fd{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4;}
+.f-gp{display:flex;align-items:center;white-space:nowrap;}
+
+/* ─── GP BOARD ─── */
+.gp-board{background:var(--s1);border:1px solid var(--bsoft);border-radius:16px;overflow:hidden;margin-bottom:28px;}
+.gp-board-head{
+  padding:20px 24px;
+  background:linear-gradient(135deg,rgba(255,183,3,.07),transparent);
+  border-bottom:1px solid var(--bsoft);
+  display:flex;align-items:center;gap:14px;
+}
+.gp-board-head h3{font-size:18px;font-weight:700;}
+.gp-board-head .sub{font-size:13px;color:var(--muted);margin-top:2px;}
+.gp-rows{display:grid;}
+.gp-row{
+  display:grid;grid-template-columns:1fr 100px 120px 140px;
+  padding:11px 24px;border-bottom:1px solid var(--bsoft);
+  align-items:center;transition:background .15s;font-size:13px;
+}
+.gp-row:last-child{border-bottom:none;}
+.gp-row:hover{background:rgba(255,255,255,.02);}
+.gp-row.header{
+  font-size:10px;font-family:'Space Mono',monospace;
+  color:var(--muted);letter-spacing:1px;text-transform:uppercase;
+  background:var(--s2);padding-top:9px;padding-bottom:9px;
+}
+.gp-pts{font-family:'Space Mono',monospace;font-weight:700;color:var(--gold);font-size:14px;}
+
+/* ─── YEAR PROJECTIONS ─── */
+.year-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:28px;}
+.year-card{
+  background:var(--s1);border:1px solid var(--bsoft);
+  border-radius:14px;padding:20px;position:relative;overflow:hidden;
+  transition:all .2s;
+}
+.year-card:hover{border-color:rgba(0,212,184,.3);transform:translateY(-2px);}
+.year-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.yc1::before{background:var(--teal);}
+.yc2::before{background:var(--gold);}
+.yc3::before{background:var(--green);}
+.yc4::before{background:var(--purple);}
+.yr-label{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.yr-year{font-size:11px;font-weight:600;margin-bottom:12px;}
+.yr-rev{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;margin-bottom:4px;}
+.yr-rev.t{color:var(--teal);}
+.yr-rev.g{color:var(--gold);}
+.yr-rev.gr{color:var(--green);}
+.yr-rev.p{color:var(--purple);}
+.yr-items{list-style:none;margin-top:12px;}
+.yr-items li{font-size:11px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--bsoft);display:flex;justify-content:space-between;gap:8px;}
+.yr-items li:last-child{border-bottom:none;}
+.yr-items li span{color:var(--txt);font-weight:600;font-family:'Space Mono',monospace;font-size:11px;white-space:nowrap;}
+
+/* ─── INSIGHT ─── */
+.ins-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:28px;}
+.ins{border-radius:10px;padding:15px;border-left:3px solid;}
+.ins p{font-size:13px;line-height:1.55;}
+.ins .il{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;color:var(--muted);}
+.it{background:var(--td);border-color:var(--teal);}
+.ic{background:var(--cd);border-color:var(--coral);}
+.ig{background:var(--gd);border-color:var(--gold);}
+.igr{background:var(--grd);border-color:var(--green);}
+.ip{background:var(--purd);border-color:var(--purple);}
+
+/* ─── MAKE SCENARIO ─── */
+.sc{background:var(--s1);border:1px solid var(--bsoft);border-radius:12px;padding:18px;margin-bottom:12px;}
+.sc-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.sc-head h3{font-size:14px;font-weight:700;flex:1;}
+.sc-steps{display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
+.ss{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);border-radius:5px;padding:4px 9px;font-size:11px;}
+.sa{color:var(--teal);font-size:14px;font-weight:700;}
+
+/* ─── TABLE ─── */
+.tw{overflow-x:auto;border-radius:12px;border:1px solid var(--bsoft);margin-bottom:24px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:var(--s2);padding:11px 14px;text-align:left;font-weight:600;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--bsoft);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--bsoft);transition:background .15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:rgba(255,255,255,.02);}
+tbody td{padding:10px 14px;vertical-align:top;line-height:1.5;}
+
+/* ─── POST TEMPLATE ─── */
+.post-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:28px;}
+.post-card{
+  background:var(--s1);border:1px solid var(--bsoft);
+  border-radius:14px;overflow:hidden;transition:all .2s;
+}
+.post-card:hover{border-color:rgba(0,212,184,.3);}
+.post-visual{
+  height:110px;display:flex;align-items:center;justify-content:center;
+  font-size:40px;position:relative;
+}
+.post-body{padding:14px;}
+.post-type{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.post-title{font-size:14px;font-weight:700;margin-bottom:6px;}
+.post-copy{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px;}
+.post-tags{display:flex;flex-wrap:wrap;gap:4px;}
+
+/* ─── NAV FLOATER ─── */
+.nav-float{
+  position:fixed;right:20px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:8px;z-index:100;
+}
+.nav-dot{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--s2);border:1px solid var(--bsoft);
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;position:relative;
+}
+.nav-dot:hover{border-color:var(--teal);background:var(--td);}
+.nav-dot.active{border-color:var(--teal);background:var(--td);}
+.nav-dot .tooltip{
+  position:absolute;right:44px;background:var(--s3);border:1px solid var(--bsoft);
+  border-radius:6px;padding:4px 10px;font-size:11px;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.nav-dot:hover .tooltip{opacity:1;}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:700px){
+  .cover,.section{padding-left:22px;padding-right:22px;}
+  .vitrina-grid,.gp-row{grid-template-columns:1fr;}
+  .gp-row.header{display:none;}
+  .year-cards{grid-template-columns:1fr 1fr;}
+  .nav-float{display:none;}
+  .cover h1{font-size:28px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV FLOTANTE -->
+<nav class="nav-float" id="navFloat">
+  <div class="nav-dot active" onclick="scrollTo('cover')" data-s="cover"><span>🌊</span><span class="tooltip">Portada</span></div>
+  <div class="nav-dot" onclick="scrollTo('activacion')" data-s="activacion"><span>⚡</span><span class="tooltip">Activación</span></div>
+  <div class="nav-dot" onclick="scrollTo('vitrina')" data-s="vitrina"><span>🏪</span><span class="tooltip">Vitrina Virtual</span></div>
+  <div class="nav-dot" onclick="scrollTo('campana')" data-s="campana"><span>📣</span><span class="tooltip">Campaña</span></div>
+  <div class="nav-dot" onclick="scrollTo('gp')" data-s="gp"><span>🌴</span><span class="tooltip">GuanaPoints</span></div>
+  <div class="nav-dot" onclick="scrollTo('proyeccion')" data-s="proyeccion"><span>📈</span><span class="tooltip">Proyección</span></div>
+  <div class="nav-dot" onclick="scrollTo('make')" data-s="make"><span>⚙️</span><span class="tooltip">Make + CRM</span></div>
+</nav>
+
+<!-- ═══════════ PORTADA ═══════════ -->
+<div class="cover" id="cover">
+  <div class="cv-eyebrow">🌴 GuanaGO · Sistema Operativo del Aliado</div>
+  <h1>Del registro<br>a la rentabilidad<br>permanente</h1>
+  <p>El mapa completo de lo que ocurre cuando un negocio se une a GuanaGO: activación, vitrina virtual, campaña automática, GuanaPoints y proyección comercial por años — sin tokens, sin complejidad.</p>
+  <div class="cv-stats">
+    <div class="cstat"><div class="n">7</div><div class="l">Fases del ciclo</div></div>
+    <div class="cstat"><div class="n">D+1</div><div class="l">Microsite live</div></div>
+    <div class="cstat"><div class="n">∞</div><div class="l">Vitrina activa 24/7</div></div>
+    <div class="cstat"><div class="n">GP</div><div class="l">Sin tokens · Fase 1</div></div>
+  </div>
+  <div class="scroll-hint"><div class="scroll-arrow"></div>scroll</div>
+</div>
+
+<!-- ═══════════ SECCIÓN 1: ACTIVACIÓN ═══════════ -->
+<div class="section" id="activacion">
+  <div class="s-label" style="color:var(--teal)">Sección 01 · Activación</div>
+  <div class="s-title">Qué ocurre cuando un aliado se inscribe</div>
+  <div class="s-sub">El flujo completo desde que firma hasta que su microsite aparece en el mapa y está listo para recibir reservas. Sky ejecuta el lado técnico; el aliado solo entrega información.</div>
+
+  <div class="timeline">
+
+    <div class="tl-item">
+      <div class="tl-dot" style="border-color:var(--teal);color:var(--teal)">1</div>
+      <div class="tl-body">
+        <div class="tl-head">
+          <div class="tl-icon">📋</div>
+          <div>
+            <div class="tl-num" style="color:var(--teal)">DÍA 0 · Inscripción</div>
+            <div class="tl-name">El aliado completa el formulario de registro</div>
+            <div class="tl-sub">Formulario web o recolección presencial. Toda la info que necesitamos para crear el microsite.</div>
+          </div>
+        </div>
+        <ul class="tl-tasks">
+          <li>Nombre comercial + tipo de negocio (alojamiento / tour / restaurante / taxi / cultural)</li>
+          <li>Teléfono WhatsApp activo + email</li>
+          <li>Dirección física o coordenadas GPS</li>
+          <li>Mínimo 3 fotos del negocio (se puede recibir por WhatsApp)</li>
+          <li>Lista de servicios/productos con precios</li>
+          <li>Horario de atención</li>
+          <li>¿Es negocio Raizal? → activa sello 🌴</li>
+          <li class="gold">Plan elegido: Explorador $0 / Activo $49.900 / Premium $129.900</li>
+        </ul>
+        <div class="tl-tags">
+          <span class="pill pt">Formulario web</span>
+          <span class="pill pn">WhatsApp como alternativa</span>
+          <span class="pill pg">~15 min del aliado</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="border-color:var(--sky);color:var(--sky)">2</div>
+      <div class="tl-body">
+        <div class="tl-head">
+          <div class="tl-icon">🗄</div>
+          <div>
+            <div class="tl-num" style="color:var(--sky)">DÍA 0 · Automático via Make.com</div>
+            <div class="tl-name">Registro en Airtable + generación del slug</div>
+            <div class="tl-sub">Make crea el record en <code>Directorio_Mapa</code>, genera el ID_Slug y lo escribe de vuelta.</div>
+          </div>
+        </div>
+        <ul class="tl-tasks">
+          <li class="sky">Nuevo record en <code>Directorio_Mapa</code> con todos los campos del formulario</li>
+          <li class="sky">Auto-generación ID_Slug: <code>"Bushi Food" → "bushi-food"</code></li>
+          <li class="sky">Subida de fotos a Cloudinary → URLs guardadas en Airtable</li>
+          <li class="sky">Record en <code>Conversaciones_CRM</code>: tipo "Aliado Nuevo"</li>
+          <li class="sky">Notificación a Sky en Telegram: "Nuevo aliado: [nombre]"</li>
+        </ul>
+        <div class="tl-tags">
+          <span class="pill pb">Make.com automático</span>
+          <span class="pill pt">Airtable appiReH55Qhrbv4Lk</span>
+          <span class="pill pn">0 min Sky</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="border-color:var(--gold);color:var(--gold)">3</div>
+      <div class="tl-body">
+        <div class="tl-head">
+          <div class="tl-icon">🔥</div>
+          <div>
+            <div class="tl-num" style="color:var(--gold)">DÍA 0 · Automático via Make.com</div>
+            <div class="tl-name">Microsite creado en Firestore + usuario en Firebase Auth</div>
+            <div class="tl-sub">El microsite queda disponible en <code>guanago.travel/[slug]</code> sin intervención técnica.</div>
+          </div>
+        </div>
+        <ul class="tl-tasks">
+          <li class="gold">Documento creado en <code>Firestore/aliados/{slug}</code> con datos públicos del aliado</li>
+          <li class="gold">Usuario Firebase Auth creado con rol <code>Aliado</code> — credenciales enviadas por email</li>
+          <li class="gold">Pin agregado al mapa Mapbox (lat/lon desde Airtable)</li>
+          <li class="gold">Microsite accesible en <code>guanago.travel/[slug]</code> — ya indexable por Google</li>
+          <li class="gold">⚠️ Campos privados filtrados: Comision_Pactada, Saldo_GP_Empresa NUNCA van a Firestore</li>
+        </ul>
+        <div class="tl-tags">
+          <span class="pill pgr">Microsite live</span>
+          <span class="pill pg">Pin en mapa</span>
+          <span class="pill pt">Firebase Auth activo</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="border-color:var(--green);color:var(--green)">4</div>
+      <div class="tl-body">
+        <div class="tl-head">
+          <div class="tl-icon">📦</div>
+          <div>
+            <div class="tl-num" style="color:var(--green)">DÍA 1–3 · Sky</div>
+            <div class="tl-name">Kit físico + email de bienvenida + capacitación 30 min</div>
+            <div class="tl-sub">La activación física. Sky prepara e imprime el kit; se entrega en el local o por mensajero.</div>
+          </div>
+        </div>
+        <ul class="tl-tasks">
+          <li class="green">Imprimir sticker QR circular 10cm con URL del microsite</li>
+          <li class="green">Imprimir sticker vitrina "Recomendado GuanaGO"</li>
+          <li class="green">3 tarjetas de mesa con QR + mensaje GuanaPoints</li>
+          <li class="green">Email bienvenida: credenciales panel + link video tutorial + guía rápida PDF</li>
+          <li class="green">Sesión Zoom/presencial 30 min: recorrido del panel aliado</li>
+        </ul>
+        <div class="tl-tags">
+          <span class="pill pgr">Kit impreso</span>
+          <span class="pill pn">Email automático</span>
+          <span class="pill pt">Capacitación 30 min</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="border-color:var(--coral);color:var(--coral)">5</div>
+      <div class="tl-body">
+        <div class="tl-head">
+          <div class="tl-icon">📣</div>
+          <div>
+            <div class="tl-num" style="color:var(--coral)">DÍA 3–5 · GuanaGO hace</div>
+            <div class="tl-name">Lanzamiento público del aliado — primera campaña editorial</div>
+            <div class="tl-sub">El microsite se convierte en elemento de campaña. GuanaGO publica el aliado en redes. El turista empieza a llegar.</div>
+          </div>
+        </div>
+        <ul class="tl-tasks">
+          <li class="coral">Post de bienvenida en Instagram + Facebook: "Nuevo aliado 🌴 [Nombre]"</li>
+          <li class="coral">Story con encuesta: "¿Ya conocés [nombre]? Tap para ver su perfil"</li>
+          <li class="coral">Publicación del microsite en la parrilla editorial de esa semana</li>
+          <li class="coral">Notificación push a usuarios con intereses afines (si FCM está activo)</li>
+          <li class="coral">Microsite indexado en Google Search Console</li>
+        </ul>
+        <div class="tl-tags">
+          <span class="pill pc">Instagram + Facebook</span>
+          <span class="pill pn">Push notifications</span>
+          <span class="pill pt">SEO indexado</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="border-color:var(--purple);color:var(--purple)">6</div>
+      <div class="tl-body">
+        <div class="tl-head">
+          <div class="tl-icon">🌊</div>
+          <div>
+            <div class="tl-num" style="color:var(--purple)">SEMANA 2+ · Operación continua</div>
+            <div class="tl-name">El ciclo se automatiza — aliado opera su panel autónomamente</div>
+            <div class="tl-sub">A partir de aquí, el aliado controla su vitrina. GuanaGO sigue generando tráfico pasivo con cada campaña editorial.</div>
+          </div>
+        </div>
+        <ul class="tl-tasks">
+          <li>El aliado actualiza precios, fotos y disponibilidad desde su panel Partner</li>
+          <li>Las reservas llegan con notificación automática por email + WhatsApp</li>
+          <li>GuanaPoints se emiten y registran automáticamente en cada transacción</li>
+          <li>Cada semana el aliado aparece en al menos 1 post de la parrilla editorial de GuanaGO</li>
+          <li class="gold">Reporte mensual automático: reservas, GP emitidos, ingresos — enviado por email el día 1 del mes</li>
+        </ul>
+        <div class="tl-tags">
+          <span class="pill pp">Autónomo</span>
+          <span class="pill pgr">Ciclo sin fin</span>
+          <span class="pill pg">Reporte mensual auto</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ SECCIÓN 2: VITRINA VIRTUAL ═══════════ -->
+<div class="section" id="vitrina">
+  <div class="s-label" style="color:var(--gold)">Sección 02 · Vitrina Virtual</div>
+  <div class="s-title">El microsite como vitrina 24/7</div>
+  <div class="s-sub">Sin importar si el negocio es un cuarto de cabaña, un tour en kayak, un plato de rondón o un taller de palma tejida — la vitrina virtual tiene la misma estructura base adaptada al tipo. Siempre genera rentabilidad.</div>
+
+  <!-- ANATOMÍA DE LA VITRINA -->
+  <div class="ins-grid" style="margin-bottom:32px">
+    <div class="ins it">
+      <div class="il">Qué es</div>
+      <p>Una página propia en <code>guanago.travel/[slug]</code> con URL permanente, indexable, compartible. El aliado no necesita web propia — esta ES su web.</p>
+    </div>
+    <div class="ins ig">
+      <div class="il">Por qué genera rentabilidad</div>
+      <p>Aparece en búsquedas de Google, en el mapa de la app, en posts de redes, en itinerarios del chatbot IA. Tráfico pasivo 24/7 sin que el aliado haga nada.</p>
+    </div>
+    <div class="ins igr">
+      <div class="il">Lo que diferencia del resto</div>
+      <p>Sello 🌴 Raizal, integración GuanaPoints, escáner QR para check-in, reseñas verificadas de usuarios reales de la app. Ninguna OTA ofrece esto en San Andrés.</p>
+    </div>
+    <div class="ins ip">
+      <div class="il">Proyección comercial multi-año</div>
+      <p>Cada reseña sube el ranking en la app. Cada GP emitido crea un cliente que regresa. El historial de ventas construye un perfil que atrae más turistas orgánicamente.</p>
+    </div>
+  </div>
+
+  <!-- VITRINA POR TIPO -->
+  <div class="vitrina-grid">
+
+    <div class="vitrina-card">
+      <div class="vc-header">
+        <div class="vc-type" style="color:var(--gold)">Alojamiento</div>
+        <div class="vc-name">🏨 Cabaña / Posada / Casa</div>
+      </div>
+      <div class="vc-img" style="background:linear-gradient(135deg,rgba(255,183,3,.08),rgba(0,212,184,.05))">🌴🏡</div>
+      <div class="vc-body">
+        <ul class="vc-features">
+          <li>Galería fotos Cloudinary (hasta 12)</li>
+          <li>Calendario de disponibilidad en tiempo real</li>
+          <li>Precios por noche + por huésped (lógica dinámica)</li>
+          <li>Formulario de reserva → PayU directo</li>
+          <li>Reseñas verificadas con estrellas</li>
+          <li>Mapa de ubicación exacta</li>
+          <li>Sello 🌴 si es Raizal-owned</li>
+          <li>Servicios incluidos (desayuno, WiFi, transfer)</li>
+        </ul>
+      </div>
+      <div class="vc-footer">
+        <span class="pill pg">Reserva directa sin OTA</span>
+        <span class="vc-gp">+1 GP/$1.000</span>
+      </div>
+    </div>
+
+    <div class="vitrina-card">
+      <div class="vc-header">
+        <div class="vc-type" style="color:var(--teal)">Tour / Náutico</div>
+        <div class="vc-name">🤿 Tour, Snorkel, Velero, Kayak</div>
+      </div>
+      <div class="vc-img" style="background:linear-gradient(135deg,rgba(0,212,184,.08),rgba(99,179,237,.05))">🌊⛵</div>
+      <div class="vc-body">
+        <ul class="vc-features">
+          <li>Video o galería del tour en acción</li>
+          <li>Horarios y punto de salida</li>
+          <li>Barra de cupo disponible (en tiempo real)</li>
+          <li>Precio por persona — lógica jet ski especial</li>
+          <li>Itinerario detallado del tour</li>
+          <li>¿Qué incluye / no incluye?</li>
+          <li>Botón reservar + selección de fecha</li>
+          <li>Escáner QR para check-in en el muelle</li>
+        </ul>
+      </div>
+      <div class="vc-footer">
+        <span class="pill pt">Cupo cerrado automático</span>
+        <span class="vc-gp">+1 GP/$1.000</span>
+      </div>
+    </div>
+
+    <div class="vitrina-card">
+      <div class="vc-header">
+        <div class="vc-type" style="color:var(--coral)">Restaurante / Gastronomía</div>
+        <div class="vc-name">🍽 Cocina isleña, ceviche, rondón</div>
+      </div>
+      <div class="vc-img" style="background:linear-gradient(135deg,rgba(255,96,96,.08),rgba(255,183,3,.05))">🦞🌶</div>
+      <div class="vc-body">
+        <ul class="vc-features">
+          <li>Menú digital completo (foto + precio + descripción)</li>
+          <li>Platos Raizal marcados especialmente 🌴</li>
+          <li>Reserva de mesa (fecha, hora, personas)</li>
+          <li>Horarios de atención</li>
+          <li>Promoción activa destacada (si la hay)</li>
+          <li>Link WhatsApp directo</li>
+          <li>Reseñas verificadas</li>
+          <li>Ubicación + mapa de llegada</li>
+        </ul>
+      </div>
+      <div class="vc-footer">
+        <span class="pill pc">Menú digital sin costo</span>
+        <span class="vc-gp">+1 GP/$1.000</span>
+      </div>
+    </div>
+
+    <div class="vitrina-card">
+      <div class="vc-header">
+        <div class="vc-type" style="color:var(--green)">Cultural / Artesanía</div>
+        <div class="vc-name">🥥 Coco ART, música, historia Kriol</div>
+      </div>
+      <div class="vc-img" style="background:linear-gradient(135deg,rgba(86,227,159,.08),rgba(255,183,3,.06))">🥥✋</div>
+      <div class="vc-body">
+        <ul class="vc-features">
+          <li>Video del artesano / proceso en acción</li>
+          <li>Historia del oficio en Kriol + español</li>
+          <li>Talleres disponibles con cupo y precio</li>
+          <li>Galería de piezas a la venta (tienda virtual)</li>
+          <li>Sello "Raizal Ancestral" 🌴 prominente</li>
+          <li>+100 GP por completar experiencia cultural</li>
+          <li>Experiencia exclusiva — no disponible en Booking</li>
+          <li>Botón reservar taller → voucher QR</li>
+        </ul>
+      </div>
+      <div class="vc-footer">
+        <span class="pill pgr">Solo existe en GuanaGO</span>
+        <span class="vc-gp">+100 GP bono cultural</span>
+      </div>
+    </div>
+
+    <div class="vitrina-card">
+      <div class="vc-header">
+        <div class="vc-type" style="color:var(--purple)">Taxi / Traslado</div>
+        <div class="vc-name">🚗 Transfer, mototaxi, taxi cooperativa</div>
+      </div>
+      <div class="vc-img" style="background:linear-gradient(135deg,rgba(179,136,255,.08),rgba(0,212,184,.05))">🚗🗺</div>
+      <div class="vc-body">
+        <ul class="vc-features">
+          <li>Calculadora de tarifa por zona (ya existe Taxi.tsx)</li>
+          <li>Tarifas fijas: aeropuerto, hoteles, playas</li>
+          <li>Solicitud directa por WhatsApp o formulario</li>
+          <li>Horario de disponibilidad</li>
+          <li>Reseñas de puntualidad</li>
+          <li>Sello Raizal si aplica</li>
+        </ul>
+      </div>
+      <div class="vc-footer">
+        <span class="pill pp">Calculadora ya construida</span>
+        <span class="vc-gp">+1 GP/$1.000</span>
+      </div>
+    </div>
+
+    <div class="vitrina-card" style="border:1px dashed rgba(255,255,255,.12);background:rgba(255,255,255,.02)">
+      <div class="vc-header">
+        <div class="vc-type" style="color:var(--muted)">Expandible</div>
+        <div class="vc-name" style="color:var(--muted)">+ Cualquier producto o servicio</div>
+      </div>
+      <div class="vc-img" style="background:rgba(255,255,255,.02)">➕</div>
+      <div class="vc-body">
+        <ul class="vc-features" style="color:var(--muted)">
+          <li>Tienda de artesanías (solo fotos + precio)</li>
+          <li>Spa / bienestar / recuperación deportiva</li>
+          <li>Alquiler de equipos (bikes, kayaks, snorkel)</li>
+          <li>Fotografía turística</li>
+          <li>Cualquier servicio con precio fijo o variable</li>
+          <li>La vitrina es el contenedor — el tipo define el layout</li>
+        </ul>
+      </div>
+      <div class="vc-footer">
+        <span class="pill pn">Nuevo tipo en AliadoPage.tsx</span>
+        <span class="vc-gp" style="color:var(--muted)">+GP siempre</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ SECCIÓN 3: CAMPAÑA ═══════════ -->
+<div class="section" id="campana">
+  <div class="s-label" style="color:var(--coral)">Sección 03 · Campaña</div>
+  <div class="s-title">El microsite como elemento de campaña</div>
+  <div class="s-sub">Cada microsite genera automáticamente material de campaña: posts, stories, contenido para parrilla editorial. El aliado no necesita saber de marketing — GuanaGO opera el canal.</div>
+
+  <!-- FUNNEL DEL TURISTA -->
+  <div style="margin-bottom:8px;font-size:13px;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Funnel del turista desde campaña hasta GP</div>
+  <div class="funnel">
+    <div class="f-step">
+      <div class="f-icon">📱</div>
+      <div class="f-content"><div class="fn">TOQUE 1 · Redes sociales</div><div class="ft">Post / Reel / Story de GuanaGO</div><div class="fd">El turista ve el negocio del aliado en Instagram, TikTok o Facebook. Imagen atractiva, precio visible, CTA claro.</div></div>
+      <div class="f-gp"><span class="pill pn">0 GP aún</span></div>
+    </div>
+    <div class="f-step">
+      <div class="f-icon">🔗</div>
+      <div class="f-content"><div class="fn">TOQUE 2 · Click al microsite</div><div class="ft">guanago.travel/[slug]</div><div class="fd">Link en bio o sticker de story lleva directo al microsite. El turista ve galería, precios, reseñas y disponibilidad real.</div></div>
+      <div class="f-gp"><span class="pill pn">0 GP aún</span></div>
+    </div>
+    <div class="f-step">
+      <div class="f-icon">🗺</div>
+      <div class="f-content"><div class="fn">TOQUE 3 · Mapa + Chatbot</div><div class="ft">El aliado aparece en el mapa interactivo</div><div class="fd">El chatbot IA recomienda el negocio según el perfil del turista. "Buscas comer local auténtico? Mira Bushi Food."</div></div>
+      <div class="f-gp"><span class="pill pn">0 GP aún</span></div>
+    </div>
+    <div class="f-step">
+      <div class="f-icon">💳</div>
+      <div class="f-content"><div class="fn">TOQUE 4 · Reserva + Pago</div><div class="ft">Checkout via PayU — comprobado en producción</div><div class="fd">Turista paga. Voucher QR generado en Firestore. Aliado recibe notificación. CRM actualizado automáticamente.</div></div>
+      <div class="f-gp"><span class="pill pg">+GP emitidos</span></div>
+    </div>
+    <div class="f-step">
+      <div class="f-icon">🌴</div>
+      <div class="f-content"><div class="fn">TOQUE 5 · Experiencia</div><div class="ft">Check-in con escáner QR del aliado</div><div class="fd">El aliado escanea el voucher en su panel Partner. El turista vive la experiencia. Señal de satisfacción registrada.</div></div>
+      <div class="f-gp"><span class="pill pg">GP confirmados</span></div>
+    </div>
+    <div class="f-step">
+      <div class="f-icon">⭐</div>
+      <div class="f-content"><div class="fn">TOQUE 6 · Reseña</div><div class="ft">+30 GP por reseña verificada</div><div class="fd">La reseña aparece en el microsite del aliado. Mejora su ranking en el directorio. El próximo turista la lee y reserva.</div></div>
+      <div class="f-gp"><span class="pill pgr">+30 GP más</span></div>
+    </div>
+    <div class="f-step">
+      <div class="f-icon">🔄</div>
+      <div class="f-content"><div class="fn">TOQUE 7 · Regreso o Referido</div><div class="ft">El turista vuelve o recomienda</div><div class="fd">Con GP acumulados, el turista tiene razón para volver. Y comparte el microsite del aliado con amigos que vienen a la isla.</div></div>
+      <div class="f-gp"><span class="pill pgr">Ciclo ∞</span></div>
+    </div>
+  </div>
+
+  <!-- TIPOS DE POST AUTOMÁTICOS -->
+  <div class="s-title" style="font-size:20px;margin-bottom:8px;margin-top:32px">Posts que genera cada microsite</div>
+  <div class="s-sub" style="margin-bottom:20px">GuanaGO produce estos formatos para cada aliado activo — se nutren de los datos del microsite. El aliado no escribe nada.</div>
+
+  <div class="post-grid">
+    <div class="post-card">
+      <div class="post-visual" style="background:linear-gradient(135deg,var(--td),rgba(0,0,0,0))">🏪✨</div>
+      <div class="post-body">
+        <div class="post-type" style="color:var(--teal)">Lanzamiento · Semana 1</div>
+        <div class="post-title">Bienvenida al nuevo aliado</div>
+        <div class="post-copy">"🌴 [Nombre] ya está en GuanaGO. Tours / Cocina / Alojamiento Raizal a un tap de distancia. Reserva en el link."</div>
+        <div class="post-tags">
+          <span class="pill pt">Feed + Story</span>
+          <span class="pill pn">Instagram + FB</span>
+        </div>
+      </div>
+    </div>
+    <div class="post-card">
+      <div class="post-visual" style="background:linear-gradient(135deg,var(--gd),rgba(0,0,0,0))">📸🌊</div>
+      <div class="post-body">
+        <div class="post-type" style="color:var(--gold)">Showcase · Recurrente</div>
+        <div class="post-title">El servicio en acción</div>
+        <div class="post-copy">"Así es un día de tour con [nombre] 🤿. Salida 8am desde el muelle. Cupo: 12 personas. Precio: $X COP. Gana GuanaPoints 🌴."</div>
+        <div class="post-tags">
+          <span class="pill pg">Reel 30s</span>
+          <span class="pill pn">TikTok + Reels</span>
+        </div>
+      </div>
+    </div>
+    <div class="post-card">
+      <div class="post-visual" style="background:linear-gradient(135deg,var(--cd),rgba(0,0,0,0))">⚡🔥</div>
+      <div class="post-body">
+        <div class="post-type" style="color:var(--coral)">Oferta Flash · Semanal</div>
+        <div class="post-title">Promoción del aliado</div>
+        <div class="post-copy">"⏰ Solo hoy: [Oferta de [Nombre]]. Reserva antes de las 8pm. Código activo en app. + doble GP esta noche."</div>
+        <div class="post-tags">
+          <span class="pill pc">Story 24h</span>
+          <span class="pill pg">Urgencia</span>
+        </div>
+      </div>
+    </div>
+    <div class="post-card">
+      <div class="post-visual" style="background:linear-gradient(135deg,var(--grd),rgba(0,0,0,0))">🥥💬</div>
+      <div class="post-body">
+        <div class="post-type" style="color:var(--green)">Cultural · Raizal</div>
+        <div class="post-title">La historia detrás del negocio</div>
+        <div class="post-copy">"'Di eena mi lang' — en Kriol, 'ven a mi local'. Conocé la historia de [Nombre], negocio Raizal de [N] generaciones. 🌴"</div>
+        <div class="post-tags">
+          <span class="pill pgr">Carrusel 5 slides</span>
+          <span class="pill pn">Instagram</span>
+        </div>
+      </div>
+    </div>
+    <div class="post-card">
+      <div class="post-visual" style="background:linear-gradient(135deg,var(--purd),rgba(0,0,0,0))">⭐💬</div>
+      <div class="post-body">
+        <div class="post-type" style="color:var(--purple)">Social Proof · Reseñas</div>
+        <div class="post-title">Testimonio de turista real</div>
+        <div class="post-copy">"'⭐⭐⭐⭐⭐ La mejor experiencia del viaje' — [Nombre turista], [ciudad]. Verificado en GuanaGO. ¿Vos cuándo venís?"</div>
+        <div class="post-tags">
+          <span class="pill pp">Post estático</span>
+          <span class="pill pn">FB + Instagram</span>
+        </div>
+      </div>
+    </div>
+    <div class="post-card">
+      <div class="post-visual" style="background:linear-gradient(135deg,var(--bld),rgba(0,0,0,0))">🗺🌴</div>
+      <div class="post-body">
+        <div class="post-type" style="color:var(--blue)">Itinerario · Combo</div>
+        <div class="post-title">El aliado en un itinerario completo</div>
+        <div class="post-copy">"Plan perfecto día 2 en San Andrés: mañana tour con [X], tarde cocina en [Y], noche RIMM Caribbean Night. Todo en la app."</div>
+        <div class="post-tags">
+          <span class="pill pb">Carrusel</span>
+          <span class="pill pn">Cross-aliados</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAND / VITRINA FÍSICA -->
+  <div class="s-title" style="font-size:20px;margin-bottom:8px">El stand físico = extensión de la vitrina digital</div>
+  <div class="s-sub" style="margin-bottom:20px">Para eventos, ferias, aeropuerto, RIMM Caribbean Night. El mismo QR del microsite convierte el stand físico en una tienda online instantánea.</div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Elemento físico</th><th>Qué hace</th><th>Conectado con</th></tr></thead>
+      <tbody>
+        <tr><td>🔲 Sticker QR vitrina</td><td>Turista lo escanea → microsite del aliado en su celular</td><td><code>guanago.travel/[slug]</code></td></tr>
+        <tr><td>🃏 Tarjeta de mesa</td><td>En restaurante / lobby hotel: "Gana GuanaPoints aquí"</td><td>CTA al microsite + GP</td></tr>
+        <tr><td>🖨 Banner de evento</td><td>En stand físico: "Reserva online — paga ahora — voucher QR"</td><td>PayU checkout directo</td></tr>
+        <tr><td>📱 Tablet del aliado</td><td>Demo en vivo del microsite al turista cara a cara</td><td>Panel aliado en tiempo real</td></tr>
+        <tr><td>📦 Empaque / souvenir</td><td>QR en empaque de artesanía → microsite para comprar más</td><td>Tienda virtual del aliado</td></tr>
+        <tr><td>🏷 Sello "GuanaGO Aliado"</td><td>En vitrina del local → genera confianza al turista que ya conoce la app</td><td>Reconocimiento de marca</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════ SECCIÓN 4: GUANAPOINTS ═══════════ -->
+<div class="section" id="gp">
+  <div class="s-label" style="color:var(--gold)">Sección 04 · Programa de Lealtad</div>
+  <div class="s-title">GuanaPoints — Fase 1<br>Sin tokens. Caja registradora desde el día 1.</div>
+  <div class="s-sub">Un sistema de millas/recompensas centralizado en Firestore + Airtable. El aliado absorbe el costo marginal en especie. GuanaGO emite, registra y liquida. Primeras victorias para el turista en los primeros 10 minutos de uso.</div>
+
+  <!-- MECÁNICA PARA EL ALIADO -->
+  <div class="ins-grid">
+    <div class="ins it">
+      <div class="il">El aliado no paga cash por GP</div>
+      <p>GuanaGO emite los puntos. El aliado absorbe el canje en especie: un postre, un descuento de $5.000, una foto gratis. Su costo marginal es mínimo, su fidelización es máxima.</p>
+    </div>
+    <div class="ins ig">
+      <div class="il">Analogía LifeMiles</div>
+      <p>Como Avianca y sus aliados: el pasajero acumula millas volando o comprando en partners. El aliado (la aerolínea) absorbe el canje. El viajero vuelve por los puntos.</p>
+    </div>
+    <div class="ins igr">
+      <div class="il">Victoria rápida para el turista</div>
+      <p>Registro: +50 GP inmediatos. Primera reserva: +100 GP. Con 200 GP ya puede canjear el primer beneficio. Eso ocurre en la primera visita — antes de salir del aeropuerto.</p>
+    </div>
+    <div class="ins ic">
+      <div class="il">Lo que impulsa la caja del aliado</div>
+      <p>El turista con GP acumulados tiene razón para volver al mismo aliado o probar otro del ecosistema. Cada GP emitido es una promesa de regreso que el aliado recibe gratis.</p>
+    </div>
+  </div>
+
+  <!-- TABLA DE EMISIÓN -->
+  <div class="gp-board">
+    <div class="gp-board-head">
+      <div>🌴</div>
+      <div>
+        <h3>Mecánica de Emisión — Fase 1</h3>
+        <div class="sub">Centralizado · Firestore + Airtable · Sin blockchain</div>
+      </div>
+    </div>
+    <div class="gp-rows">
+      <div class="gp-row header">
+        <div>Acción del usuario</div><div>GP emitidos</div><div>Quién los emite</div><div>Registrado en</div>
+      </div>
+      <div class="gp-row"><div>Registro en app</div><div class="gp-pts">+50 GP</div><div><span class="pill pt">GuanaGO</span></div><div>Firestore + Airtable Log</div></div>
+      <div class="gp-row"><div>Completar perfil</div><div class="gp-pts">+25 GP</div><div><span class="pill pt">GuanaGO</span></div><div>Firestore + Airtable Log</div></div>
+      <div class="gp-row"><div>Primera reserva pagada</div><div class="gp-pts">+100 GP</div><div><span class="pill pt">GuanaGO</span></div><div>Firestore + Airtable Log</div></div>
+      <div class="gp-row"><div>Gasto: $1.000 COP</div><div class="gp-pts">+1 GP</div><div><span class="pill pt">GuanaGO</span></div><div>Auto post-PayU</div></div>
+      <div class="gp-row"><div>Reseña verificada</div><div class="gp-pts">+30 GP</div><div><span class="pill pt">GuanaGO</span></div><div>Firestore trigger</div></div>
+      <div class="gp-row"><div>Foto subida a la app</div><div class="gp-pts">+20 GP</div><div><span class="pill pt">GuanaGO</span></div><div>Firestore trigger</div></div>
+      <div class="gp-row"><div>Check-in en POI del mapa</div><div class="gp-pts">+15 GP</div><div><span class="pill pt">GuanaGO</span></div><div>Firestore trigger</div></div>
+      <div class="gp-row"><div>Referido que reserva</div><div class="gp-pts">+50 GP</div><div><span class="pill pt">GuanaGO</span></div><div>Make.com flow</div></div>
+      <div class="gp-row"><div>Experiencia cultural completada</div><div class="gp-pts">+100 GP</div><div><span class="pill pt">GuanaGO</span></div><div>Make.com flow</div></div>
+      <div class="gp-row"><div>Compartir story con etiqueta</div><div class="gp-pts">+10 GP</div><div><span class="pill pt">GuanaGO</span></div><div>Manual confirmación</div></div>
+      <div class="gp-row"><div>Double Points Week (campaña)</div><div class="gp-pts">×2</div><div><span class="pill pg">GuanaGO promo</span></div><div>Config campaña</div></div>
+    </div>
+  </div>
+
+  <!-- 12 TIERS DE CANJE -->
+  <div class="s-title" style="font-size:20px;margin-bottom:8px">12 Tiers de Canje</div>
+  <div class="s-sub" style="margin-bottom:20px">El canje siempre es una oferta de un aliado. GuanaGO genera el cupón digital. El aliado valida el QR en su panel.</div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Tier</th><th>GP necesarios</th><th>Beneficio</th><th>Quién absorbe</th><th>Costo aliado estimado</th></tr></thead>
+      <tbody>
+        <tr><td>🥉 Tier 1</td><td class="gp-pts" style="font-size:12px">200 GP</td><td>$2.000 COP de descuento en próxima reserva</td><td>GuanaGO absorbe</td><td>$0 para el aliado</td></tr>
+        <tr><td>Tier 2</td><td class="gp-pts" style="font-size:12px">300 GP</td><td>Bebida de bienvenida en aliado gastronómico</td><td>Aliado (bebida $1.500)</td><td>~$1.500 COP</td></tr>
+        <tr><td>Tier 3</td><td class="gp-pts" style="font-size:12px">500 GP</td><td>$5.000 COP de descuento en tour</td><td>Aliado tour</td><td>$5.000 COP</td></tr>
+        <tr><td>Tier 4</td><td class="gp-pts" style="font-size:12px">700 GP</td><td>Foto recuerdo con artesano</td><td>Aliado cultural</td><td>~$0 (tiempo)</td></tr>
+        <tr><td>🥈 Tier 5</td><td class="gp-pts" style="font-size:12px">1.000 GP</td><td>Guía digital personalizada del destino</td><td>GuanaGO (digital)</td><td>$0</td></tr>
+        <tr><td>Tier 6</td><td class="gp-pts" style="font-size:12px">1.500 GP</td><td>$15.000 COP en restaurante aliado</td><td>Aliado restaurante</td><td>$15.000 COP</td></tr>
+        <tr><td>Tier 7</td><td class="gp-pts" style="font-size:12px">2.000 GP</td><td>Tour acuático básico (1 persona)</td><td>Aliado náutico</td><td>Costo marginal</td></tr>
+        <tr><td>Tier 8</td><td class="gp-pts" style="font-size:12px">3.000 GP</td><td>Taller Coco ART con Breda Sky</td><td>Aliado cultural</td><td>Materiales</td></tr>
+        <tr><td>Tier 9</td><td class="gp-pts" style="font-size:12px">4.000 GP</td><td>Cena para 2 en aliado premium</td><td>Aliado restaurante</td><td>Costo de 2 cubiertos</td></tr>
+        <tr><td>Tier 10</td><td class="gp-pts" style="font-size:12px">5.000 GP</td><td>Noche adicional en posada aliada</td><td>Aliado alojamiento</td><td>1 noche vacía</td></tr>
+        <tr><td>🥇 Tier 11</td><td class="gp-pts" style="font-size:12px">7.500 GP</td><td>Paquete Explorer con 50% desc.</td><td>Multiple aliados</td><td>Distribuido</td></tr>
+        <tr><td>👑 Tier 12</td><td class="gp-pts" style="font-size:12px">10.000 GP</td><td>VIP: Mesa Caribbean Night + tour + cena</td><td>Múltiples aliados</td><td>Noche completa</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════ SECCIÓN 5: PROYECCIÓN ═══════════ -->
+<div class="section" id="proyeccion">
+  <div class="s-label" style="color:var(--green)">Sección 05 · Proyección Comercial</div>
+  <div class="s-title">Rentabilidad por años — por aliado y por plataforma</div>
+  <div class="s-sub">Proyección conservadora. Un aliado Activo que recibe 4 reservas/mes promedio y participa en la parrilla editorial genera retorno positivo para ambos desde el mes 1.</div>
+
+  <!-- PARA EL ALIADO -->
+  <div style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--teal)">📊 Para el Aliado — Caso tipo: Tour náutico Activo</div>
+  <div class="year-cards">
+    <div class="year-card yc1">
+      <div class="yr-label">Mes 1–3</div>
+      <div class="yr-year">Activación · Q1</div>
+      <div class="yr-rev t">$600K</div>
+      <ul class="yr-items">
+        <li>4 reservas/mes promedio<span>$150K c/u</span></li>
+        <li>Membresía<span>-$49.900</span></li>
+        <li>Comisión GuanaGO 15%<span>-$90K</span></li>
+        <li>Neto aliado/mes<span>~$460K</span></li>
+        <li>GP generados<span>~600 GP</span></li>
+      </ul>
+    </div>
+    <div class="year-card yc2">
+      <div class="yr-label">Mes 4–6</div>
+      <div class="yr-year">Tracción · Q2</div>
+      <div class="yr-rev g">$1.2M</div>
+      <ul class="yr-items">
+        <li>8 reservas/mes (reseñas activas)<span>$150K c/u</span></li>
+        <li>Membresía<span>-$49.900</span></li>
+        <li>Comisión GuanaGO 15%<span>-$180K</span></li>
+        <li>Neto aliado/mes<span>~$970K</span></li>
+        <li>GP generados<span>~1.200 GP</span></li>
+      </ul>
+    </div>
+    <div class="year-card yc3">
+      <div class="yr-label">Mes 7–12</div>
+      <div class="yr-year">Consolidación · H2</div>
+      <div class="yr-rev gr">$2M</div>
+      <ul class="yr-items">
+        <li>12–15 reservas/mes<span>$150K c/u</span></li>
+        <li>Upgrade a Premium<span>$129.900</span></li>
+        <li>Comisión GuanaGO 12%<span>-$250K</span></li>
+        <li>Neto aliado/mes<span>~$1.6M</span></li>
+        <li>GP generados<span>~2.000 GP/mes</span></li>
+      </ul>
+    </div>
+    <div class="year-card yc4">
+      <div class="yr-label">Año 2–3</div>
+      <div class="yr-year">Ecosistema Maduro</div>
+      <div class="yr-rev p">$3M+</div>
+      <ul class="yr-items">
+        <li>20+ reservas/mes<span>más eventos</span></li>
+        <li>Reseñas como motor SEO<span>orgánico</span></li>
+        <li>GP generan retorno clientes<span>retención</span></li>
+        <li>Posición #1 categoría en app<span>ranking</span></li>
+        <li>Fase 2 GP: cuotas emisión<span>Q4 2026</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PARA GUANAGO PLATAFORMA -->
+  <div style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--gold);margin-top:16px">📈 Para GuanaGO — Plataforma consolidada</div>
+  <div class="year-cards">
+    <div class="year-card yc1">
+      <div class="yr-label">Agosto 2026</div>
+      <div class="yr-year">Lanzamiento</div>
+      <div class="yr-rev t">$919K/mes</div>
+      <ul class="yr-items">
+        <li>8 Activo × $49.900<span>$399K</span></li>
+        <li>4 Premium × $129.900<span>$519K</span></li>
+        <li>Comisiones reservas<span>+variable</span></li>
+        <li>Punto break-even<span>✓ superado</span></li>
+      </ul>
+    </div>
+    <div class="year-card yc2">
+      <div class="yr-label">Dic 2026</div>
+      <div class="yr-year">Copa de la Isla + 20 aliados</div>
+      <div class="yr-rev g">$2.5M/mes</div>
+      <ul class="yr-items">
+        <li>15 Activo + 5 Premium<span>$1.4M</span></li>
+        <li>Copa de la Isla (800 visitantes)<span>+comisiones</span></li>
+        <li>Comisiones reservas<span>$800K est.</span></li>
+        <li>GP Fase 1 pleno<span>activo</span></li>
+      </ul>
+    </div>
+    <div class="year-card yc3">
+      <div class="yr-label">2027</div>
+      <div class="yr-year">40 aliados · GP Fase 2</div>
+      <div class="yr-rev gr">$6M/mes</div>
+      <ul class="yr-items">
+        <li>30 Activo + 10 Premium<span>$2.8M</span></li>
+        <li>Comisiones + eventos<span>$2M</span></li>
+        <li>GP semi-descentralizados<span>Q4 2026</span></li>
+        <li>Paquetes ANATO activos<span>+agencias</span></li>
+      </ul>
+    </div>
+    <div class="year-card yc4">
+      <div class="yr-label">2028</div>
+      <div class="yr-year">Hedera HTS · GuanaToken</div>
+      <div class="yr-rev p">$15M/mes</div>
+      <ul class="yr-items">
+        <li>80+ aliados<span>activos</span></li>
+        <li>Token fungible Hedera<span>GP Fase 3</span></li>
+        <li>App nativa iOS + Android<span>lanzamiento</span></li>
+        <li>Providencia integrada<span>expansión</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SECCIÓN 6: MAKE + CRM ═══════════ -->
+<div class="section" id="make">
+  <div class="s-label" style="color:var(--purple)">Sección 06 · Automatización</div>
+  <div class="s-title">Make.com + CRM — El pegamento del sistema</div>
+  <div class="s-sub">Los escenarios que convierten el registro de un aliado en un microsite live, una campaña editorial y un ciclo de lealtad — sin intervención manual de Sky en cada paso.</div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">⚡</span>
+      <h3>Escenario Maestro: Aliado inscrito → Todo en movimiento</h3>
+      <span class="pill pgr">Prioridad 1</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">Form recibido</span><span class="sa">→</span>
+      <span class="ss">Record Directorio_Mapa</span><span class="sa">→</span>
+      <span class="ss">Auto-slug</span><span class="sa">→</span>
+      <span class="ss">Fotos → Cloudinary</span><span class="sa">→</span>
+      <span class="ss">Firestore /aliados/{slug}</span><span class="sa">→</span>
+      <span class="ss">Firebase Auth Aliado</span><span class="sa">→</span>
+      <span class="ss">Pin en Mapbox</span><span class="sa">→</span>
+      <span class="ss">Record Conversaciones_CRM</span><span class="sa">→</span>
+      <span class="ss">Email bienvenida</span><span class="sa">→</span>
+      <span class="ss">Telegram → Sky</span><span class="sa">→</span>
+      <span class="ss">Record Parrilla_Contenido: post semana 1</span>
+    </div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">💳</span>
+      <h3>Escenario: Reserva pagada → GP + Voucher + Factura + CRM</h3>
+      <span class="pill pgr">Prioridad 1</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">PayU APPROVED</span><span class="sa">→</span>
+      <span class="ss">Buscar CotizacionesGG</span><span class="sa">→</span>
+      <span class="ss">Update Estado → Pagado</span><span class="sa">→</span>
+      <span class="ss">Generar voucher QR Firestore</span><span class="sa">→</span>
+      <span class="ss">Calcular GP (monto/1000 + bonos)</span><span class="sa">→</span>
+      <span class="ss">Update Saldo_GP usuario</span><span class="sa">→</span>
+      <span class="ss">Log_GuanaPoints Airtable</span><span class="sa">→</span>
+      <span class="ss">Update Saldo_GP_Empresa aliado</span><span class="sa">→</span>
+      <span class="ss">Alegra: crear factura DIAN</span><span class="sa">→</span>
+      <span class="ss">Email turista: voucher + factura</span><span class="sa">→</span>
+      <span class="ss">WhatsApp notif aliado</span>
+    </div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">📣</span>
+      <h3>Escenario: Semana 1 aliado → Post bienvenida automático</h3>
+      <span class="pill pg">Prioridad 2</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">D+3 después del onboarding</span><span class="sa">→</span>
+      <span class="ss">Leer datos Directorio_Mapa del aliado</span><span class="sa">→</span>
+      <span class="ss">Construir caption desde template</span><span class="sa">→</span>
+      <span class="ss">Tomar foto principal de Cloudinary</span><span class="sa">→</span>
+      <span class="ss">Crear record Parrilla_Contenido: Estado=Aprobado</span><span class="sa">→</span>
+      <span class="ss">Publicar Instagram + Facebook</span><span class="sa">→</span>
+      <span class="ss">Update Estado → Publicado + timestamp</span>
+    </div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">🌴</span>
+      <h3>Escenario: Acción en app → GP emitidos → Push notification</h3>
+      <span class="pill pg">Prioridad 2</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">Firestore trigger: reseña / foto / check-in</span><span class="sa">→</span>
+      <span class="ss">Make webhook recibe</span><span class="sa">→</span>
+      <span class="ss">Router por tipo de acción</span><span class="sa">→</span>
+      <span class="ss">Sumar GP en Firestore usuario</span><span class="sa">→</span>
+      <span class="ss">Log en Airtable Log_GuanaPoints</span><span class="sa">→</span>
+      <span class="ss">FCM push: "¡Ganaste X GP! Total: Y GP"</span>
+    </div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">📊</span>
+      <h3>Escenario: Reporte mensual automático al aliado</h3>
+      <span class="pill pb">Prioridad 3</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">Cron: día 1 del mes, 8am</span><span class="sa">→</span>
+      <span class="ss">Leer Conversaciones_CRM (mes anterior, por aliado)</span><span class="sa">→</span>
+      <span class="ss">Leer Log_GuanaPoints emitidos del aliado</span><span class="sa">→</span>
+      <span class="ss">Leer escaneos QR (Directorio_Mapa tracking)</span><span class="sa">→</span>
+      <span class="ss">Construir HTML del reporte</span><span class="sa">→</span>
+      <span class="ss">Email al aliado: reservas + GP + ingresos</span>
+    </div>
+  </div>
+
+  <div class="ins-grid" style="margin-top:8px">
+    <div class="ins it">
+      <div class="il">Tarea inmediata #1</div>
+      <p>Poblar <strong>ID_Slug en los 31 registros</strong> de Directorio_Mapa. Script Make o Airtable Scripting con la función <code>generarSlug()</code>. 10 minutos de trabajo. Desbloquea todos los microsites.</p>
+    </div>
+    <div class="ins ig">
+      <div class="il">Tarea inmediata #2</div>
+      <p>Crear la tabla <strong>Log_GuanaPoints</strong> en Airtable (manualmente en UI — Make no puede crear tablas). Campos: Usuario_ID, Accion, GP_Delta, Saldo_Nuevo, Timestamp, Aliado_Relacionado.</p>
+    </div>
+    <div class="ins ic">
+      <div class="il">Tarea inmediata #3</div>
+      <p>Corregir los ~18 registros con teléfono <strong>5555555</strong> en Directorio_Mapa antes de hacer público el directorio. Mostraría datos falsos al turista.</p>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer style="padding:20px 56px;border-top:1px solid var(--bsoft);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+  <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--teal)">🌴 GuanaGO · guanago.travel · Sistema Operativo del Aliado</div>
+  <div style="font-size:11px;color:var(--muted)">GuíaSAI S.A.S. · RNT 48674 · NIT 901013739-9 · San Andrés Islas · Junio 2026</div>
+</footer>
+
+<script>
+// Scroll suave
+function scrollTo(id){
+  const el = document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// Nav dot activo
+const sections = ['cover','activacion','vitrina','campana','gp','proyeccion','make'];
+const observer = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      document.querySelectorAll('.nav-dot').forEach(d=>{
+        d.classList.toggle('active', d.dataset.s === e.target.id);
+      });
+    }
+  });
+},{threshold:0.3});
+sections.forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) observer.observe(el);
+});
+</script>
+</body>
+</html>

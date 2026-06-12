@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuanaGO — Kit de Aliados 2026</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  --bg: #080f1e;
+  --surface: #0d1a2e;
+  --surface2: #122236;
+  --teal: #00c9b1;
+  --teal-dim: rgba(0,201,177,0.12);
+  --coral: #ff6b6b;
+  --coral-dim: rgba(255,107,107,0.12);
+  --gold: #f9a825;
+  --gold-dim: rgba(249,168,37,0.12);
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.1);
+  --purple: #a78bfa;
+  --purple-dim: rgba(167,139,250,0.12);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96,165,250,0.1);
+  --text: #e2f0f8;
+  --muted: #6b8fa8;
+  --border: rgba(0,201,177,0.15);
+  --border-s: rgba(255,255,255,0.06);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Space Grotesk',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+code { font-family:'Space Mono',monospace; font-size:12px; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; }
+
+/* ── HERO ── */
+.hero {
+  padding: 48px 40px 36px;
+  background: linear-gradient(135deg, var(--bg) 0%, #0a1f35 60%, #06191f 100%);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.hero::after {
+  content:'';
+  position:absolute;
+  bottom:-80px; right:-80px;
+  width:320px; height:320px;
+  background: radial-gradient(circle, rgba(0,201,177,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--teal-dim); border:1px solid rgba(0,201,177,0.3);
+  border-radius:20px; padding:4px 14px;
+  font-size:11px; font-family:'Space Mono',monospace;
+  color:var(--teal); letter-spacing:1px; text-transform:uppercase;
+  margin-bottom:16px;
+}
+.hero h1 { font-size:clamp(26px,4vw,44px); font-weight:700; line-height:1.1; margin-bottom:12px; }
+.hero h1 em { font-style:normal; color:var(--teal); }
+.hero p { font-size:15px; color:var(--muted); max-width:620px; line-height:1.6; margin-bottom:24px; }
+.hero-stats { display:flex; flex-wrap:wrap; gap:24px; }
+.stat { text-align:center; }
+.stat-n { font-family:'Space Mono',monospace; font-size:24px; font-weight:700; color:var(--teal); }
+.stat-l { font-size:11px; color:var(--muted); margin-top:2px; }
+
+/* ── NAV ── */
+.nav { display:flex; gap:3px; padding:16px 40px 0; border-bottom:1px solid var(--border-s); overflow-x:auto; scrollbar-width:none; }
+.nav::-webkit-scrollbar { display:none; }
+.nav-btn {
+  padding:9px 18px; font-size:12px; font-weight:600;
+  border:1px solid transparent; border-bottom:none;
+  border-radius:8px 8px 0 0; cursor:pointer; white-space:nowrap;
+  background:transparent; color:var(--muted); transition:all .2s;
+  font-family:'Space Grotesk',sans-serif;
+}
+.nav-btn:hover { color:var(--text); background:rgba(255,255,255,0.03); }
+.nav-btn.active { background:var(--surface); color:var(--text); border-color:var(--border-s); }
+.nav-btn.t { &.active { color:var(--teal); border-top-color:var(--teal); } }
+.nav-btn.c { &.active { color:var(--coral); border-top-color:var(--coral); } }
+.nav-btn.g { &.active { color:var(--gold); border-top-color:var(--gold); } }
+.nav-btn.gr { &.active { color:var(--green); border-top-color:var(--green); } }
+.nav-btn.p { &.active { color:var(--purple); border-top-color:var(--purple); } }
+.nav-btn.b { &.active { color:var(--blue); border-top-color:var(--blue); } }
+
+/* ── PANELS ── */
+.panel { display:none; padding:32px 40px 56px; }
+.panel.on { display:block; }
+
+/* ── HEADINGS ── */
+.sh { display:flex; align-items:flex-start; gap:12px; margin-bottom:20px; }
+.sh-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:6px; }
+.sh h2 { font-size:22px; font-weight:700; }
+.sh p { font-size:13px; color:var(--muted); margin-top:3px; line-height:1.5; }
+.eyebrow { font-family:'Space Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+
+/* ── GRID CARDS ── */
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; margin-bottom:28px; }
+.grid-2 { grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); }
+.card {
+  background:var(--surface); border:1px solid var(--border-s);
+  border-radius:12px; padding:20px; transition:border-color .2s;
+}
+.card:hover { border-color:rgba(0,201,177,0.3); }
+.card h3 { font-size:15px; font-weight:700; margin-bottom:8px; }
+.card p { font-size:13px; color:var(--muted); line-height:1.5; }
+
+/* ── TABLA ── */
+.tw { overflow-x:auto; border-radius:12px; border:1px solid var(--border-s); margin-bottom:28px; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+thead th {
+  background:var(--surface2); padding:11px 14px;
+  text-align:left; font-weight:600; font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--muted);
+  border-bottom:1px solid var(--border-s); white-space:nowrap;
+}
+tbody tr { border-bottom:1px solid var(--border-s); transition:background .15s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:rgba(255,255,255,0.02); }
+tbody td { padding:10px 14px; vertical-align:top; line-height:1.5; }
+td:first-child { font-weight:600; }
+.pill {
+  display:inline-block; font-size:10px; padding:2px 8px;
+  border-radius:20px; font-family:'Space Mono',monospace; font-weight:700; white-space:nowrap;
+}
+.pt { background:rgba(0,201,177,.15); color:var(--teal); }
+.pc { background:rgba(255,107,107,.15); color:var(--coral); }
+.pg { background:rgba(249,168,37,.15); color:var(--gold); }
+.pgr { background:rgba(74,222,128,.15); color:var(--green); }
+.pp { background:rgba(167,139,250,.15); color:var(--purple); }
+.pb { background:rgba(96,165,250,.15); color:var(--blue); }
+.pn { background:rgba(255,255,255,.07); color:var(--muted); }
+
+/* ── FLOW ── */
+.flow { display:flex; overflow-x:auto; gap:0; padding-bottom:8px; margin-bottom:24px; }
+.fstep {
+  flex:1; min-width:120px; background:var(--surface);
+  border:1px solid var(--border-s); padding:14px 12px;
+  text-align:center; position:relative;
+}
+.fstep:first-child { border-radius:10px 0 0 10px; }
+.fstep:last-child { border-radius:0 10px 10px 0; }
+.fstep:not(:last-child)::after {
+  content:'→'; position:absolute; right:-14px; top:50%;
+  transform:translateY(-50%); font-size:16px; color:var(--teal); z-index:1;
+}
+.fstep:not(:first-child) { margin-left:-1px; }
+.fn { font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:5px; }
+.fi { font-size:20px; margin-bottom:5px; }
+.fl { font-size:11px; font-weight:700; margin-bottom:3px; }
+.fs { font-size:10px; color:var(--muted); }
+
+/* ── INSIGHTS ── */
+.ins-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin-bottom:24px; }
+.ins { border-radius:10px; padding:14px; border-left:3px solid; }
+.ins p { font-size:13px; line-height:1.5; }
+.ins .il { font-size:10px; font-family:'Space Mono',monospace; letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; color:var(--muted); }
+.it { background:var(--teal-dim); border-color:var(--teal); }
+.ic { background:var(--coral-dim); border-color:var(--coral); }
+.ig { background:var(--gold-dim); border-color:var(--gold); }
+.igr { background:var(--green-dim); border-color:var(--green); }
+.ip { background:var(--purple-dim); border-color:var(--purple); }
+.ib { background:var(--blue-dim); border-color:var(--blue); }
+
+/* ── CODE BLOCK ── */
+.cb {
+  background:var(--surface2); border:1px solid var(--border-s);
+  border-radius:10px; padding:16px 18px; margin-bottom:20px;
+  font-family:'Space Mono',monospace; font-size:12px;
+  color:#a8d8ea; overflow-x:auto; line-height:1.7;
+  white-space:pre;
+}
+.cb .k { color:var(--teal); }
+.cb .s { color:var(--gold); }
+.cb .c { color:var(--muted); }
+
+/* ── PLAN CARDS ── */
+.plans { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; margin-bottom:28px; }
+.plan {
+  border-radius:14px; padding:22px; border:1px solid;
+  position:relative; overflow:hidden;
+}
+.plan::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+.plan-free { background:rgba(255,255,255,.03); border-color:var(--border-s); }
+.plan-free::before { background:linear-gradient(90deg,var(--muted),transparent); }
+.plan-activo { background:var(--teal-dim); border-color:rgba(0,201,177,.35); }
+.plan-activo::before { background:var(--teal); }
+.plan-premium { background:var(--gold-dim); border-color:rgba(249,168,37,.4); }
+.plan-premium::before { background:var(--gold); }
+.plan-badge { font-size:10px; font-family:'Space Mono',monospace; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+.plan-price { font-size:26px; font-weight:700; margin-bottom:4px; }
+.plan-price span { font-size:13px; font-weight:400; color:var(--muted); }
+.plan-desc { font-size:12px; color:var(--muted); margin-bottom:14px; line-height:1.4; }
+.plan ul { list-style:none; }
+.plan ul li { font-size:12px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,.04); display:flex; align-items:flex-start; gap:6px; }
+.plan ul li:last-child { border-bottom:none; }
+.plan ul li::before { content:'✓'; font-size:11px; flex-shrink:0; margin-top:1px; }
+.plan-free li::before { color:var(--muted); }
+.plan-activo li::before { color:var(--teal); }
+.plan-premium li::before { color:var(--gold); }
+
+/* ── TIPO-SPECIFIC TABS ── */
+.type-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+.type-tab {
+  padding:7px 16px; font-size:12px; font-weight:600; border-radius:20px;
+  cursor:pointer; background:var(--surface2); border:1px solid var(--border-s);
+  color:var(--muted); transition:all .2s; font-family:'Space Grotesk',sans-serif;
+}
+.type-tab.on { background:var(--teal-dim); border-color:var(--teal); color:var(--teal); }
+.type-panel { display:none; }
+.type-panel.on { display:block; }
+
+/* ── SPEECH BUBBLE ── */
+.speech { background:var(--surface2); border-left:4px solid var(--teal); border-radius:0 10px 10px 0; padding:16px 20px; margin-bottom:16px; }
+.speech .who { font-size:10px; font-family:'Space Mono',monospace; color:var(--teal); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; }
+.speech p { font-size:14px; line-height:1.6; font-style:italic; color:var(--text); }
+.speech.obj { border-left-color:var(--coral); }
+.speech.obj .who { color:var(--coral); }
+.speech.ans { border-left-color:var(--green); }
+.speech.ans .who { color:var(--green); }
+
+/* ── CHECKLIST ── */
+.checklist { list-style:none; }
+.checklist li { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid var(--border-s); font-size:13px; }
+.checklist li:last-child { border-bottom:none; }
+.checklist .ck { width:18px; height:18px; border-radius:4px; border:1px solid var(--border); flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; font-size:10px; }
+.ck.done { background:var(--teal-dim); border-color:var(--teal); color:var(--teal); }
+.ck.pend { background:rgba(255,255,255,.03); }
+
+/* ── SCENARIO ── */
+.sc { background:var(--surface); border:1px solid var(--border-s); border-radius:12px; padding:18px; margin-bottom:14px; }
+.sc-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.sc-head h3 { font-size:14px; font-weight:700; flex:1; }
+.sc-steps { display:flex; flex-wrap:wrap; gap:5px; align-items:center; }
+.ss { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09); border-radius:5px; padding:4px 9px; font-size:11px; }
+.sa { color:var(--teal); font-size:13px; }
+
+/* ── FOOTER ── */
+.foot { padding:18px 40px; border-top:1px solid var(--border-s); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+.foot-brand { font-family:'Space Mono',monospace; font-size:12px; color:var(--teal); }
+.foot-meta { font-size:11px; color:var(--muted); }
+
+@media(max-width:600px){
+  .hero,.nav,.panel,.foot { padding-left:18px; padding-right:18px; }
+  .flow { flex-direction:column; }
+  .fstep::after { display:none; }
+  .fstep { border-radius:8px !important; margin-left:0 !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">🌴 GuanaGO · Ecosistema de Aliados · 2026</div>
+  <h1>Tu negocio en el <em>mapa digital</em><br>del Caribe colombiano</h1>
+  <p>GuanaGO es la plataforma turística de San Andrés, Providencia y Santa Catalina. Conecta tu negocio con miles de viajeros, gestiona reservas, recibe pagos y acumula lealtad — desde un solo panel.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-n">40+</div><div class="stat-l">POIs en el mapa</div></div>
+    <div class="stat"><div class="stat-n">6</div><div class="stat-l">Aliados activos</div></div>
+    <div class="stat"><div class="stat-n">100%</div><div class="stat-l">Raizal-owned 🌴</div></div>
+    <div class="stat"><div class="stat-n">Ago 2026</div><div class="stat-l">Lanzamiento</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn t on" onclick="sw(this,'pitch')">💬 Discurso Pitch</button>
+  <button class="nav-btn c" onclick="sw(this,'planes')">💎 Planes & Precios</button>
+  <button class="nav-btn g" onclick="sw(this,'microsites')">🏪 Microsites</button>
+  <button class="nav-btn gr" onclick="sw(this,'base_datos')">🗄 Base de Datos</button>
+  <button class="nav-btn p" onclick="sw(this,'onboarding')">🚀 Manual Onboarding</button>
+  <button class="nav-btn b" onclick="sw(this,'make')">⚙️ Make + CRM</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PANEL 1: PITCH
+══════════════════════════════════════════════════════════ -->
+<div class="panel on" id="p-pitch">
+
+  <div class="sh">
+    <div class="sh-dot" style="background:var(--teal)"></div>
+    <div><h2>Discurso para atraer aliados</h2>
+    <p>Tres versiones según el contexto: puerta a puerta, reunión formal, WhatsApp. Con manejo de objeciones.</p></div>
+  </div>
+
+  <!-- APERTURA UNIVERSAL -->
+  <div class="eyebrow" style="color:var(--teal);margin-bottom:12px">Apertura — Gancho en 30 segundos</div>
+  <div class="speech">
+    <div class="who">Sky · versión directa</div>
+    <p>— ¿Cuántos turistas pasaron por acá esta semana y no dejaron ni nombre ni correo? GuanaGO los va a traer de vuelta, con reserva paga y sus datos en tu panel. Sin comisión extra a Booking ni a ninguna OTA que cobra el 20%. Somos la plataforma local, Raizal-owned, y el turista que llega a San Andrés nos va a encontrar antes que a cualquier otro.</p>
+  </div>
+
+  <!-- VERSIÓN RESTAURANTE / GASTRONÓMICO -->
+  <div class="eyebrow" style="color:var(--coral);margin-bottom:12px;margin-top:24px">Versión para Restaurante / Gastronómico (Bushi Food, Bobby Rock style)</div>
+  <div class="speech">
+    <div class="who">Opening</div>
+    <p>— Mira, el turista llega a la isla, abre GuanaGO, busca "dónde comer comida isleña" y ahí apareces tú — con foto, menú, horario, y un botón para reservar mesa. Nosotros le mandamos la reserva por WhatsApp automáticamente y te avisa cuando confirma.</p>
+  </div>
+  <div class="speech">
+    <div class="who">Propuesta de valor</div>
+    <p>— Además, cuando ese turista come contigo y paga con GuanaGO, le damos GuanaPoints — como millas, pero de la isla. Y la próxima vez que venga a San Andrés, ya tiene puntos y ya conoce tu nombre. Tú no pagas ese bono. Lo absorbes en lo que sea: un postre, un descuento de $5.000. El valor que das lo defines tú.</p>
+  </div>
+  <div class="speech">
+    <div class="who">Cierre + siguiente paso</div>
+    <p>— La membresía Activo vale $49.900 al mes — menos de lo que te cuesta un aviso en periódico local. La primera quincena te damos sin costo para que pruebes el panel. ¿Te tomo los datos ahora y quedamos mañana para activarlo?</p>
+  </div>
+
+  <!-- VERSIÓN ALOJAMIENTO -->
+  <div class="eyebrow" style="color:var(--gold);margin-bottom:12px;margin-top:24px">Versión para Alojamiento (cabaña, posada, guesthouse)</div>
+  <div class="speech">
+    <div class="who">Opening</div>
+    <p>— Booking.com te cobra entre el 15 y el 25% por cada reserva. Con GuanaGO pagás $129.900 al mes fijo — sin importar cuántas reservas entren. Y el turista reserva directamente, el dinero llega a tu cuenta a través de PayU, no pasa por nosotros.</p>
+  </div>
+  <div class="speech">
+    <div class="who">Diferencial Raizal</div>
+    <p>— Somos la única plataforma del archipiélago que muestra el sello "Raizal-owned" en tu perfil. Para el turista cultural — y son cada vez más — eso vale más que 5 estrellas en Booking. Tu posada no compite con hoteles grandes. Compite en autenticidad, y ahí ganás vos.</p>
+  </div>
+
+  <!-- VERSIÓN TOUR / NÁUTICO -->
+  <div class="eyebrow" style="color:var(--green);margin-bottom:12px;margin-top:24px">Versión para Tour / Operador Náutico (Chamey, Capitan Mandy style)</div>
+  <div class="speech">
+    <div class="who">Opening</div>
+    <p>— El turista llega, le recomiendan tu tour en el aeropuerto, pero no tiene efectivo, no sabe tu número, te busca en Google y encuentra otra cosa. Eso pasa todos los días. Con GuanaGO, tu tour aparece en el mapa en tiempo real, con precio, disponibilidad y botón de pago online.</p>
+  </div>
+  <div class="speech">
+    <div class="who">Control operacional</div>
+    <p>— Vos controlás el cupo desde el panel. Cuando se llena, se cierra automáticamente. El turista recibe un voucher QR, vos lo escaneas al momento de abordaje y listo — sin efectivo, sin papel, sin WhatsApp a las 11 de la noche preguntando si hay campo.</p>
+  </div>
+
+  <!-- MANEJO DE OBJECIONES -->
+  <div class="sh" style="margin-top:32px">
+    <div class="sh-dot" style="background:var(--coral)"></div>
+    <div><h2>Manejo de Objeciones</h2></div>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <div class="speech obj" style="margin-bottom:0; border-radius:10px; border-left:none; border:1px solid rgba(255,107,107,.25); background:var(--coral-dim);">
+        <div class="who">Objeción</div>
+        <p>"Ya tengo Booking / Airbnb / TripAdvisor."</p>
+      </div>
+      <div class="speech ans" style="margin-top:8px;margin-bottom:0; border-radius:10px; border-left:none; border:1px solid rgba(74,222,128,.25); background:var(--green-dim);">
+        <div class="who">Respuesta</div>
+        <p>"Perfecto — esas plataformas atraen turistas globales con comisión alta. GuanaGO atrae al turista que ya está en la isla o va a llegar. Te complementa, no compite. Y el costo mensual es fijo, no se come tu margen por reserva."</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="speech obj" style="margin-bottom:0; border-radius:10px; border-left:none; border:1px solid rgba(255,107,107,.25); background:var(--coral-dim);">
+        <div class="who">Objeción</div>
+        <p>"No tengo tiempo para aprender una plataforma nueva."</p>
+      </div>
+      <div class="speech ans" style="margin-top:8px;margin-bottom:0; border-radius:10px; border-left:none; border:1px solid rgba(74,222,128,.25); background:var(--green-dim);">
+        <div class="who">Respuesta</div>
+        <p>"El onboarding dura 45 minutos. Nosotros subimos tu contenido inicial — te pedimos fotos, precios y horario, y listo. Después el panel es tan sencillo como revisar WhatsApp. Y tenés video tutorial paso a paso dentro de la app."</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="speech obj" style="margin-bottom:0; border-radius:10px; border-left:none; border:1px solid rgba(255,107,107,.25); background:var(--coral-dim);">
+        <div class="who">Objeción</div>
+        <p>"¿Y si no me trae reservas, igual pago?"</p>
+      </div>
+      <div class="speech ans" style="margin-top:8px;margin-bottom:0; border-radius:10px; border-left:none; border:1px solid rgba(74,222,128,.25); background:var(--green-dim);">
+        <div class="who">Respuesta</div>
+        <p>"El plan Explorador es gratis — aparecés en el mapa y el directorio sin pagar nada. El plan Activo te da panel de gestión, reservas online y GuanaPoints. El primer mes va absorbido en el kit de onboarding. Si en 30 días no ves tráfico, conversamos."</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="speech obj" style="margin-bottom:0; border-radius:10px; border-left:none; border:1px solid rgba(255,107,107,.25); background:var(--coral-dim);">
+        <div class="who">Objeción</div>
+        <p>"¿GuanaGO qué gana con esto?"</p>
+      </div>
+      <div class="speech ans" style="margin-top:8px;margin-bottom:0; border-radius:10px; border-left:none; border:1px solid rgba(74,222,128,.25); background:var(--green-dim);">
+        <div class="who">Respuesta</div>
+        <p>"Ganamos membresías, una comisión de 10–15% en reservas que entran por la plataforma, y visibilidad del destino. Entre más aliados tengamos, más atractiva es la plataforma para el turista — y más reservas entran para todos. Es un ecosistema circular."</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PANEL 2: PLANES
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="p-planes">
+  <div class="sh">
+    <div class="sh-dot" style="background:var(--coral)"></div>
+    <div><h2>Planes & Precios</h2>
+    <p>Tres niveles. El kit de onboarding físico va absorbido en el primer mes de pago.</p></div>
+  </div>
+
+  <div class="plans">
+    <div class="plan plan-free">
+      <div class="plan-badge" style="color:var(--muted)">Explorador · Gratis</div>
+      <div class="plan-price" style="color:var(--muted)">$0<span>/mes</span></div>
+      <div class="plan-desc">Presencia básica. Para negocios que quieren probar antes de comprometerse.</div>
+      <ul>
+        <li>Aparición en mapa interactivo</li>
+        <li>Perfil básico en directorio</li>
+        <li>Sello "Aliado GuanaGO"</li>
+        <li>Tráfico orgánico desde la app</li>
+        <li>Sin panel de gestión</li>
+        <li>Sin reservas online</li>
+        <li>Sin GuanaPoints</li>
+      </ul>
+    </div>
+    <div class="plan plan-activo">
+      <div class="plan-badge" style="color:var(--teal)">Activo · Recomendado</div>
+      <div class="plan-price" style="color:var(--teal)">$49.900<span>/mes</span></div>
+      <div class="plan-desc">El plan operativo. Reservas online, panel de métricas y lealtad activa.</div>
+      <ul>
+        <li>Todo Explorador +</li>
+        <li>Microsite propio con slug único</li>
+        <li>Panel de reservas en tiempo real</li>
+        <li>Escáner QR de vouchers</li>
+        <li>Integración GuanaPoints</li>
+        <li>Dashboard métricas básicas</li>
+        <li>Kit físico: QR sticker + vitrina</li>
+        <li>Soporte por WhatsApp</li>
+        <li>Listado en categoría destacada</li>
+      </ul>
+    </div>
+    <div class="plan plan-premium">
+      <div class="plan-badge" style="color:var(--gold)">Premium · Máxima Visibilidad</div>
+      <div class="plan-price" style="color:var(--gold)">$129.900<span>/mes</span></div>
+      <div class="plan-desc">Para negocios que quieren ser el referente en su categoría.</div>
+      <ul>
+        <li>Todo Activo +</li>
+        <li>Posición destacada en mapa</li>
+        <li>Promociones en parrilla editorial</li>
+        <li>GuanaPoints triple para clientes</li>
+        <li>Galería multimedia ampliada</li>
+        <li>Integración con paquetes B2C</li>
+        <li>Reportes avanzados</li>
+        <li>Gestión de múltiples servicios</li>
+        <li>Sello "Raizal Premium" 🌴</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sh" style="margin-top:8px">
+    <div class="sh-dot" style="background:var(--gold)"></div>
+    <div><h2>Kit físico de onboarding</h2><p>Absorbido en el primer mes — sin costo adicional</p></div>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <div class="eyebrow" style="color:var(--teal)">Ítem 01</div>
+      <h3>🔲 QR Personalizado</h3>
+      <p>Sticker circular de 10cm con el QR del microsite del aliado (<code>guanago.travel/[slug]</code>). Tracking de escaneos habilitado. Incluye logo del negocio si disponible.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow" style="color:var(--teal)">Ítem 02</div>
+      <h3>🏷 Sello Vitrina</h3>
+      <p>Sticker "Recomendado por GuanaGO" para ventana o mostrador. Genera confianza inmediata con el turista que ya conoce la app.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow" style="color:var(--teal)">Ítem 03</div>
+      <h3>🃏 Tarjetas de Mesa / Mostrador</h3>
+      <p>3 tarjetas físicas con QR, breve descripción del programa GuanaPoints y CTA: "Escanea y gana puntos con esta visita".</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow" style="color:var(--teal)">Ítem 04</div>
+      <h3>📱 Acceso al Panel</h3>
+      <p>Usuario creado en Firebase Auth con rol <code>Aliado</code>. Email de bienvenida con credenciales, link al video tutorial y guía rápida PDF descargable.</p>
+    </div>
+  </div>
+
+  <div class="ins-row">
+    <div class="ins it">
+      <div class="il">Break-even</div>
+      <p><strong>8 aliados Activo</strong> = operaciones sostenibles. Actualmente 6 confirmados. Faltan 2.</p>
+    </div>
+    <div class="ins ig">
+      <div class="il">Economía circular</div>
+      <p>Por cada $1.000 COP que gasta el turista con un aliado, se emite 1 GP. El GP impulsa la próxima visita al aliado.</p>
+    </div>
+    <div class="ins igr">
+      <div class="il">Analogía de venta</div>
+      <p>Funciona como LifeMiles/Avianca: el aliado absorbe el costo marginal (un postre, un descuento), GuanaGO emite los puntos.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PANEL 3: MICROSITES
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="p-microsites">
+  <div class="sh">
+    <div class="sh-dot" style="background:var(--gold)"></div>
+    <div><h2>Arquitectura de Microsites por Tipo</h2>
+    <p>Cada aliado tiene su propio URL: <code>guanago.travel/[slug]</code> — renderizado dinámico desde Firestore, con datos maestros en Airtable.</p></div>
+  </div>
+
+  <!-- TIPO TABS -->
+  <div class="type-tabs">
+    <button class="type-tab on" onclick="swType(this,'alojamiento')">🏨 Alojamiento</button>
+    <button class="type-tab" onclick="swType(this,'tour')">🤿 Tour / Náutico</button>
+    <button class="type-tab" onclick="swType(this,'restaurante')">🍽 Restaurante</button>
+    <button class="type-tab" onclick="swType(this,'taxi')">🚗 Taxi / Traslado</button>
+    <button class="type-tab" onclick="swType(this,'artesania')">🥥 Artesanía / Cultural</button>
+  </div>
+
+  <!-- ALOJAMIENTO -->
+  <div class="type-panel on" id="tp-alojamiento">
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="eyebrow" style="color:var(--gold)">Secciones del microsite</div>
+        <h3>🏨 Alojamiento</h3>
+        <ul style="list-style:none;padding:0;margin-top:10px">
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">📸 Galería de fotos (Cloudinary)</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">🛏 Tipos de habitación con precios dinámicos</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">📅 Calendario de disponibilidad</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">⭐ Reseñas verificadas (de usuarios GuanaGO)</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">🗺 Ubicación en mapa interactivo</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">🌴 Sello Raizal-owned si aplica</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">📋 Servicios incluidos (desayuno, transfer, etc.)</li>
+          <li style="padding:5px 0;font-size:13px">💳 Botón Reservar → checkout PayU</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="eyebrow" style="color:var(--gold)">Campos Airtable requeridos</div>
+        <h3>Directorio_Mapa + Alojamiento</h3>
+        <div class="tw" style="margin-top:10px;margin-bottom:0">
+          <table>
+            <thead><tr><th>Campo</th><th>Tabla</th><th>Tipo</th></tr></thead>
+            <tbody>
+              <tr><td>ID_Slug</td><td>Directorio_Mapa</td><td><span class="pill pt">Text</span></td></tr>
+              <tr><td>Nombre_Comercial</td><td>Directorio_Mapa</td><td><span class="pill pn">Text</span></td></tr>
+              <tr><td>Categoria</td><td>Directorio_Mapa</td><td><span class="pill pp">Select</span></td></tr>
+              <tr><td>Lat / Lon</td><td>Directorio_Mapa</td><td><span class="pill pn">Number</span></td></tr>
+              <tr><td>Raizal_Owned</td><td>Directorio_Mapa</td><td><span class="pill pgr">Boolean</span></td></tr>
+              <tr><td>Fotos_Cloudinary[]</td><td>Alojamiento</td><td><span class="pill pn">URL[]</span></td></tr>
+              <tr><td>Precio_Base_Noche</td><td>Alojamiento</td><td><span class="pill pg">Number</span></td></tr>
+              <tr><td>Tipos_Habitacion</td><td>Alojamiento</td><td><span class="pill pp">Multi-select</span></td></tr>
+              <tr><td>Max_Huespedes</td><td>Alojamiento</td><td><span class="pill pn">Number</span></td></tr>
+              <tr><td>Servicios_Incluidos</td><td>Alojamiento</td><td><span class="pill pp">Multi-select</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOUR -->
+  <div class="type-panel" id="tp-tour">
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="eyebrow" style="color:var(--teal)">Secciones del microsite</div>
+        <h3>🤿 Tour / Operador Náutico</h3>
+        <ul style="list-style:none;padding:0;margin-top:10px">
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">🎬 Video o galería del tour</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">📋 Descripción detallada + itinerario</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">⏰ Horarios y punto de salida</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">👥 Cupo máximo — barra de disponibilidad</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">💵 Precio por persona (lógica jet ski especial)</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">⭐ Reseñas + fotos de turistas</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">📦 Qué incluye / no incluye</li>
+          <li style="padding:5px 0;font-size:13px">💳 Reservar + seleccionar fecha → PayU</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="eyebrow" style="color:var(--teal)">Campos Airtable requeridos</div>
+        <h3>Directorio_Mapa + ServiciosTuristicos_SAI</h3>
+        <div class="tw" style="margin-top:10px;margin-bottom:0">
+          <table>
+            <thead><tr><th>Campo</th><th>Tabla</th><th>Tipo</th></tr></thead>
+            <tbody>
+              <tr><td>ID_Slug</td><td>Directorio_Mapa</td><td><span class="pill pt">Text</span></td></tr>
+              <tr><td>Nombre_Servicio</td><td>ServiciosTuristicos</td><td><span class="pill pn">Text</span></td></tr>
+              <tr><td>Precio_Por_Persona</td><td>ServiciosTuristicos</td><td><span class="pill pg">Number</span></td></tr>
+              <tr><td>Cupo_Maximo</td><td>ServiciosTuristicos</td><td><span class="pill pn">Number</span></td></tr>
+              <tr><td>Duracion_Horas</td><td>ServiciosTuristicos</td><td><span class="pill pn">Number</span></td></tr>
+              <tr><td>Punto_Salida</td><td>ServiciosTuristicos</td><td><span class="pill pn">Text</span></td></tr>
+              <tr><td>Horarios[]</td><td>ServiciosTuristicos</td><td><span class="pill pp">Multi-select</span></td></tr>
+              <tr><td>Incluye[]</td><td>ServiciosTuristicos</td><td><span class="pill pn">Long text</span></td></tr>
+              <tr><td>Estado</td><td>ServiciosTuristicos</td><td><span class="pill pp">Select</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESTAURANTE -->
+  <div class="type-panel" id="tp-restaurante">
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="eyebrow" style="color:var(--coral)">Secciones del microsite</div>
+        <h3>🍽 Restaurante / Gastronómico</h3>
+        <ul style="list-style:none;padding:0;margin-top:10px">
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">🍛 Menú digital (platos + precios + foto)</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">🕐 Horario de atención</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">📅 Reserva de mesa (fecha + hora + personas)</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">🌴 Destacado: "Cocina Raizal" si aplica</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">⭐ Reseñas verificadas</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">📍 Dirección + mapa</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">🎁 Promoción activa si la hay</li>
+          <li style="padding:5px 0;font-size:13px">📲 WhatsApp directo (link wa.me)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="eyebrow" style="color:var(--coral)">Campos adicionales</div>
+        <h3>Tabla nueva: Menu_Restaurante</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Linked desde Directorio_Mapa. Un registro por plato.</p>
+        <div class="tw" style="margin-bottom:0">
+          <table>
+            <thead><tr><th>Campo</th><th>Tipo</th></tr></thead>
+            <tbody>
+              <tr><td>Aliado_ID</td><td><span class="pill pt">Link → Directorio_Mapa</span></td></tr>
+              <tr><td>Nombre_Plato</td><td><span class="pill pn">Text</span></td></tr>
+              <tr><td>Descripcion</td><td><span class="pill pn">Long text</span></td></tr>
+              <tr><td>Precio</td><td><span class="pill pg">Number</span></td></tr>
+              <tr><td>Categoria_Plato</td><td><span class="pill pp">Select (Entrada/Principal/Postre/Bebida)</span></td></tr>
+              <tr><td>Foto_URL</td><td><span class="pill pn">URL</span></td></tr>
+              <tr><td>Disponible</td><td><span class="pill pgr">Boolean</span></td></tr>
+              <tr><td>Es_Plato_Raizal</td><td><span class="pill pgr">Boolean</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAXI -->
+  <div class="type-panel" id="tp-taxi">
+    <div class="card" style="max-width:640px">
+      <div class="eyebrow" style="color:var(--purple)">Secciones del microsite</div>
+      <h3>🚗 Taxi / Traslado</h3>
+      <p style="margin-bottom:12px;font-size:13px;color:var(--muted)">Ya existe lógica de calculadora de tarifas (<code>Taxi.tsx</code>). El microsite lo expone de forma autónoma por operador.</p>
+      <ul style="list-style:none;padding:0">
+        <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">🧮 Calculadora de tarifa por zona</li>
+        <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">📋 Tarifas fijas: aeropuerto, hoteles, playas</li>
+        <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">📞 Solicitud directa (WhatsApp o formulario)</li>
+        <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">🌴 Badge Raizal si aplica</li>
+        <li style="padding:5px 0;font-size:13px">⭐ Reseñas de puntualidad y servicio</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ARTESANÍA / CULTURAL -->
+  <div class="type-panel" id="tp-artesania">
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="eyebrow" style="color:var(--green)">Secciones del microsite</div>
+        <h3>🥥 Artesanía / Experiencia Cultural</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Ejemplo: Coco ART con Breda Sky. Este tipo de aliado es el diferencial cultural más potente de GuanaGO.</p>
+        <ul style="list-style:none;padding:0">
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">🎬 Video del artesano / proceso</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">📖 Historia del oficio en Kriol + español</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">📅 Talleres disponibles (fecha, cupo, precio)</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">🛍 Galería de piezas a la venta</li>
+          <li style="padding:5px 0;border-bottom:1px solid var(--border-s);font-size:13px">🌴 Sello "Raizal Ancestral" destacado</li>
+          <li style="padding:5px 0;font-size:13px">💳 Reservar taller → voucher QR + +100 GP</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="eyebrow" style="color:var(--green)">Nota estratégica</div>
+        <h3>Por qué esto vale más que los tours</h3>
+        <p style="font-size:13px;line-height:1.6;color:var(--muted)">El turista cultural paga más por experiencias auténticas. Un taller de Coco ART con Breda Sky no lo encuentra en Booking ni en ninguna OTA. Solo existe en GuanaGO porque solo GuanaGO tiene acceso a ese ecosistema Raizal. Esto justifica el sello "experiencia exclusiva" y precios 2–3x más altos que un tour estándar.</p>
+        <div class="ins igr" style="margin-top:12px">
+          <div class="il">Bono GuanaPoints</div>
+          <p>Completar una experiencia cultural = +100 GP. Es el bono más alto del ecosistema. Incentiva explícitamente al turista a elegir cultura sobre turismo masivo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RUTA TÉCNICA DEL MICROSITE -->
+  <div class="sh" style="margin-top:32px">
+    <div class="sh-dot" style="background:var(--purple)"></div>
+    <div><h2>Ruta técnica del microsite</h2><p>Cómo renderiza la app el microsite de un aliado</p></div>
+  </div>
+  <div class="flow">
+    <div class="fstep"><div class="fn">01</div><div class="fi">🌐</div><div class="fl">URL request</div><div class="fs">guanago.travel/bushi-food</div></div>
+    <div class="fstep"><div class="fn">02</div><div class="fi">🔀</div><div class="fl">React Router</div><div class="fs">/aliado/:slug</div></div>
+    <div class="fstep"><div class="fn">03</div><div class="fi">🔥</div><div class="fl">Firestore query</div><div class="fs">aliados/{slug}</div></div>
+    <div class="fstep"><div class="fn">04</div><div class="fi">🗄</div><div class="fl">Airtable fallback</div><div class="fs">si no está en cache</div></div>
+    <div class="fstep"><div class="fn">05</div><div class="fi">🧩</div><div class="fl">AliadoPage.tsx</div><div class="fs">renderiza por tipo</div></div>
+    <div class="fstep"><div class="fn">06</div><div class="fi">💳</div><div class="fl">CTA → checkout</div><div class="fs">PayU o WhatsApp</div></div>
+  </div>
+
+  <div class="cb">
+<span class="c">// Ruta en React Router (App.tsx o routes.tsx)</span>
+<span class="k">const</span> ALIADO_SLUG = '/aliado/:slug';
+
+<span class="c">// AliadoPage.tsx — lógica de renderizado por tipo</span>
+<span class="k">const</span> AliadoPage = () => {
+  <span class="k">const</span> { slug } = useParams();
+  <span class="k">const</span> [aliado, setAliado] = useState(null);
+
+  useEffect(() => {
+    <span class="c">// 1. Intentar desde Firestore (cache local)</span>
+    <span class="k">const</span> ref = doc(db, <span class="s">'aliados'</span>, slug);
+    getDoc(ref).then(snap => {
+      <span class="k">if</span> (snap.exists()) setAliado(snap.data());
+      <span class="k">else</span> fetchFromBackend(slug); <span class="c">// fallback → Node/Airtable</span>
+    });
+  }, [slug]);
+
+  <span class="c">// 2. Renderizar según tipo de aliado</span>
+  <span class="k">if</span> (!aliado) <span class="k">return</span> &lt;LoadingSkeleton /&gt;;
+  
+  <span class="k">switch</span> (aliado.tipo) {
+    <span class="k">case</span> <span class="s">'alojamiento'</span>: <span class="k">return</span> &lt;AlojamientoView data={aliado} /&gt;;
+    <span class="k">case</span> <span class="s">'tour'</span>:        <span class="k">return</span> &lt;TourView data={aliado} /&gt;;
+    <span class="k">case</span> <span class="s">'restaurante'</span>: <span class="k">return</span> &lt;RestauranteView data={aliado} /&gt;;
+    <span class="k">case</span> <span class="s">'taxi'</span>:        <span class="k">return</span> &lt;TaxiView data={aliado} /&gt;;
+    <span class="k">case</span> <span class="s">'cultural'</span>:    <span class="k">return</span> &lt;CulturalView data={aliado} /&gt;;
+    <span class="k">default</span>:           <span class="k">return</span> &lt;GenericAliadoView data={aliado} /&gt;;
+  }
+};
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PANEL 4: BASE DE DATOS UNIFICADA
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="p-base_datos">
+  <div class="sh">
+    <div class="sh-dot" style="background:var(--green)"></div>
+    <div><h2>Base de datos unificada por tipo de aliado</h2>
+    <p>Airtable como maestro de datos → Make sincroniza a Firestore → App lee desde Firestore. Un registro en Directorio_Mapa = un aliado. Tablas extensoras por tipo.</p></div>
+  </div>
+
+  <div class="ins-row">
+    <div class="ins it">
+      <div class="il">Regla de diseño</div>
+      <p>Directorio_Mapa es el registro maestro. Todos los demás (<code>Alojamiento</code>, <code>ServiciosTuristicos_SAI</code>, <code>Menu_Restaurante</code>) son tablas linked por <code>Aliado_ID</code>.</p>
+    </div>
+    <div class="ins ig">
+      <div class="il">Blocker #1 actual</div>
+      <p><strong>31 registros en Directorio_Mapa, todos con ID_Slug vacío.</strong> Sin slug, ningún microsite tiene URL. Esta es la tarea de mayor impacto antes del lanzamiento.</p>
+    </div>
+    <div class="ins ic">
+      <div class="il">Blocker #2 actual</div>
+      <p>~18 registros con teléfono <code>5555555</code>. Limpiar antes de hacer público el directorio para no mostrar datos falsos al turista.</p>
+    </div>
+  </div>
+
+  <!-- ESTRUCTURA MAESTRO -->
+  <div class="eyebrow" style="color:var(--green);margin-bottom:12px">Tabla maestra: Directorio_Mapa (tblbrq0U77RAjgG9N)</div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Obligatorio</th><th>Notas</th></tr></thead>
+      <tbody>
+        <tr><td>ID_Slug</td><td><span class="pill pt">Text</span></td><td>🔴 Sí</td><td>URL-safe: <code>bushi-food</code>, <code>capy-beach</code>. Sin espacios ni tildes.</td></tr>
+        <tr><td>Nombre_Comercial</td><td><span class="pill pn">Text</span></td><td>🔴 Sí</td><td>Nombre público en app</td></tr>
+        <tr><td>Tipo_Aliado</td><td><span class="pill pp">Single-select</span></td><td>🔴 Sí</td><td>alojamiento / tour / restaurante / taxi / cultural / otro</td></tr>
+        <tr><td>Plan_Activo</td><td><span class="pill pp">Single-select</span></td><td>🔴 Sí</td><td>Explorador / Activo / Premium</td></tr>
+        <tr><td>Es_Aliado_GuanaGO</td><td><span class="pill pgr">Boolean</span></td><td>🔴 Sí</td><td>true = aparece en directorio público</td></tr>
+        <tr><td>Raizal_Owned</td><td><span class="pill pgr">Boolean</span></td><td>🟡 No</td><td>Muestra badge 🌴</td></tr>
+        <tr><td>Lat</td><td><span class="pill pb">Number</span></td><td>🔴 Sí</td><td>Para pin en Mapbox</td></tr>
+        <tr><td>Lon</td><td><span class="pill pb">Number</span></td><td>🔴 Sí</td><td>Para pin en Mapbox</td></tr>
+        <tr><td>Telefono</td><td><span class="pill pn">Phone</span></td><td>🟡 No</td><td>Real — no placeholder 5555555</td></tr>
+        <tr><td>WhatsApp</td><td><span class="pill pn">Phone</span></td><td>🟡 No</td><td>Formato +57...</td></tr>
+        <tr><td>Descripcion_Corta</td><td><span class="pill pn">Long text</span></td><td>🔴 Sí</td><td>Max 180 chars para card en app</td></tr>
+        <tr><td>Foto_Principal_URL</td><td><span class="pill pn">URL</span></td><td>🔴 Sí</td><td>Cloudinary — 800x600 mín.</td></tr>
+        <tr><td>Firebase_UID</td><td><span class="pill pb">Text</span></td><td>🟡 No</td><td>ID del usuario en Firebase Auth</td></tr>
+        <tr><td>Saldo_GP_Empresa</td><td><span class="pill pg">Number</span></td><td>auto</td><td>🔒 Campo interno — nunca exponer en API pública</td></tr>
+        <tr><td>Comision_Pactada</td><td><span class="pill pg">Number</span></td><td>🔴 Sí</td><td>🔒 Campo interno — nunca exponer</td></tr>
+        <tr><td>Estado_Registro</td><td><span class="pill pp">Single-select</span></td><td>🔴 Sí</td><td>Activo / Suspendido / Borrador</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- CAMPOS PRIVADOS -->
+  <div class="ins-row">
+    <div class="ins ic">
+      <div class="il">⚠️ Campos privados — NUNCA exponer</div>
+      <p><code>Saldo_GP_Empresa</code>, <code>Comision_Pactada</code>, <code>Precio_Neto_Agencia</code>, <code>Utilidad</code>, <code>admin_interno</code> en RAG. El backend debe filtrarlos explícitamente en cada endpoint público.</p>
+    </div>
+    <div class="ins it">
+      <div class="il">Script para poblar ID_Slug</div>
+      <p>Patrón: tomar <code>Nombre_Comercial</code>, convertir a lowercase, reemplazar espacios por <code>-</code>, eliminar tildes y caracteres especiales. Ejecutar en Make.com o directamente vía Airtable API.</p>
+    </div>
+  </div>
+
+  <div class="cb">
+<span class="c">// Función helper: generar slug desde nombre</span>
+<span class="k">function</span> generarSlug(nombre) {
+  <span class="k">return</span> nombre
+    .toLowerCase()
+    .normalize(<span class="s">'NFD'</span>)
+    .replace(/[\u0300-\u036f]/g, <span class="s">''</span>)  <span class="c">// eliminar tildes</span>
+    .replace(/[^a-z0-9\s-]/g, <span class="s">''</span>)   <span class="c">// solo alfanumérico</span>
+    .trim()
+    .replace(/\s+/g, <span class="s">'-'</span>);           <span class="c">// espacios → guión</span>
+}
+
+<span class="c">// Ejemplos:</span>
+<span class="c">// "Bushi Food"     → "bushi-food"</span>
+<span class="c">// "Capy Beach"     → "capy-beach"</span>
+<span class="c">// "Casa Las Palmas"→ "casa-las-palmas"</span>
+<span class="c">// "Capitán Mandy"  → "capitan-mandy"</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PANEL 5: MANUAL ONBOARDING
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="p-onboarding">
+  <div class="sh">
+    <div class="sh-dot" style="background:var(--purple)"></div>
+    <div><h2>Manual de Onboarding para Aliados</h2>
+    <p>Guía paso a paso que el aliado recibe por email y puede seguir desde la app. Incluye sección de ayuda en la plataforma.</p></div>
+  </div>
+
+  <!-- PASO A PASO -->
+  <div class="eyebrow" style="color:var(--purple);margin-bottom:16px">Proceso de activación — 4 pasos, ~45 minutos</div>
+  <div class="flow">
+    <div class="fstep"><div class="fn">Paso 1</div><div class="fi">📋</div><div class="fl">Formulario</div><div class="fs">Datos básicos del negocio</div></div>
+    <div class="fstep"><div class="fn">Paso 2</div><div class="fi">📸</div><div class="fl">Fotos & Contenido</div><div class="fs">3 fotos mín. + descripción</div></div>
+    <div class="fstep"><div class="fn">Paso 3</div><div class="fi">✅</div><div class="fl">Revisión GuanaGO</div><div class="fs">24h hábiles</div></div>
+    <div class="fstep"><div class="fn">Paso 4</div><div class="fi">🎉</div><div class="fl">Activación</div><div class="fs">Microsite live + kit enviado</div></div>
+  </div>
+
+  <!-- CHECKLIST ALIADO -->
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="eyebrow" style="color:var(--purple)">Checklist del aliado</div>
+      <h3>Lo que necesitamos de vos</h3>
+      <ul class="checklist">
+        <li><div class="ck pend"></div>Nombre comercial exacto</li>
+        <li><div class="ck pend"></div>Teléfono WhatsApp activo</li>
+        <li><div class="ck pend"></div>Dirección / ubicación GPS</li>
+        <li><div class="ck pend"></div>Mínimo 3 fotos del negocio (800x600px)</li>
+        <li><div class="ck pend"></div>Descripción breve (máx. 180 caracteres)</li>
+        <li><div class="ck pend"></div>Horario de atención</li>
+        <li><div class="ck pend"></div>Lista de servicios/productos con precios</li>
+        <li><div class="ck pend"></div>Copia del RUT o documento de identidad</li>
+        <li><div class="ck pend"></div>Número de cuenta para pagos</li>
+        <li><div class="ck pend"></div>¿Es negocio Raizal? (sí/no)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="eyebrow" style="color:var(--teal)">Lo que GuanaGO hace por vos</div>
+      <h3>Activación sin esfuerzo técnico</h3>
+      <ul class="checklist">
+        <li><div class="ck done">✓</div>Subimos tu contenido inicial</li>
+        <li><div class="ck done">✓</div>Generamos tu slug automáticamente</li>
+        <li><div class="ck done">✓</div>Creamos tu microsite <code>/[slug]</code></li>
+        <li><div class="ck done">✓</div>Sincronizamos con el mapa interactivo</li>
+        <li><div class="ck done">✓</div>Te creamos usuario en el panel</li>
+        <li><div class="ck done">✓</div>Imprimimos y enviamos tu kit QR</li>
+        <li><div class="ck done">✓</div>Email de bienvenida con tutorial</li>
+        <li><div class="ck done">✓</div>Primera sesión de capacitación (30 min)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SECCIONES DE AYUDA EN APP -->
+  <div class="sh" style="margin-top:24px">
+    <div class="sh-dot" style="background:var(--blue)"></div>
+    <div><h2>Sección de Ayuda en la App</h2><p>Videos + texto paso a paso embebidos en el panel del aliado. Sin salir de la app.</p></div>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Video / Módulo</th><th>Audiencia</th><th>Duración</th><th>Tema</th></tr></thead>
+      <tbody>
+        <tr><td>V01 · Bienvenida GuanaGO</td><td>Aliado nuevo</td><td>2 min</td><td>Qué es la plataforma, qué va a ver en el panel</td></tr>
+        <tr><td>V02 · Tu microsite</td><td>Aliado</td><td>3 min</td><td>Cómo quedaría tu página pública, cómo actualizarla</td></tr>
+        <tr><td>V03 · Cómo llegan reservas</td><td>Aliado</td><td>3 min</td><td>Notificación, confirmación, voucher QR</td></tr>
+        <tr><td>V04 · Escanear un voucher</td><td>Aliado operador</td><td>2 min</td><td>Pantalla de escáner en panel Partner</td></tr>
+        <tr><td>V05 · GuanaPoints para tu negocio</td><td>Aliado</td><td>2 min</td><td>Qué son, cómo se emiten, cómo funciona el canje</td></tr>
+        <tr><td>V06 · Tus métricas</td><td>Aliado Activo/Premium</td><td>3 min</td><td>Dashboard: escaneos QR, reservas, GuanaPoints emitidos</td></tr>
+        <tr><td>V07 · Bienvenida GuanaGO (Turista)</td><td>Turista</td><td>90 seg</td><td>Cómo usar el mapa, reservar, ganar puntos</td></tr>
+        <tr><td>V08 · GuanaPoints para visitantes</td><td>Turista</td><td>2 min</td><td>Cómo ganar y canjear puntos en la isla</td></tr>
+        <tr><td>V09 · Cómo reservar un tour</td><td>Turista</td><td>2 min</td><td>Búsqueda → detalle → fecha → pago → voucher</td></tr>
+        <tr><td>V10 · Cultura Kriol con GuanaGO</td><td>Turista / Aliado</td><td>3 min</td><td>Las experiencias culturales exclusivas del ecosistema</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PANEL 6: MAKE + CRM
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="p-make">
+  <div class="sh">
+    <div class="sh-dot" style="background:var(--blue)"></div>
+    <div><h2>Make + CRM Backend en producción</h2>
+    <p>El CRM ya está en Firestore + Airtable. Los escenarios Make conectan el flujo de aliados con el CRM existente sin reescribir el backend.</p></div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">🏪</span>
+      <h3>Escenario: Nuevo aliado registrado → CRM → Microsite → Kit</h3>
+      <span class="pill pgr">Prioridad 1</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">Form aliado completado</span>
+      <span class="sa">→</span>
+      <span class="ss">Nuevo record Directorio_Mapa</span>
+      <span class="sa">→</span>
+      <span class="ss">Auto-generar ID_Slug</span>
+      <span class="sa">→</span>
+      <span class="ss">Crear doc en Firestore /aliados/{slug}</span>
+      <span class="sa">→</span>
+      <span class="ss">Crear usuario Firebase Auth (rol=Aliado)</span>
+      <span class="sa">→</span>
+      <span class="ss">Crear lead en Leads/Conversaciones_CRM</span>
+      <span class="sa">→</span>
+      <span class="ss">Email bienvenida (Alegra o SendGrid)</span>
+      <span class="sa">→</span>
+      <span class="ss">Notificar Sky en Telegram</span>
+    </div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">💳</span>
+      <h3>Escenario: Reserva pagada → CRM actualizado → GP emitidos</h3>
+      <span class="pill pgr">Prioridad 1</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">PayU webhook APPROVED</span>
+      <span class="sa">→</span>
+      <span class="ss">Buscar CotizacionesGG (GG-recXXXX)</span>
+      <span class="sa">→</span>
+      <span class="ss">Update Estado_Pago → "Pagado"</span>
+      <span class="sa">→</span>
+      <span class="ss">Generar voucher QR en Firestore</span>
+      <span class="sa">→</span>
+      <span class="ss">Calcular GP (monto/1000 + bonos)</span>
+      <span class="sa">→</span>
+      <span class="ss">Update Saldo_GP usuario Firestore</span>
+      <span class="sa">→</span>
+      <span class="ss">Log en Log_GuanaPoints (Airtable)</span>
+      <span class="sa">→</span>
+      <span class="ss">Update Saldo_GP_Empresa aliado</span>
+      <span class="sa">→</span>
+      <span class="ss">Crear factura Alegra</span>
+      <span class="sa">→</span>
+      <span class="ss">Email turista: voucher + factura</span>
+    </div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">🔄</span>
+      <h3>Escenario: Airtable → Firestore sync (datos del microsite)</h3>
+      <span class="pill pg">Prioridad 2</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">Watch: Directorio_Mapa modificado</span>
+      <span class="sa">→</span>
+      <span class="ss">Filtrar: solo campos públicos (sin Comision, Saldo_GP_Empresa)</span>
+      <span class="sa">→</span>
+      <span class="ss">Construir objeto JSON público</span>
+      <span class="sa">→</span>
+      <span class="ss">setDoc Firestore /aliados/{slug}</span>
+      <span class="sa">→</span>
+      <span class="ss">Invalidar caché frontend si existe</span>
+    </div>
+  </div>
+
+  <div class="sc">
+    <div class="sc-head">
+      <span style="font-size:20px">📊</span>
+      <h3>Escenario: Reporte semanal CEO (lunes 8am)</h3>
+      <span class="pill pb">Prioridad 3</span>
+    </div>
+    <div class="sc-steps">
+      <span class="ss">Cron trigger lunes 8:00</span>
+      <span class="sa">→</span>
+      <span class="ss">Leer Conversaciones_CRM: reservas semana</span>
+      <span class="sa">→</span>
+      <span class="ss">Leer Log_GuanaPoints: GP emitidos/canjeados</span>
+      <span class="sa">→</span>
+      <span class="ss">Contar aliados activos Directorio_Mapa</span>
+      <span class="sa">→</span>
+      <span class="ss">Construir resumen</span>
+      <span class="sa">→</span>
+      <span class="ss">Enviar Telegram + Email CEO</span>
+    </div>
+  </div>
+
+  <!-- TABLA CRM → CAMPOS DE ALIADO -->
+  <div class="sh" style="margin-top:24px">
+    <div class="sh-dot" style="background:var(--teal)"></div>
+    <div><h2>CRM: Conversaciones_CRM (ya en producción)</h2>
+    <p>Tabla <code>tbl2Uu3IwcWKAQ4bP</code> — agregar campos de aliado para trazabilidad completa</p></div>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Campo nuevo a agregar</th><th>Tipo</th><th>Propósito</th></tr></thead>
+      <tbody>
+        <tr><td>Aliado_ID</td><td><span class="pill pt">Link → Directorio_Mapa</span></td><td>Qué aliado provee el servicio reservado</td></tr>
+        <tr><td>Tipo_Servicio</td><td><span class="pill pp">Select</span></td><td>alojamiento / tour / restaurante / taxi / cultural</td></tr>
+        <tr><td>GP_Emitidos</td><td><span class="pill pg">Number</span></td><td>GP dados al turista por esta transacción</td></tr>
+        <tr><td>Voucher_QR_URL</td><td><span class="pill pn">URL</span></td><td>Link al voucher generado en Firestore Storage</td></tr>
+        <tr><td>Estado_Voucher</td><td><span class="pill pp">Select</span></td><td>Pendiente / Escaneado / Expirado</td></tr>
+        <tr><td>Fecha_Check_In</td><td><span class="pill pb">Date</span></td><td>Para alojamientos y tours con fecha</td></tr>
+        <tr><td>Factura_Alegra_URL</td><td><span class="pill pn">URL</span></td><td>PDF factura DIAN</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="foot">
+  <div class="foot-brand">🌴 GuanaGO · guanago.travel</div>
+  <div class="foot-meta">GuíaSAI S.A.S. · RNT 48674 · NIT 901013739-9 · San Andrés Islas · Jun 2026</div>
+</div>
+
+<script>
+function sw(btn, id) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('p-' + id).classList.add('on');
+}
+function swType(btn, id) {
+  const parent = btn.closest('.panel');
+  parent.querySelectorAll('.type-tab').forEach(b => b.classList.remove('on'));
+  parent.querySelectorAll('.type-panel').forEach(p => p.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('tp-' + id).classList.add('on');
+}
+</script>
+</body>
+</html>

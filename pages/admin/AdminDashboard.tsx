@@ -7,7 +7,7 @@ import {
   Bot, Send, Loader2, ChevronDown, ChevronUp,
   CheckCircle2, AlertCircle, Receipt, Briefcase, ListChecks,
   Menu, Wifi, WifiOff, Home, Settings, Globe, Layers, Trophy,
-  CalendarDays, Crown, Gift, BarChart3,
+  CalendarDays, Crown, Gift, BarChart3, Store,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { setInitialSection } from './AdminAliados';
@@ -558,6 +558,8 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
                 { id: 'guanapoints',    label: 'GuanaPoints',       icon: <Gift size={16} className="text-yellow-400" />,          cls: 'border-yellow-800 hover:border-yellow-500', grad: 'from-yellow-900/40 to-amber-900/40' },
                 { id: 'estrategia',     label: 'Estrategia',        icon: <BarChart3 size={16} className="text-indigo-400" />,     cls: 'border-indigo-800 hover:border-indigo-500', grad: 'from-indigo-900/50 to-blue-900/50' },
                 { id: 'wifi',           label: 'WiFi Captivo',      icon: <Wifi size={16} className="text-teal-400" />,            cls: 'border-teal-800 hover:border-teal-500',     grad: 'from-teal-900/50 to-emerald-900/50' },
+                { id: 'documentos',     label: 'Documentos & Kits', icon: <FileText size={16} className="text-purple-400" />,      cls: 'border-purple-800 hover:border-purple-500', grad: 'from-purple-900/50 to-violet-900/50' },
+                { id: 'microsites',     label: 'Micrositios',       icon: <Store size={16} className="text-green-400" />,          cls: 'border-green-800 hover:border-green-500',   grad: 'from-green-900/50 to-emerald-900/50' },
               ] as const).map(sec => (
                 <button
                   key={sec.id}

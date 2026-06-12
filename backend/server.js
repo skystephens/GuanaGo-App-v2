@@ -149,6 +149,13 @@ app.get('/disponibilidad-propietario', (req, res) => {
   res.sendFile(join(__dirname, '..', 'public', 'disponibilidad-propietario.html'));
 });
 
+// ── Micrositios de Aliados ────────────────────────────────────────────────────
+// Página pública por negocio del Directorio_Mapa: /aliado/bushi-food
+// El HTML lee el slug del path y consulta /api/directory/slug/:slug
+app.get('/aliado/:slug', (req, res) => {
+  res.sendFile(join(__dirname, '..', 'public', 'micrositio-aliado.html'));
+});
+
 // ── Frontend React (SPA) ──────────────────────────────────────────────────────
 // Sirve el build de Vite. /pagar y /api/* ya están manejados arriba.
 const distPath = join(__dirname, '..', 'dist');

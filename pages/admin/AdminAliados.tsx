@@ -5,9 +5,12 @@ import {
   Calendar, Camera, BarChart3, Smartphone, Globe,
   Pencil, Save, Plus, Trash2, CalendarDays, Hotel, ChevronLeft, ChevronRight,
   ExternalLink, Loader2, RefreshCw,
+  FileText, Eye, RotateCcw, Store, Copy, Search,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { getAlojamientosSAI } from '../../services/airtableService';
+import { auth } from '../../lib/firebase';
+import { loadDocContent, saveDocContent } from '../../services/docsContentService';
 
 type BeneficioRow = { id: string; label: string; basico: boolean; activo: boolean; premium: boolean };
 
@@ -270,6 +273,54 @@ const WIFI_PASOS = [
   { num: '06', titulo: 'Recibe puntos y oferta del local', desc: '50 GuanaPoints + notificación de la oferta del día del negocio.' },
 ];
 
+// ─── Documentos editables (artefactos estratégicos de aliados) ────────────────
+// Misma mecánica que los docs del Command Center: el HTML original vive en
+// public/docs/, la versión editada se guarda en Firestore (colección docs_content).
+
+type AliadoDoc = { id: string; title: string; subtitle: string; desc: string; url: string; color: string; emoji: string };
+
+const ALIADOS_DOCS: AliadoDoc[] = [
+  {
+    id: 'kit-aliados-2026',
+    title: 'Kit de Aliados 2026',
+    subtitle: 'Pitch · Planes · Microsites · Onboarding · Make',
+    desc: 'Discurso de venta con manejo de objeciones, planes y precios, arquitectura de microsites, base de datos y manual de onboarding.',
+    url: '/docs/kit-aliados-2026.html',
+    color: '#00c9b1',
+    emoji: '🧰',
+  },
+  {
+    id: 'sistema-operativo-aliado',
+    title: 'Sistema Operativo del Aliado',
+    subtitle: 'Del registro a la rentabilidad permanente',
+    desc: 'Ciclo de vida operativo del aliado dentro del ecosistema GuanaGO: flujos, panel y procesos día a día.',
+    url: '/docs/sistema-operativo-aliado.html',
+    color: '#f9a825',
+    emoji: '⚙️',
+  },
+  {
+    id: 'taxonomia-vitrinas-airtable',
+    title: 'Taxonomía de Vitrinas & Embudo',
+    subtitle: '2 familias · 11 tipos · 26 subtipos · Airtable',
+    desc: 'Clasificación completa de vitrinas, mapa real del base Airtable, embudo de ofertas y escenarios Make.',
+    url: '/docs/taxonomia-vitrinas-airtable.html',
+    color: '#a78bfa',
+    emoji: '🗂️',
+  },
+];
+
+// ─── Helpers de micrositios ───────────────────────────────────────────────────
+
+function slugify(nombre: string): string {
+  return (nombre || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 // ─── Helpers de disponibilidad ────────────────────────────────────────────────
@@ -304,6 +355,8 @@ const SECTION_DEFS = [
   { id: 'guanapoints',    label: 'Sistema GuanaPoints',     desc: 'Lealtad multinivel para aliados y turistas', icon: Gift,         color: 'yellow' },
   { id: 'estrategia',     label: 'Estrategia de Contenido', desc: 'Editorial, embudos por negocio, stack',      icon: BarChart3,    color: 'indigo' },
   { id: 'wifi',           label: 'WiFi Captivo',            desc: 'Portal de captación digital en negocios',    icon: Wifi,         color: 'teal'   },
+  { id: 'documentos',     label: 'Documentos & Kits',       desc: 'Kit aliados, sistema operativo, taxonomía — editables', icon: FileText, color: 'purple' },
+  { id: 'microsites',     label: 'Micrositios',             desc: 'Páginas públicas por negocio — /aliado/[slug]',          icon: Store,    color: 'green'  },
 ] as const;
 
 const COLOR_MAP: Record<string, { icon: string; bg: string; border: string }> = {
@@ -312,6 +365,8 @@ const COLOR_MAP: Record<string, { icon: string; bg: string; border: string }> = 
   yellow: { icon: 'text-yellow-400', bg: 'bg-yellow-900/20', border: 'border-yellow-800/30' },
   indigo: { icon: 'text-indigo-400', bg: 'bg-indigo-900/20', border: 'border-indigo-800/30' },
   teal:   { icon: 'text-teal-400',   bg: 'bg-teal-900/20',   border: 'border-teal-800/30'   },
+  purple: { icon: 'text-purple-400', bg: 'bg-purple-900/20', border: 'border-purple-800/30' },
+  green:  { icon: 'text-green-400',  bg: 'bg-green-900/20',  border: 'border-green-800/30'  },
 };
 
 let _pendingSection: string | null = null;
@@ -381,8 +436,200 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
     setNewLabel('');
   };
 
+  // ── Documentos editables (mismo flujo que Command Center) ─────────────────
+  const [docModal, setDocModal]           = useState<AliadoDoc | null>(null);
+  const [docEditMode, setDocEditMode]     = useState(false);
+  const [docEditHtml, setDocEditHtml]     = useState('');
+  const [docSavedHtml, setDocSavedHtml]   = useState<string | null>(null);
+  const [docLoadingEdit, setDocLoadingEdit] = useState(false);
+  const [docSaving, setDocSaving]         = useState(false);
+  const [docSaveOk, setDocSaveOk]         = useState(false);
+  const [docSavedBy, setDocSavedBy]       = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!docModal) { setDocSavedHtml(null); setDocEditMode(false); return; }
+    setDocSavedHtml(null);
+    setDocEditMode(false);
+    setDocSaveOk(false);
+    loadDocContent(docModal.id).then(data => {
+      if (data) {
+        setDocSavedHtml(data.html);
+        setDocSavedBy(data.updatedBy ?? null);
+      }
+    });
+  }, [docModal]);
+
+  const startDocEdit = async () => {
+    if (!docModal) return;
+    setDocLoadingEdit(true);
+    try {
+      const content = docSavedHtml ?? await fetch(docModal.url).then(r => r.text());
+      setDocEditHtml(content);
+      setDocEditMode(true);
+    } finally {
+      setDocLoadingEdit(false);
+    }
+  };
+
+  const saveDoc = async () => {
+    if (!docModal) return;
+    setDocSaving(true);
+    try {
+      const email = auth.currentUser?.email ?? 'admin';
+      await saveDocContent(docModal.id, docEditHtml, email);
+      setDocSavedHtml(docEditHtml);
+      setDocSavedBy(email);
+      setDocEditMode(false);
+      setDocSaveOk(true);
+      setTimeout(() => setDocSaveOk(false), 3000);
+    } finally {
+      setDocSaving(false);
+    }
+  };
+
+  const restoreDocOriginal = async () => {
+    if (!docModal) return;
+    setDocLoadingEdit(true);
+    try {
+      const original = await fetch(docModal.url).then(r => r.text());
+      setDocEditHtml(original);
+    } finally {
+      setDocLoadingEdit(false);
+    }
+  };
+
+  // ── Micrositios ────────────────────────────────────────────────────────────
+  const [msList, setMsList]     = useState<any[]>([]);
+  const [msLoading, setMsLoading] = useState(false);
+  const [msSearch, setMsSearch]   = useState('');
+  const [msCopied, setMsCopied]   = useState<string | null>(null);
+
+  const loadMicrosites = async () => {
+    setMsLoading(true);
+    try {
+      const r = await fetch('/api/directory').then(res => res.json());
+      setMsList(r.data || []);
+    } catch { /* silencioso */ }
+    finally { setMsLoading(false); }
+  };
+
+  useEffect(() => {
+    if (section === 'microsites' && msList.length === 0) loadMicrosites();
+  }, [section]);
+
+  const msFiltered = msList.filter(p => {
+    const q = msSearch.trim().toLowerCase();
+    return !q
+      || p.name?.toLowerCase().includes(q)
+      || p.category?.toLowerCase().includes(q);
+  });
+
+  const copyMsLink = (slug: string) => {
+    navigator.clipboard.writeText(`${window.location.origin}/aliado/${slug}`);
+    setMsCopied(slug);
+    setTimeout(() => setMsCopied(null), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 text-white pb-28">
+
+      {/* ── Modal visor/editor de documentos ── */}
+      {docModal && (
+        <div className="fixed inset-0 z-50 bg-gray-950/95 flex flex-col">
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-800 flex-shrink-0">
+            <span className="text-base">{docModal.emoji}</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold text-gray-100 truncate">{docModal.title}</div>
+              <div className="text-[10px] text-gray-500 flex items-center gap-1.5">
+                {docModal.subtitle}
+                {docSavedHtml && !docEditMode && (
+                  <span className="text-green-500 flex items-center gap-0.5">
+                    <Check size={8} /> versión guardada
+                  </span>
+                )}
+                {docSaveOk && (
+                  <span className="text-green-400 flex items-center gap-0.5 animate-pulse">
+                    <Check size={8} /> guardado
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {!docEditMode ? (
+              <button
+                onClick={startDocEdit}
+                disabled={docLoadingEdit}
+                className="text-[11px] text-amber-400 border border-amber-800/50 px-2.5 py-1.5 rounded-lg hover:border-amber-600 flex items-center gap-1 disabled:opacity-50"
+              >
+                {docLoadingEdit ? <Loader2 size={11} className="animate-spin" /> : <Pencil size={11} />}
+                Editar
+              </button>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={restoreDocOriginal}
+                  disabled={docLoadingEdit}
+                  title="Restaurar HTML original"
+                  className="text-[11px] text-gray-400 border border-gray-700 px-2 py-1.5 rounded-lg hover:border-gray-500 flex items-center gap-1"
+                >
+                  <RotateCcw size={11} /> Original
+                </button>
+                <button
+                  onClick={() => setDocEditMode(false)}
+                  className="text-[11px] text-blue-400 border border-blue-800/50 px-2.5 py-1.5 rounded-lg hover:border-blue-600 flex items-center gap-1"
+                >
+                  <Eye size={11} /> Vista
+                </button>
+                <button
+                  onClick={saveDoc}
+                  disabled={docSaving}
+                  className="text-[11px] text-green-400 border border-green-700/60 px-2.5 py-1.5 rounded-lg hover:border-green-500 flex items-center gap-1 disabled:opacity-50"
+                >
+                  {docSaving ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
+                  Guardar
+                </button>
+              </div>
+            )}
+
+            {!docEditMode && (
+              <a href={docModal.url} target="_blank" rel="noreferrer"
+                className="text-[11px] text-gray-500 border border-gray-800 px-2 py-1.5 rounded-lg hover:border-gray-600 flex items-center gap-1">
+                <ExternalLink size={11} />
+              </a>
+            )}
+            <button onClick={() => setDocModal(null)}
+              className="w-8 h-8 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-white flex-shrink-0">
+              <X size={14} />
+            </button>
+          </div>
+
+          {docEditMode ? (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="px-3 py-2 bg-gray-900/80 border-b border-gray-800 flex items-center gap-2 text-[10px] text-gray-500">
+                <Pencil size={10} className="text-amber-400" />
+                <span>Editando HTML de <strong className="text-gray-300">{docModal.title}</strong> — los cambios se guardan en la nube y sobreescriben el documento al visualizarlo</span>
+              </div>
+              <textarea
+                className="flex-1 w-full bg-gray-950 text-gray-200 font-mono text-[12px] p-4 resize-none outline-none border-0 leading-relaxed"
+                value={docEditHtml}
+                onChange={e => setDocEditHtml(e.target.value)}
+                spellCheck={false}
+                style={{ tabSize: 2 }}
+              />
+              <div className="px-4 py-2 bg-gray-900/60 border-t border-gray-800 flex items-center justify-between text-[10px] text-gray-600">
+                <span>{docEditHtml.length.toLocaleString()} caracteres</span>
+                {docSavedBy && <span>Última edición: {docSavedBy}</span>}
+              </div>
+            </div>
+          ) : (
+            docSavedHtml ? (
+              <iframe srcDoc={docSavedHtml} className="flex-1 w-full border-0" title={docModal.title} />
+            ) : (
+              <iframe src={docModal.url} className="flex-1 w-full border-0" title={docModal.title} loading="lazy" />
+            )
+          )}
+        </div>
+      )}
 
       {/* Header */}
       <div className="sticky top-0 z-30 bg-gray-900/90 backdrop-blur border-b border-gray-800 px-5 py-3">
@@ -1050,6 +1297,130 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               </div>
             </div>
           </>
+        )}
+
+        {/* ── DOCUMENTOS & KITS ───────────────────────────────────────── */}
+        {section === 'documentos' && (
+        <>
+          <div className="flex items-center gap-2 pt-1 pb-1">
+            <FileText size={15} className="text-purple-400" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">Documentos & Kits</h2>
+          </div>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            Artefactos estratégicos del ecosistema de aliados. Toca uno para verlo en pantalla completa;
+            con <span className="text-amber-400 font-bold">Editar</span> modificas su HTML y la versión
+            guardada queda en la nube para todo el equipo.
+          </p>
+          <div className="space-y-3">
+            {ALIADOS_DOCS.map(d => (
+              <button
+                key={d.id}
+                onClick={() => setDocModal(d)}
+                className="w-full text-left bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-2xl p-4 transition-all active:scale-[0.99] flex items-start gap-3"
+              >
+                <span className="text-2xl shrink-0">{d.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-black text-sm text-white">{d.title}</p>
+                  <p className="text-[10px] font-bold mt-0.5" style={{ color: d.color }}>{d.subtitle}</p>
+                  <p className="text-[11px] text-gray-500 mt-1 leading-relaxed">{d.desc}</p>
+                </div>
+                <ChevronRight size={16} className="text-gray-600 shrink-0 mt-1" />
+              </button>
+            ))}
+          </div>
+        </>
+        )}
+
+        {/* ── MICROSITIOS ─────────────────────────────────────────────── */}
+        {section === 'microsites' && (
+        <>
+          <div className="flex items-center gap-2 pt-1 pb-1">
+            <Store size={15} className="text-green-400" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">Micrositios de Aliados</h2>
+            <button onClick={loadMicrosites} className="ml-auto p-2 rounded-xl hover:bg-gray-800 transition-colors">
+              <RefreshCw size={14} className={`text-gray-500 ${msLoading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            Cada negocio de Directorio_Mapa tiene una página pública en
+            <span className="text-green-400 font-mono text-[11px]"> /aliado/[slug]</span>.
+            El slug se toma del campo ID_Slug en Airtable, o se genera automáticamente del nombre.
+            Útil para alojamientos y tours que no aparecen en el mapa.
+          </p>
+
+          {/* Buscador */}
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+            <input
+              type="text"
+              value={msSearch}
+              onChange={e => setMsSearch(e.target.value)}
+              placeholder="Buscar negocio o categoría..."
+              className="w-full bg-gray-900 border border-gray-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-gray-200 placeholder-gray-600 outline-none focus:border-green-700 transition-colors"
+            />
+          </div>
+
+          {msLoading && (
+            <div className="flex items-center justify-center py-16 gap-3">
+              <Loader2 size={22} className="animate-spin text-green-400" />
+              <span className="text-sm text-gray-500">Cargando directorio...</span>
+            </div>
+          )}
+
+          {!msLoading && msFiltered.length === 0 && (
+            <div className="text-center py-10">
+              <Store size={32} className="mx-auto mb-2 text-gray-700" />
+              <p className="text-sm text-gray-500">
+                {msList.length === 0 ? 'Sin negocios en el directorio' : 'Sin resultados para la búsqueda'}
+              </p>
+            </div>
+          )}
+
+          {!msLoading && msFiltered.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[10px] text-gray-600">{msFiltered.length} negocios</p>
+              {msFiltered.map(p => {
+                const slug = p.slug || slugify(p.name);
+                return (
+                  <div key={p.id} className="bg-gray-900 border border-gray-800 rounded-xl p-3 flex items-center gap-3">
+                    {p.image
+                      ? <img src={p.image} alt={p.name} className="w-9 h-9 rounded-lg object-cover shrink-0" />
+                      : <div className="w-9 h-9 rounded-lg bg-green-900/30 flex items-center justify-center shrink-0">
+                          <Store size={14} className="text-green-500" />
+                        </div>
+                    }
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-white truncate">{p.name}</p>
+                      <p className="text-[10px] text-gray-500 truncate">
+                        {p.category}
+                        <span className="text-gray-700"> · </span>
+                        <span className="font-mono text-green-600">/aliado/{slug}</span>
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => copyMsLink(slug)}
+                      title="Copiar link del micrositio"
+                      className="p-2 rounded-lg hover:bg-green-900/30 transition-colors shrink-0"
+                    >
+                      {msCopied === slug
+                        ? <Check size={13} className="text-green-400" />
+                        : <Copy size={13} className="text-gray-500" />
+                      }
+                    </button>
+                    <a
+                      href={`/aliado/${slug}`}
+                      target="_blank" rel="noopener noreferrer"
+                      title="Abrir micrositio"
+                      className="p-2 rounded-lg hover:bg-green-900/30 transition-colors shrink-0"
+                    >
+                      <ExternalLink size={13} className="text-green-500" />
+                    </a>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
         )}
 
       </div>

@@ -272,6 +272,13 @@ app.get('/disponibilidad-propietario', (req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'disponibilidad-propietario.html'))
 );
 
+// ==================== MICROSITIOS DE ALIADOS ====================
+// Página pública por negocio del Directorio_Mapa: /aliado/bushi-food
+// El HTML lee el slug del path y consulta /api/directory/slug/:slug
+app.get('/aliado/:slug', (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'micrositio-aliado.html'))
+);
+
 // ==================== SPA FALLBACK ====================
 // Servir index.html para cualquier ruta no API (GuanaGO)
 app.use((req, res, next) => {
