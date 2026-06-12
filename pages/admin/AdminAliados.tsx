@@ -36,7 +36,6 @@ interface Props {
   onNavigate: (route: AppRoute) => void;
 }
 
-type Tab = 'planes' | 'estrategia' | 'guanapoints' | 'wifi' | 'disponibilidad';
 
 // ─── Planes ───────────────────────────────────────────────────────────────────
 
@@ -300,7 +299,6 @@ function blockDays(start: string, end: string, year: number, month: number): num
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
-  const [tab, setTab] = useState<Tab>('planes');
   const [planOpen, setPlanOpen] = useState<string | null>('Activo');
   const [tierOpen, setTierOpen] = useState<string | null>('Turista');
 
@@ -337,8 +335,8 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
   };
 
   useEffect(() => {
-    if (tab === 'disponibilidad') loadDisp();
-  }, [tab, mesStr]);
+    loadDisp();
+  }, [mesStr]);
 
   // ── Editor de beneficios ───────────────────────────────────────────────────
   const [beneficios, setBeneficios] = useState<BeneficioRow[]>(BENEFICIOS_DEFAULT);
@@ -361,14 +359,6 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
     setNewLabel('');
   };
 
-  const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
-    { id: 'planes', label: 'Planes', icon: Crown },
-    { id: 'estrategia', label: 'Estrategia', icon: BarChart3 },
-    { id: 'guanapoints', label: 'GuanaPoints', icon: Gift },
-    { id: 'wifi', label: 'WiFi Captivo', icon: Wifi },
-    { id: 'disponibilidad', label: 'Disponibilidad', icon: CalendarDays },
-  ];
-
   const totalIngresoPotencial = (aliados: number) =>
     PLANES.reduce((acc, p) => acc + p.precioNum * aliados, 0);
 
@@ -377,13 +367,13 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
 
       {/* Header */}
       <div className="sticky top-0 z-30 bg-gray-900/90 backdrop-blur border-b border-gray-800 px-5 py-3">
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-3">
           <button onClick={onBack} className="p-2 hover:bg-gray-800 rounded-xl transition-colors">
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="font-black text-base">Estrategia Aliados</h1>
-            <p className="text-[10px] text-gray-500">Planes · Contenido · GuanaPoints · WiFi Captivo</p>
+            <h1 className="font-black text-base">Aliados & Red</h1>
+            <p className="text-[10px] text-gray-500">Disponibilidad · Planes · GuanaPoints · Estrategia</p>
           </div>
           <button
             onClick={() => onNavigate(AppRoute.VINCULAR_COMERCIO)}
@@ -392,29 +382,127 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
             Ver página pública
           </button>
         </div>
-
-        {/* Tabs */}
-        <div className="flex gap-1">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                tab === t.id ? 'bg-teal-700 text-white' : 'text-gray-400 hover:bg-gray-800'
-              }`}
-            >
-              <t.icon size={13} />
-              {t.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="px-5 mt-5 space-y-4">
 
-        {/* ── TAB: PLANES ────────────────────────────────────────────────── */}
-        {tab === 'planes' && (
-          <>
+        {/* ── DISPONIBILIDAD GLOBAL ───────────────────────────────────── */}
+        <div className="flex items-center gap-2 pt-1 pb-1">
+          <CalendarDays size={15} className="text-cyan-400" />
+          <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">Disponibilidad Global</h2>
+        </div>
+        <div>
+          {/* Navegador de mes */}
+          <div className="flex items-center justify-between mb-4">
+            <button onClick={prevMes} className="p-2 rounded-xl hover:bg-gray-800 transition-colors">
+              <ChevronLeft size={16} className="text-gray-400" />
+            </button>
+            <p className="text-sm font-black capitalize" style={{ color: '#22d3ee' }}>{mesLabel}</p>
+            <button onClick={nextMes} className="p-2 rounded-xl hover:bg-gray-800 transition-colors">
+              <ChevronRight size={16} className="text-gray-400" />
+            </button>
+            <button onClick={loadDisp} className="p-2 rounded-xl hover:bg-gray-800 transition-colors ml-1">
+              <RefreshCw size={14} className={`text-gray-500 ${dispLoading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
+          {/* Leyenda */}
+          <div className="flex flex-wrap gap-3 mb-4">
+            {Object.entries(ESTADO_COLOR).map(([estado, color]) => (
+              <div key={estado} className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+                <span className="text-[10px] text-gray-400">{estado}</span>
+              </div>
+            ))}
+          </div>
+
+          {dispLoading && (
+            <div className="flex items-center justify-center py-16 gap-3">
+              <Loader2 size={22} className="animate-spin text-teal-400" />
+              <span className="text-sm text-gray-500">Cargando disponibilidad...</span>
+            </div>
+          )}
+
+          {!dispLoading && (
+            <div className="space-y-3">
+              {dispAloj.length === 0 && (
+                <div className="text-center py-10">
+                  <Hotel size={32} className="mx-auto mb-2 text-gray-700" />
+                  <p className="text-sm text-gray-500">Sin alojamientos cargados</p>
+                </div>
+              )}
+
+              {dispAloj.map(a => {
+                const blocks = dispBlocks[a.id] || [];
+                const total  = diasDelMes(dispYear, dispMonth);
+                const dayMap: Record<number, string> = {};
+                for (const b of blocks) {
+                  for (const d of blockDays(b.start, b.end, dispYear, dispMonth)) {
+                    dayMap[d] = ESTADO_COLOR[b.estado] || '#94a3b8';
+                  }
+                }
+                const hasBlocks = blocks.length > 0;
+
+                return (
+                  <div key={a.id} className="rounded-xl overflow-hidden"
+                    style={{ background: '#0f172a', border: '1px solid #1e293b' }}>
+                    <div className="flex items-center gap-3 px-3 pt-3 pb-2">
+                      {a.image
+                        ? <img src={a.image} alt={a.title} className="w-8 h-8 rounded-lg object-cover shrink-0" />
+                        : <div className="w-8 h-8 rounded-lg bg-teal-900/30 flex items-center justify-center shrink-0">
+                            <Hotel size={14} className="text-teal-500" />
+                          </div>
+                      }
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-white truncate">{a.title}</p>
+                        {a.tipoAlojamiento && (
+                          <p className="text-[10px] text-gray-500">{a.tipoAlojamiento}</p>
+                        )}
+                      </div>
+                      <a
+                        href={`/disponibilidad-propietario?id=${a.id}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="p-1.5 rounded-lg hover:bg-teal-900/30 transition-colors"
+                      >
+                        <ExternalLink size={12} className="text-teal-500" />
+                      </a>
+                    </div>
+                    <div className="px-3 pb-3">
+                      <div className="flex flex-wrap gap-0.5">
+                        {Array.from({ length: total }, (_, i) => i + 1).map(d => (
+                          <div
+                            key={d}
+                            title={`Día ${d}`}
+                            className="rounded-sm flex items-center justify-center"
+                            style={{
+                              width: 18, height: 18,
+                              background: dayMap[d] || 'rgba(255,255,255,0.05)',
+                              fontSize: 8,
+                              color: dayMap[d] ? '#000' : '#475569',
+                              fontWeight: dayMap[d] ? 700 : 400,
+                            }}
+                          >
+                            {d}
+                          </div>
+                        ))}
+                      </div>
+                      {!hasBlocks && (
+                        <p className="text-[10px] text-gray-600 mt-1.5">Sin bloques registrados este mes</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ── PLANES DE MEMBRESÍA ──────────────────────────────────────── */}
+        <div className="flex items-center gap-2 pt-3 pb-1">
+          <Crown size={15} className="text-orange-400" />
+          <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">Planes de Membresía</h2>
+        </div>
+        <>
             {/* Resumen financiero */}
             <div className="grid grid-cols-3 gap-3">
               {[
@@ -661,11 +749,13 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               )}
             </div>
           </>
-        )}
 
-        {/* ── TAB: ESTRATEGIA ────────────────────────────────────────────── */}
-        {tab === 'estrategia' && (
-          <>
+        {/* ── ESTRATEGIA DE CONTENIDO ─────────────────────────────────── */}
+        <div className="flex items-center gap-2 pt-3 pb-1">
+          <BarChart3 size={15} className="text-indigo-400" />
+          <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">Estrategia de Contenido</h2>
+        </div>
+        <>
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
               <p className="text-[10px] font-black text-gray-500 uppercase mb-1">Filosofía</p>
               <p className="text-sm text-gray-300 leading-relaxed">
@@ -738,11 +828,13 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               </div>
             </div>
           </>
-        )}
 
-        {/* ── TAB: GUANAPOINTS ───────────────────────────────────────────── */}
-        {tab === 'guanapoints' && (
-          <>
+        {/* ── SISTEMA GUANAPOINTS ─────────────────────────────────────── */}
+        <div className="flex items-center gap-2 pt-3 pb-1">
+          <Gift size={15} className="text-yellow-400" />
+          <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">Sistema GuanaPoints</h2>
+        </div>
+        <>
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
               <p className="text-[10px] font-black text-gray-500 uppercase mb-1">¿Qué son?</p>
               <p className="text-sm text-gray-300 leading-relaxed">
@@ -826,11 +918,13 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               </div>
             </div>
           </>
-        )}
 
-        {/* ── TAB: WIFI CAPTIVO ──────────────────────────────────────────── */}
-        {tab === 'wifi' && (
-          <>
+        {/* ── WIFI CAPTIVO ────────────────────────────────────────────── */}
+        <div className="flex items-center gap-2 pt-3 pb-1">
+          <Wifi size={15} className="text-teal-400" />
+          <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">WiFi Captivo</h2>
+        </div>
+        <>
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
               <p className="text-[10px] font-black text-gray-500 uppercase mb-1">¿Qué es?</p>
               <p className="text-sm text-gray-300 leading-relaxed">
@@ -897,121 +991,7 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               </div>
             </div>
           </>
-        )}
 
-        {/* ── TAB: DISPONIBILIDAD GLOBAL ─────────────────────────────── */}
-        {tab === 'disponibilidad' && (
-          <div>
-            {/* Navegador de mes */}
-            <div className="flex items-center justify-between mb-4">
-              <button onClick={prevMes} className="p-2 rounded-xl hover:bg-gray-800 transition-colors">
-                <ChevronLeft size={16} className="text-gray-400" />
-              </button>
-              <p className="text-sm font-black capitalize" style={{ color: '#22d3ee' }}>{mesLabel}</p>
-              <button onClick={nextMes} className="p-2 rounded-xl hover:bg-gray-800 transition-colors">
-                <ChevronRight size={16} className="text-gray-400" />
-              </button>
-              <button onClick={loadDisp} className="p-2 rounded-xl hover:bg-gray-800 transition-colors ml-1">
-                <RefreshCw size={14} className={`text-gray-500 ${dispLoading ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-
-            {/* Leyenda */}
-            <div className="flex flex-wrap gap-3 mb-4">
-              {Object.entries(ESTADO_COLOR).map(([estado, color]) => (
-                <div key={estado} className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-                  <span className="text-[10px] text-gray-400">{estado}</span>
-                </div>
-              ))}
-            </div>
-
-            {dispLoading && (
-              <div className="flex items-center justify-center py-16 gap-3">
-                <Loader2 size={22} className="animate-spin text-teal-400" />
-                <span className="text-sm text-gray-500">Cargando disponibilidad...</span>
-              </div>
-            )}
-
-            {!dispLoading && (
-              <div className="space-y-3">
-                {dispAloj.length === 0 && (
-                  <div className="text-center py-10">
-                    <Hotel size={32} className="mx-auto mb-2 text-gray-700" />
-                    <p className="text-sm text-gray-500">Sin alojamientos cargados</p>
-                  </div>
-                )}
-
-                {dispAloj.map(a => {
-                  const blocks = dispBlocks[a.id] || [];
-                  const total  = diasDelMes(dispYear, dispMonth);
-                  // Mapa día → color
-                  const dayMap: Record<number, string> = {};
-                  for (const b of blocks) {
-                    for (const d of blockDays(b.start, b.end, dispYear, dispMonth)) {
-                      dayMap[d] = ESTADO_COLOR[b.estado] || '#94a3b8';
-                    }
-                  }
-                  const hasBlocks = blocks.length > 0;
-
-                  return (
-                    <div key={a.id} className="rounded-xl overflow-hidden"
-                      style={{ background: '#0f172a', border: '1px solid #1e293b' }}>
-
-                      {/* Cabecera */}
-                      <div className="flex items-center gap-3 px-3 pt-3 pb-2">
-                        {a.image
-                          ? <img src={a.image} alt={a.title} className="w-8 h-8 rounded-lg object-cover shrink-0" />
-                          : <div className="w-8 h-8 rounded-lg bg-teal-900/30 flex items-center justify-center shrink-0">
-                              <Hotel size={14} className="text-teal-500" />
-                            </div>
-                        }
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-white truncate">{a.title}</p>
-                          {a.tipoAlojamiento && (
-                            <p className="text-[10px] text-gray-500">{a.tipoAlojamiento}</p>
-                          )}
-                        </div>
-                        <a
-                          href={`/disponibilidad-propietario?id=${a.id}`}
-                          target="_blank" rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg hover:bg-teal-900/30 transition-colors"
-                        >
-                          <ExternalLink size={12} className="text-teal-500" />
-                        </a>
-                      </div>
-
-                      {/* Mini calendario de días */}
-                      <div className="px-3 pb-3">
-                        <div className="flex flex-wrap gap-0.5">
-                          {Array.from({ length: total }, (_, i) => i + 1).map(d => (
-                            <div
-                              key={d}
-                              title={`Día ${d}`}
-                              className="rounded-sm flex items-center justify-center"
-                              style={{
-                                width: 18, height: 18,
-                                background: dayMap[d] || 'rgba(255,255,255,0.05)',
-                                fontSize: 8,
-                                color: dayMap[d] ? '#000' : '#475569',
-                                fontWeight: dayMap[d] ? 700 : 400,
-                              }}
-                            >
-                              {d}
-                            </div>
-                          ))}
-                        </div>
-                        {!hasBlocks && (
-                          <p className="text-[10px] text-gray-600 mt-1.5">Sin bloques registrados este mes</p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
 
       </div>
     </div>
