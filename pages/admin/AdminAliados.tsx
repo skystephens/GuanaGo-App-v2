@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ArrowLeft, QrCode, Zap, Crown, Check, X, Users, TrendingUp,
-  Wifi, Star, Gift, ChevronDown, ChevronUp, MessageCircle,
-  Calendar, Camera, FileText, BarChart3, Smartphone, Globe,
+  ArrowLeft, QrCode, Zap, Crown, Check, X, TrendingUp,
+  Wifi, Star, Gift, ChevronDown, ChevronUp,
+  Calendar, Camera, BarChart3, Smartphone, Globe,
   Pencil, Save, Plus, Trash2, CalendarDays, Hotel, ChevronLeft, ChevronRight,
   ExternalLink, Loader2, RefreshCw,
 } from 'lucide-react';
@@ -298,7 +298,24 @@ function blockDays(start: string, end: string, year: number, month: number): num
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+const SECTION_DEFS = [
+  { id: 'disponibilidad', label: 'Disponibilidad Global',   desc: 'Calendario de alojamientos por mes',         icon: CalendarDays, color: 'cyan'   },
+  { id: 'planes',         label: 'Planes de Membresía',     desc: 'Básico, Activo y Premium — comparativa',     icon: Crown,        color: 'orange' },
+  { id: 'guanapoints',    label: 'Sistema GuanaPoints',     desc: 'Lealtad multinivel para aliados y turistas', icon: Gift,         color: 'yellow' },
+  { id: 'estrategia',     label: 'Estrategia de Contenido', desc: 'Editorial, embudos por negocio, stack',      icon: BarChart3,    color: 'indigo' },
+  { id: 'wifi',           label: 'WiFi Captivo',            desc: 'Portal de captación digital en negocios',    icon: Wifi,         color: 'teal'   },
+] as const;
+
+const COLOR_MAP: Record<string, { icon: string; bg: string; border: string }> = {
+  cyan:   { icon: 'text-cyan-400',   bg: 'bg-cyan-900/20',   border: 'border-cyan-800/30'   },
+  orange: { icon: 'text-orange-400', bg: 'bg-orange-900/20', border: 'border-orange-800/30' },
+  yellow: { icon: 'text-yellow-400', bg: 'bg-yellow-900/20', border: 'border-yellow-800/30' },
+  indigo: { icon: 'text-indigo-400', bg: 'bg-indigo-900/20', border: 'border-indigo-800/30' },
+  teal:   { icon: 'text-teal-400',   bg: 'bg-teal-900/20',   border: 'border-teal-800/30'   },
+};
+
 const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
+  const [section, setSection] = useState<string | null>(null);
   const [planOpen, setPlanOpen] = useState<string | null>('Activo');
   const [tierOpen, setTierOpen] = useState<string | null>('Turista');
 
@@ -335,8 +352,8 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
   };
 
   useEffect(() => {
-    loadDisp();
-  }, [mesStr]);
+    if (section === 'disponibilidad') loadDisp();
+  }, [section, mesStr]);
 
   // ── Editor de beneficios ───────────────────────────────────────────────────
   const [beneficios, setBeneficios] = useState<BeneficioRow[]>(BENEFICIOS_DEFAULT);
@@ -359,38 +376,67 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
     setNewLabel('');
   };
 
-  const totalIngresoPotencial = (aliados: number) =>
-    PLANES.reduce((acc, p) => acc + p.precioNum * aliados, 0);
-
   return (
     <div className="min-h-screen bg-gray-950 text-white pb-28">
 
       {/* Header */}
       <div className="sticky top-0 z-30 bg-gray-900/90 backdrop-blur border-b border-gray-800 px-5 py-3">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="p-2 hover:bg-gray-800 rounded-xl transition-colors">
+          <button
+            onClick={section ? () => setSection(null) : onBack}
+            className="p-2 hover:bg-gray-800 rounded-xl transition-colors"
+          >
             <ArrowLeft size={18} />
           </button>
           <div>
             <h1 className="font-black text-base">Aliados & Red</h1>
-            <p className="text-[10px] text-gray-500">Disponibilidad · Planes · GuanaPoints · Estrategia</p>
+            <p className="text-[10px] text-gray-500">
+              {section
+                ? SECTION_DEFS.find(s => s.id === section)?.label
+                : 'Disponibilidad · Planes · GuanaPoints · Estrategia'}
+            </p>
           </div>
-          <button
-            onClick={() => onNavigate(AppRoute.VINCULAR_COMERCIO)}
-            className="ml-auto px-3 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-600 text-xs font-bold transition-colors"
-          >
-            Ver página pública
-          </button>
+          {!section && (
+            <button
+              onClick={() => onNavigate(AppRoute.VINCULAR_COMERCIO)}
+              className="ml-auto px-3 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-600 text-xs font-bold transition-colors"
+            >
+              Ver página pública
+            </button>
+          )}
         </div>
       </div>
 
       <div className="px-5 mt-5 space-y-4">
 
+        {/* ── MENÚ DE SECCIONES ────────────────────────────────────────── */}
+        {!section && (
+          <div className="grid grid-cols-1 gap-3">
+            {SECTION_DEFS.map(sec => {
+              const Icon = sec.icon;
+              const c = COLOR_MAP[sec.color];
+              return (
+                <button
+                  key={sec.id}
+                  onClick={() => setSection(sec.id)}
+                  className={`w-full flex items-center gap-4 p-4 rounded-2xl border ${c.bg} ${c.border} hover:brightness-125 transition-all text-left`}
+                >
+                  <div className={`w-10 h-10 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center shrink-0`}>
+                    <Icon size={18} className={c.icon} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-sm text-white">{sec.label}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">{sec.desc}</p>
+                  </div>
+                  <ChevronRight size={16} className="text-gray-600 shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* ── DISPONIBILIDAD GLOBAL ───────────────────────────────────── */}
-        <div className="flex items-center gap-2 pt-1 pb-1">
-          <CalendarDays size={15} className="text-cyan-400" />
-          <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">Disponibilidad Global</h2>
-        </div>
+        {section === 'disponibilidad' && (
         <div>
           {/* Navegador de mes */}
           <div className="flex items-center justify-between mb-4">
@@ -496,13 +542,15 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
             </div>
           )}
         </div>
+        )}
 
         {/* ── PLANES DE MEMBRESÍA ──────────────────────────────────────── */}
-        <div className="flex items-center gap-2 pt-3 pb-1">
-          <Crown size={15} className="text-orange-400" />
-          <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">Planes de Membresía</h2>
-        </div>
+        {section === 'planes' && (
         <>
+          <div className="flex items-center gap-2 pt-1 pb-1">
+            <Crown size={15} className="text-orange-400" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">Planes de Membresía</h2>
+          </div>
             {/* Resumen financiero */}
             <div className="grid grid-cols-3 gap-3">
               {[
@@ -749,13 +797,15 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               )}
             </div>
           </>
+        )}
 
         {/* ── ESTRATEGIA DE CONTENIDO ─────────────────────────────────── */}
-        <div className="flex items-center gap-2 pt-3 pb-1">
-          <BarChart3 size={15} className="text-indigo-400" />
-          <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">Estrategia de Contenido</h2>
-        </div>
+        {section === 'estrategia' && (
         <>
+          <div className="flex items-center gap-2 pt-1 pb-1">
+            <BarChart3 size={15} className="text-indigo-400" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">Estrategia de Contenido</h2>
+          </div>
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
               <p className="text-[10px] font-black text-gray-500 uppercase mb-1">Filosofía</p>
               <p className="text-sm text-gray-300 leading-relaxed">
@@ -828,13 +878,15 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               </div>
             </div>
           </>
+        )}
 
         {/* ── SISTEMA GUANAPOINTS ─────────────────────────────────────── */}
-        <div className="flex items-center gap-2 pt-3 pb-1">
-          <Gift size={15} className="text-yellow-400" />
-          <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">Sistema GuanaPoints</h2>
-        </div>
+        {section === 'guanapoints' && (
         <>
+          <div className="flex items-center gap-2 pt-1 pb-1">
+            <Gift size={15} className="text-yellow-400" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">Sistema GuanaPoints</h2>
+          </div>
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
               <p className="text-[10px] font-black text-gray-500 uppercase mb-1">¿Qué son?</p>
               <p className="text-sm text-gray-300 leading-relaxed">
@@ -918,13 +970,15 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               </div>
             </div>
           </>
+        )}
 
         {/* ── WIFI CAPTIVO ────────────────────────────────────────────── */}
-        <div className="flex items-center gap-2 pt-3 pb-1">
-          <Wifi size={15} className="text-teal-400" />
-          <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">WiFi Captivo</h2>
-        </div>
+        {section === 'wifi' && (
         <>
+          <div className="flex items-center gap-2 pt-1 pb-1">
+            <Wifi size={15} className="text-teal-400" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">WiFi Captivo</h2>
+          </div>
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
               <p className="text-[10px] font-black text-gray-500 uppercase mb-1">¿Qué es?</p>
               <p className="text-sm text-gray-300 leading-relaxed">
@@ -991,7 +1045,7 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               </div>
             </div>
           </>
-
+        )}
 
       </div>
     </div>
