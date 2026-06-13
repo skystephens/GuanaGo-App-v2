@@ -286,6 +286,9 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [inlinePriceValue, setInlinePriceValue] = useState<string>('');
   const inlinePriceSavingRef = useRef(false); // evita doble-trigger Enter+blur
 
+  // Filtro B2C / B2B en la lista
+  const [filterSource, setFilterSource] = useState<'all' | 'b2c' | 'b2b'>('all');
+
   // Estado para edición de datos básicos de la cotización (header)
   const [editingHeader, setEditingHeader] = useState(false);
   const [headerForm, setHeaderForm]       = useState<{
@@ -1113,9 +1116,45 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
             onSwitchToCreate={() => setView('create')}
           />
 
+          {/* Filtros B2C / B2B */}
+          {cotizaciones.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {(['all', 'b2c', 'b2b'] as const).map(f => {
+                const labels = { all: 'Todas', b2c: '🌐 B2C Web', b2b: '👤 Staff' };
+                const counts = {
+                  all: cotizaciones.length,
+                  b2c: cotizaciones.filter(c => c.notasInternas?.includes('[B2C Web]')).length,
+                  b2b: cotizaciones.filter(c => !c.notasInternas?.includes('[B2C Web]')).length,
+                };
+                return (
+                  <button
+                    key={f}
+                    onClick={() => setFilterSource(f)}
+                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      filterSource === f
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    }`}
+                  >
+                    {labels[f]}
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${filterSource === f ? 'bg-white/20' : 'bg-gray-700'}`}>
+                      {counts[f]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Lista de cotizaciones */}
           <div className="grid gap-4">
-            {loading ? (
+            {(() => {
+              const displayedCotizaciones = filterSource === 'b2c'
+                ? cotizaciones.filter(c => c.notasInternas?.includes('[B2C Web]'))
+                : filterSource === 'b2b'
+                ? cotizaciones.filter(c => !c.notasInternas?.includes('[B2C Web]'))
+                : cotizaciones;
+              return loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
                 <p className="text-gray-400 mt-4">Cargando cotizaciones...</p>
@@ -1131,9 +1170,15 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                   Crear primera cotización
                 </button>
               </div>
+            ) : displayedCotizaciones.length === 0 ? (
+              <div className="text-center py-12 bg-gray-900 rounded-xl">
+                <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400">No hay cotizaciones en este filtro</p>
+              </div>
             ) : (
-              cotizaciones.map(cot => {
+              displayedCotizaciones.map(cot => {
                 const statusConfig = QUOTE_STATUS_CONFIG[cot.estado] || QUOTE_STATUS_CONFIG['Draft'];
+                const isB2C = cot.notasInternas?.includes('[B2C Web]');
                 return (
                   <div
                     key={cot.id}
@@ -1145,12 +1190,17 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                         setView('detail');
                       }
                     }}
-                    className="bg-gray-900 p-6 rounded-xl cursor-pointer hover:bg-gray-800 transition-colors border border-gray-800"
+                    className={`bg-gray-900 p-6 rounded-xl cursor-pointer hover:bg-gray-800 transition-colors border ${isB2C ? 'border-emerald-800' : 'border-gray-800'}`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-xl font-semibold">{cot.nombre}</h3>
+                          {isB2C && (
+                            <span className="px-2 py-0.5 bg-emerald-900/60 text-emerald-400 border border-emerald-700 rounded-full text-xs font-bold">
+                              B2C Web
+                            </span>
+                          )}
                           <span className={`px-3 py-1 ${statusConfig.color} ${statusConfig.textColor} rounded-full text-sm font-medium`}>
                             {statusConfig.label}
                           </span>
@@ -1174,7 +1224,8 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                   </div>
                 );
               })
-            )}
+            );
+            })()}
           </div>
         </div>
       </div>
