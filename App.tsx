@@ -118,7 +118,8 @@ import LanguageSelector from './components/LanguageSelector';
 import CotizadorB2C from './components/CotizadorB2C';
 import CartFloatingBar from './components/CartFloatingBar';
 import DirectoryMapbox from './components/DirectoryMapbox';
-import { AppRoute, UserRole } from './types';
+import PublicQuotePage from './pages/PublicQuotePage';
+import { AppRoute, UserRole, QuoteDisplayConfig, DEFAULT_QUOTE_DISPLAY_CONFIG } from './types';
 import { useAuth } from './context/AuthContext';
 import { GUANA_LOGO } from './constants';
 
@@ -137,9 +138,23 @@ const App: React.FC = () => {
   const [previewMode, setPreviewMode] = useState(false);
   const [previewOriginalRole, setPreviewOriginalRole] = useState<UserRole | null>(null);
 
-  // Inicializar sistema de caché al arrancar la app
+  // Cotización pública via URL params ?cot=ID&showTotal=0&showMap=0
+  const [publicCotId,     setPublicCotId]     = useState<string | null>(null);
+  const [publicQuoteCfg,  setPublicQuoteCfg]  = useState<QuoteDisplayConfig>(DEFAULT_QUOTE_DISPLAY_CONFIG);
+
+  // Inicializar sistema de caché al arrancar la app + detectar link público
   useEffect(() => {
     initializeCachedApi();
+    const params = new URLSearchParams(window.location.search);
+    const cotId  = params.get('cot');
+    if (cotId) {
+      setPublicCotId(cotId);
+      setPublicQuoteCfg({
+        showTotal: params.get('showTotal') !== '0',
+        showMap:   params.get('showMap')   !== '0',
+      });
+      setCurrentRoute(AppRoute.PUBLIC_QUOTE);
+    }
   }, []);
 
   const navigateTo = (route: AppRoute, data?: any) => {
@@ -307,6 +322,7 @@ const App: React.FC = () => {
       case AppRoute.RETOS:            return <GamificacionTurista onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.MI_VIAJE:         return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.MIS_COTIZACIONES: return <MisCotizaciones onBack={goBack} onNavigate={navigateTo} initialTelefono={detailData?.telefono} />;
+      case AppRoute.PUBLIC_QUOTE:     return publicCotId ? <PublicQuotePage cotId={publicCotId} config={publicQuoteCfg} /> : <Home onNavigate={navigateTo} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };

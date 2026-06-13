@@ -260,6 +260,7 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
           servicioId: f['AlojamientosTuristicos_SAI']?.[0] || f.Servicio?.[0] || undefined,
           servicioNombre: f.Nombre || '',
           servicioTipo: (f['AlojamientosTuristicos_SAI']?.[0] ? 'hotel' : (f['Tipo de Servicio'] || 'otro')) as CotizacionItem['servicioTipo'],
+          opcion: f['Opcion'] || undefined,
           fecha: '',
           adultos: 0, ninos: 0, bebes: 0,
           valorUnitario: valorGuardado,
@@ -632,6 +633,9 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
   }
 
   // Links (solo si existen)
+  // Opción del ítem (Incluido / A / B / C / D)
+  if (item.opcion !== undefined) fields['Opcion'] = item.opcion || null;
+
   if (item.cotizacionId?.trim()) fields['ID CotizacionGG'] = [item.cotizacionId];
   const isAlojamiento = (item.servicioTipo || '').toLowerCase().includes('hotel') ||
                         (item.servicioTipo || '').toLowerCase().includes('alojamiento');

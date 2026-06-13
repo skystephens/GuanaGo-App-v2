@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import QuotationMapView, { MapAccommodation } from '../../components/quotation/QuotationMapView';
 import DynamicItineraryBuilder from './DynamicItineraryBuilder';
-import { AppRoute, Cotizacion, CotizacionItem, Tour, QuoteStatus, QUOTE_STATUS_CONFIG } from '../../types';
+import { AppRoute, Cotizacion, CotizacionItem, Tour, QuoteStatus, QUOTE_STATUS_CONFIG, QuoteDisplayConfig, DEFAULT_QUOTE_DISPLAY_CONFIG } from '../../types';
 import {
   getCotizaciones,
   getCotizacionById,
@@ -290,6 +290,10 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [filterSource, setFilterSource] = useState<'all' | 'b2c' | 'b2b'>('all');
   // Búsqueda por nombre o teléfono
   const [searchQuery, setSearchQuery] = useState('');
+  // Configuración de visualización del link público
+  const [displayConfig, setDisplayConfig] = useState<QuoteDisplayConfig>(DEFAULT_QUOTE_DISPLAY_CONFIG);
+  // Estado de guardado de opción por ítem
+  const [savingOpcionId, setSavingOpcionId] = useState<string | null>(null);
 
   // Estado para edición de datos básicos de la cotización (header)
   const [editingHeader, setEditingHeader] = useState(false);
@@ -983,9 +987,22 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     setView('list');
   };
 
+  /** Actualiza la opción de un ítem (Incluido / A / B / C / D) en Airtable */
+  const handleUpdateOpcion = async (itemId: string, opcion: string | undefined) => {
+    setSavingOpcionId(itemId);
+    try {
+      await updateCotizacionItem(itemId, { opcion });
+      setItems(prev => prev.map(i => i.id === itemId ? { ...i, opcion } : i));
+    } catch (e) {
+      console.error('Error actualizando opción:', e);
+    } finally {
+      setSavingOpcionId(null);
+    }
+  };
+
   const handleDownloadPDF = async () => {
     if (!selectedCotizacion) return;
-    
+
     setGeneratingPDF(true);
     try {
       await downloadQuotePDF(selectedCotizacion, items, [...services, ...alojamientos]);
@@ -1654,7 +1671,11 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 className="flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors font-medium text-sm">
                 <CreditCard className="w-4 h-4" /> Cobrar
               </button>
-              <button onClick={() => { const url = `https://www.guanago.travel/cotizacion/${selectedCotizacion?.id}`; navigator.clipboard.writeText(url).then(() => alert('✅ Link copiado: ' + url)); }}
+              <button onClick={() => {
+                const base = window.location.origin + window.location.pathname;
+                const url = `${base}?cot=${selectedCotizacion?.id}&showTotal=${displayConfig.showTotal ? '1' : '0'}&showMap=${displayConfig.showMap ? '1' : '0'}`;
+                navigator.clipboard.writeText(url).then(() => alert('✅ Link copiado:\n' + url));
+              }}
                 className="flex items-center gap-2 px-3 py-2 bg-purple-700 hover:bg-purple-600 rounded-lg transition-colors font-medium text-sm">
                 <Link2 className="w-4 h-4" /> Link
               </button>
@@ -1674,10 +1695,36 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
             </div>
           </div>
           {!canSendQuote && (
-            <p className="text-xs text-gray-500 mb-4">
+            <p className="text-xs text-gray-500 mb-2">
               Completa email y teléfono del cliente y agrega al menos un servicio antes de enviar.
             </p>
           )}
+
+          {/* ⚙️ Config del Link público */}
+          <div className="flex items-center gap-4 mb-4 px-4 py-2.5 bg-gray-900/60 border border-gray-800 rounded-xl flex-wrap">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wide shrink-0">Config del Link</span>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <div
+                onClick={() => setDisplayConfig(c => ({ ...c, showTotal: !c.showTotal }))}
+                className={`w-9 h-5 rounded-full transition-colors relative ${displayConfig.showTotal ? 'bg-emerald-500' : 'bg-gray-700'}`}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${displayConfig.showTotal ? 'translate-x-4' : 'translate-x-0.5'}`} />
+              </div>
+              <span className="text-xs text-gray-300">Mostrar total / resumen financiero</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <div
+                onClick={() => setDisplayConfig(c => ({ ...c, showMap: !c.showMap }))}
+                className={`w-9 h-5 rounded-full transition-colors relative ${displayConfig.showMap ? 'bg-emerald-500' : 'bg-gray-700'}`}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${displayConfig.showMap ? 'translate-x-4' : 'translate-x-0.5'}`} />
+              </div>
+              <span className="text-xs text-gray-300">Mostrar botón "Ver en Mapa"</span>
+            </label>
+            <span className="text-[10px] text-gray-600 ml-auto hidden lg:block">
+              Los cambios se aplican al Link y Preview
+            </span>
+          </div>
 
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Columna izquierda: Info + Items */}
@@ -1973,8 +2020,36 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                 )}
                               </div>
 
+                              {/* Opción (para cotización con alternativas) */}
+                              <div className="flex items-center gap-0.5">
+                                {savingOpcionId === item.id ? (
+                                  <Loader2 className="w-3.5 h-3.5 text-gray-500 animate-spin" />
+                                ) : (
+                                  ['Incl.', 'A', 'B', 'C', 'D'].map(op => {
+                                    const val    = op === 'Incl.' ? undefined : op;
+                                    const active = (item.opcion ?? undefined) === val;
+                                    const colors: Record<string, string> = {
+                                      'Incl.': active ? 'bg-gray-600 text-white border-gray-500' : 'text-gray-600 border-gray-700',
+                                      A: active ? 'bg-blue-600 text-white border-blue-500' : 'text-gray-600 border-gray-700',
+                                      B: active ? 'bg-purple-600 text-white border-purple-500' : 'text-gray-600 border-gray-700',
+                                      C: active ? 'bg-orange-600 text-white border-orange-500' : 'text-gray-600 border-gray-700',
+                                      D: active ? 'bg-pink-600 text-white border-pink-500' : 'text-gray-600 border-gray-700',
+                                    };
+                                    return (
+                                      <button
+                                        key={op}
+                                        onClick={() => handleUpdateOpcion(item.id, val)}
+                                        title={op === 'Incl.' ? 'Siempre incluido (suma al total)' : `Opción ${op} (alternativa)`}
+                                        className={`text-[9px] font-bold px-1 py-0.5 rounded border transition-colors ${colors[op]}`}
+                                      >
+                                        {op}
+                                      </button>
+                                    );
+                                  })
+                                )}
+                              </div>
                               {/* Acciones */}
-                              <div className="w-16 flex items-center justify-end gap-0.5">
+                              <div className="w-14 flex items-center justify-end gap-0.5">
                                 <button onClick={() => handleStartEditItem(item)} title="Editar fechas / precio / imágenes" className="p-1.5 text-gray-600 hover:text-blue-400 rounded transition-colors">
                                   <Pencil className="w-3.5 h-3.5" />
                                 </button>

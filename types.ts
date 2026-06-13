@@ -342,6 +342,8 @@ export enum AppRoute {
   MI_VIAJE = 'MI_VIAJE',
   // Portal cliente B2C
   MIS_COTIZACIONES = 'MIS_COTIZACIONES',
+  // Cotización pública (accesible sin auth, vía URL ?cot=ID)
+  PUBLIC_QUOTE = 'PUBLIC_QUOTE',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Residente' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';
@@ -464,12 +466,25 @@ export interface Cotizacion {
   items?: CotizacionItem[];           // Items de la cotización
 }
 
+/** Configuración de visualización de la cotización pública */
+export interface QuoteDisplayConfig {
+  showTotal: boolean;   // Mostrar resumen financiero / total al cliente
+  showMap:   boolean;   // Mostrar botón "Ver en Mapa"
+}
+
+export const DEFAULT_QUOTE_DISPLAY_CONFIG: QuoteDisplayConfig = {
+  showTotal: true,
+  showMap:   true,
+};
+
 export interface CotizacionItem {
   id: string;
   cotizacionId: string;               // Link a CotizacionesGG
   servicioId?: string;                // Link a ServiciosTuristicos_SAI (vacío en ítems personalizados)
   servicioNombre: string;             // Nombre del servicio / ítem libre
   servicioTipo: 'tour' | 'hotel' | 'taxi' | 'package' | 'tiquete' | 'seguro' | 'transfer' | 'otro';
+  /** Agrupación del ítem: undefined/'Incluido' = suma al total; 'A'/'B'/'C'/'D' = alternativas */
+  opcion?: string;
   fecha: string;                      // ISO date (fecha inicio)
   fechaFin?: string;                  // ISO date (fecha fin para alojamientos)
   horarioInicio?: string;             // HH:MM
