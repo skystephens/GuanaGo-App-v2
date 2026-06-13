@@ -562,7 +562,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       }
     }
 
-    const payingPeople = formData.adultos + formData.ninos;
+    const payingPeople = (selectedCotizacion.adultos || 0) + (selectedCotizacion.ninos || 0);
     const valorUnitario = service.price || (service as any).precio || 0;
 
     // Modelo Excel: subtotal = valorUnitario × personas × cantidad
@@ -744,7 +744,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       const newTotal = updatedItems.reduce((sum, i) => sum + i.subtotal, 0);
       await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
       setSelectedCotizacion(prev => prev ? { ...prev, precioTotal: newTotal } : prev);
-      setFreeItemForm({ nombre: '', tipo: 'tour', valorUnitario: '', personas: String(formData.adultos + formData.ninos || 2), cantidad: '1',
+      setFreeItemForm({ nombre: '', tipo: 'tour', valorUnitario: '', personas: String((selectedCotizacion?.adultos || 0) + (selectedCotizacion?.ninos || 0) || 2), cantidad: '1',
         aerolinea: 'JetSmart', origen: '', destino: 'ADZ', tipoVuelo: 'Ida y vuelta', notasTiquete: '', images: [] });
     } else {
       alert('❌ Error al agregar el ítem');
@@ -2203,10 +2203,22 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                       <span className="w-28"></span>
                       <span className="w-14"></span>
                       <span className="w-16"></span>
-                      <span className="w-28 text-right font-bold text-white font-mono">
+                      <span className={`w-28 text-right font-bold font-mono transition-colors ${displayConfig.showTotal ? 'text-white' : 'text-gray-600 line-through'}`}>
                         ${items.reduce((s, i) => s + i.subtotal, 0).toLocaleString('es-CO')}
                       </span>
-                      <span className="w-16"></span>
+                      <div className="w-16 flex items-center justify-end">
+                        <button
+                          onClick={() => setDisplayConfig(c => ({ ...c, showTotal: !c.showTotal }))}
+                          title={displayConfig.showTotal ? 'Cliente VE el total — clic para ocultar' : 'Cliente NO ve el total — clic para mostrar'}
+                          className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded border transition-colors ${
+                            displayConfig.showTotal
+                              ? 'bg-emerald-900/40 text-emerald-400 border-emerald-700 hover:bg-emerald-800/40'
+                              : 'bg-gray-800 text-gray-500 border-gray-700 hover:border-gray-500'
+                          }`}
+                        >
+                          {displayConfig.showTotal ? '✓ Total' : '✗ Total'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
