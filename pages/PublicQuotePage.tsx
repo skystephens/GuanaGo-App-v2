@@ -4,15 +4,16 @@
  * Config via params: showTotal=0|1, showMap=0|1
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Calendar, Users, Phone, Mail, MapPin, Anchor, Bed,
   Car, Package as PackageIcon, Loader2, AlertCircle, MessageCircle,
-  CheckCircle2, DollarSign, FileText, ArrowLeft,
+  CheckCircle2, DollarSign, FileText, ArrowLeft, ChevronLeft, ChevronRight, X,
 } from 'lucide-react';
 import { getCotizacionById } from '../services/quotesService';
 import { cachedApi } from '../services/cachedApi';
 import { Cotizacion, CotizacionItem, QuoteDisplayConfig, Tour } from '../types';
+import QuotationMapView, { MapAccommodation } from '../components/quotation/QuotationMapView';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -63,119 +64,228 @@ const OPCION_HEADER: Record<string, string> = {
   D: 'bg-pink-500',
 };
 
+// ─── Lightbox ────────────────────────────────────────────────────────────────
+
+const Lightbox: React.FC<{ imgs: string[]; idx: number; onClose: () => void; onPrev: () => void; onNext: () => void }> = ({
+  imgs, idx, onClose, onPrev, onNext,
+}) => {
+  const handleKey = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') onClose();
+    if (e.key === 'ArrowLeft') onPrev();
+    if (e.key === 'ArrowRight') onNext();
+  }, [onClose, onPrev, onNext]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [handleKey]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+      onClick={onClose}
+    >
+      {/* Imagen principal */}
+      <img
+        src={imgs[idx]}
+        alt={`Foto ${idx + 1}`}
+        className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg select-none"
+        onClick={e => e.stopPropagation()}
+      />
+
+      {/* Contador */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs font-bold px-3 py-1 rounded-full">
+        {idx + 1} / {imgs.length}
+      </div>
+
+      {/* Cerrar */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 w-9 h-9 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center text-white transition-colors"
+      >
+        <X size={18} />
+      </button>
+
+      {/* Prev */}
+      {idx > 0 && (
+        <button
+          onClick={e => { e.stopPropagation(); onPrev(); }}
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center text-white transition-colors"
+        >
+          <ChevronLeft size={22} />
+        </button>
+      )}
+
+      {/* Next */}
+      {idx < imgs.length - 1 && (
+        <button
+          onClick={e => { e.stopPropagation(); onNext(); }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center text-white transition-colors"
+        >
+          <ChevronRight size={22} />
+        </button>
+      )}
+
+      {/* Miniaturas */}
+      {imgs.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 max-w-[90vw] overflow-x-auto px-2">
+          {imgs.map((url, i) => (
+            <button
+              key={i}
+              onClick={e => { e.stopPropagation(); }}
+              onClickCapture={e => { e.stopPropagation(); }}
+              className={`shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${i === idx ? 'border-white opacity-100' : 'border-transparent opacity-50 hover:opacity-80'}`}
+            >
+              <img src={url} alt="" className="w-full h-full object-cover" onClick={e => { e.stopPropagation(); }} />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── ItemRow ─────────────────────────────────────────────────────────────────
 
 const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, services }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded,    setExpanded]    = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [showMap,     setShowMap]     = useState(false);
+
   const svc = services.find(s => s.id === item.servicioId) as any;
 
   const isHotel = item.servicioTipo === 'hotel';
   const imgs: string[] = (svc?.images?.length > 0 ? svc.images
     : svc?.gallery?.length > 0 ? svc.gallery
     : svc?.image ? [svc.image] : []) as string[];
-  const description: string  = svc?.description || svc?.descripcion || '';
-  const ubicacion: string    = svc?.ubicacion || '';
-  const latLon: string       = svc?.latLon || '';
-  const tipo: string         = svc?.tipoAlojamiento || (isHotel ? 'HOTEL' : item.servicioTipo);
-  const capacidad: number    = svc?.capacidadMaxima || 0;
+  const description: string = svc?.description || svc?.descripcion || '';
+  const ubicacion: string   = svc?.ubicacion || '';
+  const latLon: string      = svc?.latLon || '';
+  const tipo: string        = svc?.tipoAlojamiento || (isHotel ? 'HOTEL' : item.servicioTipo);
+  const capacidad: number   = svc?.capacidadMaxima || 0;
+
+  const mapAcc: MapAccommodation[] = latLon
+    ? [{ id: item.servicioId || item.id, title: item.servicioNombre, latLon }]
+    : [];
+
+  const hasMap = mapAcc.length > 0;
 
   if (isHotel) {
-    const mapUrl = latLon
-      ? `https://maps.google.com/?q=${encodeURIComponent(latLon)}`
-      : `https://maps.google.com/?q=${encodeURIComponent((item.servicioNombre || '') + ' San Andrés Isla Colombia')}`;
-
-    const show4 = imgs.slice(0, 4);
+    const show4   = imgs.slice(0, 4);
     const hasMore = imgs.length > 4;
 
     return (
-      <div className="border-b border-gray-100 last:border-0 pt-3 pb-4">
-        {/* Galería 4 fotos */}
-        {show4.length > 0 && (
-          <div className="grid grid-cols-4 gap-1 rounded-xl overflow-hidden mb-3 h-24">
-            {show4.map((url, i) => (
-              <img key={i} src={url} alt={item.servicioNombre}
-                className="w-full h-full object-cover" />
-            ))}
-            {show4.length < 4 && Array.from({ length: 4 - show4.length }).map((_, i) => (
-              <div key={`ph-${i}`} className="w-full h-full bg-gray-100" />
-            ))}
-          </div>
-        )}
+      <>
+        <div className="border-b border-gray-100 last:border-0 pt-3 pb-4">
 
-        {/* Nombre + precio */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
-            {TIPO_ICON['hotel']}
-            <span className="text-sm font-bold text-gray-800 leading-tight truncate">
-              {item.servicioNombre}
-            </span>
+          {/* Galería 4 fotos — clickeables */}
+          {show4.length > 0 && (
+            <div className="grid grid-cols-4 gap-1 rounded-xl overflow-hidden mb-3 h-24">
+              {show4.map((url, i) => (
+                <button key={i} onClick={() => setLightboxIdx(i)} className="w-full h-full overflow-hidden">
+                  <img src={url} alt={item.servicioNombre}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-200 cursor-zoom-in" />
+                </button>
+              ))}
+              {show4.length < 4 && Array.from({ length: 4 - show4.length }).map((_, i) => (
+                <div key={`ph-${i}`} className="w-full h-full bg-gray-100" />
+              ))}
+            </div>
+          )}
+
+          {/* Nombre + precio */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-1.5 min-w-0">
+              {TIPO_ICON['hotel']}
+              <span className="text-sm font-bold text-gray-800 leading-tight truncate">{item.servicioNombre}</span>
+            </div>
+            {item.subtotal > 0 && (
+              <div className="text-right shrink-0">
+                <p className="text-sm font-bold text-emerald-600">{fmtCOP(item.subtotal)}</p>
+                {item.valorUnitario > 0 && item.cantidad > 0 && (
+                  <p className="text-[10px] text-gray-400 whitespace-nowrap">
+                    {fmtCOP(item.valorUnitario)} × {item.personas > 1 ? `${item.personas} × ` : ''}{item.cantidad}u
+                  </p>
+                )}
+              </div>
+            )}
           </div>
-          {item.subtotal > 0 && (
-            <div className="text-right shrink-0">
-              <p className="text-sm font-bold text-emerald-600">{fmtCOP(item.subtotal)}</p>
-              {item.valorUnitario > 0 && item.cantidad > 0 && (
-                <p className="text-[10px] text-gray-400 whitespace-nowrap">
-                  {fmtCOP(item.valorUnitario)} × {item.personas > 1 ? `${item.personas} × ` : ''}{item.cantidad}u
-                </p>
-              )}
+
+          {/* Badges */}
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full uppercase font-bold tracking-wide">{tipo}</span>
+            {item.personas > 0 && (
+              <span className="flex items-center gap-1 text-xs text-gray-500">
+                <Users size={11} /> {item.personas} {item.personas === 1 ? 'persona' : 'personas'}
+              </span>
+            )}
+            {item.cantidad > 0 && (
+              <span className="text-xs text-gray-500">× {item.cantidad} {item.cantidad === 1 ? 'noche' : 'noches'}</span>
+            )}
+            {capacidad > 0 && <span className="text-[10px] text-gray-400">· cap. {capacidad} pax</span>}
+          </div>
+
+          {/* Descripción */}
+          {description && (
+            <p className={`text-xs text-gray-500 mt-2 leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>
+              {description}
+            </p>
+          )}
+
+          {/* Acciones */}
+          <div className="flex items-center gap-4 mt-2 flex-wrap">
+            {(description || hasMore) && (
+              <button
+                onClick={() => setExpanded(e => !e)}
+                className="text-xs text-emerald-600 font-semibold flex items-center gap-1 hover:text-emerald-700"
+              >
+                {expanded ? 'Ver menos ▲' : 'Ver más info e imágenes ▼'}
+              </button>
+            )}
+            {hasMap ? (
+              <button
+                onClick={() => setShowMap(true)}
+                className="text-xs text-blue-500 font-semibold flex items-center gap-1 hover:text-blue-600"
+              >
+                <MapPin size={11} />
+                {ubicacion ? `Ver en mapa · ${ubicacion}` : 'Ver en mapa'}
+              </button>
+            ) : ubicacion ? (
+              <span className="flex items-center gap-1 text-xs text-gray-400">
+                <MapPin size={11} /> {ubicacion}
+              </span>
+            ) : null}
+          </div>
+
+          {/* Galería extra expandida */}
+          {expanded && hasMore && (
+            <div className="grid grid-cols-3 gap-1 mt-2 rounded-xl overflow-hidden">
+              {imgs.slice(4).map((url, i) => (
+                <button key={i} onClick={() => setLightboxIdx(i + 4)} className="w-full overflow-hidden">
+                  <img src={url} alt={`${item.servicioNombre} foto ${i + 5}`}
+                    className="w-full h-24 object-cover hover:scale-105 transition-transform duration-200 cursor-zoom-in" />
+                </button>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Badges */}
-        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-          <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full uppercase font-bold tracking-wide">
-            {tipo}
-          </span>
-          {item.personas > 0 && (
-            <span className="flex items-center gap-1 text-xs text-gray-500">
-              <Users size={11} /> {item.personas} {item.personas === 1 ? 'persona' : 'personas'}
-            </span>
-          )}
-          {item.cantidad > 0 && (
-            <span className="text-xs text-gray-500">× {item.cantidad} {item.cantidad === 1 ? 'noche' : 'noches'}</span>
-          )}
-          {capacidad > 0 && (
-            <span className="text-[10px] text-gray-400">· cap. {capacidad} pax</span>
-          )}
-        </div>
-
-        {/* Descripción */}
-        {description && (
-          <p className={`text-xs text-gray-500 mt-2 leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>
-            {description}
-          </p>
+        {/* Lightbox */}
+        {lightboxIdx !== null && imgs.length > 0 && (
+          <Lightbox
+            imgs={imgs}
+            idx={lightboxIdx}
+            onClose={() => setLightboxIdx(null)}
+            onPrev={() => setLightboxIdx(i => Math.max(0, (i ?? 0) - 1))}
+            onNext={() => setLightboxIdx(i => Math.min(imgs.length - 1, (i ?? 0) + 1))}
+          />
         )}
 
-        {/* Acciones: ver más / ubicación */}
-        <div className="flex items-center gap-4 mt-2">
-          {description && (
-            <button
-              onClick={() => setExpanded(e => !e)}
-              className="text-xs text-emerald-600 font-semibold flex items-center gap-1 hover:text-emerald-700"
-            >
-              {expanded ? 'Ver menos ▲' : 'Ver más info e imágenes ▼'}
-            </button>
-          )}
-          {(ubicacion || latLon || isHotel) && (
-            <a href={mapUrl} target="_blank" rel="noopener noreferrer"
-              className="text-xs text-blue-500 flex items-center gap-1 hover:text-blue-600">
-              <MapPin size={11} />
-              {ubicacion ? `Ver en mapa · ${ubicacion}` : 'Ver ubicación'}
-            </a>
-          )}
-        </div>
-
-        {/* Galería extra (expandida) */}
-        {expanded && hasMore && (
-          <div className="grid grid-cols-3 gap-1 mt-2 rounded-xl overflow-hidden">
-            {imgs.slice(4).map((url, i) => (
-              <img key={i} src={url} alt={`${item.servicioNombre} foto ${i + 5}`}
-                className="w-full h-24 object-cover" />
-            ))}
-          </div>
+        {/* Mapa Mapbox */}
+        {showMap && mapAcc.length > 0 && (
+          <QuotationMapView accommodations={mapAcc} onClose={() => setShowMap(false)} />
         )}
-      </div>
+      </>
     );
   }
 
