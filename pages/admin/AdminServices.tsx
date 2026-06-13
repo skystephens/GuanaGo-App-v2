@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Trash2, Power, Loader2, Package, Target, Plus, X, Save, Edit3, Tag, Trophy, Image as ImageIcon, Upload, ChevronDown, Calendar, Sparkles, Megaphone, CheckCircle2, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Search, Trash2, Power, Loader2, Package, Target, Plus, X, Save, Edit3, Tag, Trophy, Image as ImageIcon, Upload, ChevronDown, Calendar, Sparkles, Megaphone, CheckCircle2, ArrowLeft, RefreshCw, BedDouble } from 'lucide-react';
 import { api } from '../../services/api';
 import { Tour, Campaign, AppRoute } from '../../types';
 import { getFromCache, saveToCache } from '../../services/cacheService';
+import { cachedApi } from '../../services/cachedApi';
 
 interface AdminServicesProps {
   onBack?: () => void;
@@ -11,7 +12,9 @@ interface AdminServicesProps {
 }
 
 const AdminServices: React.FC<AdminServicesProps> = ({ onBack, onNavigate }) => {
-  const [activeTab, setActiveTab] = useState<'services' | 'campaigns'>('services');
+  const [activeTab, setActiveTab] = useState<'services' | 'alojamientos' | 'campaigns'>('services');
+  const [alojamientos, setAlojamientos] = useState<any[]>([]);
+  const [loadingAloj, setLoadingAloj] = useState(false);
 
   // Services State
   const [services, setServices] = useState<Tour[]>([]);
@@ -45,10 +48,10 @@ const AdminServices: React.FC<AdminServicesProps> = ({ onBack, onNavigate }) => 
       if (cached && cached.length > 0) {
         setServices(cached);
         setLoading(false);
-        // Refrescar en background sin bloquear la UI
         refreshInBackground();
         const campaignsData = await api.campaigns.list();
         setCampaigns(campaignsData || []);
+        fetchAlojamientos(false);
         return;
       }
     }
@@ -62,9 +65,21 @@ const AdminServices: React.FC<AdminServicesProps> = ({ onBack, onNavigate }) => 
     const svcs = servicesData || [];
     setServices(svcs);
     setCampaigns(campaignsData || []);
-    // Guardar en caché para próximas visitas (válido 48h según cacheService)
     if (svcs.length > 0) saveToCache('services_turisticos', svcs);
     setLoading(false);
+    fetchAlojamientos(forceRefresh);
+  };
+
+  const fetchAlojamientos = async (forceRefresh = false) => {
+    setLoadingAloj(true);
+    try {
+      const data = await cachedApi.getAlojamientos(forceRefresh ? { forceRefresh: true } : undefined);
+      setAlojamientos(data || []);
+    } catch {
+      setAlojamientos([]);
+    } finally {
+      setLoadingAloj(false);
+    }
   };
 
   const refreshInBackground = async () => {
@@ -208,29 +223,43 @@ const AdminServices: React.FC<AdminServicesProps> = ({ onBack, onNavigate }) => 
             </button>
           </div>
           
-          {/* Tabs con mejor diseño visual */}
+          {/* Tabs */}
           <div className="flex bg-gray-800/50 rounded-[20px] p-1.5 mb-6 border border-gray-700/50">
              <button
                 onClick={() => setActiveTab('services')}
-                className={`flex-1 py-3 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all duration-300 ${
+                className={`flex-1 py-2.5 rounded-2xl text-[10px] font-black flex items-center justify-center gap-1.5 transition-all duration-300 ${
                    activeTab === 'services' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/40' : 'text-gray-500 hover:text-gray-300'
                 }`}
              >
-                <Package size={16} />
-                PRODUCTOS
+                <Package size={14} />
+                TOURS
                 {services.length > 0 && (
                   <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'services' ? 'bg-white/20' : 'bg-gray-700'}`}>
                     {services.length}
                   </span>
                 )}
              </button>
-             <button 
+             <button
+                onClick={() => { setActiveTab('alojamientos'); if (!alojamientos.length) fetchAlojamientos(); }}
+                className={`flex-1 py-2.5 rounded-2xl text-[10px] font-black flex items-center justify-center gap-1.5 transition-all duration-300 ${
+                   activeTab === 'alojamientos' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'text-gray-500 hover:text-gray-300'
+                }`}
+             >
+                <BedDouble size={14} />
+                ALOJAM.
+                {alojamientos.length > 0 && (
+                  <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'alojamientos' ? 'bg-white/20' : 'bg-gray-700'}`}>
+                    {alojamientos.length}
+                  </span>
+                )}
+             </button>
+             <button
                 onClick={() => setActiveTab('campaigns')}
-                className={`flex-1 py-3 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all duration-300 ${
+                className={`flex-1 py-2.5 rounded-2xl text-[10px] font-black flex items-center justify-center gap-1.5 transition-all duration-300 ${
                    activeTab === 'campaigns' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/40' : 'text-gray-500 hover:text-gray-300'
                 }`}
              >
-                <Sparkles size={16} />
+                <Sparkles size={14} />
                 MARKETING
              </button>
           </div>
@@ -265,6 +294,70 @@ const AdminServices: React.FC<AdminServicesProps> = ({ onBack, onNavigate }) => 
                 <Loader2 className="animate-spin text-emerald-500" size={32}/>
                 <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Cargando catálogo...</p>
              </div>
+          ) : activeTab === 'alojamientos' ? (
+             // --- ALOJAMIENTOS LIST (AlojamientosTuristicos_SAI) ---
+             loadingAloj ? (
+               <div className="flex flex-col items-center justify-center py-20 gap-3">
+                 <Loader2 className="animate-spin text-blue-500" size={28} />
+                 <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Cargando alojamientos...</p>
+               </div>
+             ) : alojamientos.length === 0 ? (
+               <div className="text-center py-20 text-gray-600 flex flex-col items-center gap-3">
+                 <BedDouble size={48} className="opacity-10" />
+                 <p className="text-xs font-bold uppercase tracking-widest">Sin alojamientos publicados</p>
+                 <p className="text-[10px] text-gray-600 max-w-xs text-center">
+                   Activa el campo <strong>Publicado</strong> en la tabla AlojamientosTuristicos_SAI de Airtable y presiona ↻ para sincronizar
+                 </p>
+               </div>
+             ) : alojamientos.map((aloj) => {
+               const img = aloj.image || aloj.imagenwp || aloj.images?.[0] || '';
+               const precio = aloj.price || aloj.precio || aloj.precioActualizado || 0;
+               const capacidad = aloj.capacidadMaxima || aloj.capacidad || '';
+               const tipo = aloj.accommodationType || aloj.tipo || 'Hotel';
+               const publicado = aloj.publicado !== false;
+               return (
+                 <div key={aloj.id} className="bg-gray-800/50 rounded-3xl p-4 border border-gray-700/50 flex items-center justify-between group hover:bg-gray-800 transition-all">
+                   <div className="flex items-center gap-4 overflow-hidden">
+                     <div className="relative shrink-0">
+                       {img ? (
+                         <img src={img} alt={aloj.title || aloj.nombre} className="w-14 h-14 rounded-2xl object-cover bg-gray-700 border border-gray-700" />
+                       ) : (
+                         <div className="w-14 h-14 rounded-2xl bg-gray-700 flex items-center justify-center">
+                           <BedDouble size={20} className="text-gray-500" />
+                         </div>
+                       )}
+                       <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-900 ${publicado ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                     </div>
+                     <div className="min-w-0">
+                       <h3 className="font-bold text-sm truncate group-hover:text-blue-400 transition-colors">{aloj.title || aloj.nombre}</h3>
+                       <div className="flex items-center gap-2 mt-1 flex-wrap">
+                         {precio > 0 && <span className="text-blue-400 font-black text-xs">${precio.toLocaleString('es-CO')}</span>}
+                         <span className="text-gray-600 text-[10px]">•</span>
+                         <span className="text-gray-500 text-[9px] uppercase font-bold tracking-tighter">{tipo}</span>
+                         {capacidad && (
+                           <>
+                             <span className="text-gray-600 text-[10px]">•</span>
+                             <span className="text-gray-500 text-[9px]">{capacidad} pax</span>
+                           </>
+                         )}
+                       </div>
+                       <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-1 ${publicado ? 'bg-emerald-900/40 text-emerald-400' : 'bg-red-900/40 text-red-400'}`}>
+                         {publicado ? '✓ Publicado' : '✗ No publicado'}
+                       </span>
+                     </div>
+                   </div>
+                   <div className="flex gap-2 shrink-0">
+                     <button
+                       onClick={() => fetchAlojamientos(true)}
+                       title="Refrescar lista de alojamientos desde Airtable"
+                       className="p-2.5 rounded-xl bg-gray-700/50 text-gray-400 hover:bg-blue-600 hover:text-white transition-all"
+                     >
+                       <RefreshCw size={16} />
+                     </button>
+                   </div>
+                 </div>
+               );
+             })
           ) : activeTab === 'services' ? (
              // --- SERVICES LIST ---
              filteredServices.length > 0 ? filteredServices.map((service) => (
