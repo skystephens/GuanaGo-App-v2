@@ -3,7 +3,7 @@ import {
   ArrowLeft, Plus, Send, Trash2, Calendar, Users, DollarSign, Clock,
   CheckCircle2, AlertCircle, FileText, Search, Filter, User, Mail, Phone,
   Download, Eye, Loader2, Bot, ChevronDown, ChevronUp, Sparkles, Link2,
-  CreditCard, X, Pencil, Check, CalendarDays, MapPin,
+  CreditCard, X, Pencil, Check, CalendarDays, MapPin, MessageSquare,
 } from 'lucide-react';
 import QuotationMapView, { MapAccommodation } from '../../components/quotation/QuotationMapView';
 import DynamicItineraryBuilder from './DynamicItineraryBuilder';
@@ -294,6 +294,14 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [displayConfig, setDisplayConfig] = useState<QuoteDisplayConfig>(DEFAULT_QUOTE_DISPLAY_CONFIG);
   // Estado de guardado de opción por ítem
   const [savingOpcionId, setSavingOpcionId] = useState<string | null>(null);
+  // Cambio de estado inline en lista
+  const [statusDropdownId, setStatusDropdownId] = useState<string | null>(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+  // Filtro por estado en lista
+  const [filterEstado, setFilterEstado] = useState<string>('all');
+  // Panel CRM / Seguimiento
+  const [crmNote, setCrmNote] = useState('');
+  const [savingCrmNote, setSavingCrmNote] = useState(false);
 
   // Estado para edición de datos básicos de la cotización (header)
   const [editingHeader, setEditingHeader] = useState(false);
@@ -987,6 +995,43 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     setView('list');
   };
 
+  /** Cambia el estado de una cotización directamente desde la lista */
+  const handleChangeStatus = async (cotId: string, newEstado: string) => {
+    setUpdatingStatusId(cotId);
+    setStatusDropdownId(null);
+    try {
+      await updateCotizacion(cotId, { estado: newEstado as any });
+      setCotizaciones(prev => prev.map(c => c.id === cotId ? { ...c, estado: newEstado as any } : c));
+      if (selectedCotizacion?.id === cotId) {
+        setSelectedCotizacion(prev => prev ? { ...prev, estado: newEstado as any } : prev);
+      }
+    } catch (e) { console.error('Error cambiando estado:', e); }
+    finally { setUpdatingStatusId(null); }
+  };
+
+  /** Agrega una nota de seguimiento CRM (se prepende al campo Notas internas con timestamp) */
+  const handleAddCrmNote = async () => {
+    if (!selectedCotizacion || !crmNote.trim()) return;
+    setSavingCrmNote(true);
+    const ts   = new Date().toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const entry = `[${ts}] ${crmNote.trim()}`;
+    const prevNotas = selectedCotizacion.notasInternas || '';
+    // Separar sección de seguimiento del resto
+    const SEP = '\n--- Seguimiento ---\n';
+    let base = prevNotas, log = '';
+    if (prevNotas.includes(SEP)) {
+      [base, log] = prevNotas.split(SEP);
+    }
+    const newLog   = entry + (log ? '\n' + log : '');
+    const newNotas = base.trimEnd() + SEP + newLog;
+    try {
+      await updateCotizacion(selectedCotizacion.id, { notasInternas: newNotas });
+      setSelectedCotizacion(prev => prev ? { ...prev, notasInternas: newNotas } : prev);
+      setCrmNote('');
+    } catch (e) { console.error('Error guardando nota CRM:', e); }
+    finally { setSavingCrmNote(false); }
+  };
+
   /** Actualiza la opción de un ítem (Incluido / A / B / C / D) en Airtable */
   const handleUpdateOpcion = async (itemId: string, opcion: string | undefined) => {
     setSavingOpcionId(itemId);
@@ -1184,6 +1229,34 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
             )}
           </div>
 
+          {/* Filtro pipeline por estado */}
+          {cotizaciones.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap pb-1">
+              {(['all', 'Draft', 'Enviada', 'Aceptada', 'Rechazada'] as const).map(est => {
+                const cfg = est === 'all' ? null : (QUOTE_STATUS_CONFIG as any)[est];
+                const count = est === 'all'
+                  ? cotizaciones.length
+                  : cotizaciones.filter(c => (c.estado as string) === est || (c.estado as string) === est.toLowerCase()).length;
+                return (
+                  <button
+                    key={est}
+                    onClick={() => setFilterEstado(est)}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
+                      filterEstado === est
+                        ? est === 'all'
+                          ? 'bg-white text-gray-900 border-white'
+                          : `${cfg?.color} ${cfg?.textColor} border-current`
+                        : 'bg-transparent text-gray-500 border-gray-700 hover:border-gray-500'
+                    }`}
+                  >
+                    {est === 'all' ? 'Todos' : cfg?.label}
+                    <span className="font-bold">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Lista de cotizaciones */}
           <div className="grid gap-3">
             {(() => {
@@ -1201,6 +1274,11 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                     c.telefono?.toLowerCase().includes(q) ||
                     c.email?.toLowerCase().includes(q)
                   );
+                })
+                .filter(c => {
+                  if (filterEstado === 'all') return true;
+                  const est = (c.estado as string);
+                  return est === filterEstado || est === filterEstado.toLowerCase();
                 });
 
               if (loading) return (
@@ -1294,9 +1372,38 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                             )}
                           </div>
                         </div>
-                        <span className={`px-3 py-1 ${statusConfig.color} ${statusConfig.textColor} rounded-full text-xs font-medium shrink-0`}>
-                          {statusConfig.label}
-                        </span>
+                        {/* Badge de estado — clickeable para cambiar */}
+                        <div className="relative shrink-0">
+                          <button
+                            onClick={e => { e.stopPropagation(); setStatusDropdownId(statusDropdownId === cot.id ? null : cot.id); }}
+                            disabled={updatingStatusId === cot.id}
+                            className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-opacity ${statusConfig.color} ${statusConfig.textColor} hover:opacity-80`}
+                          >
+                            {updatingStatusId === cot.id
+                              ? <Loader2 className="w-3 h-3 animate-spin" />
+                              : statusConfig.label}
+                            <ChevronDown className="w-3 h-3 opacity-60" />
+                          </button>
+                          {statusDropdownId === cot.id && (
+                            <div className="absolute right-0 top-full mt-1 z-50 bg-gray-800 border border-gray-700 rounded-xl shadow-xl overflow-hidden min-w-[140px]">
+                              {(['Draft', 'Enviada', 'Aceptada', 'Rechazada'] as const).map(est => {
+                                const cfg = (QUOTE_STATUS_CONFIG as any)[est];
+                                const isActive = (cot.estado as string) === est || (cot.estado as string) === est.toLowerCase();
+                                return (
+                                  <button
+                                    key={est}
+                                    onClick={e => { e.stopPropagation(); handleChangeStatus(cot.id, est); }}
+                                    className={`w-full text-left px-4 py-2 text-xs flex items-center gap-2 hover:bg-gray-700 transition-colors ${isActive ? 'font-bold' : ''}`}
+                                  >
+                                    <span className={`w-2 h-2 rounded-full ${cfg?.color?.replace('bg-', 'bg-').replace('-100', '-400')}`} />
+                                    {cfg?.label}
+                                    {isActive && <CheckCircle2 className="w-3 h-3 ml-auto text-emerald-400" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -1660,8 +1767,33 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
               </div>
             </div>
 
-            {/* Derecha: acciones */}
-            <div className="flex items-center gap-2 flex-wrap">
+            {/* Derecha: estado + acciones */}
+            <div className="flex flex-col items-end gap-2">
+              {/* Pills de estado en detalle */}
+              <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                <span className="text-[10px] text-gray-600 uppercase tracking-wide mr-1">Estado:</span>
+                {(['Draft', 'Enviada', 'Aceptada', 'Rechazada'] as const).map(est => {
+                  const cfg = (QUOTE_STATUS_CONFIG as any)[est];
+                  const isActive = (selectedCotizacion.estado as string) === est || (selectedCotizacion.estado as string) === est.toLowerCase();
+                  return (
+                    <button
+                      key={est}
+                      onClick={() => handleChangeStatus(selectedCotizacion.id, est)}
+                      disabled={updatingStatusId === selectedCotizacion.id}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                        isActive
+                          ? `${cfg.color} ${cfg.textColor} border-current scale-105 shadow-sm`
+                          : 'text-gray-500 border-gray-700 hover:border-gray-500 hover:text-gray-300'
+                      }`}
+                    >
+                      {updatingStatusId === selectedCotizacion.id && isActive
+                        ? '...'
+                        : cfg?.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex items-center gap-2 flex-wrap justify-end">
               <button onClick={() => setShowItinerario(true)} title="Itinerario"
                 className="flex items-center gap-2 px-3 py-2 bg-teal-700 hover:bg-teal-600 rounded-lg transition-colors font-medium text-sm">
                 <CalendarDays className="w-4 h-4" /> Itinerario
@@ -1692,6 +1824,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 className="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors font-medium text-sm disabled:opacity-50">
                 <Send className="w-4 h-4" /> Enviar
               </button>
+              </div>
             </div>
           </div>
           {!canSendQuote && (
@@ -2127,6 +2260,67 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                     {selectedCotizacion.notasInternas || 'Clic para agregar notas...'}
                   </p>
                 )}
+              </div>
+
+              {/* Panel CRM — Seguimiento */}
+              <div className="bg-gray-900 p-5 rounded-xl">
+                <div className="flex items-center gap-2 mb-4">
+                  <MessageSquare className="w-4 h-4 text-purple-400" />
+                  <h3 className="text-base font-semibold text-white">Seguimiento CRM</h3>
+                </div>
+
+                {/* Input nueva nota */}
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={crmNote}
+                    onChange={(e) => setCrmNote(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAddCrmNote(); } }}
+                    placeholder="Agrega una nota de seguimiento..."
+                    className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none"
+                  />
+                  <button
+                    onClick={handleAddCrmNote}
+                    disabled={!crmNote.trim() || savingCrmNote}
+                    className="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                  >
+                    {savingCrmNote ? '...' : 'Guardar'}
+                  </button>
+                </div>
+
+                {/* Timeline de notas */}
+                {(() => {
+                  const SEP = '\n--- Seguimiento ---\n';
+                  const notas = selectedCotizacion.notasInternas || '';
+                  const logSection = notas.includes(SEP) ? notas.split(SEP)[1] : '';
+                  const entries = logSection
+                    ? logSection.split('\n').filter(l => l.trim())
+                    : [];
+                  if (!entries.length) return (
+                    <p className="text-xs text-gray-600 italic text-center py-2">Sin notas de seguimiento aún</p>
+                  );
+                  return (
+                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                      {entries.map((entry, i) => {
+                        const tsMatch = entry.match(/^\[(.+?)\]\s*/);
+                        const ts = tsMatch ? tsMatch[1] : null;
+                        const text = tsMatch ? entry.slice(tsMatch[0].length) : entry;
+                        return (
+                          <div key={i} className="flex gap-2.5">
+                            <div className="flex flex-col items-center">
+                              <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0" />
+                              {i < entries.length - 1 && <div className="w-px flex-1 bg-gray-700 my-1" />}
+                            </div>
+                            <div className="pb-2 flex-1">
+                              {ts && <span className="text-xs text-gray-500 block mb-0.5">{ts}</span>}
+                              <p className="text-sm text-gray-300 leading-snug">{text}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
