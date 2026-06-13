@@ -711,19 +711,27 @@ export default function AdminOperaciones({ onBack, onNavigate }: Props) {
                   const stCfg = estado ? (LEAD_STATUS_COLOR[estado] ?? { color: '#94a3b8', bg: '' }) : null;
                   const isSelected = selectedLead?.id === lead.id;
 
+                  const isB2C = origen === 'Cotizador B2C GuanaGO' || origen?.toLowerCase().includes('b2c');
+
                   return (
                     <button key={lead.id}
                       onClick={() => setSelectedLead(isSelected ? null : lead)}
                       className="w-full text-left rounded-xl p-3 transition-all"
-                      style={{ background: isSelected ? 'rgba(52,211,153,0.05)' : '#0f172a', border: `1px solid ${isSelected ? 'rgba(52,211,153,0.25)' : '#1e293b'}` }}>
+                      style={{ background: isSelected ? 'rgba(52,211,153,0.05)' : '#0f172a', border: `1px solid ${isSelected ? 'rgba(52,211,153,0.25)' : isB2C ? 'rgba(52,211,153,0.15)' : '#1e293b'}` }}>
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black flex-shrink-0"
-                          style={{ background: 'rgba(52,211,153,0.08)', color: '#34d399', fontSize: 15 }}>
+                          style={{ background: isB2C ? 'rgba(52,211,153,0.15)' : 'rgba(52,211,153,0.08)', color: '#34d399', fontSize: 15 }}>
                           {(lead.nombre || '?')[0].toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
                             <p className="font-bold text-sm text-white truncate">{lead.nombre || 'Sin nombre'}</p>
+                            {isB2C && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                                style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399' }}>
+                                B2C Web
+                              </span>
+                            )}
                             {estado && stCfg && (
                               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
                                 style={{ background: stCfg.bg || 'rgba(148,163,184,0.1)', color: stCfg.color }}>{estado}</span>

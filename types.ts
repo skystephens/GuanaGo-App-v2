@@ -340,6 +340,8 @@ export enum AppRoute {
   // Rutas B2C — Turista
   RETOS = 'RETOS',
   MI_VIAJE = 'MI_VIAJE',
+  // Portal cliente B2C
+  MIS_COTIZACIONES = 'MIS_COTIZACIONES',
 }
 
 export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Residente' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';
@@ -412,6 +414,29 @@ export interface Admin {
   rol: UserRole;
   activo: boolean;
   permisos_especificos?: string[];
+}
+
+// =========================================================
+// 📞 LEAD B2C — Captura de contacto vía Cotizador Web
+// =========================================================
+
+export interface LeadB2C {
+  telefono: string;
+  nombre?: string;
+  email?: string;
+  notas?: string;
+  requerimiento?: string[];
+  fechaInicio?: string;
+  fechaFin?: string;
+  adultos: number;
+  ninos: number;
+  bebes: number;
+  toursSeleccionados?: string[];
+  hotelesSeleccionados?: string[];
+  totalEstimado?: number;
+  origen: 'Cotizador B2C GuanaGO';
+  estado: 'nuevo' | 'contactado' | 'cotizado' | 'cerrado';
+  fechaCreacion: string;
 }
 
 // =========================================================

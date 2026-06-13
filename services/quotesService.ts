@@ -163,6 +163,24 @@ export async function getCotizaciones(): Promise<Cotizacion[]> {
 }
 
 /**
+ * Obtener cotizaciones por teléfono (portal cliente B2C)
+ */
+export async function getCotizacionesByTelefono(telefono: string): Promise<Cotizacion[]> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID || !telefono) return [];
+  try {
+    const sanitized = telefono.replace(/['"]/g, '');
+    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES)}?filterByFormula=${encodeURIComponent(`{Telefono}='${sanitized}'`)}&sort[0][field]=Fecha%20Creacion&sort[0][direction]=desc`;
+    const response = await fetch(url, { headers: getHeaders() });
+    if (!response.ok) throw new Error(`${response.status}`);
+    const data = await response.json();
+    return (data.records || []).map(mapRecordToCotizacion);
+  } catch (error) {
+    console.error('❌ Error buscando cotizaciones por teléfono:', error);
+    return [];
+  }
+}
+
+/**
  * Obtener cotización por ID con sus items
  */
 export async function getCotizacionById(id: string): Promise<Cotizacion | null> {

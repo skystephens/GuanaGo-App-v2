@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Anchor, Bed, Package as PackageIcon, Car, Globe } from 'lucide-react';
+import { MapPin, Anchor, Bed, Package as PackageIcon, Car, Globe, MessageSquare, ChevronRight } from 'lucide-react';
 import { getPrecioB2C, getUnidad } from '../services/pricing';
 import { cachedApi } from '../services/cachedApi';
 import { AppRoute, Tour } from '../types';
@@ -178,7 +178,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         </div>
 
         {/* Catálogo Público — acceso directo cliente B2C */}
-        <div className="mb-6">
+        <div className="mb-3">
           <button
             onClick={() => onNavigate(AppRoute.CATALOG_PUBLICO)}
             className="w-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white rounded-2xl p-4 md:p-5 flex items-center gap-4 shadow-md hover:shadow-lg hover:scale-[1.01] transition-all active:scale-95 text-left"
@@ -191,6 +191,25 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               <p className="text-xs opacity-80 mt-0.5">Tours · Alojamiento · Paquetes · Traslados</p>
             </div>
             <span className="text-white/70 text-xs font-bold shrink-0">Ver todo →</span>
+          </button>
+        </div>
+
+        {/* CTA Cotizador B2C — banner de conversión */}
+        <div className="mb-6">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('guanago:open-cotizador'))}
+            className="w-full bg-white border-2 border-emerald-100 rounded-2xl p-4 md:p-5 flex items-center gap-4 shadow-sm hover:shadow-md hover:border-emerald-300 hover:scale-[1.01] transition-all active:scale-95 text-left group"
+          >
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-sm shrink-0 group-hover:scale-110 transition-transform">
+              <MessageSquare size={20} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-black text-sm md:text-base text-gray-800">¿Planeas visitar San Andrés?</h4>
+              <p className="text-xs text-gray-500 mt-0.5">Obtén una cotización personalizada gratis — tours, hotel y traslados en minutos.</p>
+            </div>
+            <div className="flex items-center gap-1 text-emerald-600 font-bold text-xs shrink-0">
+              Cotizar <ChevronRight size={14} />
+            </div>
           </button>
         </div>
 

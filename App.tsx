@@ -85,6 +85,9 @@ import TourPrivado from './pages/TourPrivado';
 // Catálogo Público B2C (cliente directo / promotores)
 import CatalogPublico from './pages/CatalogPublico';
 
+// Portal cliente B2C — cotizaciones
+import MisCotizaciones from './pages/MisCotizaciones';
+
 // Coco Art Historia
 import CocoArtHistoria from './pages/CocoArtHistoria';
 
@@ -112,6 +115,7 @@ import Navigation from './components/Navigation';
 import LanguageSelector from './components/LanguageSelector';
 // GuanaChatbot desactivado temporalmente (en revisión) — re-habilitar cuando esté listo
 // import GuanaChatbot from './components/GuanaChatbot';
+import CotizadorB2C from './components/CotizadorB2C';
 import CartFloatingBar from './components/CartFloatingBar';
 import DirectoryMapbox from './components/DirectoryMapbox';
 import { AppRoute, UserRole } from './types';
@@ -298,10 +302,11 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_TRADUCCION: return <AdminTraduccion onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.COMMAND_CENTER: return <GuanaGOCommandCenter onBack={goBack} onNavigate={navigateTo} />;
       // ── Rutas B2C nuevas ────────────────────────────────────────────────────
-      case AppRoute.CONCURSOS:  return <ConcursosResidente onBack={goBack} onNavigate={navigateTo} />;
-      case AppRoute.EMBAJADOR:  return <EmbajadorPanel onBack={goBack} onNavigate={navigateTo} />;
-      case AppRoute.RETOS:      return <GamificacionTurista onBack={goBack} onNavigate={navigateTo} />;
-      case AppRoute.MI_VIAJE:   return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.CONCURSOS:        return <ConcursosResidente onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.EMBAJADOR:        return <EmbajadorPanel onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.RETOS:            return <GamificacionTurista onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.MI_VIAJE:         return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.MIS_COTIZACIONES: return <MisCotizaciones onBack={goBack} onNavigate={navigateTo} initialTelefono={detailData?.telefono} />;
       default: return <Home onNavigate={navigateTo} />;
     }
   };
@@ -357,6 +362,12 @@ const App: React.FC = () => {
             <CartFloatingBar onNavigate={navigateTo} isAuthenticated={isAuthenticated} />
             {/* <GuanaChatbot /> — desactivado temporalmente, disponible en panel admin */}
           </>
+        )}
+
+        {/* Cotizador B2C — visible para visitantes anónimos y turistas */}
+        {(!isAuthenticated || ['tourist', 'Turista', 'Local', 'Residente'].includes(userRole as string)) &&
+          !['partner', 'admin', 'superadmin', 'SuperAdmin', 'Socio', 'Aliado', 'Operador', 'Artista'].includes(userRole as string) && (
+          <CotizadorB2C onNavigate={navigateTo} />
         )}
 
         {/* Preview mode floating bar */}
