@@ -155,6 +155,11 @@ const App: React.FC = () => {
       });
       setCurrentRoute(AppRoute.PUBLIC_QUOTE);
     }
+    const miscotTel = params.get('miscot');
+    if (miscotTel) {
+      setDetailData({ telefono: decodeURIComponent(miscotTel) });
+      setCurrentRoute(AppRoute.MIS_COTIZACIONES);
+    }
   }, []);
 
   const navigateTo = (route: AppRoute, data?: any) => {

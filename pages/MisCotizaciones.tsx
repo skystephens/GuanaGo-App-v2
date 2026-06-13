@@ -3,7 +3,7 @@
  * Permite al cliente ver todas sus cotizaciones ingresando su teléfono.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, Phone, Search, Calendar, Users, DollarSign,
   FileText, Loader2, CheckCircle2, Clock, XCircle, AlertCircle,
@@ -50,13 +50,14 @@ const MisCotizaciones: React.FC<Props> = ({ onBack, onNavigate, initialTelefono 
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState('');
 
-  const buscar = async () => {
-    if (telefono.trim().length < 7) return;
+  const buscar = async (tel?: string) => {
+    const q = (tel ?? telefono).trim();
+    if (q.length < 7) return;
     setLoading(true);
     setError('');
     setSearched(false);
     try {
-      const result = await getCotizacionesByTelefono(telefono.trim());
+      const result = await getCotizacionesByTelefono(q);
       setCotizaciones(result);
       setSearched(true);
     } catch {
@@ -65,6 +66,13 @@ const MisCotizaciones: React.FC<Props> = ({ onBack, onNavigate, initialTelefono 
       setLoading(false);
     }
   };
+
+  // Auto-buscar si llegamos con teléfono pre-cargado (desde cotizador o URL ?miscot=tel)
+  useEffect(() => {
+    if (initialTelefono && initialTelefono.length >= 7) {
+      buscar(initialTelefono);
+    }
+  }, []);
 
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') buscar();
@@ -113,7 +121,7 @@ const MisCotizaciones: React.FC<Props> = ({ onBack, onNavigate, initialTelefono 
               />
             </div>
             <button
-              onClick={buscar}
+              onClick={() => buscar()}
               disabled={loading || telefono.trim().length < 7}
               className="bg-white text-emerald-600 font-bold px-4 py-3 rounded-xl shadow-sm hover:bg-emerald-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
