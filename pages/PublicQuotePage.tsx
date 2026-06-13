@@ -66,9 +66,121 @@ const OPCION_HEADER: Record<string, string> = {
 // ─── ItemRow ─────────────────────────────────────────────────────────────────
 
 const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, services }) => {
-  const svc = services.find(s => s.id === item.servicioId);
-  const img = (svc as any)?.image || (svc as any)?.images?.[0] || '';
+  const [expanded, setExpanded] = useState(false);
+  const svc = services.find(s => s.id === item.servicioId) as any;
 
+  const isHotel = item.servicioTipo === 'hotel';
+  const imgs: string[] = (svc?.images?.length > 0 ? svc.images
+    : svc?.gallery?.length > 0 ? svc.gallery
+    : svc?.image ? [svc.image] : []) as string[];
+  const description: string  = svc?.description || svc?.descripcion || '';
+  const ubicacion: string    = svc?.ubicacion || '';
+  const latLon: string       = svc?.latLon || '';
+  const tipo: string         = svc?.tipoAlojamiento || (isHotel ? 'HOTEL' : item.servicioTipo);
+  const capacidad: number    = svc?.capacidadMaxima || 0;
+
+  if (isHotel) {
+    const mapUrl = latLon
+      ? `https://maps.google.com/?q=${encodeURIComponent(latLon)}`
+      : `https://maps.google.com/?q=${encodeURIComponent((item.servicioNombre || '') + ' San Andrés Isla Colombia')}`;
+
+    const show4 = imgs.slice(0, 4);
+    const hasMore = imgs.length > 4;
+
+    return (
+      <div className="border-b border-gray-100 last:border-0 pt-3 pb-4">
+        {/* Galería 4 fotos */}
+        {show4.length > 0 && (
+          <div className="grid grid-cols-4 gap-1 rounded-xl overflow-hidden mb-3 h-24">
+            {show4.map((url, i) => (
+              <img key={i} src={url} alt={item.servicioNombre}
+                className="w-full h-full object-cover" />
+            ))}
+            {show4.length < 4 && Array.from({ length: 4 - show4.length }).map((_, i) => (
+              <div key={`ph-${i}`} className="w-full h-full bg-gray-100" />
+            ))}
+          </div>
+        )}
+
+        {/* Nombre + precio */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            {TIPO_ICON['hotel']}
+            <span className="text-sm font-bold text-gray-800 leading-tight truncate">
+              {item.servicioNombre}
+            </span>
+          </div>
+          {item.subtotal > 0 && (
+            <div className="text-right shrink-0">
+              <p className="text-sm font-bold text-emerald-600">{fmtCOP(item.subtotal)}</p>
+              {item.valorUnitario > 0 && item.cantidad > 0 && (
+                <p className="text-[10px] text-gray-400 whitespace-nowrap">
+                  {fmtCOP(item.valorUnitario)} × {item.personas > 1 ? `${item.personas} × ` : ''}{item.cantidad}u
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Badges */}
+        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+          <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full uppercase font-bold tracking-wide">
+            {tipo}
+          </span>
+          {item.personas > 0 && (
+            <span className="flex items-center gap-1 text-xs text-gray-500">
+              <Users size={11} /> {item.personas} {item.personas === 1 ? 'persona' : 'personas'}
+            </span>
+          )}
+          {item.cantidad > 0 && (
+            <span className="text-xs text-gray-500">× {item.cantidad} {item.cantidad === 1 ? 'noche' : 'noches'}</span>
+          )}
+          {capacidad > 0 && (
+            <span className="text-[10px] text-gray-400">· cap. {capacidad} pax</span>
+          )}
+        </div>
+
+        {/* Descripción */}
+        {description && (
+          <p className={`text-xs text-gray-500 mt-2 leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>
+            {description}
+          </p>
+        )}
+
+        {/* Acciones: ver más / ubicación */}
+        <div className="flex items-center gap-4 mt-2">
+          {description && (
+            <button
+              onClick={() => setExpanded(e => !e)}
+              className="text-xs text-emerald-600 font-semibold flex items-center gap-1 hover:text-emerald-700"
+            >
+              {expanded ? 'Ver menos ▲' : 'Ver más info e imágenes ▼'}
+            </button>
+          )}
+          {(ubicacion || latLon || isHotel) && (
+            <a href={mapUrl} target="_blank" rel="noopener noreferrer"
+              className="text-xs text-blue-500 flex items-center gap-1 hover:text-blue-600">
+              <MapPin size={11} />
+              {ubicacion ? `Ver en mapa · ${ubicacion}` : 'Ver ubicación'}
+            </a>
+          )}
+        </div>
+
+        {/* Galería extra (expandida) */}
+        {expanded && hasMore && (
+          <div className="grid grid-cols-3 gap-1 mt-2 rounded-xl overflow-hidden">
+            {imgs.slice(4).map((url, i) => (
+              <img key={i} src={url} alt={`${item.servicioNombre} foto ${i + 5}`}
+                className="w-full h-24 object-cover" />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Servicio no-hotel: fila simple ────────────────────────────────────────
+  const img = imgs[0] || '';
   return (
     <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
       {img ? (
@@ -82,9 +194,8 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
         <p className="text-sm font-semibold text-gray-800 leading-tight">{item.servicioNombre}</p>
         <p className="text-xs text-gray-400 capitalize mt-0.5">{item.servicioTipo}</p>
         <div className="flex flex-wrap gap-2 mt-1 text-xs text-gray-500">
-          {item.personas > 0 && <span>{item.personas} personas</span>}
-          {item.cantidad > 1 && item.servicioTipo === 'hotel' && <span>{item.cantidad} noches</span>}
-          {item.cantidad > 1 && item.servicioTipo !== 'hotel' && <span>×{item.cantidad}</span>}
+          {item.personas > 0 && <span>{item.personas} {item.personas === 1 ? 'persona' : 'personas'}</span>}
+          {item.cantidad > 1 && <span>× {item.cantidad}</span>}
         </div>
       </div>
       {item.subtotal > 0 && (
