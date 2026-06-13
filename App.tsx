@@ -322,7 +322,11 @@ const App: React.FC = () => {
       case AppRoute.RETOS:            return <GamificacionTurista onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.MI_VIAJE:         return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.MIS_COTIZACIONES: return <MisCotizaciones onBack={goBack} onNavigate={navigateTo} initialTelefono={detailData?.telefono} />;
-      case AppRoute.PUBLIC_QUOTE:     return publicCotId ? <PublicQuotePage cotId={publicCotId} config={publicQuoteCfg} /> : <Home onNavigate={navigateTo} />;
+      case AppRoute.PUBLIC_QUOTE: {
+        const cotId = publicCotId || detailData?.cotId;
+        const cfg   = detailData?.config ?? publicQuoteCfg;
+        return cotId ? <PublicQuotePage cotId={cotId} config={cfg} onBack={goBack} /> : <Home onNavigate={navigateTo} />;
+      }
       default: return <Home onNavigate={navigateTo} />;
     }
   };

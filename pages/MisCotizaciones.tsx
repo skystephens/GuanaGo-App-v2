@@ -7,9 +7,9 @@ import React, { useState } from 'react';
 import {
   ArrowLeft, Phone, Search, Calendar, Users, DollarSign,
   FileText, Loader2, CheckCircle2, Clock, XCircle, AlertCircle,
-  Anchor, Bed, Package as PackageIcon, ChevronRight,
+  ChevronRight,
 } from 'lucide-react';
-import { AppRoute, Cotizacion, QuoteStatus, QUOTE_STATUS_CONFIG } from '../types';
+import { AppRoute, Cotizacion, QuoteStatus, QUOTE_STATUS_CONFIG, DEFAULT_QUOTE_DISPLAY_CONFIG } from '../types';
 import { getCotizacionesByTelefono } from '../services/quotesService';
 
 interface Props {
@@ -43,13 +43,12 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
   expirada:  <AlertCircle size={14} />,
 };
 
-const MisCotizaciones: React.FC<Props> = ({ onBack, initialTelefono = '' }) => {
+const MisCotizaciones: React.FC<Props> = ({ onBack, onNavigate, initialTelefono = '' }) => {
   const [telefono, setTelefono] = useState(initialTelefono);
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState('');
-  const [expanded, setExpanded] = useState<string | null>(null);
 
   const buscar = async () => {
     if (telefono.trim().length < 7) return;
@@ -173,128 +172,64 @@ const MisCotizaciones: React.FC<Props> = ({ onBack, initialTelefono = '' }) => {
 
             {cotizaciones.map(c => {
               const statusCfg = QUOTE_STATUS_CONFIG[c.estado as keyof typeof QUOTE_STATUS_CONFIG];
-              const isExp = expanded === c.id;
               const n = nights(c);
               const p = pax(c);
 
               return (
-                <div
+                <button
                   key={c.id}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+                  onClick={() => onNavigate(AppRoute.PUBLIC_QUOTE, { cotId: c.id, config: DEFAULT_QUOTE_DISPLAY_CONFIG })}
+                  className="w-full text-left bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-emerald-200 transition-all"
                 >
-                  {/* Card header */}
-                  <button
-                    onClick={() => setExpanded(isExp ? null : c.id)}
-                    className="w-full text-left p-4"
-                  >
-                    <div className="flex items-start gap-3">
-                      {/* Status color bar */}
-                      <div className={`w-1 self-stretch rounded-full ${
-                        (c.estado as string).toLowerCase() === 'aceptada' ? 'bg-emerald-400' :
-                        (c.estado as string).toLowerCase() === 'enviada' ? 'bg-blue-400' :
-                        (c.estado as string).toLowerCase() === 'rechazada' ? 'bg-red-400' :
-                        'bg-gray-300'
-                      }`} />
+                  <div className="p-4 flex items-start gap-3">
+                    {/* Status color bar */}
+                    <div className={`w-1 self-stretch rounded-full shrink-0 ${
+                      (c.estado as string).toLowerCase() === 'aceptada' ? 'bg-emerald-400' :
+                      (c.estado as string).toLowerCase() === 'enviada' ? 'bg-blue-400' :
+                      (c.estado as string).toLowerCase() === 'rechazada' ? 'bg-red-400' :
+                      'bg-gray-300'
+                    }`} />
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs text-gray-400">{fmtDate(c.fechaCreacion)}</span>
-                          {statusCfg && (
-                            <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${statusCfg.color} ${statusCfg.textColor}`}>
-                              {STATUS_ICON[c.estado]}
-                              {statusCfg.label}
-                            </span>
-                          )}
-                        </div>
-
-                        {c.fechaInicio && c.fechaFin && (
-                          <div className="flex items-center gap-1.5 mt-2">
-                            <Calendar size={13} className="text-emerald-500 flex-shrink-0" />
-                            <span className="text-sm font-semibold text-gray-700">
-                              {fmtDate(c.fechaInicio)} → {fmtDate(c.fechaFin)}
-                            </span>
-                          </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-gray-400">{fmtDate(c.fechaCreacion)}</span>
+                        {statusCfg && (
+                          <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${statusCfg.color} ${statusCfg.textColor}`}>
+                            {STATUS_ICON[c.estado]}
+                            {statusCfg.label}
+                          </span>
                         )}
-
-                        <div className="flex items-center gap-4 mt-1.5">
-                          {p > 0 && (
-                            <div className="flex items-center gap-1 text-xs text-gray-500">
-                              <Users size={12} />
-                              {p} {p === 1 ? 'persona' : 'personas'}
-                              {n > 0 && ` · ${n} ${n === 1 ? 'noche' : 'noches'}`}
-                            </div>
-                          )}
-                          {c.precioTotal > 0 && (
-                            <div className="flex items-center gap-1 text-xs font-bold text-emerald-600">
-                              <DollarSign size={12} />
-                              {fmtCOP(c.precioTotal)}
-                            </div>
-                          )}
-                        </div>
                       </div>
 
-                      <ChevronRight
-                        size={16}
-                        className={`text-gray-300 flex-shrink-0 transition-transform duration-200 ${isExp ? 'rotate-90' : ''}`}
-                      />
+                      {c.fechaInicio && c.fechaFin && (
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <Calendar size={13} className="text-emerald-500 shrink-0" />
+                          <span className="text-sm font-semibold text-gray-700">
+                            {fmtDate(c.fechaInicio)} → {fmtDate(c.fechaFin)}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-4 mt-1.5">
+                        {p > 0 && (
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <Users size={12} />
+                            {p} {p === 1 ? 'persona' : 'personas'}
+                            {n > 0 && ` · ${n} ${n === 1 ? 'noche' : 'noches'}`}
+                          </div>
+                        )}
+                        {c.precioTotal > 0 && (
+                          <div className="flex items-center gap-1 text-xs font-bold text-emerald-600">
+                            <DollarSign size={12} />
+                            {fmtCOP(c.precioTotal)}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </button>
 
-                  {/* Expanded detail */}
-                  {isExp && (
-                    <div className="border-t border-gray-100 px-4 py-4 space-y-4">
-
-                      {/* Items */}
-                      {c.items && c.items.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Servicios incluidos</p>
-                          {c.items.map(item => (
-                            <div key={item.id} className="flex items-center justify-between text-sm">
-                              <div className="flex items-center gap-2">
-                                {item.servicioTipo === 'hotel' ? <Bed size={13} className="text-blue-400" /> :
-                                 item.servicioTipo === 'package' ? <PackageIcon size={13} className="text-purple-400" /> :
-                                 <Anchor size={13} className="text-emerald-500" />}
-                                <span className="text-gray-700">{item.servicioNombre}</span>
-                              </div>
-                              {item.subtotal > 0 && (
-                                <span className="text-gray-500 text-xs font-medium">{fmtCOP(item.subtotal)}</span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Notes */}
-                      {c.notasInternas && (
-                        <div className="bg-amber-50 rounded-xl p-3 text-xs text-amber-700 italic">
-                          "{c.notasInternas}"
-                        </div>
-                      )}
-
-                      {/* Total */}
-                      {c.precioTotal > 0 && (
-                        <div className="bg-emerald-50 rounded-xl p-3 flex items-center justify-between">
-                          <span className="text-sm text-emerald-700 font-medium">Total estimado</span>
-                          <span className="text-base font-black text-emerald-700">{fmtCOP(c.precioTotal)}</span>
-                        </div>
-                      )}
-
-                      {/* CTA */}
-                      <a
-                        href={`https://wa.me/573001234567?text=${encodeURIComponent(`Hola! Quiero consultar mi cotización de GuanaGO. Mi número: ${telefono}`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 w-full bg-[#25D366] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#1da851] transition-colors"
-                      >
-                        <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.04.514 3.963 1.415 5.642L0 24l6.545-1.386A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.006-1.374l-.36-.214-3.727.979.995-3.633-.234-.374A9.818 9.818 0 1112 21.818z"/>
-                        </svg>
-                        Hablar con un asesor
-                      </a>
-                    </div>
-                  )}
-                </div>
+                    <ChevronRight size={16} className="text-gray-300 shrink-0 mt-1" />
+                  </div>
+                </button>
               );
             })}
           </>

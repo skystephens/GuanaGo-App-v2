@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Calendar, Users, Phone, Mail, MapPin, Anchor, Bed,
   Car, Package as PackageIcon, Loader2, AlertCircle, MessageCircle,
-  CheckCircle2, DollarSign, FileText,
+  CheckCircle2, DollarSign, FileText, ArrowLeft,
 } from 'lucide-react';
 import { getCotizacionById } from '../services/quotesService';
 import { cachedApi } from '../services/cachedApi';
@@ -104,9 +104,10 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
 interface Props {
   cotId: string;
   config: QuoteDisplayConfig;
+  onBack?: () => void;
 }
 
-const PublicQuotePage: React.FC<Props> = ({ cotId, config }) => {
+const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack }) => {
   const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null);
   const [items, setItems]           = useState<CotizacionItem[]>([]);
   const [services, setServices]     = useState<Tour[]>([]);
@@ -177,6 +178,14 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config }) => {
       {/* Header brand */}
       <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-5 pb-8">
         <div className="max-w-2xl mx-auto">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="flex items-center gap-1.5 text-emerald-100 hover:text-white text-sm mb-3 transition-colors"
+            >
+              <ArrowLeft size={15} /> Mis Cotizaciones
+            </button>
+          )}
           <div className="flex items-center gap-2 mb-1">
             <span className="text-2xl font-black tracking-tight">GuanaGO</span>
             <span className="text-emerald-200 text-sm">· San Andrés Islas</span>
