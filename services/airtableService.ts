@@ -1118,10 +1118,33 @@ export async function getAlojamientosSAI(): Promise<any[]> {
         description: f['Descripcion'] || f['Itinerario'] || '',
         descripcion: f['Descripcion'] || f['Itinerario'] || '',
         active: true,
-        price: parseFloat(f['Precio actualizado'] || f['Precio'] || 0),
-        latLon: f['Lat_Lon'] || f['LatLon'] || f['lat_lon'] || undefined,
-        ubicacion: f['Ubicacion'] || f['ubicacion'] || undefined,
+        price:         parseFloat(f['Precio actualizado'] || f['Precio_GuanaGO'] || f['Precio'] || 0),
+        precioB2C:     parseFloat(f['Precio_GuanaGO'] || f['Precio actualizado'] || 0),
+        // Precios escalonados por número de huéspedes
+        precio2hues:   parseFloat(f['Precio 2 Huespedes'] || 0),
+        precio3hues:   parseFloat(f['Precio 3 Huespedes'] || 0),
+        precio4hues:   parseFloat(f['Precio 4+ Huespedes'] || 0),
+        precio5hues:   parseFloat(f['Precio 5+ Huespedes'] || 0),
+        precio6hues:   parseFloat(f['Precio 6+ Huespedes'] || 0),
+        // Capacidad
+        capacidadMaxima: parseInt(f['Capacidad Maxima'] || '0') || 0,
+        capacidad:       f['Capacidad'] || '',
+        minimoNoches:    parseInt(f['Minimo Noches'] || '1') || 1,
         tipoAlojamiento: f['Tipo de Alojamiento'] || undefined,
+        // Configuración de camas
+        camasSencillas:  parseInt(f['Camas Sencillas'] || '0') || 0,
+        camasDobles:     parseInt(f['Camas Dobles'] || '0') || 0,
+        camaQueen:       parseInt(f['Cama Queen'] || '0') || 0,
+        camaKing:        parseInt(f['Cama King'] || '0') || 0,
+        // Amenidades
+        tieneCocina:     !!f['Tiene Cocina'],
+        vistaAlMar:      !!f['Vista al mar'],
+        accesoJacuzzi:   !!f['Acceso a Jacuzzi'],
+        accesoPiscina:   !!f['Acceso Piscina'] || !!f['Acceso a Piscina'],
+        accesoBar:       !!f['Acceso a Bar'],
+        aceptaBebes:     !!f['Acepta Bebes'],
+        latLon:          f['Lat_Lon'] || f['LatLon'] || f['lat_lon'] || undefined,
+        ubicacion:       f['Ubicacion'] || f['ubicacion'] || undefined,
       };
     });
   } catch (error) {

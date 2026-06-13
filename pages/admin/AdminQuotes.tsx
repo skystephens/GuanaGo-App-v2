@@ -288,6 +288,8 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
   // Filtro B2C / B2B en la lista
   const [filterSource, setFilterSource] = useState<'all' | 'b2c' | 'b2b'>('all');
+  // Búsqueda por nombre o teléfono
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Estado para edición de datos básicos de la cotización (header)
   const [editingHeader, setEditingHeader] = useState(false);
@@ -1116,115 +1118,217 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
             onSwitchToCreate={() => setView('create')}
           />
 
-          {/* Filtros B2C / B2B */}
-          {cotizaciones.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap">
-              {(['all', 'b2c', 'b2b'] as const).map(f => {
-                const labels = { all: 'Todas', b2c: '🌐 B2C Web', b2b: '👤 Staff' };
-                const counts = {
-                  all: cotizaciones.length,
-                  b2c: cotizaciones.filter(c => c.notasInternas?.includes('[B2C Web]')).length,
-                  b2b: cotizaciones.filter(c => !c.notasInternas?.includes('[B2C Web]')).length,
-                };
-                return (
-                  <button
-                    key={f}
-                    onClick={() => setFilterSource(f)}
-                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                      filterSource === f
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                    }`}
-                  >
-                    {labels[f]}
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${filterSource === f ? 'bg-white/20' : 'bg-gray-700'}`}>
-                      {counts[f]}
-                    </span>
-                  </button>
-                );
-              })}
+          {/* Barra de búsqueda + Filtros B2C / B2B */}
+          <div className="space-y-3">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Buscar por nombre o teléfono..."
+                className="w-full bg-gray-900 border border-gray-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
-          )}
+            {/* Filtros por origen */}
+            {cotizaciones.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                {(['all', 'b2c', 'b2b'] as const).map(f => {
+                  const labels = { all: 'Todas', b2c: '🌐 B2C Web', b2b: '👤 Staff' };
+                  const counts = {
+                    all: cotizaciones.length,
+                    b2c: cotizaciones.filter(c => c.notasInternas?.includes('[B2C Web]')).length,
+                    b2b: cotizaciones.filter(c => !c.notasInternas?.includes('[B2C Web]')).length,
+                  };
+                  return (
+                    <button
+                      key={f}
+                      onClick={() => setFilterSource(f)}
+                      className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                        filterSource === f
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                      }`}
+                    >
+                      {labels[f]}
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${filterSource === f ? 'bg-white/20' : 'bg-gray-700'}`}>
+                        {counts[f]}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Lista de cotizaciones */}
-          <div className="grid gap-4">
+          <div className="grid gap-3">
             {(() => {
-              const displayedCotizaciones = filterSource === 'b2c'
-                ? cotizaciones.filter(c => c.notasInternas?.includes('[B2C Web]'))
-                : filterSource === 'b2b'
-                ? cotizaciones.filter(c => !c.notasInternas?.includes('[B2C Web]'))
-                : cotizaciones;
-              return loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
-                <p className="text-gray-400 mt-4">Cargando cotizaciones...</p>
-              </div>
-            ) : cotizaciones.length === 0 ? (
-              <div className="text-center py-12 bg-gray-900 rounded-xl">
-                <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No hay cotizaciones todavía</p>
-                <button
-                  onClick={() => setView('create')}
-                  className="mt-4 text-blue-500 hover:text-blue-400"
-                >
-                  Crear primera cotización
-                </button>
-              </div>
-            ) : displayedCotizaciones.length === 0 ? (
-              <div className="text-center py-12 bg-gray-900 rounded-xl">
-                <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No hay cotizaciones en este filtro</p>
-              </div>
-            ) : (
-              displayedCotizaciones.map(cot => {
+              const q = searchQuery.toLowerCase().trim();
+              const displayedCotizaciones = cotizaciones
+                .filter(c => {
+                  if (filterSource === 'b2c') return c.notasInternas?.includes('[B2C Web]');
+                  if (filterSource === 'b2b') return !c.notasInternas?.includes('[B2C Web]');
+                  return true;
+                })
+                .filter(c => {
+                  if (!q) return true;
+                  return (
+                    c.nombre?.toLowerCase().includes(q) ||
+                    c.telefono?.toLowerCase().includes(q) ||
+                    c.email?.toLowerCase().includes(q)
+                  );
+                });
+
+              if (loading) return (
+                <div className="text-center py-12">
+                  <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
+                  <p className="text-gray-400 mt-4">Cargando cotizaciones...</p>
+                </div>
+              );
+              if (cotizaciones.length === 0) return (
+                <div className="text-center py-12 bg-gray-900 rounded-xl">
+                  <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-400">No hay cotizaciones todavía</p>
+                  <button onClick={() => setView('create')} className="mt-4 text-blue-500 hover:text-blue-400">
+                    Crear primera cotización
+                  </button>
+                </div>
+              );
+              if (displayedCotizaciones.length === 0) return (
+                <div className="text-center py-12 bg-gray-900 rounded-xl">
+                  <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-400">Sin resultados para "{searchQuery || filterSource}"</p>
+                </div>
+              );
+
+              return displayedCotizaciones.map(cot => {
                 const statusConfig = QUOTE_STATUS_CONFIG[cot.estado] || QUOTE_STATUS_CONFIG['Draft'];
                 const isB2C = cot.notasInternas?.includes('[B2C Web]');
+                const createdAt = cot.fechaCreacion
+                  ? new Date(cot.fechaCreacion).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
+                  : null;
+
                 return (
                   <div
                     key={cot.id}
-                    onClick={async () => {
-                      const full = await getCotizacionById(cot.id);
-                      if (full) {
-                        setSelectedCotizacion(full);
-                        setItems(full.items || []);
-                        setView('detail');
-                      }
-                    }}
-                    className={`bg-gray-900 p-6 rounded-xl cursor-pointer hover:bg-gray-800 transition-colors border ${isB2C ? 'border-emerald-800' : 'border-gray-800'}`}
+                    className={`bg-gray-900 rounded-xl border transition-colors ${isB2C ? 'border-emerald-800' : 'border-gray-800'} hover:border-gray-600`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-semibold">{cot.nombre}</h3>
-                          {isB2C && (
-                            <span className="px-2 py-0.5 bg-emerald-900/60 text-emerald-400 border border-emerald-700 rounded-full text-xs font-bold">
-                              B2C Web
-                            </span>
-                          )}
-                          <span className={`px-3 py-1 ${statusConfig.color} ${statusConfig.textColor} rounded-full text-sm font-medium`}>
-                            {statusConfig.label}
-                          </span>
+                    {/* Fila principal — clickeable */}
+                    <div
+                      onClick={async () => {
+                        const full = await getCotizacionById(cot.id);
+                        if (full) { setSelectedCotizacion(full); setItems(full.items || []); setView('detail'); }
+                      }}
+                      className="p-5 cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            {isB2C && (
+                              <span className="px-2 py-0.5 bg-emerald-900/60 text-emerald-400 border border-emerald-700 rounded-full text-xs font-bold shrink-0">
+                                B2C Web
+                              </span>
+                            )}
+                            <h3 className="text-base font-semibold truncate">{cot.nombre}</h3>
+                          </div>
+                          {/* Teléfono / email */}
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400 mb-2">
+                            {cot.telefono && (
+                              <span className="flex items-center gap-1">
+                                <Phone className="w-3 h-3" />{cot.telefono}
+                              </span>
+                            )}
+                            {cot.email && (
+                              <span className="flex items-center gap-1">
+                                <Mail className="w-3 h-3" />{cot.email}
+                              </span>
+                            )}
+                            {createdAt && (
+                              <span className="flex items-center gap-1 text-gray-500">
+                                <Clock className="w-3 h-3" />{createdAt}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3 text-gray-400 text-sm">
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="w-4 h-4" />
+                              <span className="text-xs">
+                                {safeDate(cot.fechaInicio)?.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }) ?? '—'}
+                                {' → '}
+                                {safeDate(cot.fechaFin)?.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }) ?? '—'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Users className="w-4 h-4" />
+                              <span className="text-xs">{cot.adultos + cot.ninos + cot.bebes} pax</span>
+                            </div>
+                            {cot.precioTotal > 0 && (
+                              <div className="flex items-center gap-1.5">
+                                <DollarSign className="w-4 h-4" />
+                                <span className="text-xs font-semibold text-white">${cot.precioTotal.toLocaleString('es-CO')}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex flex-wrap items-center gap-4 text-gray-400 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            {safeDate(cot.fechaInicio)?.toLocaleDateString() ?? '—'} - {safeDate(cot.fechaFin)?.toLocaleDateString() ?? '—'}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            {cot.adultos + cot.ninos + cot.bebes} pax
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="w-4 h-4" />
-                            ${cot.precioTotal.toLocaleString('es-CO')}
-                          </div>
-                        </div>
+                        <span className={`px-3 py-1 ${statusConfig.color} ${statusConfig.textColor} rounded-full text-xs font-medium shrink-0`}>
+                          {statusConfig.label}
+                        </span>
                       </div>
+                    </div>
+
+                    {/* Acciones rápidas */}
+                    <div className="border-t border-gray-800 px-5 py-2.5 flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={async () => {
+                          const full = await getCotizacionById(cot.id);
+                          if (full) { setSelectedCotizacion(full); setItems(full.items || []); setView('detail'); }
+                        }}
+                        className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-800"
+                      >
+                        <Eye className="w-3.5 h-3.5" /> Ver detalle
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            nombre:    cot.nombre || '',
+                            telefono:  cot.telefono || '',
+                            email:     cot.email || '',
+                            adultos:   cot.adultos,
+                            ninos:     cot.ninos,
+                            bebes:     cot.bebes,
+                            fechaInicio: '',
+                            fechaFin:    '',
+                            notasInternas: isB2C ? `Cliente B2C - cotización anterior #${cot.id.slice(-6)}` : '',
+                          }));
+                          setView('create');
+                        }}
+                        className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-800"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Nueva cotización para este cliente
+                      </button>
+                      {cot.telefono && (
+                        <a
+                          href={`https://wa.me/${cot.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${cot.nombre || ''}, te contactamos de GuanaGO respecto a tu cotización para San Andrés.`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          className="flex items-center gap-1.5 text-xs text-green-400 hover:text-green-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-800"
+                        >
+                          <Phone className="w-3.5 h-3.5" /> WhatsApp
+                        </a>
+                      )}
                     </div>
                   </div>
                 );
-              })
-            );
+              });
             })()}
           </div>
         </div>

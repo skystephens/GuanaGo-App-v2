@@ -51,6 +51,16 @@ function getServicePrice(svc: any): number {
   return svc.precioB2C || svc.precioActualizado || svc.precioBase || svc.price || 0;
 }
 
+/** Precio escalonado por número de huéspedes para alojamientos */
+function getHotelPriceByPax(svc: any, totalPax: number): number {
+  if (totalPax >= 6 && svc.precio6hues > 0) return svc.precio6hues;
+  if (totalPax >= 5 && svc.precio5hues > 0) return svc.precio5hues;
+  if (totalPax >= 4 && svc.precio4hues > 0) return svc.precio4hues;
+  if (totalPax === 3 && svc.precio3hues > 0) return svc.precio3hues;
+  if (totalPax <= 2 && svc.precio2hues > 0) return svc.precio2hues;
+  return getServicePrice(svc);
+}
+
 function getServiceImage(svc: any): string {
   return svc.image || svc.imageUrl || svc.foto || '';
 }
@@ -67,6 +77,16 @@ function getCategoryIcon(cat: string) {
     case 'package': return <PackageIcon size={14} />;
     default:        return <MapPin size={14} />;
   }
+}
+
+/** Resumen de camas para un alojamiento */
+function bedSummary(svc: any): string {
+  const parts: string[] = [];
+  if (svc.camaKing > 0)      parts.push(`${svc.camaKing} King`);
+  if (svc.camaQueen > 0)     parts.push(`${svc.camaQueen} Queen`);
+  if (svc.camasDobles > 0)   parts.push(`${svc.camasDobles} doble${svc.camasDobles > 1 ? 's' : ''}`);
+  if (svc.camasSencillas > 0) parts.push(`${svc.camasSencillas} senc.`);
+  return parts.join(' · ');
 }
 
 // ─── Counter ─────────────────────────────────────────────────────────────────
@@ -106,10 +126,24 @@ const ServiceCard: React.FC<{
   svc: any; selected: boolean; pax: number; nights?: number;
   onToggle: () => void; priceLabel?: string;
 }> = ({ svc, selected, pax, nights = 1, onToggle, priceLabel }) => {
-  const price = getServicePrice(svc);
-  const total = price > 0 ? price * (priceLabel === 'noche' ? nights : pax) : 0;
-  const image = getServiceImage(svc);
-  const name  = getServiceName(svc);
+  const isHotel = priceLabel === 'noche' || svc.category === 'hotel';
+  const price   = isHotel ? getHotelPriceByPax(svc, pax) : getServicePrice(svc);
+  const total   = price > 0 ? price * (isHotel ? nights : pax) : 0;
+  const image   = getServiceImage(svc);
+  const name    = getServiceName(svc);
+  const capMax  = svc.capacidadMaxima || 0;
+  const capText = svc.capacidad || (capMax > 0 ? `${capMax} personas` : '');
+  const camas   = isHotel ? bedSummary(svc) : '';
+
+  // Amenidades visibles (máx 4)
+  const amenidades: string[] = [];
+  if (isHotel) {
+    if (svc.vistaAlMar)    amenidades.push('🌊 Vista al mar');
+    if (svc.accesoPiscina) amenidades.push('🏊 Piscina');
+    if (svc.accesoJacuzzi) amenidades.push('♨️ Jacuzzi');
+    if (svc.tieneCocina)   amenidades.push('🍳 Cocina');
+    if (svc.accesoBar)     amenidades.push('🍹 Bar');
+  }
 
   return (
     <div
@@ -145,10 +179,47 @@ const ServiceCard: React.FC<{
             Raizal
           </span>
         )}
+        {/* Badge de capacidad */}
+        {isHotel && capMax > 0 && (
+          <span className={`absolute top-2 right-2 flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+            pax > capMax
+              ? 'bg-red-500 text-white'
+              : 'bg-black/60 text-white'
+          }`}>
+            <Users size={9} />
+            {capText || `${capMax} pers.`}
+          </span>
+        )}
       </div>
       <div className="p-3">
         <h4 className="text-xs font-semibold text-gray-800 leading-tight line-clamp-2">{name}</h4>
-        {svc.duration && <p className="text-[10px] text-gray-400 mt-0.5">{svc.duration}</p>}
+        {/* Tipo de alojamiento */}
+        {svc.tipoAlojamiento && (
+          <p className="text-[10px] text-gray-400 mt-0.5">{svc.tipoAlojamiento}</p>
+        )}
+        {/* Camas */}
+        {camas && (
+          <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
+            <Bed size={9} /> {camas}
+          </p>
+        )}
+        {!camas && svc.duration && (
+          <p className="text-[10px] text-gray-400 mt-0.5">{svc.duration}</p>
+        )}
+        {/* Amenidades */}
+        {amenidades.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {amenidades.slice(0, 3).map(a => (
+              <span key={a} className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">{a}</span>
+            ))}
+          </div>
+        )}
+        {/* Alerta capacidad excedida */}
+        {isHotel && capMax > 0 && pax > capMax && (
+          <p className="text-[9px] text-red-500 font-semibold mt-1 flex items-center gap-0.5">
+            <AlertCircle size={9} /> Capacidad excedida para {pax} personas
+          </p>
+        )}
         <div className="flex items-end justify-between mt-2 gap-1">
           {price > 0 ? (
             <div>
@@ -286,7 +357,7 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
       if (p > 0) total += p * pax;
     });
     alojamientos.filter(a => selectedHotels.has(a.id)).forEach(a => {
-      const p = getServicePrice(a);
+      const p = getHotelPriceByPax(a, pax);
       if (p > 0) total += p * nights;
     });
     return total;
@@ -781,13 +852,30 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
                         <Bed size={13} className="text-emerald-500" /> Alojamiento ({hotelesSeleccionados.length})
                       </h4>
                       {hotelesSeleccionados.map(a => {
-                        const p = getServicePrice(a);
+                        const p = getHotelPriceByPax(a, pax);
+                        const capMax = a.capacidadMaxima || 0;
                         return (
-                          <div key={a.id} className="flex items-center justify-between text-sm py-1">
-                            <span className="text-gray-700 flex-1 pr-2 text-xs">{getServiceName(a)}</span>
-                            <span className="text-emerald-600 font-semibold text-xs whitespace-nowrap">
-                              {p > 0 ? fmtCOP(p * nights) : 'A consultar'}
-                            </span>
+                          <div key={a.id} className="py-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-700 flex-1 pr-2 text-xs font-medium">{getServiceName(a)}</span>
+                              <span className="text-emerald-600 font-semibold text-xs whitespace-nowrap">
+                                {p > 0 ? fmtCOP(p * nights) : 'A consultar'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {a.tipoAlojamiento && (
+                                <span className="text-[10px] text-gray-400">{a.tipoAlojamiento}</span>
+                              )}
+                              {capMax > 0 && (
+                                <span className={`text-[10px] flex items-center gap-0.5 ${pax > capMax ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>
+                                  <Users size={9} /> hasta {capMax} pers.
+                                  {pax > capMax && ' ⚠️'}
+                                </span>
+                              )}
+                              {p > 0 && nights > 0 && (
+                                <span className="text-[10px] text-gray-400">{fmtCOP(p)}/noche</span>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
