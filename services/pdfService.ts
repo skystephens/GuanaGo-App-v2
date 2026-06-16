@@ -21,8 +21,16 @@ function safeDate(d: string | Date | undefined | null): Date | null {
 // Logo GuanaGO (data URI - reemplaza con tu logo real)
 const GUANAGO_LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
+// ─── Colecciones GuanaGO ──────────────────────────────────────────────────────
+const COLECCION_COLORS: Record<string, string> = {
+  'Island Room':    '#16a37a',
+  'Posada Raizal':  '#d9930a',
+  'Come Noh':       '#D32F2F',
+  'Seaflower Hotel':'#7a3fb0',
+};
+
 /**
- * Generar HTML de la cotización para preview
+ * Generar HTML de la cotización para preview — diseño GuanaGO
  */
 export function generateQuoteHTML(
   cotizacion: Cotizacion,
@@ -30,6 +38,7 @@ export function generateQuoteHTML(
   services?: Tour[]
 ): string {
   const totalPersonas = cotizacion.adultos + cotizacion.ninos + cotizacion.bebes;
+  const guanaPoints   = Math.round(cotizacion.precioTotal / 1000);
 
   /** Fallback de imagen por categoría cuando Airtable no tiene foto */
   const categoryFallback: Record<string, string> = {
@@ -64,295 +73,247 @@ export function generateQuoteHTML(
   };
   
   return `
-    <div style="font-family: 'Arial', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; background: white; color: #1a1a1a;">
-      <!-- Header -->
-      <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #FF6600; padding-bottom: 20px;">
-        <h1 style="color: #FF6600; font-size: 36px; margin: 0 0 4px 0; font-weight: 800;">GuíaSAI</h1>
-        <p style="color: #64748b; font-size: 14px; margin: 0;">San Andrés Isla · Especialistas en Turismo</p>
-      </div>
+    <div style="font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:800px;margin:0 auto;background:#f4f7f5;color:#15201c;padding:20px 16px;">
 
-      <!-- Título Cotización -->
-      <div style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); padding: 20px; border-radius: 12px; margin-bottom: 30px;">
-        <h2 style="color: white; margin: 0 0 5px 0; font-size: 24px;">Cotización de Viaje</h2>
-        <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 14px;">
-          ${new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
-      </div>
-
-      <!-- Información del Cliente -->
-      <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
-        <h3 style="color: #334155; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">Información del Cliente</h3>
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr>
-            <td style="padding: 8px 0; color: #64748b; font-size: 14px; width: 120px;">Nombre:</td>
-            <td style="padding: 8px 0; color: #1e293b; font-weight: 500; font-size: 14px;">${cotizacion.nombre}</td>
-          </tr>
-          ${cotizacion.email ? `
-          <tr>
-            <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Email:</td>
-            <td style="padding: 8px 0; color: #1e293b; font-size: 14px;">${cotizacion.email}</td>
-          </tr>` : ''}
-          ${cotizacion.telefono ? `
-          <tr>
-            <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Teléfono:</td>
-            <td style="padding: 8px 0; color: #1e293b; font-size: 14px;">${cotizacion.telefono}</td>
-          </tr>` : ''}
-          <tr>
-            <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Fechas:</td>
-            <td style="padding: 8px 0; color: #1e293b; font-weight: 500; font-size: 14px;">
-              ${safeDate(cotizacion.fechaInicio)?.toLocaleDateString('es-CO') ?? 'Por confirmar'} -
-              ${safeDate(cotizacion.fechaFin)?.toLocaleDateString('es-CO') ?? 'Por confirmar'}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Pasajeros:</td>
-            <td style="padding: 8px 0; color: #1e293b; font-size: 14px;">
-              ${totalPersonas} personas 
-              (${cotizacion.adultos} adultos 18+, ${cotizacion.ninos} niños 4-17 años, ${cotizacion.bebes} bebés 0-3 años)
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <!-- Servicios Incluidos -->
-      <div style="margin-bottom: 30px;">
-        <h3 style="color: #334155; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">Servicios Incluidos</h3>
-        
-        ${items.map((item, index) => {
-          // ── Tiquete aéreo: card especial sin fotos ──────────────────────────
-          const isTiquete = item.servicioNombre?.startsWith('✈️') || item.servicioTipo === 'tiquete';
-          if (isTiquete) {
-            const escH = (s: string) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-            const nombre   = item.servicioNombre || '';
-            // Same parsing as backend renderFlightCard:
-            // "✈️ LATAM · CLO→ADZ · Ida y vuelta | Vuelo de ida..."
-            const parts    = nombre.replace(/^✈️\s*/, '').split('·').map((s: string) => s.trim());
-            const aerolinea = parts[0] || 'Vuelo';
-            const ruta      = parts[1] || '';
-            const tipoVuelo = parts[2] ? parts[2].split('|')[0].trim() : '';
-            const notas     = nombre.includes('|')
-              ? nombre.split('|').slice(1).map((s: string) => s.trim()).join(' · ')
-              : '';
-            const [orig, dest] = ruta.includes('→') ? ruta.split('→').map((s: string) => s.trim()) : [ruta, ''];
-            const fmtP = (n: number) => `$${n.toLocaleString('es-CO')}`;
-            const pax = item.personas || 1;
-
-            return `
-            <!-- ── Tiquete aéreo ${index + 1} ── -->
-            <div class="service-card" style="background:white;border:2px solid #bfdbfe;border-radius:12px;overflow:hidden;margin-bottom:16px;">
-              <!-- header azul -->
-              <div style="background:linear-gradient(135deg,#1d4ed8,#2563eb);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;">
-                <div style="display:flex;align-items:center;gap:10px;">
-                  <span style="font-size:22px;">✈️</span>
-                  <div>
-                    <div style="color:white;font-weight:700;font-size:15px;">${escH(aerolinea)}</div>
-                    ${tipoVuelo ? `<div style="color:rgba(255,255,255,.8);font-size:11px;">${escH(tipoVuelo)}</div>` : ''}
-                  </div>
-                </div>
-                <div style="color:#10b981;font-size:18px;font-weight:700;background:white;padding:4px 12px;border-radius:20px;">
-                  ${fmtP(item.subtotal)}
-                </div>
-              </div>
-              <!-- ruta -->
-              <div style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed #e2e8f0;">
-                <div style="text-align:center;">
-                  <div style="font-size:26px;font-weight:800;color:#1e293b;">${escH(orig)}</div>
-                  <div style="font-size:11px;color:#64748b;">Origen</div>
-                </div>
-                <div style="color:#94a3b8;font-size:20px;flex:1;text-align:center;">→</div>
-                <div style="text-align:center;">
-                  <div style="font-size:26px;font-weight:800;color:#1e293b;">${escH(dest || 'ADZ')}</div>
-                  <div style="font-size:11px;color:#64748b;">Destino</div>
-                </div>
-              </div>
-              <!-- detalles pasajeros -->
-              <div style="padding:10px 18px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#64748b;flex-wrap:wrap;gap:6px;border-bottom:${notas ? '1px dashed #e2e8f0' : 'none'};">
-                <div>👥 ${pax} pasajero${pax !== 1 ? 's' : ''}</div>
-                <div>${fmtP(item.valorUnitario)}/pax${item.cantidad > 1 ? ` × ${item.cantidad}` : ''}</div>
-              </div>
-              ${notas ? `
-              <div style="padding:12px 18px;background:#f8fafc;">
-                <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">ℹ️ Detalles del vuelo</div>
-                <div style="font-size:13px;color:#334155;line-height:1.7;white-space:pre-line;">${escH(notas).replace(/ · /g, '\n')}</div>
-              </div>` : ''}
-            </div>`;
-          }
-
-          // ── Servicios con foto-grid (tours, hoteles, etc.) ──────────────────
-          const { images: catalogImages, description } = getServiceMeta(item);
-          // Ítems libres con fotos adjuntas usan sus propias imágenes
-          const freeItemImages: string[] = item.images && item.images.length > 0 ? item.images : [];
-          const activeImages = item.esPersonalizado ? freeItemImages : catalogImages;
-          const fallbackUrl = categoryFallback[item.servicioTipo] || categoryFallback['tour'];
-          const showPhotoGrid = activeImages.length > 0;
-          const images = activeImages; // solo imágenes reales, sin padding
-          const allImages = catalogImages.length > 0 ? catalogImages : [fallbackUrl];
-          const fechaDisplay = safeDate(item.fecha)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? 'Por confirmar';
-          const fechaFinDisplay = item.fechaFin ? safeDate(item.fechaFin)?.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) ?? '' : '';
-          const itemPax = (item.personas || (item.adultos + item.ninos + item.bebes)) || totalPersonas;
-          const cardId = `svc-${index}`;
-          const modalId = `modal-${index}`;
-
-          // Grid de fotos — solo las imágenes reales, sin repetir
-          const realCount = activeImages.length;
-          const slotWidth = realCount === 1 ? '100%' : realCount === 2 ? 'calc(50% - 2px)' : realCount === 3 ? 'calc(33.33% - 3px)' : 'calc(25% - 3px)';
-          const photoGrid = activeImages.map((url, i) => `
-            <div style="width:${slotWidth};aspect-ratio:${realCount === 1 ? '16/7' : '1/1'};overflow:hidden;border-radius:6px;cursor:pointer;flex-shrink:0;"
-                 onclick="openModal('${modalId}', ${i})">
-              <img src="${url}" style="width:100%;height:100%;object-fit:cover;display:block;transition:opacity .2s;"
-                   onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"
-                   onerror="this.src='${fallbackUrl}'" loading="lazy">
-            </div>
-          `).join('');
-
-          // Lightbox con TODAS las fotos disponibles
-          const lightboxThumbs = allImages.map((url, i) => `
-            <img src="${url}" id="${modalId}-thumb-${i}"
-                 style="width:60px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.6;border:2px solid transparent;"
-                 onclick="setModalImg('${modalId}',${i})"
-                 onerror="this.src='${fallbackUrl}'">
-          `).join('');
-
-          return `
-          <!-- ── Tarjeta servicio ${index + 1} ── -->
-          <div class="service-card" style="background:white;border:2px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:16px;">
-
-            ${showPhotoGrid ? `<!-- Grid fotos -->
-            <div style="display:flex;gap:4px;padding:10px 10px 0;">
-              ${photoGrid}
-            </div>` : ''}
-
-            <!-- Info principal -->
-            <div style="padding:14px 16px 16px;">
-              <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;">
-                <div style="flex:1;">
-                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <span style="background:#0ea5e9;color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${index + 1}</span>
-                    <h4 style="margin:0;color:#1e293b;font-size:15px;font-weight:700;">${item.servicioNombre}</h4>
-                  </div>
-                  <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:#64748b;">
-                    <span>📅 ${fechaDisplay}${fechaFinDisplay ? ` → ${fechaFinDisplay}` : ''}</span>
-                    ${item.horarioInicio && item.horarioFin ? `<span>🕐 ${item.horarioInicio}–${item.horarioFin}</span>` : ''}
-                    <span>👥 ${itemPax} persona${itemPax !== 1 ? 's' : ''}</span>
-                    <span style="text-transform:uppercase;background:#f1f5f9;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;">${item.servicioTipo}</span>
-                  </div>
-                </div>
-                <div style="text-align:right;flex-shrink:0;margin-left:16px;">
-                  <div style="color:#10b981;font-size:17px;font-weight:700;">$${item.subtotal.toLocaleString('es-CO')}</div>
-                  <div style="color:#94a3b8;font-size:11px;">$${item.valorUnitario.toLocaleString('es-CO')} × ${item.personas || itemPax}${item.cantidad > 1 ? ` × ${item.cantidad}u` : ''}</div>
-                </div>
-              </div>
-
-              ${description ? `
-              <!-- Descripción truncada -->
-              <div id="${cardId}-short" style="font-size:13px;color:#64748b;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">
-                ${description}
-              </div>
-              ${showPhotoGrid ? `<button onclick="openModal('${modalId}', 0)"
-                style="margin-top:6px;background:none;border:none;color:#0ea5e9;font-size:12px;font-weight:600;cursor:pointer;padding:0;">
-                Ver más info e imágenes ▼
-              </button>` : ''}` : ''}
-            </div>
-          </div>
-
-          ${showPhotoGrid ? `<!-- ── Lightbox / Modal ── -->
-          <div id="${modalId}" onclick="if(event.target===this)closeModal('${modalId}')"
-            style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px;">
-            <div style="background:white;border-radius:14px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;position:relative;">
-              <button onclick="closeModal('${modalId}')"
-                style="position:sticky;top:10px;float:right;margin:10px 12px 0 0;background:#1e293b;color:white;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;z-index:10;">✕</button>
-              <!-- Imagen principal -->
-              <div style="padding:16px 16px 0;">
-                <img id="${modalId}-main" src="${allImages[0]}" alt="${item.servicioNombre}"
-                  style="width:100%;height:280px;object-fit:cover;border-radius:10px;display:block;"
-                  onerror="this.src='${fallbackUrl}'">
-              </div>
-              <!-- Miniaturas (todas las disponibles) -->
-              ${allImages.length > 1 ? `
-              <div style="display:flex;gap:8px;padding:10px 16px 0;flex-wrap:wrap;">
-                ${lightboxThumbs}
-              </div>` : ''}
-              <!-- Nombre + datos -->
-              <div style="padding:14px 16px;">
-                <h3 style="margin:0 0 8px;color:#1e293b;font-size:17px;">${item.servicioNombre}</h3>
-                <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:13px;color:#64748b;margin-bottom:12px;">
-                  <span>📅 ${fechaDisplay}${fechaFinDisplay ? ` → ${fechaFinDisplay}` : ''}</span>
-                  ${item.horarioInicio && item.horarioFin ? `<span>🕐 ${item.horarioInicio}–${item.horarioFin}</span>` : ''}
-                  <span>👥 ${itemPax} persona${itemPax !== 1 ? 's' : ''}</span>
-                  <span style="text-transform:uppercase;background:#f1f5f9;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;">${item.servicioTipo}</span>
-                </div>
-                ${description ? `<p style="margin:0;font-size:14px;color:#475569;line-height:1.65;">${description}</p>` : ''}
-                <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:13px;color:#64748b;">Subtotal</span>
-                  <span style="color:#10b981;font-size:20px;font-weight:700;">$${item.subtotal.toLocaleString('es-CO')} COP</span>
-                </div>
-              </div>
-            </div>
-          </div>` : ''}
-        `}).join('')}
-      </div>
-
-      <!-- Total -->
-      <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; border-radius: 12px; margin-bottom: 30px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+      <!-- Header GuanaGO -->
+      <div style="background:linear-gradient(135deg,#16a37a,#0d8a66);color:white;padding:24px 28px;border-radius:16px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:start;">
           <div>
-            <div style="color: rgba(255,255,255,0.9); font-size: 14px; margin-bottom: 5px;">PRECIO TOTAL</div>
-            <div style="color: white; font-size: 36px; font-weight: 700; line-height: 1;">
-              $${cotizacion.precioTotal.toLocaleString('es-CO')}
-            </div>
-            <div style="color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 5px;">
-              COP - Pesos Colombianos
-            </div>
+            <div style="font-size:26px;font-weight:800;letter-spacing:-0.5px;line-height:1;">GuanaGO</div>
+            <div style="font-size:12px;opacity:.85;margin-top:3px;">San Andrés Isla · Tu experiencia caribeña</div>
           </div>
-          <div style="text-align: right; color: rgba(255,255,255,0.9); font-size: 13px;">
-            <div>${items.length} servicio${items.length !== 1 ? 's' : ''}</div>
-            <div>${totalPersonas} pasajero${totalPersonas !== 1 ? 's' : ''}</div>
+          <div style="text-align:right;font-size:11px;opacity:.8;">
+            <div>Cotización</div>
+            <div style="font-weight:700;">${new Date().toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' })}</div>
           </div>
+        </div>
+        <div style="margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.25);">
+          <div style="font-size:11px;opacity:.75;letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px;">Preparada para</div>
+          <div style="font-size:20px;font-weight:800;">${cotizacion.nombre}</div>
+          ${cotizacion.telefono ? `<div style="font-size:12px;opacity:.85;margin-top:2px;">📱 ${cotizacion.telefono}</div>` : ''}
         </div>
       </div>
 
-      <!-- Información Adicional -->
-      <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin-bottom: 30px;">
-        <h4 style="color: #92400e; margin: 0 0 8px 0; font-size: 14px; font-weight: 600;">
-          ℹ️ Información Importante
-        </h4>
-        <ul style="margin: 0; padding-left: 20px; color: #78350f; font-size: 13px; line-height: 1.6;">
-          <li>Esta cotización es válida por 7 días desde su emisión</li>
-          <li>Los precios están sujetos a disponibilidad al momento de la reserva</li>
-          <li>Se requiere confirmación previa para todos los servicios</li>
-          <li>Tarifas: Adultos (18+) y Niños (4-17) pagan tarifa completa. Bebés (0-3) gratis.</li>
-          <li>Los bebés no cuentan como huésped en alojamientos</li>
+      <!-- Info strip: fechas + pax -->
+      <div style="background:white;border:1px solid #e6ece9;border-radius:12px;padding:16px 20px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#6b7b74;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Fechas</div>
+          <div style="font-size:15px;font-weight:800;color:#15201c;">
+            ${safeDate(cotizacion.fechaInicio)?.toLocaleDateString('es-CO', { day:'2-digit', month:'short' }) ?? '—'}
+            &nbsp;→&nbsp;
+            ${safeDate(cotizacion.fechaFin)?.toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' }) ?? '—'}
+          </div>
+        </div>
+        <div style="width:1px;height:32px;background:#e6ece9;"></div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#6b7b74;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Pasajeros</div>
+          <div style="font-size:15px;font-weight:800;color:#15201c;">${totalPersonas} persona${totalPersonas !== 1 ? 's' : ''}</div>
+          <div style="font-size:11px;color:#6b7b74;margin-top:1px;">
+            ${cotizacion.adultos} adulto${cotizacion.adultos !== 1 ? 's' : ''}${cotizacion.ninos > 0 ? ` · ${cotizacion.ninos} niño${cotizacion.ninos !== 1 ? 's' : ''}` : ''}${cotizacion.bebes > 0 ? ` · ${cotizacion.bebes} bebé${cotizacion.bebes !== 1 ? 's' : ''}` : ''}
+          </div>
+        </div>
+        ${cotizacion.email ? `<div style="width:1px;height:32px;background:#e6ece9;"></div><div>
+          <div style="font-size:10px;font-weight:700;color:#6b7b74;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Email</div>
+          <div style="font-size:13px;color:#15201c;">${cotizacion.email}</div>
+        </div>` : ''}
+      </div>
+
+      <!-- Sección servicios -->
+      <div style="font-size:10px;font-weight:700;color:#6b7b74;text-transform:uppercase;letter-spacing:.08em;margin:0 0 10px 4px;">
+        Servicios incluidos · ${items.length}
+      </div>
+
+      ${items.map((item, index) => {
+        // ── Tiquete aéreo ──────────────────────────────────────────────────────
+        const isTiquete = item.servicioNombre?.startsWith('✈️') || item.servicioTipo === 'tiquete';
+        if (isTiquete) {
+          const escH = (s: string) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          const nombre    = item.servicioNombre || '';
+          const parts     = nombre.replace(/^✈️\s*/, '').split('·').map((s: string) => s.trim());
+          const aerolinea = parts[0] || 'Vuelo';
+          const ruta      = parts[1] || '';
+          const tipoVuelo = parts[2] ? parts[2].split('|')[0].trim() : '';
+          const notas     = nombre.includes('|') ? nombre.split('|').slice(1).map((s: string) => s.trim()).join(' · ') : '';
+          const [orig, dest] = ruta.includes('→') ? ruta.split('→').map((s: string) => s.trim()) : [ruta, ''];
+          const fmtP = (n: number) => `$${n.toLocaleString('es-CO')}`;
+          const pax = item.personas || 1;
+          return `
+          <div class="service-card" style="background:white;border:1px solid #e6ece9;border-radius:14px;overflow:hidden;margin-bottom:12px;">
+            <div style="background:linear-gradient(135deg,#1d4ed8,#2563eb);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:22px;">✈️</span>
+                <div>
+                  <div style="color:white;font-weight:800;font-size:15px;">${escH(aerolinea)}</div>
+                  ${tipoVuelo ? `<div style="color:rgba(255,255,255,.75);font-size:11px;">${escH(tipoVuelo)}</div>` : ''}
+                </div>
+              </div>
+              <div style="color:#16a37a;font-size:18px;font-weight:800;background:white;padding:4px 12px;border-radius:20px;">
+                ${fmtP(item.subtotal)}
+              </div>
+            </div>
+            <div style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed #e6ece9;">
+              <div style="text-align:center;">
+                <div style="font-size:26px;font-weight:800;color:#15201c;">${escH(orig)}</div>
+                <div style="font-size:11px;color:#6b7b74;">Origen</div>
+              </div>
+              <div style="color:#6b7b74;font-size:20px;flex:1;text-align:center;">→</div>
+              <div style="text-align:center;">
+                <div style="font-size:26px;font-weight:800;color:#15201c;">${escH(dest || 'ADZ')}</div>
+                <div style="font-size:11px;color:#6b7b74;">Destino</div>
+              </div>
+            </div>
+            <div style="padding:10px 18px;display:flex;justify-content:space-between;font-size:12px;color:#6b7b74;flex-wrap:wrap;gap:6px;border-bottom:${notas ? '1px dashed #e6ece9' : 'none'};">
+              <div>👥 ${pax} pasajero${pax !== 1 ? 's' : ''}</div>
+              <div>${fmtP(item.valorUnitario)}/pax${item.cantidad > 1 ? ` × ${item.cantidad}` : ''}</div>
+            </div>
+            ${notas ? `<div style="padding:12px 18px;background:#f0faf6;">
+              <div style="font-size:11px;font-weight:700;color:#0b6b50;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">ℹ️ Detalles del vuelo</div>
+              <div style="font-size:13px;color:#15201c;line-height:1.7;white-space:pre-line;">${escH(notas).replace(/ · /g, '\n')}</div>
+            </div>` : ''}
+          </div>`;
+        }
+
+        // ── Servicios regulares (tours, hoteles, traslados…) ───────────────────
+        const { images: catalogImages, description } = getServiceMeta(item);
+        const freeItemImages: string[] = item.images && item.images.length > 0 ? item.images : [];
+        const activeImages  = item.esPersonalizado ? freeItemImages : catalogImages;
+        const fallbackUrl   = categoryFallback[item.servicioTipo] || categoryFallback['tour'];
+        const showPhotoGrid = activeImages.length > 0;
+        const allImages     = catalogImages.length > 0 ? catalogImages : [fallbackUrl];
+
+        const fechaDisplay    = safeDate(item.fecha)?.toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' }) ?? 'Por confirmar';
+        const fechaFinDisplay = item.fechaFin ? safeDate(item.fechaFin)?.toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' }) ?? '' : '';
+        const itemPax = (item.personas || (item.adultos + item.ninos + item.bebes)) || totalPersonas;
+        const modalId = `modal-${index}`;
+
+        // Badge de Colección para alojamientos
+        const coleccion     = (item as any).coleccion || '';
+        const colColor      = COLECCION_COLORS[coleccion] || '';
+        const colBadge      = coleccion && colColor
+          ? `<span style="font-size:10px;font-weight:800;color:white;background:${colColor};border-radius:5px;padding:2px 7px;flex-shrink:0;">${coleccion}</span>`
+          : '';
+
+        const tipoLabel: Record<string, string> = {
+          hotel: '🏨 Alojamiento', tour: '⛵ Tour/Actividad', taxi: '🚗 Traslado',
+          transfer: '🚌 Transfer', package: '📦 Paquete', tiquete: '✈️ Tiquete',
+          seguro: '🛡️ Seguro', otro: '➕ Adicional',
+        };
+
+        // Grid fotos
+        const realCount = activeImages.length;
+        const slotW = realCount === 1 ? '100%' : realCount === 2 ? 'calc(50% - 2px)' : realCount === 3 ? 'calc(33.33% - 3px)' : 'calc(25% - 3px)';
+        const photoGrid = activeImages.map((url: string, i: number) => `
+          <div style="width:${slotW};aspect-ratio:${realCount === 1 ? '16/7' : '1/1'};overflow:hidden;border-radius:6px;cursor:pointer;flex-shrink:0;"
+               onclick="openModal('${modalId}',${i})">
+            <img src="${url}" style="width:100%;height:100%;object-fit:cover;display:block;"
+                 onerror="this.src='${fallbackUrl}'" loading="lazy">
+          </div>`).join('');
+
+        const lightboxThumbs = allImages.map((url: string, i: number) => `
+          <img src="${url}" id="${modalId}-thumb-${i}"
+               style="width:60px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.6;border:2px solid transparent;"
+               onclick="setModalImg('${modalId}',${i})"
+               onerror="this.src='${fallbackUrl}'">`).join('');
+
+        return `
+        <div class="service-card" style="background:white;border:1px solid #e6ece9;border-radius:14px;overflow:hidden;margin-bottom:12px;">
+
+          ${showPhotoGrid ? `<div style="display:flex;gap:4px;padding:10px 10px 0;">${photoGrid}</div>` : ''}
+
+          <div style="padding:14px 16px 16px;">
+            <div style="display:flex;justify-content:space-between;align-items:start;gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <!-- Número + colección + nombre -->
+                <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:7px;">
+                  <span style="background:#16a37a;color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">${index + 1}</span>
+                  ${colBadge}
+                  <span style="background:#e7f5ef;color:#0b6b50;font-size:10px;font-weight:700;border-radius:5px;padding:2px 7px;">${tipoLabel[item.servicioTipo] || item.servicioTipo}</span>
+                </div>
+                <h4 style="margin:0 0 7px;color:#15201c;font-size:15px;font-weight:700;line-height:1.2;">${item.servicioNombre}</h4>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11.5px;color:#6b7b74;">
+                  <span>📅 ${fechaDisplay}${fechaFinDisplay ? ` → ${fechaFinDisplay}` : ''}</span>
+                  ${item.horarioInicio && item.horarioFin ? `<span>🕐 ${item.horarioInicio}–${item.horarioFin}</span>` : ''}
+                  <span>👥 ${itemPax} persona${itemPax !== 1 ? 's' : ''}</span>
+                </div>
+                ${description ? `<div style="margin-top:8px;font-size:12.5px;color:#6b7b74;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">${description}</div>` : ''}
+              </div>
+              <!-- Precio -->
+              <div style="text-align:right;flex-shrink:0;">
+                <div style="font-size:17px;font-weight:800;color:#0d8a66;">$${item.subtotal.toLocaleString('es-CO')}</div>
+                <div style="font-size:10.5px;color:#6b7b74;margin-top:2px;">$${item.valorUnitario.toLocaleString('es-CO')} × ${item.personas || itemPax}${item.cantidad > 1 ? ` × ${item.cantidad}` : ''}</div>
+              </div>
+            </div>
+            ${showPhotoGrid ? `<button onclick="openModal('${modalId}',0)" style="margin-top:8px;background:none;border:none;color:#16a37a;font-size:12px;font-weight:600;cursor:pointer;padding:0;">Ver fotos ▼</button>` : ''}
+          </div>
+        </div>
+
+        ${showPhotoGrid ? `<div id="${modalId}" onclick="if(event.target===this)closeModal('${modalId}')"
+          style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+          <div style="background:white;border-radius:16px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;position:relative;">
+            <button onclick="closeModal('${modalId}')" style="position:sticky;top:10px;float:right;margin:10px 12px 0 0;background:#15201c;color:white;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;z-index:10;">✕</button>
+            <div style="padding:16px 16px 0;">
+              <img id="${modalId}-main" src="${allImages[0]}" style="width:100%;height:280px;object-fit:cover;border-radius:10px;display:block;" onerror="this.src='${fallbackUrl}'">
+            </div>
+            ${allImages.length > 1 ? `<div style="display:flex;gap:8px;padding:10px 16px 0;flex-wrap:wrap;">${lightboxThumbs}</div>` : ''}
+            <div style="padding:14px 16px;">
+              <h3 style="margin:0 0 8px;color:#15201c;font-size:17px;font-weight:700;">${item.servicioNombre}</h3>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:13px;color:#6b7b74;margin-bottom:12px;">
+                <span>📅 ${fechaDisplay}${fechaFinDisplay ? ` → ${fechaFinDisplay}` : ''}</span>
+                ${item.horarioInicio && item.horarioFin ? `<span>🕐 ${item.horarioInicio}–${item.horarioFin}</span>` : ''}
+                <span>👥 ${itemPax} persona${itemPax !== 1 ? 's' : ''}</span>
+              </div>
+              ${description ? `<p style="margin:0;font-size:14px;color:#6b7b74;line-height:1.65;">${description}</p>` : ''}
+              <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e6ece9;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;color:#6b7b74;">Subtotal</span>
+                <span style="color:#0d8a66;font-size:20px;font-weight:800;">$${item.subtotal.toLocaleString('es-CO')} COP</span>
+              </div>
+            </div>
+          </div>
+        </div>` : ''}`;
+      }).join('')}
+
+      <!-- Total GuanaGO -->
+      <div style="background:linear-gradient(135deg,#16a37a,#0d8a66);border-radius:14px;padding:20px 24px;margin-bottom:14px;color:white;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div style="font-size:10px;opacity:.8;letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px;">Total estimado</div>
+            <div style="font-size:34px;font-weight:800;line-height:1;">$${cotizacion.precioTotal.toLocaleString('es-CO')}</div>
+            <div style="font-size:11px;opacity:.8;margin-top:4px;">COP · ${items.length} servicio${items.length !== 1 ? 's' : ''} · ${totalPersonas} pasajero${totalPersonas !== 1 ? 's' : ''}</div>
+          </div>
+          ${guanaPoints > 0 ? `<div style="background:rgba(0,0,0,.2);border-radius:12px;padding:14px 18px;text-align:center;">
+            <div style="font-size:24px;font-weight:800;color:#F9A825;">${guanaPoints.toLocaleString('es-CO')}</div>
+            <div style="font-size:10px;opacity:.85;margin-top:2px;">GuanaPoints</div>
+          </div>` : ''}
+        </div>
+      </div>
+
+      <!-- Info importante -->
+      <div style="background:#f0faf6;border:1px solid #c7ebdd;border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+        <div style="font-size:11.5px;font-weight:700;color:#0b6b50;margin-bottom:8px;">ℹ️ Información importante</div>
+        <ul style="margin:0;padding-left:18px;color:#0b6b50;font-size:12px;line-height:1.7;">
+          <li>Cotización válida por <strong>7 días</strong> desde su emisión</li>
+          <li>Precios sujetos a disponibilidad al momento de confirmar</li>
+          <li>Adultos (18+) y Niños (4-17) pagan tarifa completa · Bebés (0-3) gratis</li>
+          <li>El nombre del alojamiento se confirma tras el pago</li>
         </ul>
       </div>
 
       ${cotizacion.notasInternas ? `
-      <div style="background: #f1f5f9; padding: 16px; border-radius: 8px; margin-bottom: 30px;">
-        <h4 style="color: #475569; margin: 0 0 8px 0; font-size: 14px; font-weight: 600;">
-          📝 Notas Adicionales
-        </h4>
-        <p style="margin: 0; color: #64748b; font-size: 13px; line-height: 1.6;">
-          ${cotizacion.notasInternas}
-        </p>
-      </div>
-      ` : ''}
+      <div style="background:white;border:1px solid #e6ece9;border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:#6b7b74;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">📝 Notas adicionales</div>
+        <p style="margin:0;color:#15201c;font-size:13px;line-height:1.6;">${cotizacion.notasInternas}</p>
+      </div>` : ''}
 
       <!-- Footer -->
-      <div style="text-align: center; padding-top: 30px; border-top: 2px solid #e2e8f0;">
-        <p style="color: #64748b; font-size: 14px; margin: 0 0 8px 0; font-weight: 500;">
-          ¿Listo para tu aventura en San Andrés? 🌴
-        </p>
-        <p style="color: #94a3b8; font-size: 12px; margin: 0 0 15px 0;">
-          Contáctanos para confirmar tu reserva o hacer ajustes
-        </p>
-        <div style="color: #0ea5e9; font-size: 13px; font-weight: 600;">
-          📱 WhatsApp: +57 315 383 6043<br/>
-          📧 Email: comercial@guiasai.com<br/>
-          🌐 Web: guiasanandresislas.com
+      <div style="text-align:center;padding:20px 0 8px;border-top:1px solid #e6ece9;margin-top:8px;">
+        <div style="font-size:13px;font-weight:700;color:#15201c;margin-bottom:4px;">¿Listo para tu aventura en San Andrés? 🌴</div>
+        <div style="font-size:12px;color:#6b7b74;margin-bottom:12px;">Confirma tu reserva o ajusta los servicios con tu asesor GuanaGO</div>
+        <div style="font-size:13px;font-weight:600;color:#16a37a;">
+          📱 WhatsApp: +57 320 662 0695&nbsp;&nbsp;·&nbsp;&nbsp;🌐 guanago.travel
         </div>
-        <p style="color: #cbd5e1; font-size: 11px; margin: 20px 0 0 0;">
-          GuíaSAI © ${new Date().getFullYear()} · San Andrés Isla, Colombia · RNT 48674
-        </p>
+        <div style="font-size:10px;color:#6b7b74;margin-top:12px;">GuanaGO © ${new Date().getFullYear()} · San Andrés Isla, Colombia · RNT 48674</div>
       </div>
+
     </div>
   `;
 }
@@ -507,9 +468,11 @@ export function previewQuote(
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Cotización ${cotizacion.nombre} - GuíaSAI</title>
+          <title>Cotización ${cotizacion.nombre} - GuanaGO</title>
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
           <style>
-            body { margin:0; padding:20px; background:#f1f5f9; font-family:Arial,sans-serif; }
+            body { margin:0; padding:20px; background:#f4f7f5; font-family:'Plus Jakarta Sans',-apple-system,sans-serif; }
             @media print {
               body { background:white; padding:0; }
               .no-print { display:none !important; }

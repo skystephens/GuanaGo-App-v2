@@ -33,6 +33,22 @@ const STEP_LABELS: Record<Step, string> = {
   done:    'Listo',
 };
 
+// ─── Constantes Paso 4 (Alojamiento) ─────────────────────────────────────────
+
+const COLECCIONES = ['Todas', 'Island Room', 'Posada Raizal', 'Come Noh', 'Seaflower Hotel'] as const;
+const COLECCION_COLORS: Record<string, string> = {
+  'Island Room':    '#16a37a',
+  'Posada Raizal':  '#d9930a',
+  'Come Noh':       '#D32F2F',
+  'Seaflower Hotel':'#7a3fb0',
+};
+const ADDONS_LIST = [
+  { key: 'transfer', emoji: '🚌', nombre: 'Traslado aeropuerto',         detalle: 'Por trayecto · compartido', precio: 60000,  porPax: false },
+  { key: 'tour',     emoji: '⛵', nombre: 'Tour Acuario + Johnny Cay',    detalle: 'Por persona',               precio: 120000, porPax: true  },
+  { key: 'comida',   emoji: '🍽️', nombre: 'Comida a domicilio (aliado)',  detalle: 'Por persona · evita salir', precio: 45000,  porPax: true  },
+  { key: 'vehiculo', emoji: '🛵', nombre: 'Alquiler vehículo / mula',     detalle: 'Por día',                   precio: 180000, porPax: false },
+] as const;
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function calcNights(fechaInicio: string, fechaFin: string): number {
@@ -53,12 +69,34 @@ function getServicePrice(svc: any): number {
 
 /** Precio escalonado por número de huéspedes para alojamientos */
 function getHotelPriceByPax(svc: any, totalPax: number): number {
+  // precio2-4hues tienen placeholder 700k en ~25 registros — ignorar ese valor literal
+  const safe = (n: number) => (n > 0 && n !== 700000) ? n : 0;
   if (totalPax >= 6 && svc.precio6hues > 0) return svc.precio6hues;
   if (totalPax >= 5 && svc.precio5hues > 0) return svc.precio5hues;
-  if (totalPax >= 4 && svc.precio4hues > 0) return svc.precio4hues;
-  if (totalPax === 3 && svc.precio3hues > 0) return svc.precio3hues;
-  if (totalPax <= 2 && svc.precio2hues > 0) return svc.precio2hues;
+  if (totalPax >= 4 && safe(svc.precio4hues)) return safe(svc.precio4hues);
+  if (totalPax === 3 && safe(svc.precio3hues)) return safe(svc.precio3hues);
+  if (totalPax <= 2 && safe(svc.precio2hues)) return safe(svc.precio2hues);
   return getServicePrice(svc);
+}
+
+/** Precio base "desde" para tarjeta pública de alojamiento */
+function getDesdePrecio(svc: any): number {
+  const opts = [svc.precioB2C, svc.price].filter((p: number) => p > 0);
+  return opts.length ? Math.min(...opts) : 0;
+}
+
+/** Precio de unidad completa para grupos (solo si cap ≥ 5) */
+function getCompletoPrice(svc: any, desde: number): number | null {
+  if ((svc.capacidadMaxima || 0) < 5) return null;
+  const completo = [svc.precio6hues, svc.precio5hues].find((p: number) => p > 0 && p > desde);
+  return completo || null;
+}
+
+/** Título opaco para cards públicas — NO expone nombre real */
+function getOpaqueTitle(svc: any): string {
+  const tipo = svc.tipoAlojamiento || 'Alojamiento';
+  const cap  = svc.capacidadMaxima;
+  return cap ? `${tipo} · hasta ${cap} huéspedes` : tipo;
 }
 
 function getServiceImage(svc: any): string {
@@ -276,6 +314,17 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
   const [selectedTours,  setSelectedTours]  = useState<Set<string>>(new Set());
   const [selectedHotels, setSelectedHotels] = useState<Set<string>>(new Set());
 
+  // Paso 4 — filtros de alojamiento
+  const [filtroColeccion, setFiltroColeccion] = useState<string>('Todas');
+  const [filtroVistaMar,  setFiltroVistaMar]  = useState(false);
+  const [filtroCocina,    setFiltroCocina]    = useState(false);
+  const [filtroPiscina,   setFiltroPiscina]   = useState(false);
+  const [filtroPrecioMax, setFiltroPrecioMax] = useState(1800000);
+
+  // Bottom sheet de adicionales
+  const [sheetAloj,      setSheetAloj]      = useState<any>(null);
+  const [selectedAddons, setSelectedAddons] = useState<Record<string, boolean>>({});
+
   const loadCatalog = useCallback(async () => {
     if (catalogLoadedRef.current) return;
     setCatalogLoading(true);
@@ -315,6 +364,9 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
     setFechaInicio(''); setFechaFin('');
     setAdultos(2); setNinos(0); setBebes(0);
     setSelectedTours(new Set()); setSelectedHotels(new Set());
+    setFiltroColeccion('Todas'); setFiltroVistaMar(false); setFiltroCocina(false);
+    setFiltroPiscina(false); setFiltroPrecioMax(1800000);
+    setSheetAloj(null); setSelectedAddons({});
     setSaveError('');
   };
 
@@ -357,8 +409,13 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
       if (p > 0) total += p * pax;
     });
     alojamientos.filter(a => selectedHotels.has(a.id)).forEach(a => {
-      const p = getHotelPriceByPax(a, pax);
+      const p = getDesdePrecio(a) || getHotelPriceByPax(a, pax);
       if (p > 0) total += p * nights;
+    });
+    ADDONS_LIST.forEach(addon => {
+      if (selectedAddons[addon.key]) {
+        total += addon.porPax ? addon.precio * pax : addon.precio;
+      }
     });
     return total;
   };
@@ -391,7 +448,8 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
 
       // 2. Cotización en CotizacionesGG
       // IMPORTANTE: estado 'Draft' con D mayúscula — así lo espera el Select de Airtable
-      const notasB2C = `[B2C Web] ${[req, notas].filter(Boolean).join(' | ')}`.trim();
+      const hotelesNombres = alojamientos.filter((a: any) => selectedHotels.has(a.id)).map((a: any) => getServiceName(a)).join(', ');
+      const notasB2C = `[B2C Web] ${[req, notas, hotelesNombres && `Aloj: ${hotelesNombres}`].filter(Boolean).join(' | ')}`.trim();
 
       const cotizacion = await createCotizacion({
         nombre:       nombre || 'Cliente Web',
@@ -433,11 +491,11 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
           });
         }),
         ...alojamientos.filter(a => selectedHotels.has(a.id)).map(a => {
-          const price = getServicePrice(a);
+          const price = getDesdePrecio(a) || getHotelPriceByPax(a, pax);
           return addCotizacionItem({
             cotizacionId:   cotizacion.id,
             servicioId:     a.id,
-            servicioNombre: getServiceName(a),
+            servicioNombre: getOpaqueTitle(a),  // título opaco al cliente
             servicioTipo:   'hotel',
             fecha:          fechaInicio,
             fechaFin,
@@ -448,6 +506,24 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
             precioUnitario: price,
             subtotal:       price * nights,
             esPersonalizado: false,
+            status:         'disponible',
+          });
+        }),
+        // Adicionales seleccionados en el bottom sheet
+        ...ADDONS_LIST.filter(addon => selectedAddons[addon.key]).map(addon => {
+          const precio = addon.porPax ? addon.precio * pax : addon.precio;
+          return addCotizacionItem({
+            cotizacionId:   cotizacion.id,
+            servicioNombre: addon.nombre,
+            servicioTipo:   addon.key === 'transfer' || addon.key === 'vehiculo' ? 'transfer' : 'tour',
+            fecha:          fechaInicio,
+            adultos, ninos, bebes,
+            valorUnitario:  addon.precio,
+            personas:       addon.porPax ? pax : 1,
+            cantidad:       1,
+            precioUnitario: addon.precio,
+            subtotal:       precio,
+            esPersonalizado: true,
             status:         'disponible',
           });
         }),
@@ -736,49 +812,198 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
                 </div>
               )}
 
-              {/* ── STEP: hotels ── */}
-              {step === 'hotels' && (
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-800">¿Dónde te quedas?</h3>
-                    <p className="text-sm text-gray-500 mt-1">Precios por noche · {nights} {nights === 1 ? 'noche' : 'noches'} para {pax} personas.</p>
-                  </div>
+              {/* ── STEP: hotels (Paso 4 — ¿Dónde te quedas?) ── */}
+              {step === 'hotels' && (() => {
+                const alojaFiltrados = alojamientos.filter((a: any) => {
+                  if (filtroColeccion !== 'Todas' && a.coleccion !== filtroColeccion) return false;
+                  if (filtroVistaMar  && !a.vistaAlMar)    return false;
+                  if (filtroCocina    && !a.tieneCocina)   return false;
+                  if (filtroPiscina   && !a.accesoPiscina) return false;
+                  if ((a.capacidadMaxima || 0) > 0 && a.capacidadMaxima < pax) return false;
+                  const desde = getDesdePrecio(a);
+                  if (desde > 0 && desde > filtroPrecioMax) return false;
+                  return true;
+                });
 
-                  {selectedHotels.size > 0 && (
-                    <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl text-sm text-emerald-700 font-medium">
-                      <Check size={14} />
-                      {selectedHotels.size} {selectedHotels.size === 1 ? 'alojamiento seleccionado' : 'alojamientos seleccionados'}
+                return (
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">¿Dónde te quedas?</h3>
+                      <p className="text-sm text-gray-500 mt-0.5">Toca una tarjeta para agregar extras a tu viaje.</p>
                     </div>
-                  )}
 
-                  {catalogLoading ? (
-                    <div className="flex items-center justify-center py-16">
-                      <Loader2 size={24} className="text-emerald-500 animate-spin" />
-                      <span className="ml-3 text-gray-400 text-sm">Cargando alojamientos...</span>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      {alojamientos.map((aloj: any) => (
-                        <ServiceCard
-                          key={aloj.id} svc={aloj}
-                          selected={selectedHotels.has(aloj.id)} pax={pax} nights={nights}
-                          onToggle={() => toggleHotel(aloj.id)} priceLabel="noche"
-                        />
+                    {/* Chips de Colección */}
+                    <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
+                      {COLECCIONES.map(c => (
+                        <button
+                          key={c}
+                          onClick={() => setFiltroColeccion(c)}
+                          className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all ${
+                            filtroColeccion === c
+                              ? 'bg-gray-800 text-white border-gray-800'
+                              : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400'
+                          }`}
+                        >
+                          {c}
+                        </button>
                       ))}
-                      {alojamientos.length === 0 && (
-                        <div className="col-span-2 text-center py-12 text-gray-400">
-                          <Bed size={32} className="mx-auto mb-3 opacity-30" />
-                          <p className="text-sm">Sin alojamientos disponibles</p>
-                        </div>
-                      )}
                     </div>
-                  )}
 
-                  <button onClick={goNext} className="w-full text-center text-sm text-gray-400 py-2 hover:text-emerald-500 transition-colors">
-                    Saltar este paso →
-                  </button>
-                </div>
-              )}
+                    {/* Chips de amenidades */}
+                    <div className="flex gap-2 flex-wrap">
+                      {[
+                        { key: 'vistaMar', label: '🌊 Vista al mar',  val: filtroVistaMar, set: setFiltroVistaMar },
+                        { key: 'cocina',   label: '🍳 Cocina',        val: filtroCocina,   set: setFiltroCocina },
+                        { key: 'piscina',  label: '🏊 Piscina',       val: filtroPiscina,  set: setFiltroPiscina },
+                      ].map(({ key, label, val, set }) => (
+                        <button
+                          key={key}
+                          onClick={() => set(!val)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all ${
+                            val
+                              ? 'bg-emerald-500 text-white border-emerald-500'
+                              : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-300'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Precio máx */}
+                    <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-sm">
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="text-xs font-semibold text-gray-500">Precio máx / noche</label>
+                        <span className="text-xs font-bold text-emerald-600 font-mono">{fmtCOP(filtroPrecioMax)}</span>
+                      </div>
+                      <input
+                        type="range" min={80000} max={1800000} step={20000}
+                        value={filtroPrecioMax}
+                        onChange={e => setFiltroPrecioMax(Number(e.target.value))}
+                        className="w-full accent-emerald-500"
+                      />
+                    </div>
+
+                    {/* Contador */}
+                    <p className="text-xs text-gray-400 font-medium">
+                      {alojaFiltrados.length} alojamiento{alojaFiltrados.length !== 1 ? 's' : ''} · precios por noche para {pax} persona{pax !== 1 ? 's' : ''}
+                    </p>
+
+                    {/* Selección actual */}
+                    {selectedHotels.size > 0 && (
+                      <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl text-xs text-emerald-700 font-semibold">
+                        <Check size={13} />
+                        {selectedHotels.size} {selectedHotels.size === 1 ? 'alojamiento seleccionado' : 'alojamientos seleccionados'} · toca para ver extras
+                      </div>
+                    )}
+
+                    {catalogLoading ? (
+                      <div className="flex items-center justify-center py-16">
+                        <Loader2 size={24} className="text-emerald-500 animate-spin" />
+                        <span className="ml-3 text-gray-400 text-sm">Cargando alojamientos...</span>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3">
+                        {alojaFiltrados.map((aloj: any) => {
+                          const desde    = getDesdePrecio(aloj);
+                          const completo = getCompletoPrice(aloj, desde);
+                          const colColor = COLECCION_COLORS[aloj.coleccion] || '#999';
+                          const isSelected = selectedHotels.has(aloj.id);
+                          const amenBadges: string[] = [];
+                          if (aloj.vistaAlMar)    amenBadges.push('Vista mar');
+                          if (aloj.tieneCocina)   amenBadges.push('Cocina');
+                          if (aloj.accesoPiscina) amenBadges.push('Piscina');
+                          if (aloj.accesoJacuzzi) amenBadges.push('Jacuzzi');
+
+                          return (
+                            <div
+                              key={aloj.id}
+                              onClick={() => setSheetAloj(aloj)}
+                              className={`relative rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-200 active:scale-95 flex flex-col bg-white ${
+                                isSelected
+                                  ? 'border-emerald-500 shadow-lg shadow-emerald-100'
+                                  : 'border-gray-200 hover:border-emerald-300'
+                              }`}
+                            >
+                              {/* Foto */}
+                              <div className="h-24 relative overflow-hidden bg-gradient-to-br from-emerald-100 to-teal-100">
+                                {aloj.image ? (
+                                  <img src={aloj.image} alt="" className="w-full h-full object-cover"
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Bed size={28} className="text-emerald-300" />
+                                  </div>
+                                )}
+                                {/* Badge colección */}
+                                {aloj.coleccion && (
+                                  <span className="absolute top-1.5 left-1.5 text-[9px] font-black text-white px-1.5 py-0.5 rounded-md"
+                                    style={{ background: colColor }}>
+                                    {aloj.coleccion}
+                                  </span>
+                                )}
+                                {/* Badge capacidad */}
+                                {aloj.capacidadMaxima > 0 && (
+                                  <span className={`absolute top-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                                    pax > aloj.capacidadMaxima ? 'bg-red-500 text-white' : 'bg-black/55 text-white'
+                                  }`}>
+                                    {aloj.capacidadMaxima} pax
+                                  </span>
+                                )}
+                                {/* Check de seleccionado */}
+                                {isSelected && (
+                                  <div className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shadow">
+                                      <Check size={16} className="text-white" />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Info */}
+                              <div className="p-2.5 flex flex-col gap-1 flex-1">
+                                <p className="text-[11px] font-bold text-gray-800 leading-tight">{getOpaqueTitle(aloj)}</p>
+                                {amenBadges.length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {amenBadges.slice(0, 3).map(b => (
+                                      <span key={b} className="text-[8.5px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">{b}</span>
+                                    ))}
+                                  </div>
+                                )}
+                                <div className="mt-auto pt-1">
+                                  {desde > 0 ? (
+                                    <>
+                                      <p className="text-[9px] text-gray-400">desde</p>
+                                      <p className="text-sm font-black text-emerald-600 font-mono leading-tight">${desde.toLocaleString('es-CO')}</p>
+                                      {completo && (
+                                        <p className="text-[9px] text-gray-400 mt-0.5">o completo: ${completo.toLocaleString('es-CO')}/n</p>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <p className="text-[10px] text-emerald-500 font-medium">A consultar</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {alojaFiltrados.length === 0 && (
+                          <div className="col-span-2 text-center py-12 text-gray-400">
+                            <Bed size={28} className="mx-auto mb-2 opacity-30" />
+                            <p className="text-sm">Sin resultados con esos filtros</p>
+                            <button onClick={() => { setFiltroColeccion('Todas'); setFiltroVistaMar(false); setFiltroCocina(false); setFiltroPiscina(false); setFiltroPrecioMax(1800000); }}
+                              className="mt-2 text-xs text-emerald-500 underline">Limpiar filtros</button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <button onClick={goNext} className="w-full text-center text-sm text-gray-400 py-2 hover:text-emerald-500 transition-colors">
+                      Saltar este paso →
+                    </button>
+                  </div>
+                );
+              })()}
 
               {/* ── STEP: summary ── */}
               {step === 'summary' && (
@@ -851,31 +1076,50 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
                       <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
                         <Bed size={13} className="text-emerald-500" /> Alojamiento ({hotelesSeleccionados.length})
                       </h4>
-                      {hotelesSeleccionados.map(a => {
-                        const p = getHotelPriceByPax(a, pax);
+                      {hotelesSeleccionados.map((a: any) => {
+                        const p      = getDesdePrecio(a) || getHotelPriceByPax(a, pax);
                         const capMax = a.capacidadMaxima || 0;
+                        const colColor = COLECCION_COLORS[a.coleccion] || '';
                         return (
                           <div key={a.id} className="py-1.5">
-                            <div className="flex items-center justify-between">
-                              <span className="text-gray-700 flex-1 pr-2 text-xs font-medium">{getServiceName(a)}</span>
+                            <div className="flex items-center gap-2">
+                              {a.coleccion && colColor && (
+                                <span className="text-[9px] font-black text-white px-1.5 py-0.5 rounded flex-shrink-0"
+                                  style={{ background: colColor }}>{a.coleccion}</span>
+                              )}
+                              <span className="text-gray-700 flex-1 pr-2 text-xs font-medium">{getOpaqueTitle(a)}</span>
                               <span className="text-emerald-600 font-semibold text-xs whitespace-nowrap">
                                 {p > 0 ? fmtCOP(p * nights) : 'A consultar'}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              {a.tipoAlojamiento && (
-                                <span className="text-[10px] text-gray-400">{a.tipoAlojamiento}</span>
-                              )}
+                            <div className="flex items-center gap-2 mt-0.5 pl-0.5">
                               {capMax > 0 && (
                                 <span className={`text-[10px] flex items-center gap-0.5 ${pax > capMax ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>
-                                  <Users size={9} /> hasta {capMax} pers.
-                                  {pax > capMax && ' ⚠️'}
+                                  <Users size={9} /> hasta {capMax} pers.{pax > capMax && ' ⚠️'}
                                 </span>
                               )}
                               {p > 0 && nights > 0 && (
-                                <span className="text-[10px] text-gray-400">{fmtCOP(p)}/noche</span>
+                                <span className="text-[10px] text-gray-400">{fmtCOP(p)}/noche · {nights} {nights === 1 ? 'noche' : 'noches'}</span>
                               )}
                             </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Adicionales */}
+                  {ADDONS_LIST.some(a => selectedAddons[a.key]) && (
+                    <div className="bg-gray-50 rounded-2xl p-4">
+                      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                        <Plus size={13} className="text-emerald-500" /> Adicionales
+                      </h4>
+                      {ADDONS_LIST.filter(a => selectedAddons[a.key]).map(addon => {
+                        const precio = addon.porPax ? addon.precio * pax : addon.precio;
+                        return (
+                          <div key={addon.key} className="flex items-center justify-between text-xs py-1">
+                            <span className="text-gray-700">{addon.emoji} {addon.nombre}</span>
+                            <span className="text-emerald-600 font-semibold">{fmtCOP(precio)}</span>
                           </div>
                         );
                       })}
@@ -890,11 +1134,19 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
 
                   {total > 0 && (
                     <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl p-4">
-                      <p className="text-emerald-100 text-xs font-medium">Estimado total</p>
-                      <p className="text-2xl font-black">{fmtCOP(total)}</p>
-                      <p className="text-emerald-100 text-xs mt-0.5">
-                        {pax} personas · {nights} noches · tarifa B2C · sujeto a disponibilidad
-                      </p>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-emerald-100 text-xs font-medium">Estimado total</p>
+                          <p className="text-2xl font-black">{fmtCOP(total)}</p>
+                          <p className="text-emerald-100 text-xs mt-0.5">
+                            {pax} personas · {nights} noches · tarifa B2C · sujeto a disponibilidad
+                          </p>
+                        </div>
+                        <div className="bg-black/20 rounded-xl px-3 py-2 text-center flex-shrink-0">
+                          <p className="text-amber-300 font-black text-base leading-none">{Math.round(total / 1000).toLocaleString('es-CO')}</p>
+                          <p className="text-[9px] text-white/80 mt-0.5">GuanaPoints</p>
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -1014,6 +1266,113 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
                 )}
               </div>
             </div>
+          )}
+
+          {/* ── Bottom Sheet — Adicionales de alojamiento ── */}
+          {sheetAloj && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="absolute inset-0 bg-black/40"
+                style={{ zIndex: 5 }}
+                onClick={() => setSheetAloj(null)}
+              />
+              {/* Sheet panel */}
+              <div
+                className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl overflow-y-auto"
+                style={{ zIndex: 6, maxHeight: '88%' }}
+              >
+                {/* Handle */}
+                <div className="flex justify-center pt-3 pb-1">
+                  <div className="w-10 h-1 bg-gray-200 rounded-full" />
+                </div>
+
+                {/* Header del sheet */}
+                <div className="px-4 pb-2 sticky top-0 bg-white pt-2">
+                  <h2 className="text-lg font-black text-gray-800">{getOpaqueTitle(sheetAloj)}</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {sheetAloj.coleccion && (
+                      <span
+                        className="inline-block text-white text-[9px] font-black px-1.5 py-0.5 rounded mr-1"
+                        style={{ background: COLECCION_COLORS[sheetAloj.coleccion] || '#999' }}
+                      >
+                        {sheetAloj.coleccion}
+                      </span>
+                    )}
+                    desde {fmtCOP(getDesdePrecio(sheetAloj))}/noche · hasta {sheetAloj.capacidadMaxima || '?'} huéspedes
+                  </p>
+                </div>
+
+                {/* Adicionales */}
+                <div className="px-4 pt-2 pb-2">
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Servicios adicionales</p>
+                  {ADDONS_LIST.map(addon => {
+                    const isOn = !!selectedAddons[addon.key];
+                    const precio = addon.porPax ? addon.precio * pax : addon.precio;
+                    return (
+                      <button
+                        key={addon.key}
+                        onClick={() => setSelectedAddons(prev => ({ ...prev, [addon.key]: !prev[addon.key] }))}
+                        className={`w-full flex items-center gap-3 p-3 rounded-2xl border-2 mb-2 transition-all text-left ${
+                          isOn ? 'border-emerald-500 bg-emerald-50' : 'border-gray-100 bg-white hover:border-gray-200'
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-lg flex-shrink-0">
+                          {addon.emoji}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-gray-800">{addon.nombre}</p>
+                          <p className="text-[11px] text-gray-400">{addon.detalle}</p>
+                        </div>
+                        <div className="flex-shrink-0 text-right">
+                          <p className="text-xs font-black text-gray-700">{fmtCOP(precio)}</p>
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center ml-auto mt-1 ${
+                            isOn ? 'bg-emerald-500 border-emerald-500' : 'border-gray-200'
+                          }`}>
+                            {isOn && <Check size={11} className="text-white" />}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Nota */}
+                <div className="mx-4 mb-4 bg-emerald-50 border border-emerald-100 rounded-xl p-3">
+                  <p className="text-xs text-emerald-800 leading-relaxed">
+                    📱 <strong>Tu WhatsApp es tu cuenta.</strong> Al solicitar la cotización, si ya cotizaste antes, esta queda bajo el mismo cliente. Un asesor la revisa y te envía el <strong>link de pago seguro</strong>.
+                  </p>
+                </div>
+
+                {/* Spacer para el footer fijo */}
+                <div className="h-24" />
+              </div>
+
+              {/* Footer fijo del sheet */}
+              <div
+                className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex items-center justify-between gap-3"
+                style={{ zIndex: 7 }}
+              >
+                <div>
+                  <p className="text-[10px] text-gray-400">
+                    {Math.round((getDesdePrecio(sheetAloj) + ADDONS_LIST.reduce((s, a) => s + (selectedAddons[a.key] ? (a.porPax ? a.precio * pax : a.precio) : 0), 0)) / 1000).toLocaleString('es-CO')} GuanaPoints
+                  </p>
+                  <p className="text-lg font-black text-gray-800">
+                    {fmtCOP(getDesdePrecio(sheetAloj) + ADDONS_LIST.reduce((s, a) => s + (selectedAddons[a.key] ? (a.porPax ? a.precio * pax : a.precio) : 0), 0))}
+                  </p>
+                  <p className="text-[10px] text-gray-400">estimado 1ª noche + extras</p>
+                </div>
+                <button
+                  onClick={() => {
+                    toggleHotel(sheetAloj.id);
+                    setSheetAloj(null);
+                  }}
+                  className="bg-emerald-500 text-white px-5 py-3 rounded-xl font-bold text-sm hover:bg-emerald-600 active:scale-95 transition-all flex-shrink-0"
+                >
+                  {selectedHotels.has(sheetAloj.id) ? 'Quitar selección' : 'Agregar a mi viaje'}
+                </button>
+              </div>
+            </>
           )}
 
         </div>

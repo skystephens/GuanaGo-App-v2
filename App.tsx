@@ -138,9 +138,10 @@ const App: React.FC = () => {
   const [previewMode, setPreviewMode] = useState(false);
   const [previewOriginalRole, setPreviewOriginalRole] = useState<UserRole | null>(null);
 
-  // Cotización pública via URL params ?cot=ID&showTotal=0&showMap=0
+  // Cotización pública via URL params ?cot=ID&showTotal=0&showMap=0&pdf=1
   const [publicCotId,     setPublicCotId]     = useState<string | null>(null);
   const [publicQuoteCfg,  setPublicQuoteCfg]  = useState<QuoteDisplayConfig>(DEFAULT_QUOTE_DISPLAY_CONFIG);
+  const [publicPrintMode, setPublicPrintMode] = useState(false);
 
   // Inicializar sistema de caché al arrancar la app + detectar link público
   useEffect(() => {
@@ -153,6 +154,7 @@ const App: React.FC = () => {
         showTotal: params.get('showTotal') !== '0',
         showMap:   params.get('showMap')   !== '0',
       });
+      setPublicPrintMode(params.get('pdf') === '1');
       setCurrentRoute(AppRoute.PUBLIC_QUOTE);
     }
     const miscotTel = params.get('miscot');
@@ -330,7 +332,7 @@ const App: React.FC = () => {
       case AppRoute.PUBLIC_QUOTE: {
         const cotId = publicCotId || detailData?.cotId;
         const cfg   = detailData?.config ?? publicQuoteCfg;
-        return cotId ? <PublicQuotePage cotId={cotId} config={cfg} onBack={goBack} /> : <Home onNavigate={navigateTo} />;
+        return cotId ? <PublicQuotePage cotId={cotId} config={cfg} onBack={goBack} printOnLoad={publicPrintMode} /> : <Home onNavigate={navigateTo} />;
       }
       default: return <Home onNavigate={navigateTo} />;
     }
@@ -340,6 +342,18 @@ const App: React.FC = () => {
 
   // Rutas full-screen que no deben tener el shell normal (padding, nav, scroll, etc.)
   const isFullScreenRoute = currentRoute === AppRoute.ADMIN_TAXI_ZONE_EDITOR;
+
+  // Cotización pública vía URL: renderizar sin shell de app (sin nav, sin header admin)
+  if (currentRoute === AppRoute.PUBLIC_QUOTE && publicCotId) {
+    const cfg = publicQuoteCfg;
+    return (
+      <PublicQuotePage
+        cotId={publicCotId}
+        config={cfg}
+        printOnLoad={publicPrintMode}
+      />
+    );
+  }
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-300

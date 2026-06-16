@@ -1143,6 +1143,7 @@ export async function getAlojamientosSAI(): Promise<any[]> {
         accesoPiscina:   !!f['Acceso Piscina'] || !!f['Acceso a Piscina'],
         accesoBar:       !!f['Acceso a Bar'],
         aceptaBebes:     !!f['Acepta Bebes'],
+        coleccion:       f['Coleccion'] || '',
         latLon:          f['Lat_Lon'] || f['LatLon'] || f['lat_lon'] || undefined,
         ubicacion:       f['Ubicacion'] || f['ubicacion'] || undefined,
       };

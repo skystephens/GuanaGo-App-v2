@@ -21,7 +21,6 @@ import {
   validateOperatingDay
 } from '../../services/quotesService';
 import { cachedApi } from '../../services/cachedApi';
-import { downloadQuotePDF, previewQuote } from '../../services/pdfService';
 import { storage } from '../../lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -274,7 +273,6 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [services, setServices] = useState<Tour[]>([]);
   const [alojamientos, setAlojamientos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [generatingPDF, setGeneratingPDF] = useState(false);
   const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
   
   // Estados para edición completa de items (fecha, pax)
@@ -1045,24 +1043,18 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     }
   };
 
-  const handleDownloadPDF = async () => {
+  const handleDownloadPDF = () => {
     if (!selectedCotizacion) return;
-
-    setGeneratingPDF(true);
-    try {
-      await downloadQuotePDF(selectedCotizacion, items, [...services, ...alojamientos]);
-      alert('✅ PDF descargado exitosamente');
-    } catch (error) {
-      alert('❌ Error generando PDF. Inténtalo de nuevo.');
-      console.error(error);
-    } finally {
-      setGeneratingPDF(false);
-    }
+    const base = window.location.origin + window.location.pathname;
+    const url = `${base}?cot=${selectedCotizacion.id}&showTotal=${displayConfig.showTotal ? '1' : '0'}&showMap=${displayConfig.showMap ? '1' : '0'}&pdf=1`;
+    window.open(url, '_blank');
   };
 
   const handlePreview = () => {
     if (!selectedCotizacion) return;
-    previewQuote(selectedCotizacion, items, [...services, ...alojamientos]);
+    const base = window.location.origin + window.location.pathname;
+    const url = `${base}?cot=${selectedCotizacion.id}&showTotal=${displayConfig.showTotal ? '1' : '0'}&showMap=${displayConfig.showMap ? '1' : '0'}`;
+    window.open(url, '_blank');
   };
 
   // Normaliza alojamientos al mismo shape que Tour para el catálogo
@@ -1815,10 +1807,9 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors font-medium text-sm">
                 <Eye className="w-4 h-4" /> Preview
               </button>
-              <button onClick={handleDownloadPDF} disabled={generatingPDF}
-                className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium text-sm disabled:opacity-50">
-                {generatingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                {generatingPDF ? 'Generando…' : 'PDF'}
+              <button onClick={handleDownloadPDF}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium text-sm">
+                <Download className="w-4 h-4" /> PDF
               </button>
               <button onClick={handleSendQuote} disabled={!canSendQuote}
                 className="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors font-medium text-sm disabled:opacity-50">

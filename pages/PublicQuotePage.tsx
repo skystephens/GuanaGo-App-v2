@@ -237,24 +237,24 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
             {(description || hasMore) && (
               <button
                 onClick={() => setExpanded(e => !e)}
-                className="text-xs text-emerald-600 font-semibold flex items-center gap-1 hover:text-emerald-700"
+                className="no-print text-xs text-emerald-600 font-semibold flex items-center gap-1 hover:text-emerald-700"
               >
                 {expanded ? 'Ver menos ▲' : 'Ver más info e imágenes ▼'}
               </button>
             )}
-            {hasMap ? (
-              <button
-                onClick={() => setShowMap(true)}
-                className="text-xs text-blue-500 font-semibold flex items-center gap-1 hover:text-blue-600"
-              >
-                <MapPin size={11} />
-                {ubicacion ? `Ver en mapa · ${ubicacion}` : 'Ver en mapa'}
-              </button>
-            ) : ubicacion ? (
+            {ubicacion && (
               <span className="flex items-center gap-1 text-xs text-gray-400">
                 <MapPin size={11} /> {ubicacion}
               </span>
-            ) : null}
+            )}
+            {hasMap && (
+              <button
+                onClick={() => setShowMap(true)}
+                className="no-print text-xs text-blue-500 font-semibold flex items-center gap-1 hover:text-blue-600"
+              >
+                <MapPin size={11} /> Ver en mapa
+              </button>
+            )}
           </div>
 
           {/* Galería extra expandida */}
@@ -326,9 +326,10 @@ interface Props {
   cotId: string;
   config: QuoteDisplayConfig;
   onBack?: () => void;
+  printOnLoad?: boolean;
 }
 
-const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack }) => {
+const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }) => {
   const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null);
   const [items, setItems]           = useState<CotizacionItem[]>([]);
   const [services, setServices]     = useState<Tour[]>([]);
@@ -356,6 +357,13 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack }) => {
     };
     load();
   }, [cotId]);
+
+  useEffect(() => {
+    if (printOnLoad && cotizacion) {
+      const timer = setTimeout(() => window.print(), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [printOnLoad, cotizacion]);
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -396,8 +404,27 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack }) => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-gray-50">
 
+      <style>{`
+        @page { margin: 1.5cm; }
+        @media print {
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          body { margin: 0 !important; }
+          .no-print { display: none !important; }
+          .line-clamp-2 { -webkit-line-clamp: unset !important; overflow: visible !important; }
+          .pb-24 { padding-bottom: 0 !important; }
+        }
+      `}</style>
+
+      {/* Banner visible solo en pantalla durante preparación de PDF */}
+      {printOnLoad && (
+        <div className="no-print fixed top-0 left-0 right-0 z-50 bg-emerald-500 text-white text-sm font-semibold text-center py-2.5 flex items-center justify-center gap-2 shadow-lg">
+          <Loader2 size={14} className="animate-spin" />
+          Preparando PDF · El diálogo de impresión se abrirá en unos segundos…
+        </div>
+      )}
+
       {/* Header brand */}
-      <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-5 pb-8">
+      <div className={`bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-5 pb-8${printOnLoad ? ' pt-14' : ''}`}>
         <div className="max-w-2xl mx-auto">
           {onBack && (
             <button
@@ -540,7 +567,7 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack }) => {
             href={`https://maps.google.com/?q=San+Andrés+Isla,+Colombia`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 bg-white rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow"
+            className="no-print flex items-center gap-3 bg-white rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow"
           >
             <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
               <MapPin size={18} className="text-emerald-500" />
@@ -561,7 +588,7 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack }) => {
         )}
 
         {/* CTA WhatsApp */}
-        <div className="bg-white rounded-2xl shadow-sm p-5">
+        <div className="no-print bg-white rounded-2xl shadow-sm p-5">
           <h3 className="text-sm font-bold text-gray-800 mb-1">¿Tienes preguntas?</h3>
           <p className="text-xs text-gray-400 mb-3">Nuestro equipo en San Andrés está listo para ayudarte.</p>
           <a
