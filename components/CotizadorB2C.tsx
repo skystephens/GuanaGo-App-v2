@@ -339,7 +339,7 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
           .sort((a: Tour, b: Tour) => (b.destacado ? 1 : 0) - (a.destacado ? 1 : 0))
           .slice(0, 24)
       );
-      setAlojamientos((alojs || []).filter((a: any) => a.active !== false).slice(0, 20));
+      setAlojamientos((alojs || []).filter((a: any) => a.active !== false));
       catalogLoadedRef.current = true;
     } catch (err) {
       console.error('Error cargando catálogo cotizador:', err);
@@ -909,11 +909,11 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
                           const completo = getCompletoPrice(aloj, desde);
                           const colColor = COLECCION_COLORS[aloj.coleccion] || '#999';
                           const isSelected = selectedHotels.has(aloj.id);
-                          const amenBadges: string[] = [];
-                          if (aloj.vistaAlMar)    amenBadges.push('Vista mar');
-                          if (aloj.tieneCocina)   amenBadges.push('Cocina');
-                          if (aloj.accesoPiscina) amenBadges.push('Piscina');
-                          if (aloj.accesoJacuzzi) amenBadges.push('Jacuzzi');
+                          const amenList = [
+                            { label: '🌊 Vista', val: !!aloj.vistaAlMar },
+                            { label: '🍳 Cocina', val: !!aloj.tieneCocina },
+                            { label: '🏊 Piscina', val: !!aloj.accesoPiscina },
+                          ];
 
                           return (
                             <div
@@ -963,10 +963,12 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
                               {/* Info */}
                               <div className="p-2.5 flex flex-col gap-1 flex-1">
                                 <p className="text-[11px] font-bold text-gray-800 leading-tight">{getOpaqueTitle(aloj)}</p>
-                                {amenBadges.length > 0 && (
+                                {true && (
                                   <div className="flex flex-wrap gap-1">
-                                    {amenBadges.slice(0, 3).map(b => (
-                                      <span key={b} className="text-[8.5px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">{b}</span>
+                                    {amenList.map(a => (
+                                      <span key={a.label} className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded ${
+                                        a.val ? 'text-emerald-700 bg-emerald-50' : 'text-gray-300 bg-gray-50'
+                                      }`}>{a.label}</span>
                                     ))}
                                   </div>
                                 )}
