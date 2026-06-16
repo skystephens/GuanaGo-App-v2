@@ -225,7 +225,18 @@ export function VouchersListPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
               <FormRow label="Tour *">
-                <select value={form.tourId} onChange={e => setForm({ ...form, tourId: e.target.value })} style={inputStyle}>
+                <select
+                  value={form.tourId}
+                  onChange={e => {
+                    const svc = servicios.find(s => s.id === e.target.value)
+                    setForm({
+                      ...form,
+                      tourId: e.target.value,
+                      observaciones: svc ? (svc.observacionesAuto || '') : form.observaciones,
+                    })
+                  }}
+                  style={inputStyle}
+                >
                   <option value="">— Selecciona un tour —</option>
                   {servicios.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
                 </select>
@@ -280,6 +291,11 @@ export function VouchersListPage() {
                 <textarea value={form.observaciones} onChange={e => setForm({ ...form, observaciones: e.target.value })}
                   placeholder="Ej: Pagan impuesto $20.000 por persona en efectivo al llegar"
                   rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+                {form.tourId && servicios.find(s => s.id === form.tourId)?.observacionesAuto && (
+                  <div style={{ fontSize: '0.68rem', color: '#00c4cc', marginTop: '0.25rem' }}>
+                    ✓ Pre-llenado desde el tour — puedes editar
+                  </div>
+                )}
               </FormRow>
 
               <FormRow label="Notas adicionales">

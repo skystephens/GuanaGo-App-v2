@@ -1766,6 +1766,7 @@ export async function createVoucher(data: VoucherFormData): Promise<VoucherRecor
 export interface ServicioTuristico {
   id: string
   nombre: string
+  observacionesAuto: string
 }
 
 export async function getServiciosTuristicosVoucher(): Promise<ServicioTuristico[]> {
@@ -1779,6 +1780,7 @@ export async function getServiciosTuristicosVoucher(): Promise<ServicioTuristico
     return response.data.records.map((r: any) => ({
       id: r.id,
       nombre: r.fields['Nombre del Servicio'] || '',
+      observacionesAuto: r.fields['Keywords del tour'] || '',
     }))
   } catch (error) {
     console.error('❌ Error obteniendo servicios:', error)
