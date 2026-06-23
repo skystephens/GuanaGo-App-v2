@@ -44,6 +44,15 @@ router.post('/chat', async (req, res) => {
     const validModes = ['turista', 'cotizador', 'admin', 'b2b'];
     const safeMode = validModes.includes(mode) ? mode : 'turista';
 
+    // Modos públicos deshabilitados temporalmente (chatbot público diferido por costos)
+    if (safeMode === 'turista' || safeMode === 'cotizador') {
+      return res.status(503).json({
+        success: false,
+        error: 'Chatbot público temporalmente deshabilitado',
+        response: 'El asistente estará disponible pronto. ¿Tienes preguntas? Escríbenos por WhatsApp.',
+      });
+    }
+
     const result = await agentChat({
       message: message.trim(),
       mode: safeMode,
