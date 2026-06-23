@@ -251,7 +251,10 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
       const cantidadGuardado = parseInt(f['Cantidad'] || '1') || 1;
       const subtotalGuardado = parseFloat(f['Precio Subtotal'] || '0') || 0;
 
-      if (valorGuardado > 0 || esPersonalizado) {
+      // Ítem sin link al catálogo → siempre modelo nuevo (precio puede ser 0 en ítems libres incluidos)
+      const isCatalogLinked = !!(f['AlojamientosTuristicos_SAI']?.[0] || f.Servicio?.[0]);
+
+      if (valorGuardado > 0 || esPersonalizado || !isCatalogLinked) {
         // ── MODELO NUEVO: datos completos guardados en el ítem ──
         const subtotal = subtotalGuardado || valorGuardado * personasGuardado * cantidadGuardado;
         items.push({
