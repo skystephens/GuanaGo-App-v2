@@ -348,9 +348,12 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
           getAlojamientosSAI({ publishedOnly: false }),
         ]);
         if (!cot) throw new Error('Cotización no encontrada');
+        const allSvcs = [...(svcs || []), ...(alojs || [])];
+        console.log('[PublicQuote] servicios cargados:', svcs?.length, '| alojamientos:', alojs?.length);
+        console.log('[PublicQuote] items de cotización:', cot.items?.map(i => ({ nombre: i.servicioNombre, tipo: i.servicioTipo, servicioId: i.servicioId, imgs: (allSvcs.find(s => s.id === i.servicioId) as any)?.images?.length })));
         setCotizacion(cot);
         setItems(cot.items || []);
-        setServices([...(svcs || []), ...(alojs || [])]);
+        setServices(allSvcs);
       } catch (e: any) {
         setError(e?.message || 'Error al cargar la cotización');
       } finally {
