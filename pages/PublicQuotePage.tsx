@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { getCotizacionById } from '../services/quotesService';
 import { cachedApi } from '../services/cachedApi';
+import { getAlojamientosSAI } from '../services/airtableService';
 import { Cotizacion, CotizacionItem, QuoteDisplayConfig, Tour } from '../types';
 import QuotationMapView, { MapAccommodation } from '../components/quotation/QuotationMapView';
 
@@ -335,6 +336,7 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
   const [services, setServices]     = useState<Tour[]>([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
+  const [showGlobalMap, setShowGlobalMap] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -343,7 +345,7 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
         const [cot, svcs, alojs] = await Promise.all([
           getCotizacionById(cotId),
           cachedApi.getServices(),
-          cachedApi.getAlojamientos(),
+          getAlojamientosSAI({ publishedOnly: false }),
         ]);
         if (!cot) throw new Error('Cotización no encontrada');
         setCotizacion(cot);
@@ -394,8 +396,16 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
   const descuento        = cotizacion.descuento || 0;
   const totalFinal       = Math.max(0, totalIncluidos - descuento);
 
-  // Items en el mapa: solo los que tienen servicioId y tienen ubicación
-  const hasMapItems = itemsIncluidos.length + opciones.length > 0;
+  // Acumulamos todas las ubicaciones de ítems que tengan latLon en el catálogo
+  const allMapAccommodations: MapAccommodation[] = [...itemsIncluidos, ...opciones.flatMap(op => items.filter(i => i.opcion === op))]
+    .reduce<MapAccommodation[]>((acc, item) => {
+      const svc = services.find(s => s.id === item.servicioId) as any;
+      const latLon: string = svc?.latLon || '';
+      if (latLon && !acc.some(a => a.id === (item.servicioId || item.id))) {
+        acc.push({ id: item.servicioId || item.id, title: item.servicioNombre, latLon });
+      }
+      return acc;
+    }, []);
 
   const whatsappMsg = encodeURIComponent(
     `Hola GuanaGO! Vi mi cotización para San Andrés (${fmtDateShort(cotizacion.fechaInicio)} → ${fmtDateShort(cotizacion.fechaFin)}) y tengo una pregunta.`
@@ -562,12 +572,10 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
         )}
 
         {/* Mapa */}
-        {config.showMap && hasMapItems && (
-          <a
-            href={`https://maps.google.com/?q=San+Andrés+Isla,+Colombia`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="no-print flex items-center gap-3 bg-white rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow"
+        {config.showMap && allMapAccommodations.length > 0 && (
+          <button
+            onClick={() => setShowGlobalMap(true)}
+            className="no-print flex items-center gap-3 bg-white rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow w-full text-left"
           >
             <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
               <MapPin size={18} className="text-emerald-500" />
@@ -576,7 +584,14 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
               <p className="text-sm font-semibold text-gray-800">Ver ubicaciones en el mapa</p>
               <p className="text-xs text-gray-400">San Andrés Isla, Colombia</p>
             </div>
-          </a>
+          </button>
+        )}
+
+        {showGlobalMap && allMapAccommodations.length > 0 && (
+          <QuotationMapView
+            accommodations={allMapAccommodations}
+            onClose={() => setShowGlobalMap(false)}
+          />
         )}
 
         {/* Sin servicios */}

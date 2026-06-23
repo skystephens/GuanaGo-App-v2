@@ -1084,11 +1084,12 @@ export async function getHotels() {
  * Devuelve objetos normalizados compatibles con Tour (image, gallery, description, etc.)
  * para que pdfService pueda hacer el lookup por servicioId.
  */
-export async function getAlojamientosSAI(): Promise<any[]> {
+export async function getAlojamientosSAI(options?: { publishedOnly?: boolean }): Promise<any[]> {
+  const publishedOnly = options?.publishedOnly ?? true;
   try {
     const records = await fetchTable('AlojamientosTuristicos_SAI', {
-      filterByFormula: '{Publicado} = 1',
-      maxRecords: 100,
+      filterByFormula: publishedOnly ? '{Publicado} = 1' : undefined,
+      maxRecords: 200,
     });
 
     return records.map((record: any) => {
