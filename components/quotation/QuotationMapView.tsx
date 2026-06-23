@@ -175,7 +175,7 @@ const QuotationMapView: React.FC<QuotationMapViewProps> = ({ accommodations, onC
               <h2 className="text-white font-bold text-sm">Ubicaciones de Alojamientos</h2>
               <p className="text-gray-500 text-[11px]">
                 {valid.length === 0
-                  ? `${accommodations.length} alojamiento${accommodations.length !== 1 ? 's' : ''} · sin coordenadas`
+                  ? 'San Andrés Isla, Colombia'
                   : `${valid.length} de ${accommodations.length} con ubicación · áreas aproximadas`}
               </p>
             </div>
@@ -213,29 +213,14 @@ const QuotationMapView: React.FC<QuotationMapViewProps> = ({ accommodations, onC
           </div>
         )}
 
-        {/* Map / empty state */}
+        {/* Map — siempre visible, centrado en San Andrés aunque no haya coordenadas */}
         <div className="flex-1 relative min-h-0">
-          {accommodations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-600">
-              <MapPin className="w-10 h-10" />
-              <p className="text-sm font-medium">No hay alojamientos en esta cotización</p>
+          <div ref={mapContainerRef} className="w-full h-full" />
+          {noCoords && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-sm rounded-xl px-4 py-2.5 text-center max-w-xs">
+              <p className="text-xs text-gray-400">San Andrés Isla, Colombia</p>
+              <p className="text-[10px] text-gray-600 mt-0.5">Ubica los servicios de tu cotización en la isla</p>
             </div>
-          ) : noCoords ? (
-            <div className="flex flex-col items-center justify-center h-full gap-3 px-8 text-center">
-              <MapPin className="w-10 h-10 text-gray-700" />
-              <p className="text-sm font-medium text-gray-400">Sin coordenadas disponibles</p>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                Los alojamientos de esta cotización no tienen el campo{' '}
-                <code className="bg-gray-800 px-1.5 py-0.5 rounded text-emerald-400">Lat_Lon</code> en Airtable,
-                o el caché está desactualizado.
-              </p>
-              <p className="text-xs text-gray-700">
-                Agrega las coordenadas en Airtable (formato: <code className="text-gray-500">12.5849,-81.7338</code>)
-                y recarga el catálogo con el botón ↺ en la sección de servicios.
-              </p>
-            </div>
-          ) : (
-            <div ref={mapContainerRef} className="w-full h-full" />
           )}
         </div>
 

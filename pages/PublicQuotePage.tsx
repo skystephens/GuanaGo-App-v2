@@ -576,38 +576,21 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
 
         {/* Mapa */}
         {config.showMap && items.length > 0 && (
-          allMapAccommodations.length > 0 ? (
-            <button
-              onClick={() => setShowGlobalMap(true)}
-              className="no-print flex items-center gap-3 bg-white rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow w-full text-left"
-            >
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                <MapPin size={18} className="text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">Ver ubicaciones en el mapa</p>
-                <p className="text-xs text-gray-400">San Andrés Isla, Colombia</p>
-              </div>
-            </button>
-          ) : (
-            <a
-              href="https://maps.google.com/?q=San+Andrés+Isla,+Colombia"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="no-print flex items-center gap-3 bg-white rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                <MapPin size={18} className="text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">Ver ubicaciones en el mapa</p>
-                <p className="text-xs text-gray-400">San Andrés Isla, Colombia</p>
-              </div>
-            </a>
-          )
+          <button
+            onClick={() => setShowGlobalMap(true)}
+            className="no-print flex items-center gap-3 bg-white rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow w-full text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+              <MapPin size={18} className="text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Ver ubicaciones en el mapa</p>
+              <p className="text-xs text-gray-400">San Andrés Isla, Colombia</p>
+            </div>
+          </button>
         )}
 
-        {showGlobalMap && allMapAccommodations.length > 0 && (
+        {showGlobalMap && (
           <QuotationMapView
             accommodations={allMapAccommodations}
             onClose={() => setShowGlobalMap(false)}
