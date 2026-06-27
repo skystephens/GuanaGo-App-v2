@@ -317,6 +317,7 @@ export enum AppRoute {
   MUSIC_EVENT_DETAIL = 'MUSIC_EVENT_DETAIL',
   ARTIST_DETAIL = 'ARTIST_DETAIL',
   ARTISTA_PORTAL = 'ARTISTA_PORTAL',
+  SOCIO_PORTAL = 'SOCIO_PORTAL',
   TOUR_PRIVADO = 'TOUR_PRIVADO',
   ADMIN_SKY_PANEL = 'ADMIN_SKY_PANEL',
   CATALOG_PUBLICO = 'CATALOG_PUBLICO',
@@ -519,6 +520,56 @@ export const QUOTE_STATUS_CONFIG = {
   rechazada: { label: 'Rechazada', color: 'bg-red-100', textColor: 'text-red-700' },
   expirada: { label: 'Expirada', color: 'bg-yellow-100', textColor: 'text-yellow-700' }
 } as const;
+
+// =========================================================
+// 👥 SISTEMA DE SOCIOS MULTI-PERFIL
+// =========================================================
+
+export type TipoSocio =
+  | 'artista_musical'
+  | 'tour_operador'
+  | 'alojamiento'
+  | 'restaurante'
+  | 'transporte'
+  | 'comercio'
+  | 'experiencia'
+  | 'evento';
+
+export interface SocioConfig {
+  tipo: TipoSocio;
+  label: string;
+  icon: string;
+  color: string;
+  camposRequeridos: string[];
+  camposOpcionales: string[];
+  portalRoute: AppRoute;
+}
+
+export interface Socio {
+  id: string;
+  nombre: string;
+  nombreComercial: string;
+  tipo: TipoSocio;
+  email: string;
+  telefono: string;
+  estado: 'prospecto' | 'activo' | 'pausado' | 'suspendido';
+  verificado: boolean;
+  comisionGuanaGO: number;
+  walletHedera?: string;
+  datosBancarios?: {
+    banco: string;
+    tipoCuenta: string;
+    numeroCuenta: string;
+    titular: string;
+  };
+  documentosCompletados: string[];
+  documentosPendientes: string[];
+  productosActivos: number;
+  ventasTotales: number;
+  calificacionPromedio: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export const QUOTE_ITEM_STATUS_CONFIG = {
   disponible: { label: 'Disponible', color: 'bg-green-50', textColor: 'text-green-700', icon: 'CheckCircle2' },
