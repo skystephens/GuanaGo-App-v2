@@ -93,6 +93,7 @@ import CocoArtHistoria from './pages/CocoArtHistoria';
 
 // Vincular Comercio
 import VincularComercio from './pages/VincularComercio';
+import AliadoDiagnostico from './pages/AliadoDiagnostico';
 
 // Admin — Aliados & Arquitectura
 import AdminAliados from './pages/admin/AdminAliados';
@@ -314,6 +315,7 @@ const App: React.FC = () => {
       case AppRoute.CATALOG_PUBLICO: return <CatalogPublico onNavigate={navigateTo} onBack={goBack} />;
       case AppRoute.COCO_ART_HISTORIA: return <CocoArtHistoria onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.VINCULAR_COMERCIO: return <VincularComercio onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ALIADO_DIAGNOSTICO: return <AliadoDiagnostico onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_ALIADOS: return <AdminAliados onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_APP_ARQUITECTURA: return <AdminAppArquitectura onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_PREVIEW_ROLES: return <AdminPreviewRoles onBack={goBack} onNavigate={navigateTo} onPreview={startPreview} />;

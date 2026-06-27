@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, MapPin, Star, Zap, Crown, Check, X,
   MessageCircle, ChevronDown, ChevronUp, Users, TrendingUp, QrCode, Shield,
+  ClipboardList,
 } from 'lucide-react';
 import { AppRoute } from '../types';
+
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 interface Props {
   onBack: () => void;
@@ -122,8 +125,39 @@ const colorMap: Record<string, { bg: string; border: string; text: string; badge
   },
 };
 
+const ALIADOS_DESTACADOS = [
+  'Bushi Food', 'Bobby Rock', 'Capy Beach',
+  'Casa Las Palmas', 'Capitán Mandy', 'Dreamer', 'Sweet Avenue Café',
+];
+
+const PASOS_CONSULTORIA = [
+  {
+    num: '01',
+    titulo: 'Diagnóstico de tu negocio',
+    desc: 'Cómo vendes hoy, qué canal usas, si tienes temporada baja.',
+  },
+  {
+    num: '02',
+    titulo: 'Recomendación de módulos',
+    desc: 'Wallet, bonos, canal de aliados — lo que tu negocio necesita, no una lista genérica.',
+  },
+  {
+    num: '03',
+    titulo: 'Acompañamiento mensual',
+    desc: 'Revisión de resultados y ajuste de promociones cada mes.',
+  },
+];
+
 const VincularComercio: React.FC<Props> = ({ onBack, onNavigate }) => {
   const [openPlan, setOpenPlan] = useState<string | null>('activo');
+  const [puntosActivos, setPuntosActivos] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/directory`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setPuntosActivos(d.total ?? d.data?.length ?? null); })
+      .catch(() => {});
+  }, []);
 
   const handleWhatsApp = () => {
     window.open(
@@ -181,6 +215,36 @@ const VincularComercio: React.FC<Props> = ({ onBack, onNavigate }) => {
       </div>
 
       <div className="px-5 space-y-10 mt-8">
+
+        {/* La red hoy */}
+        <section>
+          <h3 className="text-lg font-black mb-1">El mapa que los turistas ya usan</h3>
+          <p className="text-xs text-gray-500 mb-5">San Andrés, Providencia y Santa Catalina, en un solo lugar.</p>
+
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            <div className="bg-gray-900 border border-teal-800/40 rounded-2xl p-4 text-center">
+              <p className="text-3xl font-black text-teal-400">
+                {puntosActivos !== null ? puntosActivos : '—'}
+              </p>
+              <p className="text-[11px] text-gray-500 mt-1">Puntos activos en el mapa</p>
+            </div>
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 text-center">
+              <p className="text-3xl font-black text-white">1.060</p>
+              <p className="text-[11px] text-gray-500 mt-1">Alojamientos con RNT en la isla</p>
+            </div>
+          </div>
+
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+            <p className="text-xs font-bold text-gray-400 mb-3">Negocios que ya están en la red</p>
+            <div className="flex flex-wrap gap-2">
+              {ALIADOS_DESTACADOS.map(a => (
+                <span key={a} className="px-2.5 py-1 bg-teal-900/40 border border-teal-800/50 text-teal-300 text-[11px] font-medium rounded-full">
+                  {a}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* Valor */}
         <section>
@@ -284,6 +348,50 @@ const VincularComercio: React.FC<Props> = ({ onBack, onNavigate }) => {
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        {/* Consultoría */}
+        <section>
+          <h3 className="text-lg font-black mb-1">Consultoría para crecer con la isla</h3>
+          <p className="text-xs text-gray-500 mb-5">No es solo aparecer en un mapa. Es vender mejor lo que ya tienes.</p>
+
+          <div className="space-y-4 mb-6">
+            {PASOS_CONSULTORIA.map(p => (
+              <div key={p.num} className="flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-2xl bg-teal-900/50 border border-teal-700/40 flex items-center justify-center shrink-0">
+                  <span className="text-xs font-black text-teal-400">{p.num}</span>
+                </div>
+                <div className="flex-1 pt-1">
+                  <p className="font-black text-sm text-white mb-0.5">{p.titulo}</p>
+                  <p className="text-xs text-gray-500 leading-relaxed">{p.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => onNavigate(AppRoute.ALIADO_DIAGNOSTICO)}
+              className="w-full py-4 rounded-2xl bg-teal-600 hover:bg-teal-500 text-white font-black text-sm transition-colors active:scale-95 flex items-center justify-center gap-2"
+            >
+              <ClipboardList size={18} />
+              Hacer mi diagnóstico gratuito
+            </button>
+            <button
+              onClick={handleWhatsApp}
+              className="w-full py-3.5 rounded-2xl bg-gray-800 hover:bg-gray-700 text-white font-bold text-sm transition-colors active:scale-95 flex items-center justify-center gap-2"
+            >
+              <MessageCircle size={16} className="text-green-400" />
+              Hablar con el equipo
+            </button>
+          </div>
+
+          <div className="mt-5 p-4 bg-gray-900 border border-gray-800 rounded-2xl">
+            <p className="text-[11px] text-gray-500 leading-relaxed text-center">
+              <span className="text-gray-400 font-bold">GuiaSAI S.A.S.</span> — empresa Raizal de turismo digital, San Andrés Islas.
+              RNT 48674. Más de 8 años de trayectoria, con respaldo de Apps.co, Fondo Emprender e Innpulsa Colombia.
+            </p>
           </div>
         </section>
 
