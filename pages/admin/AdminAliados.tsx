@@ -4,7 +4,7 @@ import {
   Wifi, Star, Gift, ChevronDown, ChevronUp,
   Calendar, Camera, BarChart3, Smartphone, Globe,
   Pencil, Save, Plus, Trash2, CalendarDays, Hotel, ChevronLeft, ChevronRight,
-  ExternalLink, Loader2, RefreshCw,
+  ExternalLink, Loader2, RefreshCw, MapPin,
   FileText, Eye, RotateCcw, Store, Copy, Search,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
