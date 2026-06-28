@@ -357,6 +357,7 @@ const SECTION_DEFS = [
   { id: 'wifi',           label: 'WiFi Captivo',            desc: 'Portal de captación digital en negocios',    icon: Wifi,         color: 'teal'   },
   { id: 'documentos',     label: 'Documentos & Kits',       desc: 'Kit aliados, sistema operativo, taxonomía — editables', icon: FileText, color: 'purple' },
   { id: 'microsites',     label: 'Micrositios',             desc: 'Páginas públicas por negocio — /aliado/[slug]',          icon: Store,    color: 'green'  },
+  { id: 'red_aliados',   label: 'Red en el Mapa',         desc: 'Directorio · Inscritos · Contenido landing → vista completa', icon: MapPin, color: 'teal' },
 ] as const;
 
 const COLOR_MAP: Record<string, { icon: string; bg: string; border: string }> = {
@@ -1421,6 +1422,27 @@ const AdminAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
             </div>
           )}
         </>
+        )}
+
+        {/* ── RED EN EL MAPA — navega a la página dedicada ─────────────── */}
+        {section === 'red_aliados' && (
+          <div className="space-y-4 pt-1">
+            <p className="text-xs text-gray-500 leading-relaxed">
+              Gestiona el directorio de negocios, revisa nuevos inscritos del formulario de diagnóstico
+              y edita los aliados destacados en la landing de vinculación.
+            </p>
+            <button
+              onClick={() => onNavigate(AppRoute.ADMIN_RED_ALIADOS)}
+              className="w-full flex items-center gap-4 bg-teal-900/30 border border-teal-700/50 rounded-2xl p-5 hover:bg-teal-900/50 transition-colors text-left"
+            >
+              <MapPin size={28} className="text-teal-400 shrink-0" />
+              <div className="flex-1">
+                <p className="font-black text-base text-white">Abrir Red en el Mapa</p>
+                <p className="text-xs text-gray-400 mt-0.5">Directorio · Inscritos · Contenido landing</p>
+              </div>
+              <ChevronRight size={18} className="text-gray-500 shrink-0" />
+            </button>
+          </div>
         )}
 
       </div>

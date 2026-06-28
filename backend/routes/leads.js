@@ -15,6 +15,42 @@ const AIRTABLE_URL  = `https://api.airtable.com/v0/${AIRTABLE_BASE}/Leads`;
 // Make.com webhook para notificación WhatsApp (opcional)
 const MAKE_WEBHOOK_LEADS = process.env.MAKE_WEBHOOK_LEADS;
 
+// GET /api/leads?tipo=Aliado_Diagnostico  — lista de leads filtrada (uso admin)
+router.get('/', async (req, res) => {
+  if (!AIRTABLE_KEY) return res.status(503).json({ success: false, error: 'AIRTABLE_API_KEY not configured' });
+
+  const { tipo, estado, limit = '50' } = req.query;
+  const params = new URLSearchParams({ pageSize: String(Math.min(Number(limit), 100)) });
+  const filterParts = [];
+  if (tipo)   filterParts.push(`{Tipo_Cliente}="${tipo}"`);
+  if (estado) filterParts.push(`{Estado_del_Lead}="${estado}"`);
+  if (filterParts.length) params.set('filterByFormula', filterParts.length > 1 ? `AND(${filterParts.join(',')})` : filterParts[0]);
+  params.set('sort[0][field]', 'Referencia_GG');
+  params.set('sort[0][direction]', 'desc');
+
+  try {
+    const atRes = await axios.get(`${AIRTABLE_URL}?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${AIRTABLE_KEY}` },
+    });
+    const records = (atRes.data.records || []).map(r => ({
+      id: r.id,
+      nombre:      r.fields.Nombre            || '',
+      whatsapp:    r.fields.WhatsApp           || '',
+      tipo:        r.fields.Tipo_Cliente       || '',
+      estado:      r.fields.Estado_del_Lead    || '',
+      fuente:      r.fields.Fuente_del_Lead    || '',
+      ref:         r.fields.Referencia_GG      || '',
+      detalles:    r.fields.Detalles_Adicionales || '',
+      canal:       r.fields.Canal_Preferido    || '',
+      createdTime: r.createdTime               || '',
+    }));
+    return res.json({ success: true, records, total: records.length });
+  } catch (err) {
+    const msg = err.response?.data?.error?.message || err.message;
+    return res.status(500).json({ success: false, error: msg });
+  }
+});
+
 router.post('/', async (req, res) => {
   const refNum = 'GG-' + String(Date.now()).slice(-6);
 

@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft, MapPin, Star, Zap, Crown, Check, X,
   MessageCircle, ChevronDown, ChevronUp, Users, TrendingUp, QrCode, Shield,
   ClipboardList,
 } from 'lucide-react';
 import { AppRoute } from '../types';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -125,7 +127,7 @@ const colorMap: Record<string, { bg: string; border: string; text: string; badge
   },
 };
 
-const ALIADOS_DESTACADOS = [
+const ALIADOS_DESTACADOS_DEFAULT = [
   'Bushi Food', 'Bobby Rock', 'Capy Beach',
   'Casa Las Palmas', 'Capitán Mandy', 'Dreamer', 'Sweet Avenue Café',
 ];
@@ -151,12 +153,28 @@ const PASOS_CONSULTORIA = [
 const VincularComercio: React.FC<Props> = ({ onBack, onNavigate }) => {
   const [openPlan, setOpenPlan] = useState<string | null>('activo');
   const [puntosActivos, setPuntosActivos] = useState<number | null>(null);
+  const [aliadosDestacados, setAliadosDestacados] = useState<string[]>(ALIADOS_DESTACADOS_DEFAULT);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/directory`)
       .then(r => r.json())
       .then(d => { if (d.success) setPuntosActivos(d.total ?? d.data?.length ?? null); })
       .catch(() => {});
+
+    if (!fetchedRef.current) {
+      fetchedRef.current = true;
+      getDoc(doc(db, 'docs_content', 'vinculacion-config'))
+        .then(snap => {
+          if (snap.exists()) {
+            const d = snap.data();
+            if (Array.isArray(d.aliadosDestacados) && d.aliadosDestacados.length > 0) {
+              setAliadosDestacados(d.aliadosDestacados);
+            }
+          }
+        })
+        .catch(() => {});
+    }
   }, []);
 
   const handleWhatsApp = () => {
@@ -237,7 +255,7 @@ const VincularComercio: React.FC<Props> = ({ onBack, onNavigate }) => {
           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
             <p className="text-xs font-bold text-gray-400 mb-3">Negocios que ya están en la red</p>
             <div className="flex flex-wrap gap-2">
-              {ALIADOS_DESTACADOS.map(a => (
+              {aliadosDestacados.map(a => (
                 <span key={a} className="px-2.5 py-1 bg-teal-900/40 border border-teal-800/50 text-teal-300 text-[11px] font-medium rounded-full">
                   {a}
                 </span>

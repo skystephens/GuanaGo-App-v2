@@ -97,6 +97,7 @@ import AliadoDiagnostico from './pages/AliadoDiagnostico';
 
 // Admin — Aliados & Arquitectura
 import AdminAliados from './pages/admin/AdminAliados';
+import AdminRedAliados from './pages/admin/AdminRedAliados';
 import AdminAppArquitectura from './pages/admin/AdminAppArquitectura';
 import AdminPreviewRoles from './pages/admin/AdminPreviewRoles';
 import AdminEstrategia from './pages/admin/AdminEstrategia';
@@ -317,6 +318,7 @@ const App: React.FC = () => {
       case AppRoute.VINCULAR_COMERCIO: return <VincularComercio onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ALIADO_DIAGNOSTICO: return <AliadoDiagnostico onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_ALIADOS: return <AdminAliados onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_RED_ALIADOS: return <AdminRedAliados onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_APP_ARQUITECTURA: return <AdminAppArquitectura onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_PREVIEW_ROLES: return <AdminPreviewRoles onBack={goBack} onNavigate={navigateTo} onPreview={startPreview} />;
       case AppRoute.ADMIN_ESTRATEGIA: return <AdminEstrategia onBack={goBack} onNavigate={navigateTo} />;
