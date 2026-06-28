@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Anchor, Bed, Package as PackageIcon, Car, Globe, MessageSquare, ChevronRight } from 'lucide-react';
+import { MapPin, Anchor, Bed, Package as PackageIcon, Car, Globe, MessageSquare, ChevronRight, Store } from 'lucide-react';
 import { getPrecioB2C, getUnidad } from '../services/pricing';
 import { cachedApi } from '../services/cachedApi';
 import { AppRoute, Tour } from '../types';
@@ -213,7 +213,24 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           </button>
         </div>
 
-        {/* GUANA Points oculto temporalmente */}
+        {/* CTA Vincular negocio — banner para negocios locales */}
+        <div className="mb-6">
+          <button
+            onClick={() => onNavigate(AppRoute.VINCULAR_COMERCIO)}
+            className="w-full bg-white border-2 border-teal-100 rounded-2xl p-4 md:p-5 flex items-center gap-4 shadow-sm hover:shadow-md hover:border-teal-300 hover:scale-[1.01] transition-all active:scale-95 text-left group"
+          >
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center shadow-sm shrink-0 group-hover:scale-110 transition-transform">
+              <Store size={20} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-black text-sm md:text-base text-gray-800">¿Tienes un negocio en la isla?</h4>
+              <p className="text-xs text-gray-500 mt-0.5">Únete a la red de aliados GuanaGO — aparece en el mapa y conecta con turistas.</p>
+            </div>
+            <div className="flex items-center gap-1 text-teal-600 font-bold text-xs shrink-0">
+              Ver más <ChevronRight size={14} />
+            </div>
+          </button>
+        </div>
 
         {/* RIMM Caribbean Night Section */}
         <CaribbeanNightSection onNavigate={onNavigate} />
