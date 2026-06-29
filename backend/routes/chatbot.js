@@ -1,6 +1,6 @@
 import express from 'express';
 import * as chatbotController from '../controllers/chatbotController.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { verifyFirebaseToken } from '../middleware/firebaseAuth.js';
 
 const router = express.Router();
 
@@ -25,16 +25,16 @@ router.post('/atencion/contacto', chatbotController.contactoDirecto);
 // Badge: conteo de chats pendientes — sin auth para que el admin lo cargue al entrar
 router.get('/atencion/pendientes', chatbotController.pendientesAtencion);
 
-// Listado y actualización de chats (admin autenticado)
-router.get('/atencion/lista', authenticateToken, chatbotController.listarChatsAtencion);
-router.patch('/atencion/:id', authenticateToken, chatbotController.actualizarChatAtencion);
+// Listado y actualización de chats (admin autenticado con Firebase)
+router.get('/atencion/lista', verifyFirebaseToken, chatbotController.listarChatsAtencion);
+router.patch('/atencion/:id', verifyFirebaseToken, chatbotController.actualizarChatAtencion);
 
 // Chatbot público legacy
 router.post('/message', chatbotController.sendMessage);
 
 // Historial (requiere autenticación)
 router.get('/conversation/:conversationId',
-  authenticateToken,
+  verifyFirebaseToken,
   chatbotController.getConversationHistory
 );
 

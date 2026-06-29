@@ -89,7 +89,8 @@ export const cotizar = async (
 export const atender = async (
   mensaje: string,
   historial: ChatMessage[] = [],
-  usuarioId?: string | null
+  usuarioId?: string | null,
+  contactoVisitante?: { visitante_nombre?: string; visitante_telefono?: string; visitante_email?: string }
 ): Promise<AtencionResponse> => {
   try {
     const response = await fetch(`${API_URL}/chatbot/atencion`, {
@@ -99,6 +100,7 @@ export const atender = async (
         mensaje,
         historial: historial.slice(-8),
         usuario_id: usuarioId || null,
+        ...contactoVisitante,
       }),
     });
 

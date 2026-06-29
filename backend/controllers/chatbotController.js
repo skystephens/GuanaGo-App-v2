@@ -361,15 +361,26 @@ Tono: amable, caribeño, conciso (máx 200 palabras).`;
  */
 export const atender = async (req, res, next) => {
   try {
-    const { mensaje, historial = [], usuario_id } = req.body;
+    const {
+      mensaje, historial = [], usuario_id,
+      visitante_nombre, visitante_telefono, visitante_email,
+    } = req.body;
     if (!mensaje) return res.status(400).json({ success: false, error: 'El mensaje es requerido' });
+
+    // Prefijo de contacto visible en el panel admin
+    const contactoParts = [
+      visitante_nombre   && `Nombre: ${visitante_nombre}`,
+      visitante_telefono && `Tel: ${visitante_telefono}`,
+      visitante_email    && `Email: ${visitante_email}`,
+    ].filter(Boolean);
+    const contactoPrefix = contactoParts.length ? `[Contacto: ${contactoParts.join(' | ')}]\n` : '';
 
     const groqKey = config.groqApiKey;
     if (!groqKey) {
       // Sin API key: escalar el chat para que el equipo lo vea en el panel admin
       console.warn('⚠️  GROQ_API_KEY no configurada — escalando chat sin IA');
       const idChat = await crearRegistroChatAtencion({
-        mensaje_usuario: mensaje,
+        mensaje_usuario: contactoPrefix + mensaje,
         historial_conversacion: JSON.stringify(historial.slice(-6)),
         respuesta_ia_tentativa: '',
         usuario_id: usuario_id || null,
@@ -388,7 +399,7 @@ export const atender = async (req, res, next) => {
     const msgLower = mensaje.toLowerCase();
     if (PALABRAS_ESCALAR.some(p => msgLower.includes(p))) {
       const idChat = await crearRegistroChatAtencion({
-        mensaje_usuario: mensaje,
+        mensaje_usuario: contactoPrefix + mensaje,
         historial_conversacion: JSON.stringify(historial.slice(-6)),
         respuesta_ia_tentativa: '',
         usuario_id: usuario_id || null,
@@ -450,7 +461,7 @@ export const atender = async (req, res, next) => {
     let idChat = null;
     if (escalado) {
       idChat = await crearRegistroChatAtencion({
-        mensaje_usuario: mensaje,
+        mensaje_usuario: contactoPrefix + mensaje,
         historial_conversacion: JSON.stringify(historial.slice(-6)),
         respuesta_ia_tentativa: respuestaLimpia,
         usuario_id: usuario_id || null,
@@ -490,10 +501,16 @@ export const atender = async (req, res, next) => {
  */
 export const contactoDirecto = async (req, res) => {
   try {
-    const { mensaje, nombre, usuario_id } = req.body;
+    const { mensaje, nombre, telefono, email, usuario_id } = req.body;
     if (!mensaje) return res.status(400).json({ success: false, error: 'El mensaje es requerido' });
+    const contactoParts = [
+      nombre   && `Nombre: ${nombre}`,
+      telefono && `Tel: ${telefono}`,
+      email    && `Email: ${email}`,
+    ].filter(Boolean);
+    const prefijo = contactoParts.length ? `[Contacto: ${contactoParts.join(' | ')}]\n` : '';
     const idChat = await crearRegistroChatAtencion({
-      mensaje_usuario: nombre ? `[${nombre}] ${mensaje}` : mensaje,
+      mensaje_usuario: prefijo + mensaje,
       historial_conversacion: '[]',
       respuesta_ia_tentativa: '',
       usuario_id: usuario_id || null,
