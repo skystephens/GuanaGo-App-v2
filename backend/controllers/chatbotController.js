@@ -287,7 +287,24 @@ export const atender = async (req, res, next) => {
     if (!mensaje) return res.status(400).json({ success: false, error: 'El mensaje es requerido' });
 
     const groqKey = config.groqApiKey;
-    if (!groqKey) return res.status(500).json({ success: false, error: 'GROQ_API_KEY no configurada' });
+    if (!groqKey) {
+      // Sin API key: escalar el chat para que el equipo lo vea en el panel admin
+      console.warn('⚠️  GROQ_API_KEY no configurada — escalando chat sin IA');
+      const idChat = await crearRegistroChatAtencion({
+        mensaje_usuario: mensaje,
+        historial_conversacion: JSON.stringify(historial.slice(-6)),
+        respuesta_ia_tentativa: '',
+        usuario_id: usuario_id || null,
+        origen: 'chat_web_publico',
+        estado: 'pendiente',
+      });
+      return res.json({
+        success: true,
+        respuesta: '¡Hola! 🌴 Nuestro asistente está siendo configurado. Tu mensaje quedó registrado y el equipo de GuanaGO te responderá pronto.',
+        escalado: true,
+        id_chat: idChat,
+      });
+    }
 
     // Escalar de inmediato si el mensaje contiene palabras de queja/reclamo
     const msgLower = mensaje.toLowerCase();
@@ -364,10 +381,24 @@ export const atender = async (req, res, next) => {
 
   } catch (error) {
     console.error('❌ Error en chat atención:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      respuesta: '¡Hola! 🌴 Tengo un problema técnico momentáneo. ¿Puedes intentar de nuevo?',
+    // Intentar guardar el chat aunque Groq haya fallado
+    try {
+      const { mensaje, historial = [], usuario_id } = req.body;
+      await crearRegistroChatAtencion({
+        mensaje_usuario: mensaje || '',
+        historial_conversacion: JSON.stringify((historial || []).slice(-6)),
+        respuesta_ia_tentativa: '',
+        usuario_id: usuario_id || null,
+        origen: 'chat_web_publico',
+        estado: 'pendiente',
+      });
+    } catch { /* silencioso */ }
+    // Siempre responder 200 al frontend — nunca mostrar error técnico al visitante
+    res.json({
+      success: true,
+      respuesta: '¡Hola! 🌴 Tu mensaje quedó registrado. El equipo de GuanaGO te responderá pronto.',
+      escalado: true,
+      id_chat: null,
     });
   }
 };
