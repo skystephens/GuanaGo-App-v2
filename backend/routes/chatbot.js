@@ -19,6 +19,9 @@ router.post('/cotizar', chatbotController.cotizar);
 // Chat de atención general con Groq llama-3.3-70b + RAG público (sin auth)
 router.post('/atencion', chatbotController.atender);
 
+// Contacto directo con asesor — sin IA, crea registro pendiente en Airtable (sin auth)
+router.post('/atencion/contacto', chatbotController.contactoDirecto);
+
 // Badge: conteo de chats pendientes — sin auth para que el admin lo cargue al entrar
 router.get('/atencion/pendientes', chatbotController.pendientesAtencion);
 

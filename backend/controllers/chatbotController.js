@@ -486,6 +486,36 @@ export const atender = async (req, res, next) => {
 };
 
 /**
+ * Contacto directo con un asesor — sin pasar por la IA
+ */
+export const contactoDirecto = async (req, res) => {
+  try {
+    const { mensaje, nombre, usuario_id } = req.body;
+    if (!mensaje) return res.status(400).json({ success: false, error: 'El mensaje es requerido' });
+    const idChat = await crearRegistroChatAtencion({
+      mensaje_usuario: nombre ? `[${nombre}] ${mensaje}` : mensaje,
+      historial_conversacion: '[]',
+      respuesta_ia_tentativa: '',
+      usuario_id: usuario_id || null,
+      origen: 'chat_web_publico',
+      estado: 'pendiente',
+    });
+    res.json({
+      success: true,
+      respuesta: '¡Mensaje recibido! 🙌 Un asesor de GuanaGO te responderá pronto.',
+      id_chat: idChat,
+    });
+  } catch (error) {
+    console.error('❌ Error en contacto directo:', error);
+    res.json({
+      success: true,
+      respuesta: '¡Mensaje recibido! 🙌 Un asesor de GuanaGO te responderá pronto.',
+      id_chat: null,
+    });
+  }
+};
+
+/**
  * Conteo de chats pendientes — usado por el badge del admin
  */
 export const pendientesAtencion = async (req, res) => {
