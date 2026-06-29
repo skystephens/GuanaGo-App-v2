@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft, MapPin, Star, Zap, Crown, Check, X,
   MessageCircle, ChevronDown, ChevronUp, Users, TrendingUp, QrCode, Shield,
-  ClipboardList,
+  ClipboardList, Wrench,
 } from 'lucide-react';
 import { AppRoute } from '../types';
 import { doc, getDoc } from 'firebase/firestore';
@@ -15,14 +15,13 @@ interface Props {
   onNavigate: (route: AppRoute) => void;
 }
 
-const PLANES = [
+interface PlanFeature { texto: string; ok: boolean; }
+interface Plan { id: string; nombre: string; precio: number; label: string; color: string; descripcion: string; popular?: boolean; features: PlanFeature[]; }
+interface ServicioAd { id: string; titulo: string; descripcion: string; precio: string; activo: boolean; }
+
+const PLANES_DEFAULT: Plan[] = [
   {
-    id: 'basico',
-    nombre: 'Básico',
-    precio: 0,
-    label: 'Gratis',
-    color: 'teal',
-    icon: QrCode,
+    id: 'basico', nombre: 'Básico', precio: 0, label: 'Gratis', color: 'teal',
     descripcion: 'Empieza a ser visible en GuanaGO',
     features: [
       { texto: 'Ficha en directorio GuanaGO', ok: true },
@@ -31,19 +30,12 @@ const PLANES = [
       { texto: 'Panel de negocio básico', ok: true },
       { texto: 'Pin en mapa interactivo', ok: false },
       { texto: 'GuanaPoints para clientes', ok: false },
-      { texto: 'Prioridad en búsquedas', ok: false },
       { texto: 'Creación de contenido', ok: false },
     ],
   },
   {
-    id: 'activo',
-    nombre: 'Aliado Activo',
-    precio: 49900,
-    label: '$49.900/mes',
-    color: 'orange',
-    icon: Zap,
-    descripcion: 'Con pin en el mapa para turistas que caminan la isla',
-    popular: true,
+    id: 'activo', nombre: 'Aliado Activo', precio: 49900, label: '$49.900/mes', color: 'orange',
+    descripcion: 'Con pin en el mapa para turistas que caminan la isla', popular: true,
     features: [
       { texto: 'Todo lo del plan Básico', ok: true },
       { texto: 'Pin de ubicación en el mapa', ok: true },
@@ -56,12 +48,7 @@ const PLANES = [
     ],
   },
   {
-    id: 'premium',
-    nombre: 'Aliado Premium',
-    precio: 129900,
-    label: '$129.900/mes',
-    color: 'indigo',
-    icon: Crown,
+    id: 'premium', nombre: 'Aliado Premium', precio: 129900, label: '$129.900/mes', color: 'indigo',
     descripcion: 'El paquete completo para crecer de verdad',
     features: [
       { texto: 'Todo lo del plan Activo', ok: true },
@@ -70,7 +57,6 @@ const PLANES = [
       { texto: 'Analytics de visitas e interacciones', ok: true },
       { texto: 'Gestor de cuenta dedicado', ok: true },
       { texto: 'Badge verificado Premium', ok: true },
-      { texto: 'Descuento en tours GuanaGO', ok: true },
       { texto: 'Material impreso QR + sticker', ok: true },
     ],
   },
@@ -154,6 +140,14 @@ const VincularComercio: React.FC<Props> = ({ onBack, onNavigate }) => {
   const [openPlan, setOpenPlan] = useState<string | null>('activo');
   const [puntosActivos, setPuntosActivos] = useState<number | null>(null);
   const [aliadosDestacados, setAliadosDestacados] = useState<string[]>(ALIADOS_DESTACADOS_DEFAULT);
+  const [planes, setPlanes]               = useState<Plan[]>(PLANES_DEFAULT);
+  const [serviciosAd, setServiciosAd]     = useState<ServicioAd[]>([]);
+  const [textos, setTextos] = useState({
+    heroTitulo:      'Tu negocio en el mapa de San Andrés',
+    heroSubtitulo:   'Únete a la red de negocios locales que conectan con miles de turistas que visitan la isla cada mes. Gratis para empezar, potente para crecer.',
+    waNumero:        '573153836043',
+    subtituloPlanes: 'Sin contratos. Cancela cuando quieras.',
+  });
   const fetchedRef = useRef(false);
 
   useEffect(() => {
@@ -166,12 +160,15 @@ const VincularComercio: React.FC<Props> = ({ onBack, onNavigate }) => {
       fetchedRef.current = true;
       getDoc(doc(db, 'docs_content', 'vinculacion-config'))
         .then(snap => {
-          if (snap.exists()) {
-            const d = snap.data();
-            if (Array.isArray(d.aliadosDestacados) && d.aliadosDestacados.length > 0) {
-              setAliadosDestacados(d.aliadosDestacados);
-            }
-          }
+          if (!snap.exists()) return;
+          const d = snap.data();
+          if (Array.isArray(d.aliadosDestacados) && d.aliadosDestacados.length > 0)
+            setAliadosDestacados(d.aliadosDestacados);
+          if (Array.isArray(d.planes) && d.planes.length > 0)
+            setPlanes(d.planes.map((p: Plan) => ({ ...p, color: p.color || (p.id === 'basico' ? 'teal' : p.id === 'activo' ? 'orange' : 'indigo') })));
+          if (Array.isArray(d.serviciosAdicionales))
+            setServiciosAd(d.serviciosAdicionales.filter((s: ServicioAd) => s.activo));
+          if (d.textos) setTextos(t => ({ ...t, ...d.textos }));
         })
         .catch(() => {});
     }
@@ -179,7 +176,7 @@ const VincularComercio: React.FC<Props> = ({ onBack, onNavigate }) => {
 
   const handleWhatsApp = () => {
     window.open(
-      'https://wa.me/573153836043?text=Hola%20GuanaGO%2C%20quiero%20vincular%20mi%20negocio%20a%20la%20plataforma',
+      `https://wa.me/${textos.waNumero}?text=Hola%20GuanaGO%2C%20quiero%20vincular%20mi%20negocio%20a%20la%20plataforma`,
       '_blank',
     );
   };
@@ -207,12 +204,12 @@ const VincularComercio: React.FC<Props> = ({ onBack, onNavigate }) => {
             GuanaGO Aliados
           </span>
           <h2 className="text-3xl font-black leading-tight mb-3">
-            Tu negocio en el mapa<br />
-            <span className="text-teal-400">de San Andrés</span>
+            {textos.heroTitulo.includes('mapa')
+              ? <>{textos.heroTitulo.split('mapa')[0]}mapa<br /><span className="text-teal-400">{textos.heroTitulo.split('mapa')[1]}</span></>
+              : textos.heroTitulo}
           </h2>
           <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-sm">
-            Únete a la red de negocios locales que conectan con miles de turistas que visitan la isla cada mes.
-            Gratis para empezar, potente para crecer.
+            {textos.heroSubtitulo}
           </p>
           <div className="flex gap-3">
             <button
@@ -302,10 +299,10 @@ const VincularComercio: React.FC<Props> = ({ onBack, onNavigate }) => {
         {/* Planes */}
         <section>
           <h3 className="text-lg font-black mb-1">Elige tu plan</h3>
-          <p className="text-xs text-gray-500 mb-5">Sin contratos. Cancela cuando quieras.</p>
+          <p className="text-xs text-gray-500 mb-5">{textos.subtituloPlanes}</p>
 
           <div className="space-y-3">
-            {PLANES.map((plan) => {
+            {planes.map((plan) => {
               const c = colorMap[plan.color];
               const isOpen = openPlan === plan.id;
               return (
@@ -368,6 +365,33 @@ const VincularComercio: React.FC<Props> = ({ onBack, onNavigate }) => {
             })}
           </div>
         </section>
+
+        {/* Servicios adicionales — solo aparece si hay items activos */}
+        {serviciosAd.length > 0 && (
+          <section>
+            <h3 className="text-lg font-black mb-1">Servicios adicionales</h3>
+            <p className="text-xs text-gray-500 mb-5">Más allá del plan mensual — diseño, contenido y desarrollo a la medida.</p>
+            <div className="space-y-3">
+              {serviciosAd.map(s => (
+                <div key={s.id} className="bg-gray-900 border border-gray-800 rounded-2xl p-4 flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-teal-900/40 flex items-center justify-center shrink-0">
+                    <Wrench size={16} className="text-teal-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-sm text-white">{s.titulo}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">{s.descripcion}</p>
+                    {s.precio && <p className="text-xs font-bold text-teal-400 mt-1.5">{s.precio}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={handleWhatsApp}
+              className="w-full mt-4 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-sm transition-colors active:scale-95 flex items-center justify-center gap-2">
+              <MessageCircle size={16} className="text-green-400" />
+              Preguntar por servicios adicionales
+            </button>
+          </section>
+        )}
 
         {/* Consultoría */}
         <section>

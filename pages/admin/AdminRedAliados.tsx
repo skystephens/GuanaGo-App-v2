@@ -3,7 +3,8 @@ import {
   ArrowLeft, MapPin, Edit3, Plus, Trash2, RefreshCw,
   Search, MessageCircle, Save, X, Store, ClipboardList,
   LayoutList, ChevronRight, FileText, Camera, Hash,
-  CheckSquare, Square, Globe, Instagram,
+  CheckSquare, Square, Globe, Instagram, DollarSign,
+  Type, Wrench, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -231,12 +232,74 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
   };
 
   // ── Contenido ─────────────────────────────────────────────────────────────────
+  type ContSec = 'landing' | 'planes' | 'servicios' | 'diagnostico';
+  const [contSec, setContSec] = useState<ContSec>('landing');
+  const [contLoaded, setContLoaded] = useState(false);
+
+  // Landing
   const [aliadosDestacados, setAliadosDestacados] = useState<string[]>(ALIADOS_DEFAULT);
   const [newAliado, setNewAliado]                 = useState('');
-  const [contSaving, setContSaving]               = useState(false);
-  const [contMsg, setContMsg]                     = useState('');
-  const [contLoaded, setContLoaded]               = useState(false);
+  const [textos, setTextos] = useState({
+    heroTitulo:    'Tu negocio en el mapa de San Andrés',
+    heroSubtitulo: 'Únete a la red de negocios locales que conectan con miles de turistas que visitan la isla cada mes.',
+    waNumero:      '573153836043',
+    subtituloPlanes: 'Sin contratos. Cancela cuando quieras.',
+  });
+  const [landingSaving, setLandingSaving] = useState(false);
+  const [landingMsg, setLandingMsg]       = useState('');
 
+  // Planes
+  const PLANES_DEFAULT = [
+    { id: 'basico',   nombre: 'Básico',         precio: 0,      label: 'Gratis',         descripcion: 'Empieza a ser visible en GuanaGO', popular: false,
+      features: [
+        { texto: 'Ficha en directorio GuanaGO', ok: true },
+        { texto: 'Código QR personalizado',     ok: true },
+        { texto: 'Visibilidad digital básica',  ok: true },
+        { texto: 'Panel de negocio básico',     ok: true },
+        { texto: 'Pin en mapa interactivo',     ok: false },
+        { texto: 'GuanaPoints para clientes',   ok: false },
+        { texto: 'Creación de contenido',       ok: false },
+      ]},
+    { id: 'activo',   nombre: 'Aliado Activo',  precio: 49900,  label: '$49.900/mes',    descripcion: 'Con pin en el mapa para turistas que caminan la isla', popular: true,
+      features: [
+        { texto: 'Todo lo del plan Básico',          ok: true },
+        { texto: 'Pin de ubicación en el mapa',      ok: true },
+        { texto: 'GuanaPoints para tus clientes',    ok: true },
+        { texto: 'Prioridad en búsquedas',           ok: true },
+        { texto: 'Insignia "Aliado Verificado"',     ok: true },
+        { texto: 'Notificaciones en tiempo real',    ok: true },
+        { texto: 'Soporte prioritario WhatsApp',     ok: true },
+        { texto: 'Creación de contenido mensual',    ok: false },
+      ]},
+    { id: 'premium',  nombre: 'Aliado Premium', precio: 129900, label: '$129.900/mes',   descripcion: 'El paquete completo para crecer de verdad', popular: false,
+      features: [
+        { texto: 'Todo lo del plan Activo',              ok: true },
+        { texto: 'Posición destacada (aparece primero)', ok: true },
+        { texto: 'Creación de contenido mensual',        ok: true },
+        { texto: 'Analytics de visitas e interacciones', ok: true },
+        { texto: 'Gestor de cuenta dedicado',            ok: true },
+        { texto: 'Badge verificado Premium',             ok: true },
+        { texto: 'Material impreso QR + sticker',        ok: true },
+      ]},
+  ];
+  const [planes, setPlanes]       = useState(PLANES_DEFAULT);
+  const [openPlanEdit, setOpenPlanEdit] = useState<string | null>('activo');
+  const [planesSaving, setPlanesSaving] = useState(false);
+  const [planesMsg, setPlanesMsg]       = useState('');
+
+  // Servicios adicionales
+  const SERVICIOS_DEFAULT = [
+    { id: 'social',  titulo: 'Gestión de redes sociales',  descripcion: 'Publicaciones semanales en Instagram y Facebook con diseño profesional.', precio: 'Desde $120.000/mes', activo: true },
+    { id: 'reels',   titulo: 'Producción de Reels',        descripcion: 'Un Reel mensual filmado y editado en tu negocio para Instagram y TikTok.', precio: 'Desde $200.000/Reel', activo: true },
+    { id: 'web',     titulo: 'Micrositio Pro',             descripcion: 'Página personalizada con menú, galería, reservas y whatsapp directo.', precio: 'Desde $350.000', activo: true },
+    { id: 'fotog',   titulo: 'Sesión fotográfica',         descripcion: 'Fotos profesionales de tu negocio, platos o experiencias para redes y mapa.', precio: 'Desde $180.000', activo: false },
+  ];
+  const [serviciosAd, setServiciosAd]   = useState(SERVICIOS_DEFAULT);
+  const [servSaving, setServSaving]     = useState(false);
+  const [servMsg, setServMsg]           = useState('');
+  const [newServ, setNewServ] = useState({ titulo: '', descripcion: '', precio: '' });
+
+  // Diagnóstico
   const PREGUNTAS_DEFAULT = [
     { id: 'tipo',    texto: '¿Qué tipo de negocio tienes?',            opciones: ['Restaurante / bar', 'Hotel / alojamiento', 'Tour / excursión / buceo', 'Transporte (taxis, lanchas)', 'Tienda / artesanías', 'Experiencia cultural / música', 'Otro'] },
     { id: 'canal',   texto: '¿Cómo consigues clientes hoy?',           opciones: ['Recomendaciones de boca en boca', 'Redes sociales (Instagram / TikTok)', 'Agencias / tour operadores', 'Sin canal digital definido'] },
@@ -252,8 +315,10 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
       .then(snap => {
         if (snap.exists()) {
           const d = snap.data();
-          if (Array.isArray(d.aliadosDestacados) && d.aliadosDestacados.length > 0)
-            setAliadosDestacados(d.aliadosDestacados);
+          if (Array.isArray(d.aliadosDestacados) && d.aliadosDestacados.length > 0) setAliadosDestacados(d.aliadosDestacados);
+          if (d.textos) setTextos(t => ({ ...t, ...d.textos }));
+          if (Array.isArray(d.planes) && d.planes.length > 0) setPlanes(d.planes);
+          if (Array.isArray(d.serviciosAdicionales) && d.serviciosAdicionales.length > 0) setServiciosAd(d.serviciosAdicionales);
         }
         setContLoaded(true);
       }).catch(() => setContLoaded(true));
@@ -262,39 +327,76 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
       .then(snap => {
         if (snap.exists()) {
           const d = snap.data();
-          if (Array.isArray(d.preguntas) && d.preguntas.length > 0)
-            setPreguntas(d.preguntas);
+          if (Array.isArray(d.preguntas) && d.preguntas.length > 0) setPreguntas(d.preguntas);
         }
       }).catch(() => {});
   }, [tab, contLoaded]);
 
-  const saveContenido = async () => {
-    setContSaving(true); setContMsg('');
+  const saveLanding = async () => {
+    setLandingSaving(true); setLandingMsg('');
     try {
+      const snap = await getDoc(doc(db, 'docs_content', 'vinculacion-config'));
+      const existing = snap.exists() ? snap.data() : {};
       await setDoc(doc(db, 'docs_content', 'vinculacion-config'), {
-        aliadosDestacados,
-        updatedAt: serverTimestamp(),
-        updatedBy: auth.currentUser?.email || 'admin',
+        ...existing, aliadosDestacados, textos,
+        updatedAt: serverTimestamp(), updatedBy: auth.currentUser?.email || 'admin',
       });
-      setContMsg('✅ Aliados guardados.');
-    } catch { setContMsg('❌ Error al guardar'); }
-    finally { setContSaving(false); }
+      setLandingMsg('✅ Guardado.');
+    } catch { setLandingMsg('❌ Error al guardar'); }
+    finally { setLandingSaving(false); }
+  };
+
+  const savePlanes = async () => {
+    setPlanesSaving(true); setPlanesMsg('');
+    try {
+      const snap = await getDoc(doc(db, 'docs_content', 'vinculacion-config'));
+      const existing = snap.exists() ? snap.data() : {};
+      await setDoc(doc(db, 'docs_content', 'vinculacion-config'), {
+        ...existing, planes,
+        updatedAt: serverTimestamp(), updatedBy: auth.currentUser?.email || 'admin',
+      });
+      setPlanesMsg('✅ Planes guardados. La landing los usa en la próxima carga.');
+    } catch { setPlanesMsg('❌ Error al guardar'); }
+    finally { setPlanesSaving(false); }
+  };
+
+  const saveServicios = async () => {
+    setServSaving(true); setServMsg('');
+    try {
+      const snap = await getDoc(doc(db, 'docs_content', 'vinculacion-config'));
+      const existing = snap.exists() ? snap.data() : {};
+      await setDoc(doc(db, 'docs_content', 'vinculacion-config'), {
+        ...existing, serviciosAdicionales: serviciosAd,
+        updatedAt: serverTimestamp(), updatedBy: auth.currentUser?.email || 'admin',
+      });
+      setServMsg('✅ Servicios guardados.');
+    } catch { setServMsg('❌ Error al guardar'); }
+    finally { setServSaving(false); }
   };
 
   const saveDiagnostico = async () => {
     setDiagSaving(true); setDiagMsg('');
     try {
       await setDoc(doc(db, 'docs_content', 'diagnostico-config'), {
-        preguntas,
-        updatedAt: serverTimestamp(),
-        updatedBy: auth.currentUser?.email || 'admin',
+        preguntas, updatedAt: serverTimestamp(), updatedBy: auth.currentUser?.email || 'admin',
       });
-      setDiagMsg('✅ Preguntas guardadas. El formulario de diagnóstico las usará desde ahora.');
+      setDiagMsg('✅ Preguntas guardadas.');
     } catch { setDiagMsg('❌ Error al guardar'); }
     finally { setDiagSaving(false); }
   };
 
-  const updOpcion   = (pi: number, oi: number, val: string) =>
+  // Helpers — planes
+  const updFeature   = (pi: number, fi: number, field: 'texto' | 'ok', val: string | boolean) =>
+    setPlanes(ps => ps.map((p, i) => i !== pi ? p : { ...p, features: p.features.map((f, j) => j !== fi ? f : { ...f, [field]: val }) }));
+  const addFeature   = (pi: number) =>
+    setPlanes(ps => ps.map((p, i) => i !== pi ? p : { ...p, features: [...p.features, { texto: 'Nuevo beneficio', ok: true }] }));
+  const removeFeature = (pi: number, fi: number) =>
+    setPlanes(ps => ps.map((p, i) => i !== pi ? p : { ...p, features: p.features.filter((_, j) => j !== fi) }));
+  const updPlan = (pi: number, field: string, val: string | number | boolean) =>
+    setPlanes(ps => ps.map((p, i) => i !== pi ? p : { ...p, [field]: val }));
+
+  // Helpers — diagnóstico
+  const updOpcion    = (pi: number, oi: number, val: string) =>
     setPreguntas(ps => ps.map((p, i) => i !== pi ? p : { ...p, opciones: p.opciones.map((o, j) => j !== oi ? o : val) }));
   const removeOpcion = (pi: number, oi: number) =>
     setPreguntas(ps => ps.map((p, i) => i !== pi ? p : { ...p, opciones: p.opciones.filter((_, j) => j !== oi) }));
@@ -610,49 +712,259 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
 
         {/* ── TAB: CONTENIDO ──────────────────────────────────────────────────── */}
         {tab === 'contenido' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
 
-            {/* Aliados destacados */}
-            <div>
-              <h3 className="font-bold text-sm mb-1">Negocios destacados en la landing</h3>
-              <p className="text-xs text-gray-500 mb-3">Aparecen como chips en "Negocios que ya están en la red"</p>
-              <div className="space-y-2">
-                {aliadosDestacados.map((a, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5">
-                    <MapPin size={14} className="text-teal-400 shrink-0" />
-                    <input value={a} onChange={e => setAliadosDestacados(prev => prev.map((x, j) => j === i ? e.target.value : x))}
-                      className="flex-1 bg-transparent text-sm text-white focus:outline-none" />
-                    <button onClick={() => setAliadosDestacados(prev => prev.filter((_, j) => j !== i))}
-                      className="p-1 hover:bg-gray-700 rounded-lg text-gray-500 hover:text-red-400 transition-colors shrink-0">
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-2 mt-2">
-                <input value={newAliado} onChange={e => setNewAliado(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && newAliado.trim()) { setAliadosDestacados(p => [...p, newAliado.trim()]); setNewAliado(''); } }}
-                  placeholder="Nombre del negocio..."
-                  className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-teal-500 text-white placeholder-gray-600" />
-                <button onClick={() => { if (newAliado.trim()) { setAliadosDestacados(p => [...p, newAliado.trim()]); setNewAliado(''); } }}
-                  disabled={!newAliado.trim()}
-                  className="px-4 py-2.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 rounded-xl text-sm font-bold text-white transition-colors">
-                  <Plus size={16} />
+            {/* Sub-nav */}
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {([
+                { id: 'landing',     label: 'Landing',    icon: Type        },
+                { id: 'planes',      label: 'Planes',     icon: DollarSign  },
+                { id: 'servicios',   label: 'Servicios+', icon: Wrench      },
+                { id: 'diagnostico', label: 'Diagnóstico',icon: ClipboardList },
+              ] as const).map(s => (
+                <button key={s.id} onClick={() => setContSec(s.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                    contSec === s.id ? 'bg-gray-700 text-white' : 'bg-gray-800/60 text-gray-500 hover:text-gray-300'}`}>
+                  <s.icon size={12} /> {s.label}
                 </button>
-              </div>
-              {contMsg && <p className={`text-sm font-medium mt-2 ${contMsg.startsWith('✅') ? 'text-green-400' : 'text-red-400'}`}>{contMsg}</p>}
-              <button onClick={saveContenido} disabled={contSaving}
-                className="w-full py-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors mt-3">
-                {contSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-                {contSaving ? 'Guardando...' : 'Guardar aliados destacados'}
-              </button>
+              ))}
             </div>
 
-            {/* Diagnóstico editable */}
-            <div className="border-t border-gray-800 pt-5">
-              <h3 className="font-bold text-sm mb-1">Preguntas del diagnóstico</h3>
-              <p className="text-xs text-gray-500 mb-3">Edita el formulario "Hacer mi diagnóstico" para aliados</p>
+            {/* ── LANDING ── */}
+            {contSec === 'landing' && (
+              <div className="space-y-5">
+                {/* Textos del hero */}
+                <div className="space-y-3">
+                  <h3 className="font-bold text-sm">Textos principales</h3>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Título del hero</label>
+                    <input value={textos.heroTitulo} onChange={e => setTextos(t => ({ ...t, heroTitulo: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-teal-500 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Subtítulo del hero</label>
+                    <textarea value={textos.heroSubtitulo} onChange={e => setTextos(t => ({ ...t, heroSubtitulo: e.target.value }))}
+                      rows={2} className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-teal-500 text-white resize-none" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">WhatsApp (sin +)</label>
+                      <input value={textos.waNumero} onChange={e => setTextos(t => ({ ...t, waNumero: e.target.value }))}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-teal-500 text-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Subtítulo sección planes</label>
+                      <input value={textos.subtituloPlanes} onChange={e => setTextos(t => ({ ...t, subtituloPlanes: e.target.value }))}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-teal-500 text-white" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Aliados destacados */}
+                <div className="border-t border-gray-800 pt-4 space-y-3">
+                  <h3 className="font-bold text-sm">Negocios destacados</h3>
+                  <p className="text-xs text-gray-500 -mt-2">Aparecen como chips en "Negocios que ya están en la red"</p>
+                  {aliadosDestacados.map((a, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5">
+                      <MapPin size={14} className="text-teal-400 shrink-0" />
+                      <input value={a} onChange={e => setAliadosDestacados(prev => prev.map((x, j) => j === i ? e.target.value : x))}
+                        className="flex-1 bg-transparent text-sm text-white focus:outline-none" />
+                      <button onClick={() => setAliadosDestacados(prev => prev.filter((_, j) => j !== i))}
+                        className="p-1 hover:bg-gray-700 rounded-lg text-gray-500 hover:text-red-400 shrink-0">
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <input value={newAliado} onChange={e => setNewAliado(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && newAliado.trim()) { setAliadosDestacados(p => [...p, newAliado.trim()]); setNewAliado(''); } }}
+                      placeholder="Nombre del negocio..."
+                      className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-teal-500 text-white placeholder-gray-600" />
+                    <button onClick={() => { if (newAliado.trim()) { setAliadosDestacados(p => [...p, newAliado.trim()]); setNewAliado(''); } }}
+                      disabled={!newAliado.trim()}
+                      className="px-4 py-2.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 rounded-xl font-bold text-white transition-colors">
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                {landingMsg && <p className={`text-sm font-medium ${landingMsg.startsWith('✅') ? 'text-green-400' : 'text-red-400'}`}>{landingMsg}</p>}
+                <button onClick={saveLanding} disabled={landingSaving}
+                  className="w-full py-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors">
+                  {landingSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+                  {landingSaving ? 'Guardando...' : 'Guardar textos + aliados'}
+                </button>
+
+                {/* Link Documentos */}
+                <div className="border-t border-gray-800 pt-4">
+                  <button onClick={() => { onBack(); setTimeout(() => onNavigate(AppRoute.ADMIN_ALIADOS), 50); }}
+                    className="w-full flex items-center gap-4 bg-gray-800/50 border border-gray-700 rounded-2xl p-4 hover:bg-gray-800 transition-colors text-left">
+                    <FileText size={22} className="text-purple-400 shrink-0" />
+                    <div className="flex-1">
+                      <p className="font-bold text-sm">Documentos & Kits</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Contratos, kits de bienvenida, material impreso</p>
+                    </div>
+                    <ChevronRight size={16} className="text-gray-600 shrink-0" />
+                  </button>
+                  <div className="flex items-center gap-3 bg-gray-800/40 border border-dashed border-gray-700 rounded-xl p-3 mt-2">
+                    <Camera size={16} className="text-gray-600 shrink-0" />
+                    <p className="text-xs text-gray-600">Fotos → campo <code className="bg-gray-700 px-1 rounded text-[10px]">Imagen</code> en Airtable Directorio_Mapa.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── PLANES ── */}
+            {contSec === 'planes' && (
               <div className="space-y-4">
+                <div>
+                  <h3 className="font-bold text-sm">Editor de planes</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Edita nombres, precios y beneficios de cada plan</p>
+                </div>
+                {planes.map((plan, pi) => (
+                  <div key={plan.id} className="bg-gray-800/60 border border-gray-700 rounded-xl overflow-hidden">
+                    <button onClick={() => setOpenPlanEdit(openPlanEdit === plan.id ? null : plan.id)}
+                      className="w-full px-4 py-3 flex items-center gap-3 text-left">
+                      <div className="flex-1">
+                        <p className="font-bold text-sm text-white">{plan.nombre}</p>
+                        <p className="text-xs text-gray-400">{plan.label}</p>
+                      </div>
+                      {plan.popular && <span className="text-[9px] bg-orange-500 text-white px-2 py-0.5 rounded-full font-black">Popular</span>}
+                      {openPlanEdit === plan.id ? <ChevronUp size={14} className="text-gray-500" /> : <ChevronDown size={14} className="text-gray-500" />}
+                    </button>
+                    {openPlanEdit === plan.id && (
+                      <div className="px-4 pb-4 border-t border-gray-700 space-y-3 pt-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-gray-400 mb-1">Nombre del plan</label>
+                            <input value={plan.nombre} onChange={e => updPlan(pi, 'nombre', e.target.value)}
+                              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500 text-white" />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-400 mb-1">Etiqueta precio (ej: $49.900/mes)</label>
+                            <input value={plan.label} onChange={e => updPlan(pi, 'label', e.target.value)}
+                              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500 text-white" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-gray-400 mb-1">Precio en COP (número)</label>
+                            <input type="number" value={plan.precio} onChange={e => updPlan(pi, 'precio', Number(e.target.value))}
+                              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500 text-white" />
+                          </div>
+                          <div className="flex items-center gap-2 mt-4">
+                            <button onClick={() => updPlan(pi, 'popular', !plan.popular)}
+                              className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold transition-colors ${plan.popular ? 'border-orange-500 bg-orange-900/20 text-orange-400' : 'border-gray-700 text-gray-500'}`}>
+                              {plan.popular ? <CheckSquare size={13} /> : <Square size={13} />}
+                              Popular
+                            </button>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-1">Descripción breve</label>
+                          <input value={plan.descripcion} onChange={e => updPlan(pi, 'descripcion', e.target.value)}
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500 text-white" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-2">Beneficios</label>
+                          <div className="space-y-1.5">
+                            {plan.features.map((f, fi) => (
+                              <div key={fi} className="flex items-center gap-2">
+                                <button onClick={() => updFeature(pi, fi, 'ok', !f.ok)}
+                                  className={`shrink-0 p-1 rounded transition-colors ${f.ok ? 'text-teal-400' : 'text-gray-600'}`}>
+                                  {f.ok ? <CheckSquare size={14} /> : <Square size={14} />}
+                                </button>
+                                <input value={f.texto} onChange={e => updFeature(pi, fi, 'texto', e.target.value)}
+                                  className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-teal-500 text-white" />
+                                <button onClick={() => removeFeature(pi, fi)} className="p-1 text-gray-600 hover:text-red-400 shrink-0"><X size={11} /></button>
+                              </div>
+                            ))}
+                            <button onClick={() => addFeature(pi)}
+                              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-teal-400 transition-colors pl-7 py-1">
+                              <Plus size={11} /> Agregar beneficio
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {planesMsg && <p className={`text-sm font-medium ${planesMsg.startsWith('✅') ? 'text-green-400' : 'text-red-400'}`}>{planesMsg}</p>}
+                <button onClick={savePlanes} disabled={planesSaving}
+                  className="w-full py-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors">
+                  {planesSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+                  {planesSaving ? 'Guardando...' : 'Guardar planes'}
+                </button>
+              </div>
+            )}
+
+            {/* ── SERVICIOS ADICIONALES ── */}
+            {contSec === 'servicios' && (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-bold text-sm">Servicios adicionales</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Aparecen en una sección extra de la landing — desarrollo web, redes, fotografía, etc.</p>
+                </div>
+                {serviciosAd.map((s, si) => (
+                  <div key={s.id} className="bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1 space-y-2">
+                        <input value={s.titulo} onChange={e => setServiciosAd(ss => ss.map((x, i) => i !== si ? x : { ...x, titulo: e.target.value }))}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:border-teal-500 text-white" placeholder="Título del servicio" />
+                        <textarea value={s.descripcion} onChange={e => setServiciosAd(ss => ss.map((x, i) => i !== si ? x : { ...x, descripcion: e.target.value }))}
+                          rows={2} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-teal-500 text-white resize-none placeholder-gray-500" placeholder="Descripción" />
+                        <input value={s.precio} onChange={e => setServiciosAd(ss => ss.map((x, i) => i !== si ? x : { ...x, precio: e.target.value }))}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-teal-500 text-white" placeholder="Precio (ej: Desde $120.000/mes)" />
+                      </div>
+                      <div className="flex flex-col gap-1.5 shrink-0">
+                        <button onClick={() => setServiciosAd(ss => ss.map((x, i) => i !== si ? x : { ...x, activo: !x.activo }))}
+                          className={`px-2 py-1.5 rounded-lg border text-[10px] font-bold transition-colors ${s.activo ? 'border-green-600/60 bg-green-900/20 text-green-400' : 'border-gray-700 text-gray-500'}`}>
+                          {s.activo ? 'Visible' : 'Oculto'}
+                        </button>
+                        <button onClick={() => setServiciosAd(ss => ss.filter((_, i) => i !== si))}
+                          className="p-1.5 bg-gray-700 hover:bg-red-900/30 rounded-lg text-gray-500 hover:text-red-400 transition-colors">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Agregar nuevo */}
+                <div className="bg-gray-800/40 border border-dashed border-gray-700 rounded-xl p-4 space-y-2">
+                  <p className="text-xs font-bold text-gray-400">Nuevo servicio</p>
+                  <input value={newServ.titulo} onChange={e => setNewServ(s => ({ ...s, titulo: e.target.value }))}
+                    placeholder="Título *" className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500 text-white placeholder-gray-600" />
+                  <input value={newServ.descripcion} onChange={e => setNewServ(s => ({ ...s, descripcion: e.target.value }))}
+                    placeholder="Descripción" className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-teal-500 text-white placeholder-gray-600" />
+                  <input value={newServ.precio} onChange={e => setNewServ(s => ({ ...s, precio: e.target.value }))}
+                    placeholder="Precio (ej: Desde $120.000/mes)" className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-teal-500 text-white placeholder-gray-600" />
+                  <button onClick={() => {
+                    if (!newServ.titulo.trim()) return;
+                    setServiciosAd(ss => [...ss, { id: Date.now().toString(), ...newServ, activo: true }]);
+                    setNewServ({ titulo: '', descripcion: '', precio: '' });
+                  }} disabled={!newServ.titulo.trim()}
+                    className="w-full py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 rounded-lg text-sm font-bold text-white transition-colors flex items-center justify-center gap-1.5">
+                    <Plus size={14} /> Agregar servicio
+                  </button>
+                </div>
+
+                {servMsg && <p className={`text-sm font-medium ${servMsg.startsWith('✅') ? 'text-green-400' : 'text-red-400'}`}>{servMsg}</p>}
+                <button onClick={saveServicios} disabled={servSaving}
+                  className="w-full py-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors">
+                  {servSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+                  {servSaving ? 'Guardando...' : 'Guardar servicios adicionales'}
+                </button>
+              </div>
+            )}
+
+            {/* ── DIAGNÓSTICO ── */}
+            {contSec === 'diagnostico' && (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-bold text-sm">Preguntas del diagnóstico</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Edita el formulario "Hacer mi diagnóstico" para aliados</p>
+                </div>
                 {preguntas.map((p, pi) => (
                   <div key={p.id} className="bg-gray-800/60 border border-gray-700 rounded-xl p-4 space-y-2">
                     <input value={p.texto} onChange={e => updPregunta(pi, e.target.value)}
@@ -663,10 +975,7 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
                           <Hash size={12} className="text-gray-600 shrink-0" />
                           <input value={o} onChange={e => updOpcion(pi, oi, e.target.value)}
                             className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-teal-500 text-white" />
-                          <button onClick={() => removeOpcion(pi, oi)}
-                            className="p-1 text-gray-600 hover:text-red-400 transition-colors shrink-0">
-                            <X size={12} />
-                          </button>
+                          <button onClick={() => removeOpcion(pi, oi)} className="p-1 text-gray-600 hover:text-red-400 shrink-0"><X size={12} /></button>
                         </div>
                       ))}
                       <button onClick={() => addOpcion(pi)}
@@ -676,40 +985,14 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
                     </div>
                   </div>
                 ))}
+                {diagMsg && <p className={`text-sm font-medium ${diagMsg.startsWith('✅') ? 'text-green-400' : 'text-red-400'}`}>{diagMsg}</p>}
+                <button onClick={saveDiagnostico} disabled={diagSaving}
+                  className="w-full py-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors">
+                  {diagSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+                  {diagSaving ? 'Guardando...' : 'Guardar preguntas'}
+                </button>
               </div>
-              {diagMsg && <p className={`text-sm font-medium mt-2 ${diagMsg.startsWith('✅') ? 'text-green-400' : 'text-red-400'}`}>{diagMsg}</p>}
-              <button onClick={saveDiagnostico} disabled={diagSaving}
-                className="w-full py-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors mt-3">
-                {diagSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-                {diagSaving ? 'Guardando...' : 'Guardar preguntas del diagnóstico'}
-              </button>
-            </div>
-
-            {/* Documentos & Kits */}
-            <div className="border-t border-gray-800 pt-5">
-              <h3 className="font-bold text-sm mb-1">Documentos & Kits de aliados</h3>
-              <p className="text-xs text-gray-500 mb-3">Contratos, kits de bienvenida y material impreso para aliados.</p>
-              <button onClick={() => { onBack(); setTimeout(() => onNavigate(AppRoute.ADMIN_ALIADOS), 50); }}
-                className="w-full flex items-center gap-4 bg-gray-800/50 border border-gray-700 rounded-2xl p-4 hover:bg-gray-800 transition-colors text-left">
-                <FileText size={24} className="text-purple-400 shrink-0" />
-                <div className="flex-1">
-                  <p className="font-bold text-sm">Ir a Documentos & Kits</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Sección en el panel de Aliados</p>
-                </div>
-                <ChevronRight size={16} className="text-gray-600 shrink-0" />
-              </button>
-            </div>
-
-            {/* Fotos */}
-            <div className="border-t border-gray-800 pt-5">
-              <div className="flex items-center gap-3 bg-gray-800/40 border border-dashed border-gray-700 rounded-xl p-4">
-                <Camera size={20} className="text-gray-600 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-gray-400">Fotos de negocios</p>
-                  <p className="text-xs text-gray-600 mt-0.5">Se gestionan directamente en el campo <code className="bg-gray-700 px-1 rounded text-[10px]">Imagen</code> en Airtable → Directorio_Mapa.</p>
-                </div>
-              </div>
-            </div>
+            )}
 
           </div>
         )}
