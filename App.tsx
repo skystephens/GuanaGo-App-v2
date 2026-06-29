@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Home from './pages/Home';
 import Detail from './pages/Detail';
 import Taxi from './pages/Taxi';
@@ -118,7 +118,7 @@ import UserProfileButton from './components/UserProfileButton';
 import Navigation from './components/Navigation';
 import LanguageSelector from './components/LanguageSelector';
 import GuanaChatbot from './components/GuanaChatbot';
-import CotizadorB2C from './components/CotizadorB2C';
+import CotizadorB2C, { CotizadorB2CHandle } from './components/CotizadorB2C';
 import CartFloatingBar from './components/CartFloatingBar';
 import DirectoryMapbox from './components/DirectoryMapbox';
 import PublicQuotePage from './pages/PublicQuotePage';
@@ -130,6 +130,7 @@ import { GUANA_LOGO } from './constants';
 import { initializeCachedApi } from './services/cachedApi';
 
 const App: React.FC = () => {
+  const cotizadorRef = useRef<CotizadorB2CHandle>(null);
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(AppRoute.HOME);
   const [history, setHistory] = useState<AppRoute[]>([]);
 
@@ -411,8 +412,8 @@ const App: React.FC = () => {
         {(!isAuthenticated || ['tourist', 'Turista', 'Local', 'Residente'].includes(userRole as string)) &&
           !['partner', 'admin', 'superadmin', 'SuperAdmin', 'Socio', 'Aliado', 'Operador', 'Artista'].includes(userRole as string) && (
           <>
-            <GuanaChatbot />
-            <CotizadorB2C onNavigate={navigateTo} />
+            <GuanaChatbot onCotizar={() => cotizadorRef.current?.open()} />
+            <CotizadorB2C ref={cotizadorRef} onNavigate={navigateTo} />
           </>
         )}
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Sparkles, Bot, User, ChevronLeft, Loader2, MessageSquare } from 'lucide-react';
+import { X, Send, Sparkles, Bot, User, ChevronLeft, Loader2, MessageSquare, FileText } from 'lucide-react';
 import { cotizar, atender, esMensajeCotizacion, ChatMessage } from '../services/chatService';
 
 interface Message {
@@ -15,7 +15,11 @@ type Pantalla = 'bienvenida' | 'chat_ia' | 'representante' | 'confirmado';
 const CHAT_HISTORY_KEY = 'guanago_chat_history';
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
-const GuanaChatbot: React.FC = () => {
+interface GuanaChatbotProps {
+  onCotizar?: () => void;
+}
+
+const GuanaChatbot: React.FC<GuanaChatbotProps> = ({ onCotizar }) => {
   const [isOpen, setIsOpen]         = useState(false);
   const [pantalla, setPantalla]     = useState<Pantalla>('bienvenida');
   const [isTyping, setIsTyping]     = useState(false);
@@ -191,6 +195,20 @@ const GuanaChatbot: React.FC = () => {
                     <p className="text-xs text-gray-500">Responde al instante sobre tours, precios y destino</p>
                   </div>
                 </button>
+                {onCotizar && (
+                  <button
+                    onClick={() => { cerrar(); onCotizar(); }}
+                    className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-orange-200 hover:border-orange-400 hover:bg-orange-50 transition-all text-left"
+                  >
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center shrink-0">
+                      <FileText size={20} className="text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-gray-800">Cotizar mi viaje</p>
+                      <p className="text-xs text-gray-500">Arma tu cotización paso a paso con precios reales</p>
+                    </div>
+                  </button>
+                )}
                 <button
                   onClick={() => setPantalla('representante')}
                   className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-all text-left"

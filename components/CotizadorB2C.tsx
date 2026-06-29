@@ -5,7 +5,7 @@
  * ORDEN DE PASOS: Fechas+Pax → Datos → Actividades → Alojamiento → Resumen
  */
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import {
   MessageSquare, X, ChevronRight, ChevronLeft,
   Plus, Minus, Check, Phone, User, Mail, FileText,
@@ -286,7 +286,11 @@ interface CotizadorB2CProps {
   onNavigate?: (route: AppRoute, data?: any) => void;
 }
 
-const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
+export interface CotizadorB2CHandle {
+  open: () => void;
+}
+
+const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavigate }, ref) => {
   const [isOpen,         setIsOpen]         = useState(false);
   const [step,           setStep]           = useState<Step>('dates');
   const [loading,        setLoading]        = useState(false);
@@ -354,6 +358,8 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
     setSaveError('');
     loadCatalog();
   };
+
+  useImperativeHandle(ref, () => ({ open }), []);
 
   const close = () => setIsOpen(false);
 
@@ -1381,6 +1387,8 @@ const CotizadorB2C: React.FC<CotizadorB2CProps> = ({ onNavigate }) => {
       )}
     </>
   );
-};
+});
+
+CotizadorB2C.displayName = 'CotizadorB2C';
 
 export default CotizadorB2C;
