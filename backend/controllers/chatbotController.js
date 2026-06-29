@@ -176,9 +176,11 @@ export const getConversationHistory = async (req, res, next) => {
 // CHAT DE ATENCIÓN — endpoints nuevos (Groq llama-3.3-70b)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const TABLE_CHATS_ATENCION  = 'tblUwoBPPdW8iR4YK';
-const TABLE_PROCEDIMIENTOS  = 'tblOvlFanUiguceZo';
-const TABLE_DIRECTORIO_MAPA = 'tblbrq0U77RAjgG9N';
+const TABLE_CHATS_ATENCION    = 'tblUwoBPPdW8iR4YK';
+const TABLE_PROCEDIMIENTOS    = 'tblOvlFanUiguceZo';
+const TABLE_DIRECTORIO_MAPA   = 'tblbrq0U77RAjgG9N';
+const TABLE_SERVICIOS         = 'tblTp0v7EoCjNHU4W';
+const TABLE_ALOJAMIENTOS      = 'tblUNglGMsxDZYZPs';
 
 let _ragCache = '';
 let _ragTs = 0;
@@ -236,6 +238,82 @@ async function getDirectorioResumen() {
     _dirTs = Date.now();
   } catch { /* silencioso */ }
   return _dirCache;
+}
+
+let _svcCache = '';
+let _svcTs = 0;
+
+async function getServiciosContext() {
+  if (_svcCache && Date.now() - _svcTs < 10 * 60 * 1000) return _svcCache;
+  try {
+    const { apiKey, baseId } = config.airtable;
+    if (!apiKey) return '';
+    const fields = ['Nombre', 'Tipo', 'Precio_GuanaGo', 'Descripcion', 'Duracion', 'Incluye', 'Notas'].map(f => `fields[]=${encodeURIComponent(f)}`).join('&');
+    const url = `https://api.airtable.com/v0/${baseId}/${TABLE_SERVICIOS}?maxRecords=50&${fields}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return '';
+    const data = await res.json();
+    _svcCache = (data.records || [])
+      .filter(r => r.fields?.Nombre)
+      .map(r => {
+        const f = r.fields;
+        const precio = f.Precio_GuanaGo ? `$${Number(f.Precio_GuanaGo).toLocaleString('es-CO')} COP` : '';
+        const partes = [
+          f.Nombre,
+          f.Tipo && `(${f.Tipo})`,
+          precio && `Precio: ${precio}`,
+          f.Duracion && `Duración: ${f.Duracion}`,
+          f.Descripcion,
+          f.Incluye && `Incluye: ${f.Incluye}`,
+          f.Notas,
+        ].filter(Boolean);
+        return partes.join(' · ');
+      })
+      .join('\n');
+    _svcTs = Date.now();
+  } catch { /* silencioso */ }
+  return _svcCache;
+}
+
+let _aloCache = '';
+let _aloTs = 0;
+
+async function getAlojamientosContext() {
+  if (_aloCache && Date.now() - _aloTs < 10 * 60 * 1000) return _aloCache;
+  try {
+    const { apiKey, baseId } = config.airtable;
+    if (!apiKey) return '';
+    const fields = ['Nombre', 'Tipo', 'Precio_GuanaGo', 'Descripcion', 'Capacidad', 'Servicios', 'Notas'].map(f => `fields[]=${encodeURIComponent(f)}`).join('&');
+    const url = `https://api.airtable.com/v0/${baseId}/${TABLE_ALOJAMIENTOS}?maxRecords=50&${fields}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return '';
+    const data = await res.json();
+    _aloCache = (data.records || [])
+      .filter(r => r.fields?.Nombre)
+      .map(r => {
+        const f = r.fields;
+        const precio = f.Precio_GuanaGo ? `desde $${Number(f.Precio_GuanaGo).toLocaleString('es-CO')} COP/noche` : '';
+        const partes = [
+          f.Nombre,
+          f.Tipo && `(${f.Tipo})`,
+          precio && `Precio: ${precio}`,
+          f.Capacidad && `Capacidad: ${f.Capacidad}`,
+          f.Descripcion,
+          f.Servicios && `Servicios: ${f.Servicios}`,
+          f.Notas,
+        ].filter(Boolean);
+        return partes.join(' · ');
+      })
+      .join('\n');
+    _aloTs = Date.now();
+  } catch { /* silencioso */ }
+  return _aloCache;
 }
 
 async function crearRegistroChatAtencion({ mensaje_usuario, historial_conversacion, respuesta_ia_tentativa, usuario_id, origen, estado }) {
@@ -326,14 +404,18 @@ export const atender = async (req, res, next) => {
     }
 
     // Cargar contexto público en paralelo
-    const [procedimientos, directorio] = await Promise.all([
+    const [procedimientos, directorio, servicios, alojamientos] = await Promise.all([
       getProcedimientosRAG(),
       getDirectorioResumen(),
+      getServiciosContext(),
+      getAlojamientosContext(),
     ]);
 
     const partes = [
-      procedimientos && `PROCEDIMIENTOS PÚBLICOS:\n${procedimientos}`,
+      servicios      && `TOURS Y SERVICIOS (precios Precio_GuanaGo):\n${servicios}`,
+      alojamientos   && `ALOJAMIENTOS (precios Precio_GuanaGo por noche):\n${alojamientos}`,
       directorio     && `DIRECTORIO DE LUGARES:\n${directorio}`,
+      procedimientos && `PROCEDIMIENTOS Y POLÍTICAS:\n${procedimientos}`,
     ].filter(Boolean);
 
     const systemMsg = partes.length
