@@ -7,7 +7,7 @@ import {
   Bot, Send, Loader2, ChevronDown, ChevronUp,
   CheckCircle2, AlertCircle, Receipt, Briefcase, ListChecks,
   Menu, Wifi, WifiOff, Home, Settings, Globe, Layers, Trophy,
-  CalendarDays, Crown, Gift, BarChart3, Store,
+  CalendarDays, Crown, Gift, BarChart3, Store, MessageSquare,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { setInitialSection } from './AdminAliados';
@@ -242,6 +242,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [atStatus, setAtStatus] = useState<'checking' | 'ok' | 'error'>('checking');
+  const [chatsPendientes, setChatsPendientes] = useState<number | null>(null);
 
   // Cargar reservas recientes
   const loadRecent = useCallback(async () => {
@@ -277,12 +278,27 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
     } catch { setPendingApprovals(null); }
   }, []);
 
+  // Cargar chats de atención pendientes (badge)
+  const loadChatsPendientes = useCallback(async () => {
+    try {
+      const res = await fetch('/api/chatbot/atencion/pendientes');
+      if (res.ok) {
+        const data = await res.json();
+        setChatsPendientes(data?.total ?? 0);
+      }
+    } catch { /* silencioso — no bloquear el dashboard */ }
+  }, []);
+
   useEffect(() => {
     loadRecent();
     loadApprovals();
-    const id = setInterval(loadRecent, 60000);
+    loadChatsPendientes();
+    const id = setInterval(() => {
+      loadRecent();
+      loadChatsPendientes();
+    }, 60000);
     return () => clearInterval(id);
-  }, [loadRecent, loadApprovals]);
+  }, [loadRecent, loadApprovals, loadChatsPendientes]);
 
   // Cargar tareas desde Airtable
   useEffect(() => {
@@ -325,6 +341,9 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
       { icon: <Trophy size={18} />, label: 'Dinámicas', route: AppRoute.ADMIN_DINAMICAS },
       { icon: <Map size={18} />, label: 'Zonas Taxi', route: AppRoute.ADMIN_TAXI_ZONE_EDITOR },
     ]},
+    { label: 'ATENCIÓN', items: [
+      { icon: <MessageSquare size={18} />, label: 'Chat Atención', route: AppRoute.ADMIN_CHATS_ATENCION },
+    ]},
     { label: 'HERRAMIENTAS', items: [
       { icon: <Settings size={18} />, label: 'Herramientas', route: AppRoute.ADMIN_HERRAMIENTAS },
     ]},
@@ -349,17 +368,35 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
               {sidebarExpanded && (
                 <p className="px-3 mb-1 text-[9px] font-bold text-gray-600 tracking-widest">{group.label}</p>
               )}
-              {group.items.map(item => (
-                <button
-                  key={item.label}
-                  onClick={() => onNavigate(item.route)}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/70 transition-colors"
-                  title={!sidebarExpanded ? item.label : undefined}
-                >
-                  <span className="shrink-0">{item.icon}</span>
-                  {sidebarExpanded && <span className="text-xs font-medium truncate">{item.label}</span>}
-                </button>
-              ))}
+              {group.items.map(item => {
+                const isChatAtencion = item.route === AppRoute.ADMIN_CHATS_ATENCION;
+                const showBadge = isChatAtencion && chatsPendientes !== null && chatsPendientes > 0;
+                return (
+                  <button
+                    key={item.label}
+                    onClick={() => onNavigate(item.route)}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/70 transition-colors relative"
+                    title={!sidebarExpanded ? item.label : undefined}
+                  >
+                    <span className="shrink-0 relative">
+                      {item.icon}
+                      {showBadge && !sidebarExpanded && (
+                        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full flex items-center justify-center text-[8px] font-bold text-white">
+                          {chatsPendientes > 9 ? '9+' : chatsPendientes}
+                        </span>
+                      )}
+                    </span>
+                    {sidebarExpanded && (
+                      <span className="text-xs font-medium truncate flex-1">{item.label}</span>
+                    )}
+                    {sidebarExpanded && showBadge && (
+                      <span className="ml-auto bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                        {chatsPendientes > 9 ? '9+' : chatsPendientes}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           ))}
         </nav>
@@ -521,6 +558,13 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
               />
               <MiniButton icon={<FileText size={18} className="text-emerald-400" />} label="Cotizaciones" onClick={() => onNavigate(AppRoute.ADMIN_QUOTES)} />
               <MiniButton icon={<Route size={18} className="text-cyan-400" />} label="Itinerarios" onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY)} />
+              <MiniButton
+                icon={<MessageSquare size={18} className="text-rose-400" />} label="Chat Atención"
+                onClick={() => onNavigate(AppRoute.ADMIN_CHATS_ATENCION)}
+                pulse={chatsPendientes !== null && chatsPendientes > 0 ? 'bg-red-500' : undefined}
+                badge={chatsPendientes !== null && chatsPendientes > 0 ? String(chatsPendientes) : undefined}
+                gradient="from-rose-900/60 to-pink-900/60" border="border-rose-800 hover:border-rose-500"
+              />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <MiniButton

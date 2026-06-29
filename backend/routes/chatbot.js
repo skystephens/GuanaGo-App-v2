@@ -9,19 +9,29 @@ router.get('/', (req, res) => {
   res.json({
     success: true,
     message: 'Chatbot API funcionando',
-    endpoints: ['/message', '/cotizar', '/conversation/:id']
+    endpoints: ['/cotizar', '/atencion', '/atencion/pendientes', '/atencion/lista', '/atencion/:id', '/message', '/conversation/:id']
   });
 });
 
-// Cotizador inteligente con Groq AI (público)
+// Cotizador inteligente con Claude Haiku (público)
 router.post('/cotizar', chatbotController.cotizar);
 
-// Chatbot público (sin autenticación requerida)
+// Chat de atención general con Groq llama-3.3-70b + RAG público (sin auth)
+router.post('/atencion', chatbotController.atender);
+
+// Badge: conteo de chats pendientes — sin auth para que el admin lo cargue al entrar
+router.get('/atencion/pendientes', chatbotController.pendientesAtencion);
+
+// Listado y actualización de chats (admin autenticado)
+router.get('/atencion/lista', authenticateToken, chatbotController.listarChatsAtencion);
+router.patch('/atencion/:id', authenticateToken, chatbotController.actualizarChatAtencion);
+
+// Chatbot público legacy
 router.post('/message', chatbotController.sendMessage);
 
 // Historial (requiere autenticación)
-router.get('/conversation/:conversationId', 
-  authenticateToken, 
+router.get('/conversation/:conversationId',
+  authenticateToken,
   chatbotController.getConversationHistory
 );
 
