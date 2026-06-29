@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  ArrowLeft, MessageSquare, Clock, CheckCircle2, XCircle,
-  RefreshCw, ChevronDown, ChevronUp, User, AlertTriangle,
-  FileText, Send, Loader2,
+  ArrowLeft, MessageSquare, CheckCircle2, XCircle,
+  RefreshCw, ChevronDown, ChevronUp, User, AlertTriangle, Loader2,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 
 interface ChatRecord {
   id: string;
@@ -202,26 +202,39 @@ function ChatDetalle({
 // ─── Vista principal ──────────────────────────────────────────────────────────
 
 const AdminChatsAtencion: React.FC<Props> = ({ onBack }) => {
+  const { firebaseUser } = useAuth();
   const [chats, setChats]           = useState<ChatRecord[]>([]);
   const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState<string | null>(null);
   const [filtro, setFiltro]         = useState<FiltroEstado>('pendiente');
   const [chatAbierto, setChatAbierto] = useState<ChatRecord | null>(null);
   const [totalPendientes, setTotalPendientes] = useState<number | null>(null);
 
+  const getToken = useCallback(async () => {
+    if (!firebaseUser) return null;
+    return firebaseUser.getIdToken();
+  }, [firebaseUser]);
+
   const cargarChats = useCallback(async (estado: FiltroEstado) => {
     setLoading(true);
+    setError(null);
     try {
+      const token = await getToken();
+      if (!token) throw new Error('Sin sesión activa');
       const qs = estado !== 'todos' ? `?estado=${estado}` : '';
-      const res = await fetch(`${API}/lista${qs}`, { credentials: 'include' });
-      if (!res.ok) throw new Error(`${res.status}`);
+      const res = await fetch(`${API}/lista${qs}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
       const data = await res.json();
       setChats(data.data || []);
-    } catch {
+    } catch (e: any) {
+      setError(e.message || 'Error cargando chats');
       setChats([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getToken]);
 
   const cargarPendientes = useCallback(async () => {
     try {
@@ -240,10 +253,11 @@ const AdminChatsAtencion: React.FC<Props> = ({ onBack }) => {
 
   const actualizarChat = async (id: string, campos: object) => {
     try {
+      const token = await getToken();
+      if (!token) return;
       const res = await fetch(`${API}/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(campos),
       });
       if (res.ok) {
@@ -310,6 +324,11 @@ const AdminChatsAtencion: React.FC<Props> = ({ onBack }) => {
 
       {/* Lista */}
       <div className="px-4 pb-24 space-y-2">
+        {error && (
+          <div className="bg-red-900/30 border border-red-700 rounded-xl p-3 text-sm text-red-400">
+            ⚠ {error}
+          </div>
+        )}
         {loading && (
           <div className="flex items-center gap-2 text-gray-500 text-sm py-6 justify-center">
             <Loader2 size={16} className="animate-spin" /> Cargando...
