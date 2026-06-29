@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  ArrowLeft, MapPin, Users, Edit3, Plus, Trash2, RefreshCw,
-  Search, CheckCircle, XCircle, MessageCircle, Save, X,
-  Store, ClipboardList, LayoutList, ChevronRight,
+  ArrowLeft, MapPin, Edit3, Plus, Trash2, RefreshCw,
+  Search, MessageCircle, Save, X, Store, ClipboardList,
+  LayoutList, ChevronRight, FileText, Camera, Hash,
+  CheckSquare, Square, Globe, Instagram,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -15,19 +16,43 @@ interface Props {
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
-const CATEGORIAS = ['Restaurante', 'Hotel', 'Tour', 'Transporte', 'Tienda', 'Bar', 'Experiencia', 'Servicios', 'General'];
-const PLANES     = ['', 'Básico', 'Activo', 'Premium'];
-const ESTADOS    = ['activo', 'inactivo', 'pendiente'];
+const CATEGORIAS_NEGOCIO = [
+  'Restaurante', 'Bar', 'Hotel', 'Alojamiento', 'Tour', 'Transporte',
+  'Tienda', 'Artesanías', 'Experiencia', 'Servicios', 'General',
+];
+const CATEGORIAS_POI = [
+  'Playa', 'Monumento', 'Iglesia', 'Aviso / Letrero', 'Mirador',
+  'Parque', 'Atractivo Natural', 'Otro lugar',
+];
+const PLANES  = ['', 'Básico', 'Activo', 'Premium'];
+const ESTADOS = ['activo', 'inactivo', 'pendiente'];
+const TIPO_ENTRADA = ['Negocio', 'Punto de Interés'] as const;
 
-const ALIADOS_DEFAULT = ['Bushi Food', 'Bobby Rock', 'Capy Beach', 'Casa Las Palmas', 'Capitán Mandy', 'Dreamer', 'Sweet Avenue Café'];
+const DOCS_CHECKLIST = [
+  'Cámara de Comercio',
+  'Cédula del propietario',
+  'RUT',
+  'RNT vigente',
+  'Cuenta bancaria',
+  'Contrato firmado',
+  'Fotos del negocio',
+  'Logo alta resolución',
+];
+
+const ALIADOS_DEFAULT = [
+  'Bushi Food', 'Bobby Rock', 'Capy Beach',
+  'Casa Las Palmas', 'Capitán Mandy', 'Dreamer', 'Sweet Avenue Café',
+];
 
 type Tab = 'directorio' | 'inscritos' | 'contenido';
 
 interface DirEntry {
-  id: string; name: string; category: string; address: string; phone: string;
-  email: string; description: string; website: string; hours: string;
-  estado: string; plan: string; rnt: string; responsable: string;
-  slug: string; whatsapp: string;
+  id: string; name: string; category: string; tipo_entrada: string;
+  address: string; phone: string; email: string; description: string;
+  servicios: string; website: string; instagram: string; facebook: string;
+  tiktok: string; hours: string; estado: string; plan: string;
+  rnt: string; responsable: string; slug: string; whatsapp: string;
+  documentos: string;
 }
 
 interface Lead {
@@ -36,8 +61,10 @@ interface Lead {
 }
 
 const EMPTY_FORM: Omit<DirEntry, 'id' | 'slug' | 'whatsapp'> = {
-  name: '', category: 'General', address: '', phone: '', email: '',
-  description: '', website: '', hours: '', estado: 'activo', plan: '', rnt: '', responsable: '',
+  tipo_entrada: 'Negocio', name: '', category: 'General', address: '',
+  phone: '', email: '', description: '', servicios: '', website: '',
+  instagram: '', facebook: '', tiktok: '', hours: '', estado: 'activo',
+  plan: '', rnt: '', responsable: '', documentos: '',
 };
 
 function parseDetalles(raw: string): Record<string, string> {
@@ -50,11 +77,10 @@ function parseDetalles(raw: string): Record<string, string> {
 }
 
 const PLAN_COLOR: Record<string, string> = {
-  'Básico':   'bg-teal-900/50 text-teal-400',
-  'Activo':   'bg-orange-900/50 text-orange-400',
-  'Premium':  'bg-indigo-900/50 text-indigo-400',
+  'Básico':  'bg-teal-900/50 text-teal-400',
+  'Activo':  'bg-orange-900/50 text-orange-400',
+  'Premium': 'bg-indigo-900/50 text-indigo-400',
 };
-
 const ESTADO_COLOR: Record<string, string> = {
   activo:    'bg-green-900/50 text-green-400',
   inactivo:  'bg-gray-800 text-gray-500',
@@ -62,7 +88,6 @@ const ESTADO_COLOR: Record<string, string> = {
 };
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
-
 function FormField({ label, value, onChange, placeholder = '', textarea = false, type = 'text' }: {
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; textarea?: boolean; type?: string;
@@ -94,7 +119,6 @@ function SelectField({ label, value, onChange, options }: {
 }
 
 // ─── AdminRedAliados ───────────────────────────────────────────────────────────
-
 const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
   const [tab, setTab] = useState<Tab>('directorio');
 
@@ -108,6 +132,8 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
   const [form, setForm]             = useState({ ...EMPTY_FORM });
   const [saving, setSaving]         = useState(false);
   const [saveMsg, setSaveMsg]       = useState('');
+
+  const upd = (field: string) => (v: string) => setForm(f => ({ ...f, [field]: v }));
 
   const loadDirectorio = useCallback(async () => {
     setDirLoading(true);
@@ -124,9 +150,16 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
   const openNew = () => { setEditing(null); setForm({ ...EMPTY_FORM }); setFormOpen(true); };
   const openEdit = (e: DirEntry) => {
     setEditing(e);
-    setForm({ name: e.name, category: e.category, address: e.address, phone: e.phone,
-      email: e.email, description: e.description, website: e.website, hours: e.hours,
-      estado: e.estado, plan: e.plan, rnt: e.rnt, responsable: e.responsable });
+    setForm({
+      tipo_entrada: e.tipo_entrada || 'Negocio',
+      name: e.name, category: e.category, address: e.address,
+      phone: e.phone, email: e.email, description: e.description,
+      servicios: e.servicios || '', website: e.website,
+      instagram: e.instagram || '', facebook: e.facebook || '',
+      tiktok: e.tiktok || '', hours: e.hours, estado: e.estado,
+      plan: e.plan, rnt: e.rnt, responsable: e.responsable,
+      documentos: e.documentos || '',
+    });
     setFormOpen(true);
   };
   const closeForm = () => { setFormOpen(false); setEditing(null); setSaveMsg(''); };
@@ -135,7 +168,7 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
     if (!form.name.trim()) { setSaveMsg('El nombre es requerido'); return; }
     setSaving(true); setSaveMsg('');
     try {
-      const url  = editing ? `${API_BASE}/api/directory/${editing.id}` : `${API_BASE}/api/directory`;
+      const url    = editing ? `${API_BASE}/api/directory/${editing.id}` : `${API_BASE}/api/directory`;
       const method = editing ? 'PATCH' : 'POST';
       const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       const d = await r.json();
@@ -145,6 +178,16 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
     finally { setSaving(false); }
   };
 
+  const toggleDoc = (docName: string) => {
+    const list = form.documentos ? form.documentos.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const next = list.includes(docName) ? list.filter(x => x !== docName) : [...list, docName];
+    setForm(f => ({ ...f, documentos: next.join(', ') }));
+  };
+  const hasDoc = (docName: string) =>
+    form.documentos ? form.documentos.split(',').map(s => s.trim()).includes(docName) : false;
+
+  const categoriasActuales = form.tipo_entrada === 'Punto de Interés' ? CATEGORIAS_POI : CATEGORIAS_NEGOCIO;
+
   const filteredDir = dirList.filter(e => {
     const q = dirSearch.toLowerCase();
     const matchSearch = !q || e.name?.toLowerCase().includes(q) || e.responsable?.toLowerCase().includes(q);
@@ -152,10 +195,12 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
     return matchSearch && matchCat;
   });
 
+  const negociosCount = dirList.filter(e => (e.tipo_entrada || 'Negocio') === 'Negocio').length;
+  const poiCount      = dirList.filter(e => e.tipo_entrada === 'Punto de Interés').length;
+
   // ── Inscritos ─────────────────────────────────────────────────────────────────
   const [leads, setLeads]               = useState<Lead[]>([]);
   const [leadsLoading, setLeadsLoading] = useState(false);
-  const [leadsMsg, setLeadsMsg]         = useState('');
 
   const loadLeads = useCallback(async () => {
     setLeadsLoading(true);
@@ -172,18 +217,13 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
   const handleCrearDesdeInscrito = (lead: Lead) => {
     const det = parseDetalles(lead.detalles);
     setForm({
-      name:        det['NEGOCIO'] || lead.nombre,
-      category:    det['TIPO']    || 'General',
-      address:     '',
-      phone:       lead.whatsapp,
-      email:       '',
+      tipo_entrada: 'Negocio',
+      name: det['NEGOCIO'] || lead.nombre, category: det['TIPO'] || 'General',
+      address: '', phone: lead.whatsapp, email: '',
       description: det['CANAL'] ? `Canal actual: ${det['CANAL']}` : '',
-      website:     '',
-      hours:       '',
-      estado:      'pendiente',
-      plan:        det['PLAN_RECOMENDADO'] || '',
-      rnt:         '',
-      responsable: lead.nombre,
+      servicios: '', website: '', instagram: '', facebook: '', tiktok: '',
+      hours: '', estado: 'pendiente', plan: det['PLAN_RECOMENDADO'] || '',
+      rnt: '', responsable: lead.nombre, documentos: '',
     });
     setEditing(null);
     setTab('directorio');
@@ -191,37 +231,77 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
   };
 
   // ── Contenido ─────────────────────────────────────────────────────────────────
-  const [aliados, setAliados]           = useState<string[]>(ALIADOS_DEFAULT);
-  const [aliadosLoaded, setAliadosLoaded] = useState(false);
-  const [newAliado, setNewAliado]       = useState('');
-  const [contSaving, setContSaving]     = useState(false);
-  const [contMsg, setContMsg]           = useState('');
+  const [aliadosDestacados, setAliadosDestacados] = useState<string[]>(ALIADOS_DEFAULT);
+  const [newAliado, setNewAliado]                 = useState('');
+  const [contSaving, setContSaving]               = useState(false);
+  const [contMsg, setContMsg]                     = useState('');
+  const [contLoaded, setContLoaded]               = useState(false);
+
+  const PREGUNTAS_DEFAULT = [
+    { id: 'tipo',    texto: '¿Qué tipo de negocio tienes?',            opciones: ['Restaurante / bar', 'Hotel / alojamiento', 'Tour / excursión / buceo', 'Transporte (taxis, lanchas)', 'Tienda / artesanías', 'Experiencia cultural / música', 'Otro'] },
+    { id: 'canal',   texto: '¿Cómo consigues clientes hoy?',           opciones: ['Recomendaciones de boca en boca', 'Redes sociales (Instagram / TikTok)', 'Agencias / tour operadores', 'Sin canal digital definido'] },
+    { id: 'interes', texto: '¿Qué te interesa más de la red GuanaGO?', opciones: ['Solo quiero estar en el mapa', 'Me interesa recibir referidos de otros negocios', 'Quiero el paquete completo (crecer de verdad)'] },
+  ];
+  const [preguntas, setPreguntas]   = useState(PREGUNTAS_DEFAULT);
+  const [diagSaving, setDiagSaving] = useState(false);
+  const [diagMsg, setDiagMsg]       = useState('');
 
   useEffect(() => {
-    if (tab !== 'contenido' || aliadosLoaded) return;
+    if (tab !== 'contenido' || contLoaded) return;
     getDoc(doc(db, 'docs_content', 'vinculacion-config'))
       .then(snap => {
         if (snap.exists()) {
           const d = snap.data();
-          if (Array.isArray(d.aliadosDestacados)) setAliados(d.aliadosDestacados);
+          if (Array.isArray(d.aliadosDestacados) && d.aliadosDestacados.length > 0)
+            setAliadosDestacados(d.aliadosDestacados);
         }
-        setAliadosLoaded(true);
-      })
-      .catch(() => setAliadosLoaded(true));
-  }, [tab, aliadosLoaded]);
+        setContLoaded(true);
+      }).catch(() => setContLoaded(true));
+
+    getDoc(doc(db, 'docs_content', 'diagnostico-config'))
+      .then(snap => {
+        if (snap.exists()) {
+          const d = snap.data();
+          if (Array.isArray(d.preguntas) && d.preguntas.length > 0)
+            setPreguntas(d.preguntas);
+        }
+      }).catch(() => {});
+  }, [tab, contLoaded]);
 
   const saveContenido = async () => {
     setContSaving(true); setContMsg('');
     try {
       await setDoc(doc(db, 'docs_content', 'vinculacion-config'), {
-        aliadosDestacados: aliados,
+        aliadosDestacados,
         updatedAt: serverTimestamp(),
         updatedBy: auth.currentUser?.email || 'admin',
       });
-      setContMsg('✅ Guardado. Los cambios se verán en la página de vinculación.');
-    } catch { setContMsg('❌ Error al guardar en Firestore'); }
+      setContMsg('✅ Aliados guardados.');
+    } catch { setContMsg('❌ Error al guardar'); }
     finally { setContSaving(false); }
   };
+
+  const saveDiagnostico = async () => {
+    setDiagSaving(true); setDiagMsg('');
+    try {
+      await setDoc(doc(db, 'docs_content', 'diagnostico-config'), {
+        preguntas,
+        updatedAt: serverTimestamp(),
+        updatedBy: auth.currentUser?.email || 'admin',
+      });
+      setDiagMsg('✅ Preguntas guardadas. El formulario de diagnóstico las usará desde ahora.');
+    } catch { setDiagMsg('❌ Error al guardar'); }
+    finally { setDiagSaving(false); }
+  };
+
+  const updOpcion   = (pi: number, oi: number, val: string) =>
+    setPreguntas(ps => ps.map((p, i) => i !== pi ? p : { ...p, opciones: p.opciones.map((o, j) => j !== oi ? o : val) }));
+  const removeOpcion = (pi: number, oi: number) =>
+    setPreguntas(ps => ps.map((p, i) => i !== pi ? p : { ...p, opciones: p.opciones.filter((_, j) => j !== oi) }));
+  const addOpcion    = (pi: number) =>
+    setPreguntas(ps => ps.map((p, i) => i !== pi ? p : { ...p, opciones: [...p.opciones, 'Nueva opción'] }));
+  const updPregunta  = (pi: number, texto: string) =>
+    setPreguntas(ps => ps.map((p, i) => i !== pi ? p : { ...p, texto }));
 
   // ─── Render ────────────────────────────────────────────────────────────────────
   return (
@@ -235,7 +315,7 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
           </button>
           <div>
             <h1 className="text-lg font-black">Red de Aliados</h1>
-            <p className="text-xs text-gray-500">Directorio · Inscritos · Contenido landing</p>
+            <p className="text-xs text-gray-500">Directorio · Inscritos · Contenido</p>
           </div>
         </div>
       </header>
@@ -271,16 +351,16 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               <div className="relative flex-1">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <input value={dirSearch} onChange={e => setDirSearch(e.target.value)}
-                  placeholder="Buscar negocio..."
+                  placeholder="Buscar..."
                   className="w-full bg-gray-800 border border-gray-700 rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-teal-500 placeholder-gray-600" />
               </div>
               <select value={dirCat} onChange={e => setDirCat(e.target.value)}
                 className="bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
                 <option value="Todos">Todos</option>
-                {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
+                <optgroup label="Negocios">{CATEGORIAS_NEGOCIO.map(c => <option key={c}>{c}</option>)}</optgroup>
+                <optgroup label="POI">{CATEGORIAS_POI.map(c => <option key={c}>{c}</option>)}</optgroup>
               </select>
-              <button onClick={() => loadDirectorio()}
-                className="p-2 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-700 transition-colors">
+              <button onClick={loadDirectorio} className="p-2 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-700 transition-colors">
                 <RefreshCw size={16} className={dirLoading ? 'animate-spin text-teal-400' : 'text-gray-400'} />
               </button>
               <button onClick={openNew}
@@ -289,97 +369,166 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               </button>
             </div>
 
-            {/* Stats strip */}
+            {/* Stats */}
             <div className="flex gap-3 text-xs text-gray-500">
-              <span>{filteredDir.length} / {dirList.length} negocios</span>
+              <span>{filteredDir.length} / {dirList.length} total</span>
+              <span>·</span>
+              <span>{negociosCount} negocios</span>
+              <span>·</span>
+              <span>{poiCount} POI</span>
               <span>·</span>
               <span>{dirList.filter(e => e.plan === 'Activo' || e.plan === 'Premium').length} en mapa</span>
-              <span>·</span>
-              <span>{dirList.filter(e => e.plan === 'Premium').length} premium</span>
             </div>
 
             {/* List */}
             {dirLoading ? (
               <div className="flex justify-center py-16"><RefreshCw size={28} className="animate-spin text-teal-500" /></div>
             ) : filteredDir.length === 0 ? (
-              <div className="text-center py-12 text-gray-500 text-sm">
-                {dirSearch || dirCat !== 'Todos' ? 'Sin resultados para el filtro aplicado' : 'No hay negocios en el directorio'}
-              </div>
+              <div className="text-center py-12 text-gray-500 text-sm">Sin resultados</div>
             ) : (
               <div className="space-y-2">
-                {filteredDir.map(e => (
-                  <div key={e.id} className="bg-gray-800 border border-gray-700 rounded-xl p-3 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-gray-700 flex items-center justify-center shrink-0">
-                      <Store size={16} className="text-teal-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm truncate">{e.name}</p>
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-[10px] text-gray-500">{e.category}</span>
-                        {e.plan && (
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${PLAN_COLOR[e.plan] || 'bg-gray-700 text-gray-400'}`}>
-                            {e.plan}
-                          </span>
-                        )}
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${ESTADO_COLOR[e.estado] || 'bg-gray-700 text-gray-400'}`}>
-                          {e.estado}
-                        </span>
-                        {e.whatsapp && (
-                          <a href={`https://wa.me/${e.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer"
-                            className="text-green-400" onClick={ev => ev.stopPropagation()}>
-                            <MessageCircle size={12} />
-                          </a>
-                        )}
+                {filteredDir.map(e => {
+                  const isPOI = e.tipo_entrada === 'Punto de Interés';
+                  return (
+                    <div key={e.id} className="bg-gray-800 border border-gray-700 rounded-xl p-3 flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${isPOI ? 'bg-cyan-900/40' : 'bg-gray-700'}`}>
+                        {isPOI ? <MapPin size={16} className="text-cyan-400" /> : <Store size={16} className="text-teal-400" />}
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm truncate">{e.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          <span className="text-[10px] text-gray-500">{e.category}</span>
+                          {isPOI && <span className="text-[9px] bg-cyan-900/40 text-cyan-400 px-1.5 py-0.5 rounded-full font-bold">POI</span>}
+                          {e.plan && <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${PLAN_COLOR[e.plan] || 'bg-gray-700 text-gray-400'}`}>{e.plan}</span>}
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${ESTADO_COLOR[e.estado] || 'bg-gray-700 text-gray-400'}`}>{e.estado}</span>
+                          {e.instagram && <Instagram size={11} className="text-pink-400" />}
+                          {e.website && <Globe size={11} className="text-blue-400" />}
+                          {(e.whatsapp || e.phone) && (
+                            <a href={`https://wa.me/${(e.whatsapp || e.phone).replace(/\D/g, '')}`}
+                              target="_blank" rel="noreferrer"
+                              className="text-green-400" onClick={ev => ev.stopPropagation()}>
+                              <MessageCircle size={12} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <button onClick={() => openEdit(e)} className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors shrink-0">
+                        <Edit3 size={14} className="text-gray-400" />
+                      </button>
                     </div>
-                    <button onClick={() => openEdit(e)}
-                      className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors shrink-0">
-                      <Edit3 size={14} className="text-gray-400" />
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
             {/* Form modal */}
             {formOpen && (
               <div className="fixed inset-0 bg-black/80 z-50 flex items-end justify-center">
-                <div className="bg-gray-900 w-full max-w-lg rounded-t-3xl max-h-[92vh] overflow-y-auto">
+                <div className="bg-gray-900 w-full max-w-lg rounded-t-3xl max-h-[94vh] overflow-y-auto">
                   <div className="sticky top-0 bg-gray-900 px-5 pt-5 pb-3 border-b border-gray-800 flex items-center justify-between z-10">
-                    <h2 className="font-black text-base">{editing ? 'Editar negocio' : 'Agregar negocio'}</h2>
-                    <button onClick={closeForm} className="p-2 hover:bg-gray-800 rounded-xl">
-                      <X size={18} />
-                    </button>
+                    <h2 className="font-black text-base">{editing ? 'Editar registro' : 'Agregar registro'}</h2>
+                    <button onClick={closeForm} className="p-2 hover:bg-gray-800 rounded-xl"><X size={18} /></button>
                   </div>
-                  <div className="px-5 py-4 space-y-3">
-                    <FormField label="Nombre del negocio *" value={form.name} onChange={v => setForm(f => ({...f, name: v}))} placeholder="Ej: Bushi Food" />
-                    <div className="grid grid-cols-2 gap-3">
-                      <SelectField label="Categoría" value={form.category} onChange={v => setForm(f => ({...f, category: v}))} options={CATEGORIAS} />
-                      <SelectField label="Plan" value={form.plan} onChange={v => setForm(f => ({...f, plan: v}))} options={PLANES} />
+                  <div className="px-5 py-4 space-y-4">
+
+                    {/* Tipo de entrada */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-2">Tipo de registro</label>
+                      <div className="flex gap-2">
+                        {TIPO_ENTRADA.map(t => (
+                          <button key={t} onClick={() => setForm(f => ({
+                            ...f, tipo_entrada: t,
+                            category: t === 'Punto de Interés' ? 'Playa' : 'General',
+                          }))}
+                            className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-colors ${
+                              form.tipo_entrada === t
+                                ? t === 'Punto de Interés'
+                                  ? 'border-cyan-500 bg-cyan-900/30 text-cyan-300'
+                                  : 'border-teal-500 bg-teal-900/30 text-teal-300'
+                                : 'border-gray-700 text-gray-500 hover:border-gray-600'}`}>
+                            {t === 'Negocio' ? '🏪 Negocio' : '📍 Punto de Interés'}
+                          </button>
+                        ))}
+                      </div>
                     </div>
+
+                    <FormField label="Nombre *" value={form.name} onChange={upd('name')}
+                      placeholder={form.tipo_entrada === 'Negocio' ? 'Ej: Bushi Food' : 'Ej: Playa Spratt Bight'} />
+
                     <div className="grid grid-cols-2 gap-3">
-                      <FormField label="Teléfono / WhatsApp" value={form.phone} onChange={v => setForm(f => ({...f, phone: v}))} placeholder="+57 310..." />
-                      <FormField label="Email" value={form.email} onChange={v => setForm(f => ({...f, email: v}))} placeholder="correo@..." type="email" />
+                      <SelectField label="Categoría" value={form.category} onChange={upd('category')} options={categoriasActuales} />
+                      {form.tipo_entrada === 'Negocio'
+                        ? <SelectField label="Plan" value={form.plan} onChange={upd('plan')} options={PLANES} />
+                        : <SelectField label="Estado" value={form.estado} onChange={upd('estado')} options={ESTADOS} />
+                      }
                     </div>
-                    <FormField label="Dirección" value={form.address} onChange={v => setForm(f => ({...f, address: v}))} placeholder="Ej: Av. Colón #5-12" />
-                    <FormField label="Descripción" value={form.description} onChange={v => setForm(f => ({...f, description: v}))} placeholder="Breve descripción del negocio..." textarea />
+
                     <div className="grid grid-cols-2 gap-3">
-                      <FormField label="Horarios" value={form.hours} onChange={v => setForm(f => ({...f, hours: v}))} placeholder="Lun–Sab 8am–8pm" />
-                      <FormField label="RNT" value={form.rnt} onChange={v => setForm(f => ({...f, rnt: v}))} placeholder="Número RNT" />
+                      <FormField label="Teléfono / WhatsApp" value={form.phone} onChange={upd('phone')} placeholder="+57 310..." />
+                      <FormField label="Email" value={form.email} onChange={upd('email')} placeholder="correo@..." type="email" />
                     </div>
+
+                    <FormField label="Dirección" value={form.address} onChange={upd('address')} placeholder="Ej: Av. Colón #5-12" />
+                    <FormField label="Descripción" value={form.description} onChange={upd('description')} placeholder="Breve descripción..." textarea />
+
+                    {form.tipo_entrada === 'Negocio' && (
+                      <FormField label="Productos / Servicios" value={form.servicios} onChange={upd('servicios')}
+                        placeholder="Ej: Almuerzo ejecutivo, ceviche, jugos naturales..." textarea />
+                    )}
+
                     <div className="grid grid-cols-2 gap-3">
-                      <FormField label="Responsable" value={form.responsable} onChange={v => setForm(f => ({...f, responsable: v}))} placeholder="Nombre del encargado" />
-                      <SelectField label="Estado" value={form.estado} onChange={v => setForm(f => ({...f, estado: v}))} options={ESTADOS} />
+                      <FormField label="Horarios" value={form.hours} onChange={upd('hours')} placeholder="Lun–Sab 8am–8pm" />
+                      {form.tipo_entrada === 'Negocio' && (
+                        <FormField label="RNT" value={form.rnt} onChange={upd('rnt')} placeholder="Número RNT" />
+                      )}
                     </div>
-                    <FormField label="Sitio web" value={form.website} onChange={v => setForm(f => ({...f, website: v}))} placeholder="https://..." type="url" />
+
+                    <FormField label="Sitio web" value={form.website} onChange={upd('website')} placeholder="https://..." type="url" />
+
+                    {form.tipo_entrada === 'Negocio' && (
+                      <div className="grid grid-cols-3 gap-2">
+                        <FormField label="Instagram" value={form.instagram} onChange={upd('instagram')} placeholder="@usuario" />
+                        <FormField label="Facebook"  value={form.facebook}  onChange={upd('facebook')}  placeholder="@pagina"  />
+                        <FormField label="TikTok"    value={form.tiktok}    onChange={upd('tiktok')}    placeholder="@usuario" />
+                      </div>
+                    )}
+
+                    {form.tipo_entrada === 'Negocio' && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField label="Responsable" value={form.responsable} onChange={upd('responsable')} placeholder="Nombre del encargado" />
+                        <SelectField label="Estado" value={form.estado} onChange={upd('estado')} options={ESTADOS} />
+                      </div>
+                    )}
+
+                    {/* Documentos recibidos */}
+                    {form.tipo_entrada === 'Negocio' && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-400 mb-2">Documentos recibidos</label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {DOCS_CHECKLIST.map(d => (
+                            <button key={d} onClick={() => toggleDoc(d)}
+                              className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border text-xs text-left transition-colors ${
+                                hasDoc(d)
+                                  ? 'border-teal-600/60 bg-teal-900/20 text-teal-300'
+                                  : 'border-gray-700 text-gray-500 hover:border-gray-600'}`}>
+                              {hasDoc(d)
+                                ? <CheckSquare size={13} className="text-teal-400 shrink-0" />
+                                : <Square size={13} className="text-gray-600 shrink-0" />}
+                              {d}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {saveMsg && (
                       <p className={`text-sm font-medium ${saveMsg.startsWith('✅') ? 'text-green-400' : 'text-red-400'}`}>{saveMsg}</p>
                     )}
+
                     <button onClick={handleSave} disabled={saving}
                       className="w-full py-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors">
                       {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-                      {saving ? 'Guardando...' : editing ? 'Guardar cambios' : 'Crear en directorio'}
+                      {saving ? 'Guardando...' : editing ? 'Guardar cambios' : 'Crear registro'}
                     </button>
                   </div>
                 </div>
@@ -394,15 +543,12 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-sm">Diagnósticos recibidos</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Formulario "Hacer mi diagnóstico" desde guanago.travel</p>
+                <p className="text-xs text-gray-500 mt-0.5">Formulario "Hacer mi diagnóstico" desde la landing</p>
               </div>
-              <button onClick={loadLeads}
-                className="p-2 hover:bg-gray-800 rounded-xl transition-colors">
+              <button onClick={loadLeads} className="p-2 hover:bg-gray-800 rounded-xl transition-colors">
                 <RefreshCw size={16} className={leadsLoading ? 'animate-spin text-teal-400' : 'text-gray-400'} />
               </button>
             </div>
-
-            {leadsMsg && <p className="text-sm text-green-400">{leadsMsg}</p>}
 
             {leadsLoading ? (
               <div className="flex justify-center py-12"><RefreshCw size={24} className="animate-spin text-orange-500" /></div>
@@ -410,7 +556,6 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
               <div className="text-center py-12 bg-gray-800/40 rounded-xl border border-gray-700">
                 <ClipboardList size={40} className="mx-auto text-gray-600 mb-3" />
                 <p className="text-gray-400 text-sm font-medium">Sin diagnósticos aún</p>
-                <p className="text-gray-600 text-xs mt-1">Cuando alguien use el formulario aparecerá aquí</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -429,16 +574,17 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
                           </span>
                         </div>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-400 mt-2">
-                          {det['TIPO']              && <p>Tipo: <span className="text-gray-300">{det['TIPO']}</span></p>}
-                          {det['CANAL']             && <p>Canal: <span className="text-gray-300">{det['CANAL']}</span></p>}
-                          {det['TEMPORADA_BAJA']    && <p>Temporada baja: <span className="text-gray-300">{det['TEMPORADA_BAJA']}</span></p>}
-                          {det['PLAN_RECOMENDADO']  && (
-                            <p>Plan recomendado: <span className={`font-bold ${det['PLAN_RECOMENDADO'] === 'Premium' ? 'text-indigo-400' : det['PLAN_RECOMENDADO'] === 'Aliado Activo' ? 'text-orange-400' : 'text-teal-400'}`}>{det['PLAN_RECOMENDADO']}</span></p>
+                          {det['TIPO']             && <p>Tipo: <span className="text-gray-300">{det['TIPO']}</span></p>}
+                          {det['CANAL']            && <p>Canal: <span className="text-gray-300">{det['CANAL']}</span></p>}
+                          {det['TEMPORADA_BAJA']   && <p>Temporada baja: <span className="text-gray-300">{det['TEMPORADA_BAJA']}</span></p>}
+                          {det['PLAN_RECOMENDADO'] && (
+                            <p>Plan: <span className={`font-bold ${
+                              det['PLAN_RECOMENDADO'] === 'Aliado Premium' ? 'text-indigo-400'
+                              : det['PLAN_RECOMENDADO'] === 'Aliado Activo' ? 'text-orange-400'
+                              : 'text-teal-400'}`}>{det['PLAN_RECOMENDADO']}</span></p>
                           )}
                         </div>
-                        {lead.whatsapp && (
-                          <p className="text-xs text-gray-400 mt-1.5">📞 {lead.whatsapp}</p>
-                        )}
+                        {lead.whatsapp && <p className="text-xs text-gray-400 mt-1.5">📞 {lead.whatsapp}</p>}
                       </div>
                       <div className="flex border-t border-gray-700">
                         <button onClick={() => handleCrearDesdeInscrito(lead)}
@@ -464,54 +610,107 @@ const AdminRedAliados: React.FC<Props> = ({ onBack, onNavigate }) => {
 
         {/* ── TAB: CONTENIDO ──────────────────────────────────────────────────── */}
         {tab === 'contenido' && (
-          <div className="space-y-5">
-            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+          <div className="space-y-6">
+
+            {/* Aliados destacados */}
+            <div>
               <h3 className="font-bold text-sm mb-1">Negocios destacados en la landing</h3>
-              <p className="text-xs text-gray-500">Estos nombres aparecen en la sección "Negocios que ya están en la red" de la página <strong>Vincular tu negocio</strong>.</p>
-            </div>
-
-            {/* Lista editable */}
-            <div className="space-y-2">
-              {aliados.map((a, i) => (
-                <div key={i} className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5">
-                  <MapPin size={14} className="text-teal-400 shrink-0" />
-                  <input value={a} onChange={e => setAliados(prev => prev.map((x, j) => j === i ? e.target.value : x))}
-                    className="flex-1 bg-transparent text-sm text-white focus:outline-none placeholder-gray-600" />
-                  <button onClick={() => setAliados(prev => prev.filter((_, j) => j !== i))}
-                    className="p-1 hover:bg-gray-700 rounded-lg text-gray-500 hover:text-red-400 transition-colors shrink-0">
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Agregar */}
-            <div className="flex gap-2">
-              <input value={newAliado} onChange={e => setNewAliado(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && newAliado.trim()) { setAliados(p => [...p, newAliado.trim()]); setNewAliado(''); } }}
-                placeholder="Nombre del negocio..."
-                className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-teal-500 text-white placeholder-gray-600" />
-              <button
-                onClick={() => { if (newAliado.trim()) { setAliados(p => [...p, newAliado.trim()]); setNewAliado(''); } }}
-                disabled={!newAliado.trim()}
-                className="px-4 py-2.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 rounded-xl text-sm font-bold text-white transition-colors">
-                <Plus size={16} />
+              <p className="text-xs text-gray-500 mb-3">Aparecen como chips en "Negocios que ya están en la red"</p>
+              <div className="space-y-2">
+                {aliadosDestacados.map((a, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5">
+                    <MapPin size={14} className="text-teal-400 shrink-0" />
+                    <input value={a} onChange={e => setAliadosDestacados(prev => prev.map((x, j) => j === i ? e.target.value : x))}
+                      className="flex-1 bg-transparent text-sm text-white focus:outline-none" />
+                    <button onClick={() => setAliadosDestacados(prev => prev.filter((_, j) => j !== i))}
+                      className="p-1 hover:bg-gray-700 rounded-lg text-gray-500 hover:text-red-400 transition-colors shrink-0">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 mt-2">
+                <input value={newAliado} onChange={e => setNewAliado(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && newAliado.trim()) { setAliadosDestacados(p => [...p, newAliado.trim()]); setNewAliado(''); } }}
+                  placeholder="Nombre del negocio..."
+                  className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-teal-500 text-white placeholder-gray-600" />
+                <button onClick={() => { if (newAliado.trim()) { setAliadosDestacados(p => [...p, newAliado.trim()]); setNewAliado(''); } }}
+                  disabled={!newAliado.trim()}
+                  className="px-4 py-2.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 rounded-xl text-sm font-bold text-white transition-colors">
+                  <Plus size={16} />
+                </button>
+              </div>
+              {contMsg && <p className={`text-sm font-medium mt-2 ${contMsg.startsWith('✅') ? 'text-green-400' : 'text-red-400'}`}>{contMsg}</p>}
+              <button onClick={saveContenido} disabled={contSaving}
+                className="w-full py-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors mt-3">
+                {contSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+                {contSaving ? 'Guardando...' : 'Guardar aliados destacados'}
               </button>
             </div>
 
-            {contMsg && (
-              <p className={`text-sm font-medium ${contMsg.startsWith('✅') ? 'text-green-400' : 'text-red-400'}`}>{contMsg}</p>
-            )}
+            {/* Diagnóstico editable */}
+            <div className="border-t border-gray-800 pt-5">
+              <h3 className="font-bold text-sm mb-1">Preguntas del diagnóstico</h3>
+              <p className="text-xs text-gray-500 mb-3">Edita el formulario "Hacer mi diagnóstico" para aliados</p>
+              <div className="space-y-4">
+                {preguntas.map((p, pi) => (
+                  <div key={p.id} className="bg-gray-800/60 border border-gray-700 rounded-xl p-4 space-y-2">
+                    <input value={p.texto} onChange={e => updPregunta(pi, e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:border-teal-500 text-white" />
+                    <div className="space-y-1.5 pl-1">
+                      {p.opciones.map((o, oi) => (
+                        <div key={oi} className="flex items-center gap-2">
+                          <Hash size={12} className="text-gray-600 shrink-0" />
+                          <input value={o} onChange={e => updOpcion(pi, oi, e.target.value)}
+                            className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-teal-500 text-white" />
+                          <button onClick={() => removeOpcion(pi, oi)}
+                            className="p-1 text-gray-600 hover:text-red-400 transition-colors shrink-0">
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                      <button onClick={() => addOpcion(pi)}
+                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-teal-400 transition-colors pl-5 py-1">
+                        <Plus size={11} /> Agregar opción
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {diagMsg && <p className={`text-sm font-medium mt-2 ${diagMsg.startsWith('✅') ? 'text-green-400' : 'text-red-400'}`}>{diagMsg}</p>}
+              <button onClick={saveDiagnostico} disabled={diagSaving}
+                className="w-full py-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors mt-3">
+                {diagSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+                {diagSaving ? 'Guardando...' : 'Guardar preguntas del diagnóstico'}
+              </button>
+            </div>
 
-            <button onClick={saveContenido} disabled={contSaving}
-              className="w-full py-4 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors">
-              {contSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-              {contSaving ? 'Guardando...' : 'Guardar cambios en la landing'}
-            </button>
+            {/* Documentos & Kits */}
+            <div className="border-t border-gray-800 pt-5">
+              <h3 className="font-bold text-sm mb-1">Documentos & Kits de aliados</h3>
+              <p className="text-xs text-gray-500 mb-3">Contratos, kits de bienvenida y material impreso para aliados.</p>
+              <button onClick={() => { onBack(); setTimeout(() => onNavigate(AppRoute.ADMIN_ALIADOS), 50); }}
+                className="w-full flex items-center gap-4 bg-gray-800/50 border border-gray-700 rounded-2xl p-4 hover:bg-gray-800 transition-colors text-left">
+                <FileText size={24} className="text-purple-400 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-bold text-sm">Ir a Documentos & Kits</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Sección en el panel de Aliados</p>
+                </div>
+                <ChevronRight size={16} className="text-gray-600 shrink-0" />
+              </button>
+            </div>
 
-            <p className="text-xs text-gray-600 text-center">
-              Los cambios se reflejan en guanago.travel en la próxima carga de la página.
-            </p>
+            {/* Fotos */}
+            <div className="border-t border-gray-800 pt-5">
+              <div className="flex items-center gap-3 bg-gray-800/40 border border-dashed border-gray-700 rounded-xl p-4">
+                <Camera size={20} className="text-gray-600 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-gray-400">Fotos de negocios</p>
+                  <p className="text-xs text-gray-600 mt-0.5">Se gestionan directamente en el campo <code className="bg-gray-700 px-1 rounded text-[10px]">Imagen</code> en Airtable → Directorio_Mapa.</p>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
 

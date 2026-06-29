@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, ChevronRight, CheckCircle, MessageCircle,
   Store, MapPin, Zap, Crown, QrCode, RefreshCw,
 } from 'lucide-react';
 import { AppRoute } from '../types';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 interface Props {
   onBack: () => void;
   onNavigate: (route: AppRoute) => void;
 }
 
-const TIPOS_NEGOCIO = [
+const TIPOS_NEGOCIO_DEFAULT = [
   'Restaurante / bar',
   'Hotel / alojamiento',
   'Tour / excursión / buceo',
@@ -20,14 +22,14 @@ const TIPOS_NEGOCIO = [
   'Otro',
 ];
 
-const CANALES = [
+const CANALES_DEFAULT = [
   'Recomendaciones de boca en boca',
   'Redes sociales (Instagram / TikTok)',
   'Agencias / tour operadores',
   'Sin canal digital definido',
 ];
 
-const INTERESES = [
+const INTERESES_DEFAULT = [
   { value: 'mapa',      label: 'Solo quiero estar en el mapa' },
   { value: 'referidos', label: 'Me interesa recibir referidos de otros negocios' },
   { value: 'completo',  label: 'Quiero el paquete completo (crecer de verdad)' },
@@ -92,6 +94,30 @@ const AliadoDiagnostico: React.FC<Props> = ({ onBack, onNavigate }) => {
   const [ref, setRef] = useState('');
   const [planResult, setPlanResult] = useState<'basico' | 'activo' | 'premium'>('activo');
 
+  const [tiposNegocio, setTiposNegocio] = useState(TIPOS_NEGOCIO_DEFAULT);
+  const [canales, setCanales]           = useState(CANALES_DEFAULT);
+  const [intereses, setIntereses]       = useState(INTERESES_DEFAULT);
+
+  useEffect(() => {
+    getDoc(doc(db, 'docs_content', 'diagnostico-config'))
+      .then(snap => {
+        if (!snap.exists()) return;
+        const d = snap.data();
+        if (!Array.isArray(d.preguntas)) return;
+        for (const p of d.preguntas) {
+          if (p.id === 'tipo'    && p.opciones?.length) setTiposNegocio(p.opciones);
+          if (p.id === 'canal'   && p.opciones?.length) setCanales(p.opciones);
+          if (p.id === 'interes' && p.opciones?.length) {
+            setIntereses(p.opciones.map((o: string) => {
+              const found = INTERESES_DEFAULT.find(x => x.label === o);
+              return found ?? { value: o.toLowerCase().replace(/\s+/g, '_'), label: o };
+            }));
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const formCompleto = tipo && canal && temporada !== null && interes && nombre && whatsapp;
 
   const handleEnviar = async () => {
@@ -104,7 +130,7 @@ const AliadoDiagnostico: React.FC<Props> = ({ onBack, onNavigate }) => {
       `TIPO: ${tipo}`,
       `CANAL: ${canal}`,
       `TEMPORADA_BAJA: ${temporada ? 'Sí' : 'No'}`,
-      `INTERES: ${INTERESES.find(i => i.value === interes)?.label}`,
+      `INTERES: ${intereses.find(i => i.value === interes)?.label ?? interes}`,
       `NEGOCIO: ${negocio}`,
       `PLAN_RECOMENDADO: ${PLAN_INFO[plan].nombre}`,
     ].join('\n');
@@ -178,7 +204,7 @@ const AliadoDiagnostico: React.FC<Props> = ({ onBack, onNavigate }) => {
           <div>
             <p className="text-sm font-bold mb-3">1. ¿Qué tipo de negocio tienes?</p>
             <div className="grid grid-cols-2 gap-2">
-              {TIPOS_NEGOCIO.map(t => (
+              {tiposNegocio.map(t => (
                 <button
                   key={t}
                   onClick={() => setTipo(t)}
@@ -198,7 +224,7 @@ const AliadoDiagnostico: React.FC<Props> = ({ onBack, onNavigate }) => {
           <div>
             <p className="text-sm font-bold mb-3">2. ¿Cómo consigues clientes hoy?</p>
             <div className="space-y-2">
-              {CANALES.map(c => (
+              {canales.map(c => (
                 <button
                   key={c}
                   onClick={() => setCanal(c)}
@@ -241,7 +267,7 @@ const AliadoDiagnostico: React.FC<Props> = ({ onBack, onNavigate }) => {
           <div>
             <p className="text-sm font-bold mb-3">4. ¿Qué te interesa más de la red GuanaGO?</p>
             <div className="space-y-2">
-              {INTERESES.map(i => (
+              {intereses.map(i => (
                 <button
                   key={i.value}
                   onClick={() => setInteres(i.value)}

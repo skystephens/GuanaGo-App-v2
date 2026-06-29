@@ -48,6 +48,7 @@ function normalizeRecord(r) {
     raizal:      f.Raizal_Owned === true || f.Raizal === true,
     name:        f.Nombre       ?? f.Name        ?? '',
     category:    f.Categoria    ?? f.Category    ?? 'General',
+    tipo_entrada: f.Tipo_Entrada ?? 'Negocio',
     latitude:    lat,
     longitude:   lng,
     lat,
@@ -57,7 +58,11 @@ function normalizeRecord(r) {
     email:       f.Email        ?? f.Correo      ?? '',
     hours:       f.Horario      ?? f.Hours       ?? '',
     description: f.Descripcion  ?? f.Description ?? '',
+    servicios:   f.Servicios    ?? f.Productos_Servicios ?? '',
     website:     f.Website      ?? '',
+    instagram:   f.Instagram    ?? '',
+    facebook:    f.Facebook     ?? '',
+    tiktok:      f.TikTok       ?? '',
     rating:      Number(f.Rating ?? f.Calificacion ?? 0),
     image,
     price:       Number(f.Precio ?? f.Price ?? 0),
@@ -66,6 +71,7 @@ function normalizeRecord(r) {
     plan:        f.Plan         ?? f.Membresia   ?? '',
     rnt:         f.RNT          ?? '',
     responsable: f.Responsable  ?? f.Contacto    ?? '',
+    documentos:  f.Documentos_Recibidos ?? '',
   };
 }
 
@@ -251,25 +257,35 @@ export const createPlace = async (req, res, next) => {
       return res.status(503).json({ success: false, error: 'Airtable no configurado' });
     }
 
-    const { name, category, address, phone, email, description, website, hours, estado, plan, rnt, responsable } = req.body;
+    const {
+      name, category, tipo_entrada, address, phone, email, description,
+      servicios, website, instagram, facebook, tiktok, hours,
+      estado, plan, rnt, responsable, documentos,
+    } = req.body;
 
     if (!name) {
       return res.status(400).json({ success: false, error: 'El campo "name" es requerido' });
     }
 
     const fields = {
-      Nombre:      name,
-      Categoria:   category    || 'General',
-      Direccion:   address     || '',
-      Telefono:    phone       || '',
-      Email:       email       || '',
-      Descripcion: description || '',
-      Website:     website     || '',
-      Horario:     hours       || '',
-      Estado:      estado      || 'activo',
-      Plan:        plan        || '',
-      RNT:         rnt         || '',
-      Responsable: responsable || '',
+      Nombre:               name,
+      Categoria:            category      || 'General',
+      Tipo_Entrada:         tipo_entrada  || 'Negocio',
+      Direccion:            address       || '',
+      Telefono:             phone         || '',
+      Email:                email         || '',
+      Descripcion:          description   || '',
+      Servicios:            servicios     || '',
+      Website:              website       || '',
+      Instagram:            instagram     || '',
+      Facebook:             facebook      || '',
+      TikTok:               tiktok        || '',
+      Horario:              hours         || '',
+      Estado:               estado        || 'activo',
+      Plan:                 plan          || '',
+      RNT:                  rnt           || '',
+      Responsable:          responsable   || '',
+      Documentos_Recibidos: documentos    || '',
     };
 
     const atRes = await fetch(`${AT_URL}/${baseId}/${encodeURIComponent(TABLE)}`, {
@@ -306,21 +322,31 @@ export const updatePlace = async (req, res, next) => {
     }
 
     const { id } = req.params;
-    const { name, category, address, phone, email, description, website, hours, estado, plan, rnt, responsable } = req.body;
+    const {
+      name, category, tipo_entrada, address, phone, email, description,
+      servicios, website, instagram, facebook, tiktok, hours,
+      estado, plan, rnt, responsable, documentos,
+    } = req.body;
 
     const fields = {};
-    if (name        !== undefined) fields.Nombre      = name;
-    if (category    !== undefined) fields.Categoria   = category;
-    if (address     !== undefined) fields.Direccion   = address;
-    if (phone       !== undefined) fields.Telefono    = phone;
-    if (email       !== undefined) fields.Email       = email;
-    if (description !== undefined) fields.Descripcion = description;
-    if (website     !== undefined) fields.Website     = website;
-    if (hours       !== undefined) fields.Horario     = hours;
-    if (estado      !== undefined) fields.Estado      = estado;
-    if (plan        !== undefined) fields.Plan        = plan;
-    if (rnt         !== undefined) fields.RNT         = rnt;
-    if (responsable !== undefined) fields.Responsable = responsable;
+    if (name         !== undefined) fields.Nombre               = name;
+    if (category     !== undefined) fields.Categoria            = category;
+    if (tipo_entrada !== undefined) fields.Tipo_Entrada         = tipo_entrada;
+    if (address      !== undefined) fields.Direccion            = address;
+    if (phone        !== undefined) fields.Telefono             = phone;
+    if (email        !== undefined) fields.Email                = email;
+    if (description  !== undefined) fields.Descripcion          = description;
+    if (servicios    !== undefined) fields.Servicios             = servicios;
+    if (website      !== undefined) fields.Website              = website;
+    if (instagram    !== undefined) fields.Instagram            = instagram;
+    if (facebook     !== undefined) fields.Facebook             = facebook;
+    if (tiktok       !== undefined) fields.TikTok               = tiktok;
+    if (hours        !== undefined) fields.Horario              = hours;
+    if (estado       !== undefined) fields.Estado               = estado;
+    if (plan         !== undefined) fields.Plan                 = plan;
+    if (rnt          !== undefined) fields.RNT                  = rnt;
+    if (responsable  !== undefined) fields.Responsable          = responsable;
+    if (documentos   !== undefined) fields.Documentos_Recibidos = documentos;
 
     const atRes = await fetch(`${AT_URL}/${baseId}/${encodeURIComponent(TABLE)}/${id}`, {
       method: 'PATCH',
