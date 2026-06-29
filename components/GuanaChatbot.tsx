@@ -103,7 +103,7 @@ const GuanaChatbot: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-24 right-4 md:right-8 lg:right-12 z-50 pointer-events-none font-sans">
+    <div className="fixed bottom-40 right-4 md:right-8 lg:right-12 z-50 pointer-events-none font-sans">
       <div className="relative pointer-events-auto">
         {!isOpen && (
           <button

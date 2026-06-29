@@ -117,8 +117,7 @@ import UserProfileButton from './components/UserProfileButton';
 
 import Navigation from './components/Navigation';
 import LanguageSelector from './components/LanguageSelector';
-// GuanaChatbot desactivado temporalmente (en revisión) — re-habilitar cuando esté listo
-// import GuanaChatbot from './components/GuanaChatbot';
+import GuanaChatbot from './components/GuanaChatbot';
 import CotizadorB2C from './components/CotizadorB2C';
 import CartFloatingBar from './components/CartFloatingBar';
 import DirectoryMapbox from './components/DirectoryMapbox';
@@ -405,16 +404,16 @@ const App: React.FC = () => {
         )}
 
         {['tourist', 'Turista', 'Local'].includes(userRole) && (
-          <>
-            <CartFloatingBar onNavigate={navigateTo} isAuthenticated={isAuthenticated} />
-            {/* <GuanaChatbot /> — desactivado temporalmente, disponible en panel admin */}
-          </>
+          <CartFloatingBar onNavigate={navigateTo} isAuthenticated={isAuthenticated} />
         )}
 
-        {/* Cotizador B2C — visible para visitantes anónimos y turistas */}
+        {/* Cotizador B2C + Chat Atención — visible para visitantes anónimos y turistas */}
         {(!isAuthenticated || ['tourist', 'Turista', 'Local', 'Residente'].includes(userRole as string)) &&
           !['partner', 'admin', 'superadmin', 'SuperAdmin', 'Socio', 'Aliado', 'Operador', 'Artista'].includes(userRole as string) && (
-          <CotizadorB2C onNavigate={navigateTo} />
+          <>
+            <GuanaChatbot />
+            <CotizadorB2C onNavigate={navigateTo} />
+          </>
         )}
 
         {/* Preview mode floating bar */}
