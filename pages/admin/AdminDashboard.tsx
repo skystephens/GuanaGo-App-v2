@@ -325,6 +325,9 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
       { icon: <Trophy size={18} />, label: 'Dinámicas', route: AppRoute.ADMIN_DINAMICAS },
       { icon: <Map size={18} />, label: 'Zonas Taxi', route: AppRoute.ADMIN_TAXI_ZONE_EDITOR },
     ]},
+    { label: 'HERRAMIENTAS', items: [
+      { icon: <Settings size={18} />, label: 'Herramientas', route: AppRoute.ADMIN_HERRAMIENTAS },
+    ]},
   ];
 
   return (
@@ -608,6 +611,19 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
                 onClick={() => onNavigate(AppRoute.ADMIN_ARTISTAS)}
                 pulse="bg-pink-500" gradient="from-purple-900/60 to-pink-900/60" border="border-purple-700 hover:border-purple-500" />
             </div>
+          </Section>
+
+          {/* ── 5. Herramientas ── */}
+          <Section label="Herramientas" color="indigo">
+            <BigButton
+              label="Herramientas del Proyecto"
+              sub="Mapa Mental · Lean Canvas · Backend · Torre de Control · Estado del Proyecto"
+              icon={<Settings size={20} className="text-sky-400" />}
+              gradient="from-sky-950 via-blue-950 to-sky-950"
+              border="border-sky-700 hover:border-sky-400"
+              pulse="bg-sky-400"
+              onClick={() => onNavigate(AppRoute.ADMIN_HERRAMIENTAS)}
+            />
           </Section>
 
           {/* ── 4. Hub de trabajo ── */}
