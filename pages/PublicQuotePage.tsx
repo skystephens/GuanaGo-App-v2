@@ -526,7 +526,7 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
                 <h2 className="text-sm font-bold text-white flex items-center gap-2">
                   Opción {op}
                 </h2>
-                {opTotal > 0 && config.showTotal && (
+                {opTotal > 0 && config.showOptionTotals && (
                   <span className="text-white font-bold text-sm">{fmtCOP(opTotal)}</span>
                 )}
               </div>
@@ -535,7 +535,7 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
                   <ItemRow key={item.id} item={item} services={services} />
                 ))}
               </div>
-              {opTotal > 0 && config.showTotal && (
+              {opTotal > 0 && config.showOptionTotals && (
                 <div className="mx-5 mb-4 mt-2 bg-white rounded-xl border border-current p-3 flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-600">
                     Subtotal Opción {op}

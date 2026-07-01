@@ -473,12 +473,14 @@ export interface Cotizacion {
 
 /** Configuración de visualización de la cotización pública */
 export interface QuoteDisplayConfig {
-  showTotal: boolean;   // Mostrar resumen financiero / total al cliente
-  showMap:   boolean;   // Mostrar botón "Ver en Mapa"
+  showTotal:        boolean;   // Mostrar resumen financiero / gran total al cliente
+  showOptionTotals: boolean;   // Mostrar subtotal de cada opción (A/B/C/D) por separado
+  showMap:          boolean;   // Mostrar botón "Ver en Mapa"
 }
 
 export const DEFAULT_QUOTE_DISPLAY_CONFIG: QuoteDisplayConfig = {
   showTotal: true,
+  showOptionTotals: true,
   showMap:   true,
 };
 

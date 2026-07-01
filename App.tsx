@@ -155,8 +155,9 @@ const App: React.FC = () => {
     if (cotId) {
       setPublicCotId(cotId);
       setPublicQuoteCfg({
-        showTotal: params.get('showTotal') !== '0',
-        showMap:   params.get('showMap')   !== '0',
+        showTotal:        params.get('showTotal')        !== '0',
+        showOptionTotals: params.get('showOptionTotals') !== '0',
+        showMap:          params.get('showMap')           !== '0',
       });
       setPublicPrintMode(params.get('pdf') === '1');
       setCurrentRoute(AppRoute.PUBLIC_QUOTE);

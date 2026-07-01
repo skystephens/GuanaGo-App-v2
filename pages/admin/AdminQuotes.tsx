@@ -297,6 +297,8 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   // Filtro por estado en lista
   const [filterEstado, setFilterEstado] = useState<string>('all');
+  // Orden de la lista por fecha de última realización (creación)
+  const [sortOrder, setSortOrder] = useState<'recent' | 'oldest'>('recent');
   // Panel CRM / Seguimiento
   const [crmNote, setCrmNote] = useState('');
   const [savingCrmNote, setSavingCrmNote] = useState(false);
@@ -1046,14 +1048,14 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const handleDownloadPDF = () => {
     if (!selectedCotizacion) return;
     const base = window.location.origin + window.location.pathname;
-    const url = `${base}?cot=${selectedCotizacion.id}&showTotal=${displayConfig.showTotal ? '1' : '0'}&showMap=${displayConfig.showMap ? '1' : '0'}&pdf=1`;
+    const url = `${base}?cot=${selectedCotizacion.id}&showTotal=${displayConfig.showTotal ? '1' : '0'}&showOptionTotals=${displayConfig.showOptionTotals ? '1' : '0'}&showMap=${displayConfig.showMap ? '1' : '0'}&pdf=1`;
     window.open(url, '_blank');
   };
 
   const handlePreview = () => {
     if (!selectedCotizacion) return;
     const base = window.location.origin + window.location.pathname;
-    const url = `${base}?cot=${selectedCotizacion.id}&showTotal=${displayConfig.showTotal ? '1' : '0'}&showMap=${displayConfig.showMap ? '1' : '0'}`;
+    const url = `${base}?cot=${selectedCotizacion.id}&showTotal=${displayConfig.showTotal ? '1' : '0'}&showOptionTotals=${displayConfig.showOptionTotals ? '1' : '0'}&showMap=${displayConfig.showMap ? '1' : '0'}`;
     window.open(url, '_blank');
   };
 
@@ -1190,6 +1192,31 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 </button>
               )}
             </div>
+            {/* Orden por fecha de última realización */}
+            {cotizaciones.length > 0 && (
+              <div className="flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-gray-500" />
+                <span className="text-xs text-gray-500">Ordenar:</span>
+                <div className="flex items-center gap-1.5">
+                  {([
+                    { key: 'recent', label: 'Más recientes' },
+                    { key: 'oldest', label: 'Más antiguas' },
+                  ] as const).map(o => (
+                    <button
+                      key={o.key}
+                      onClick={() => setSortOrder(o.key)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                        sortOrder === o.key
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {/* Filtros por origen */}
             {cotizaciones.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
@@ -1271,6 +1298,11 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                   if (filterEstado === 'all') return true;
                   const est = (c.estado as string);
                   return est === filterEstado || est === filterEstado.toLowerCase();
+                })
+                .sort((a, b) => {
+                  const dateA = a.fechaCreacion ? new Date(a.fechaCreacion).getTime() : 0;
+                  const dateB = b.fechaCreacion ? new Date(b.fechaCreacion).getTime() : 0;
+                  return sortOrder === 'recent' ? dateB - dateA : dateA - dateB;
                 });
 
               if (loading) return (
@@ -1797,7 +1829,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
               </button>
               <button onClick={() => {
                 const base = window.location.origin + window.location.pathname;
-                const url = `${base}?cot=${selectedCotizacion?.id}&showTotal=${displayConfig.showTotal ? '1' : '0'}&showMap=${displayConfig.showMap ? '1' : '0'}`;
+                const url = `${base}?cot=${selectedCotizacion?.id}&showTotal=${displayConfig.showTotal ? '1' : '0'}&showOptionTotals=${displayConfig.showOptionTotals ? '1' : '0'}&showMap=${displayConfig.showMap ? '1' : '0'}`;
                 navigator.clipboard.writeText(url).then(() => alert('✅ Link copiado:\n' + url));
               }}
                 className="flex items-center gap-2 px-3 py-2 bg-purple-700 hover:bg-purple-600 rounded-lg transition-colors font-medium text-sm">
@@ -1835,6 +1867,15 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${displayConfig.showTotal ? 'translate-x-4' : 'translate-x-0.5'}`} />
               </div>
               <span className="text-xs text-gray-300">Mostrar total / resumen financiero</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <div
+                onClick={() => setDisplayConfig(c => ({ ...c, showOptionTotals: !c.showOptionTotals }))}
+                className={`w-9 h-5 rounded-full transition-colors relative ${displayConfig.showOptionTotals ? 'bg-emerald-500' : 'bg-gray-700'}`}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${displayConfig.showOptionTotals ? 'translate-x-4' : 'translate-x-0.5'}`} />
+              </div>
+              <span className="text-xs text-gray-300">Mostrar total por opción (A/B/C/D)</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <div
