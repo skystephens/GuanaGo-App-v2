@@ -825,7 +825,6 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                   if (filtroVistaMar  && !a.vistaAlMar)    return false;
                   if (filtroCocina    && !a.tieneCocina)   return false;
                   if (filtroPiscina   && !a.accesoPiscina) return false;
-                  if ((a.capacidadMaxima || 0) > 0 && a.capacidadMaxima < pax) return false;
                   const desde = getDesdePrecio(a);
                   if (desde > 0 && desde > filtroPrecioMax) return false;
                   return true;
@@ -896,12 +895,21 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                     </p>
 
                     {/* Selección actual */}
-                    {selectedHotels.size > 0 && (
-                      <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl text-xs text-emerald-700 font-semibold">
-                        <Check size={13} />
-                        {selectedHotels.size} {selectedHotels.size === 1 ? 'alojamiento seleccionado' : 'alojamientos seleccionados'} · toca para ver extras
-                      </div>
-                    )}
+                    {selectedHotels.size > 0 && (() => {
+                      const capacidadCubierta = alojamientos
+                        .filter((a: any) => selectedHotels.has(a.id))
+                        .reduce((sum: number, a: any) => sum + (a.capacidadMaxima || 0), 0);
+                      const cubreGrupo = capacidadCubierta >= pax;
+                      return (
+                        <div className={`flex items-center gap-2 border px-3 py-2 rounded-xl text-xs font-semibold ${
+                          cubreGrupo ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-amber-50 border-amber-200 text-amber-700'
+                        }`}>
+                          <Check size={13} />
+                          {selectedHotels.size} {selectedHotels.size === 1 ? 'alojamiento seleccionado' : 'alojamientos seleccionados'} · capacidad cubierta {capacidadCubierta}/{pax} pax
+                          {!cubreGrupo && ' · combina otro para completar el grupo'}
+                        </div>
+                      );
+                    })()}
 
                     {catalogLoading ? (
                       <div className="flex items-center justify-center py-16">
@@ -950,9 +958,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                                 )}
                                 {/* Badge capacidad */}
                                 {aloj.capacidadMaxima > 0 && (
-                                  <span className={`absolute top-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                                    pax > aloj.capacidadMaxima ? 'bg-red-500 text-white' : 'bg-black/55 text-white'
-                                  }`}>
+                                  <span className="absolute top-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-black/55 text-white">
                                     {aloj.capacidadMaxima} pax
                                   </span>
                                 )}
