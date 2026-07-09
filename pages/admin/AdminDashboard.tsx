@@ -236,6 +236,7 @@ function AgenteBriefing({ onNavigate }: { onNavigate: (r: AppRoute) => void }) {
 
 const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => {
   const [recentReservations, setRecentReservations] = useState<Reservation[]>([]);
+  const [showArchivo, setShowArchivo] = useState(false);
   const [loadingRes, setLoadingRes] = useState(false);
   const [pendingApprovals, setPendingApprovals] = useState<number | null>(null);
   const [atStats, setAtStats] = useState<{ total: number; criticas: number } | null>(null);
@@ -596,54 +597,6 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
             </div>
           </Section>
 
-          {/* ── 2b. Aliados & Red ── */}
-          <Section label="Aliados & Red" color="orange">
-            <div className="grid grid-cols-1 gap-2">
-              {([
-                { id: 'disponibilidad', label: 'Disponibilidad',    icon: <CalendarDays size={16} className="text-cyan-400" />,   cls: 'border-cyan-800 hover:border-cyan-500',     grad: 'from-cyan-900/50 to-teal-900/50' },
-                { id: 'planes',         label: 'Planes Membresía',  icon: <Crown size={16} className="text-orange-400" />,         cls: 'border-orange-800 hover:border-orange-500', grad: 'from-orange-900/50 to-amber-900/50' },
-                { id: 'guanapoints',    label: 'GuanaPoints',       icon: <Gift size={16} className="text-yellow-400" />,          cls: 'border-yellow-800 hover:border-yellow-500', grad: 'from-yellow-900/40 to-amber-900/40' },
-                { id: 'estrategia',     label: 'Estrategia',        icon: <BarChart3 size={16} className="text-indigo-400" />,     cls: 'border-indigo-800 hover:border-indigo-500', grad: 'from-indigo-900/50 to-blue-900/50' },
-                { id: 'wifi',           label: 'WiFi Captivo',      icon: <Wifi size={16} className="text-teal-400" />,            cls: 'border-teal-800 hover:border-teal-500',     grad: 'from-teal-900/50 to-emerald-900/50' },
-                { id: 'documentos',     label: 'Documentos & Kits', icon: <FileText size={16} className="text-purple-400" />,      cls: 'border-purple-800 hover:border-purple-500', grad: 'from-purple-900/50 to-violet-900/50' },
-                { id: 'microsites',     label: 'Micrositios',       icon: <Store size={16} className="text-green-400" />,          cls: 'border-green-800 hover:border-green-500',   grad: 'from-green-900/50 to-emerald-900/50' },
-              ] as const).map(sec => (
-                <button
-                  key={sec.id}
-                  onClick={() => { setInitialSection(sec.id); onNavigate(AppRoute.ADMIN_ALIADOS); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border bg-gradient-to-r ${sec.grad} ${sec.cls} transition-all text-left`}
-                >
-                  {sec.icon}
-                  <span className="text-sm font-bold text-white">{sec.label}</span>
-                  <ChevronRight size={14} className="text-gray-600 ml-auto shrink-0" />
-                </button>
-              ))}
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <MiniButton
-                icon={<Map size={18} className="text-teal-400" />} label="Negocios Locales"
-                onClick={() => onNavigate(AppRoute.ADMIN_NEGOCIOS_LOCALES)}
-                pulse="bg-teal-500" gradient="from-teal-900/60 to-emerald-900/60" border="border-teal-800 hover:border-teal-500" />
-              <MiniButton
-                icon={<Globe size={18} className="text-cyan-400" />} label="Ver página pública"
-                onClick={() => onNavigate(AppRoute.VINCULAR_COMERCIO)}
-                gradient="from-cyan-900/60 to-teal-900/60" border="border-cyan-800 hover:border-cyan-500" />
-            </div>
-          </Section>
-
-          {/* ── 3. Dinámicas & Comunidad ── */}
-          <Section label="Dinámicas & Comunidad" color="orange">
-            <BigButton
-              label="Dinámicas y Embajadores"
-              sub="Concursos · Embajadores residentes y turistas · Rutas Raizal"
-              icon={<Trophy size={20} className="text-orange-400" />}
-              gradient="from-orange-950 via-amber-950 to-orange-950"
-              border="border-orange-700 hover:border-orange-400"
-              pulse="bg-orange-400"
-              onClick={() => onNavigate(AppRoute.ADMIN_DINAMICAS)}
-            />
-          </Section>
-
           {/* ── 4. Contenido & Cultura ── */}
           <Section label="Contenido & Cultura" color="orange">
             <div className="grid grid-cols-3 gap-2">
@@ -745,6 +698,73 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
               </p>
             </div>
           </Section>
+
+          {/* ── Archivo: secciones pausadas (no en uso a corto plazo) ── */}
+          <div className="space-y-2">
+            <button
+              onClick={() => setShowArchivo(v => !v)}
+              className="w-full flex items-center gap-2 px-4 py-3 rounded-xl border border-gray-800 bg-gray-900/60 hover:border-gray-600 transition-colors"
+            >
+              <span className="text-base">🗄️</span>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-bold text-gray-400">Archivo</p>
+                <p className="text-[10px] text-gray-600">Aliados & Red · Dinámicas & Comunidad — secciones pausadas</p>
+              </div>
+              {showArchivo ? <ChevronUp size={15} className="text-gray-600" /> : <ChevronDown size={15} className="text-gray-600" />}
+            </button>
+            {showArchivo && (
+              <div className="space-y-5 border border-gray-800 rounded-xl p-3 bg-gray-950/50 opacity-80">
+            {/* ── 2b. Aliados & Red ── */}
+            <Section label="Aliados & Red" color="orange">
+              <div className="grid grid-cols-1 gap-2">
+                {([
+                  { id: 'disponibilidad', label: 'Disponibilidad',    icon: <CalendarDays size={16} className="text-cyan-400" />,   cls: 'border-cyan-800 hover:border-cyan-500',     grad: 'from-cyan-900/50 to-teal-900/50' },
+                  { id: 'planes',         label: 'Planes Membresía',  icon: <Crown size={16} className="text-orange-400" />,         cls: 'border-orange-800 hover:border-orange-500', grad: 'from-orange-900/50 to-amber-900/50' },
+                  { id: 'guanapoints',    label: 'GuanaPoints',       icon: <Gift size={16} className="text-yellow-400" />,          cls: 'border-yellow-800 hover:border-yellow-500', grad: 'from-yellow-900/40 to-amber-900/40' },
+                  { id: 'estrategia',     label: 'Estrategia',        icon: <BarChart3 size={16} className="text-indigo-400" />,     cls: 'border-indigo-800 hover:border-indigo-500', grad: 'from-indigo-900/50 to-blue-900/50' },
+                  { id: 'wifi',           label: 'WiFi Captivo',      icon: <Wifi size={16} className="text-teal-400" />,            cls: 'border-teal-800 hover:border-teal-500',     grad: 'from-teal-900/50 to-emerald-900/50' },
+                  { id: 'documentos',     label: 'Documentos & Kits', icon: <FileText size={16} className="text-purple-400" />,      cls: 'border-purple-800 hover:border-purple-500', grad: 'from-purple-900/50 to-violet-900/50' },
+                  { id: 'microsites',     label: 'Micrositios',       icon: <Store size={16} className="text-green-400" />,          cls: 'border-green-800 hover:border-green-500',   grad: 'from-green-900/50 to-emerald-900/50' },
+                ] as const).map(sec => (
+                  <button
+                    key={sec.id}
+                    onClick={() => { setInitialSection(sec.id); onNavigate(AppRoute.ADMIN_ALIADOS); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border bg-gradient-to-r ${sec.grad} ${sec.cls} transition-all text-left`}
+                  >
+                    {sec.icon}
+                    <span className="text-sm font-bold text-white">{sec.label}</span>
+                    <ChevronRight size={14} className="text-gray-600 ml-auto shrink-0" />
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <MiniButton
+                  icon={<Map size={18} className="text-teal-400" />} label="Negocios Locales"
+                  onClick={() => onNavigate(AppRoute.ADMIN_NEGOCIOS_LOCALES)}
+                  pulse="bg-teal-500" gradient="from-teal-900/60 to-emerald-900/60" border="border-teal-800 hover:border-teal-500" />
+                <MiniButton
+                  icon={<Globe size={18} className="text-cyan-400" />} label="Ver página pública"
+                  onClick={() => onNavigate(AppRoute.VINCULAR_COMERCIO)}
+                  gradient="from-cyan-900/60 to-teal-900/60" border="border-cyan-800 hover:border-cyan-500" />
+              </div>
+            </Section>
+
+            {/* ── 3. Dinámicas & Comunidad ── */}
+            <Section label="Dinámicas & Comunidad" color="orange">
+              <BigButton
+                label="Dinámicas y Embajadores"
+                sub="Concursos · Embajadores residentes y turistas · Rutas Raizal"
+                icon={<Trophy size={20} className="text-orange-400" />}
+                gradient="from-orange-950 via-amber-950 to-orange-950"
+                border="border-orange-700 hover:border-orange-400"
+                pulse="bg-orange-400"
+                onClick={() => onNavigate(AppRoute.ADMIN_DINAMICAS)}
+              />
+            </Section>
+
+              </div>
+            )}
+          </div>
 
         </div>
       </div>
