@@ -281,6 +281,19 @@ const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto'
 function ymdLocal(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+/** Normaliza la fecha del voucher a YYYY-MM-DD.
+ *  Airtable (Generador_vouchers) guarda 'Fecha de Inicio' como MM/DD/YYYY;
+ *  el formulario HTML usa YYYY-MM-DD. Acepta ambos + fallback Date(). */
+function normFecha(raw: string): string {
+  if (!raw) return '';
+  const s = String(raw).trim();
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s);
+  if (iso) return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`;
+  const us = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s);
+  if (us) return `${us[3]}-${us[1].padStart(2, '0')}-${us[2].padStart(2, '0')}`;
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? '' : ymdLocal(d);
+}
 function startOfWeek(d: Date): Date {
   const r = new Date(d);
   r.setDate(r.getDate() - ((r.getDay() + 6) % 7)); // lunes = inicio
@@ -300,7 +313,7 @@ function VoucherCalendar({ vouchers, onSelect }: {
   const porFecha = useMemo(() => {
     const map: Record<string, VoucherRecord[]> = {};
     vouchers.forEach(v => {
-      const f = (v.fecha || '').slice(0, 10);
+      const f = normFecha(v.fecha);
       if (!f) return;
       (map[f] = map[f] || []).push(v);
     });
@@ -1341,8 +1354,8 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
     pendientes: vouchers.filter(v => v.estado === 'Pendiente').length,
     confirmados:vouchers.filter(v => v.estado === 'Reserva Confirmada').length,
     hoy: (() => {
-      const hoy = new Date().toISOString().slice(0, 10);
-      return vouchers.filter(v => v.fecha === hoy).length;
+      const hoy = ymdLocal(new Date());
+      return vouchers.filter(v => normFecha(v.fecha) === hoy).length;
     })(),
   };
 
