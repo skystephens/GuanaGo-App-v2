@@ -1209,7 +1209,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                   </div>
 
                   <a
-                    href={`https://wa.me/573206620695?text=${encodeURIComponent(`Hola GuiaSAI! Acabo de cotizar mi viaje a San Andrés. Mi número: ${telefono}`)}`}
+                    href={`https://wa.me/573153836043?text=${encodeURIComponent(`Hola GuiaSAI! Acabo de cotizar mi viaje a San Andrés. Mi número: ${telefono}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-[#1da851] transition-colors w-full justify-center"

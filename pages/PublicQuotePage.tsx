@@ -4,6 +4,7 @@
  * Config via params: showTotal=0|1, showMap=0|1
  */
 
+import { GUANA_LOGO } from '../constants';
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   Calendar, Users, Phone, Mail, MapPin, Anchor, Bed,
@@ -181,7 +182,7 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
 
           {/* Galería 4 fotos — clickeables */}
           {show4.length > 0 && (
-            <div className="grid grid-cols-4 gap-1 rounded-xl overflow-hidden mb-3 h-24">
+            <div className="grid grid-cols-4 gap-1 rounded-xl overflow-hidden mb-3 h-24 md:h-52">
               {show4.map((url, i) => (
                 <button key={i} onClick={() => setLightboxIdx(i)} className="w-full h-full overflow-hidden">
                   <img src={url} alt={item.servicioNombre}
@@ -198,11 +199,11 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
               {TIPO_ICON['hotel']}
-              <span className="text-sm font-bold text-gray-800 leading-tight truncate">{item.servicioNombre}</span>
+              <span className="text-sm md:text-lg font-bold text-gray-800 leading-tight truncate">{item.servicioNombre}</span>
             </div>
             {item.subtotal > 0 && (
               <div className="text-right shrink-0">
-                <p className="text-sm font-bold text-emerald-600">{fmtCOP(item.subtotal)}</p>
+                <p className="text-sm md:text-lg font-bold text-emerald-600">{fmtCOP(item.subtotal)}</p>
                 {item.valorUnitario > 0 && item.cantidad > 0 && (
                   <p className="text-[10px] text-gray-400 whitespace-nowrap">
                     {fmtCOP(item.valorUnitario)} × {item.personas > 1 ? `${item.personas} × ` : ''}{item.cantidad}u
@@ -228,7 +229,7 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
 
           {/* Descripción */}
           {description && (
-            <p className={`text-xs text-gray-500 mt-2 leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>
+            <p className={`text-xs md:text-sm text-gray-500 mt-2 leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>
               {description}
             </p>
           )}
@@ -295,14 +296,14 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
   return (
     <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
       {img ? (
-        <img src={img} alt={item.servicioNombre} className="w-14 h-14 rounded-xl object-cover shrink-0" />
+        <img src={img} alt={item.servicioNombre} className="w-14 h-14 md:w-20 md:h-20 rounded-xl object-cover shrink-0" />
       ) : (
         <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
           {TIPO_ICON[item.servicioTipo] || <FileText size={15} className="text-gray-400" />}
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-800 leading-tight">{item.servicioNombre}</p>
+        <p className="text-sm md:text-base font-semibold text-gray-800 leading-tight">{item.servicioNombre}</p>
         <p className="text-xs text-gray-400 capitalize mt-0.5">{item.servicioTipo}</p>
         <div className="flex flex-wrap gap-2 mt-1 text-xs text-gray-500">
           {item.personas > 0 && <span>{item.personas} {item.personas === 1 ? 'persona' : 'personas'}</span>}
@@ -311,7 +312,7 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
       </div>
       {item.subtotal > 0 && (
         <div className="text-right shrink-0">
-          <p className="text-sm font-bold text-emerald-600">{fmtCOP(item.subtotal)}</p>
+          <p className="text-sm md:text-lg font-bold text-emerald-600">{fmtCOP(item.subtotal)}</p>
           {item.valorUnitario > 0 && item.personas > 0 && (
             <p className="text-[10px] text-gray-400">{fmtCOP(item.valorUnitario)}/u</p>
           )}
@@ -438,7 +439,7 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
 
       {/* Header brand */}
       <div className={`bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-5 pb-8${printOnLoad ? ' pt-14' : ''}`}>
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl lg:max-w-4xl mx-auto">
           {onBack && (
             <button
               onClick={onBack}
@@ -447,9 +448,14 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
               <ArrowLeft size={15} /> Mis Cotizaciones
             </button>
           )}
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-2xl font-black tracking-tight">GuanaGO</span>
-            <span className="text-emerald-200 text-sm">· San Andrés Islas</span>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="bg-white rounded-2xl w-14 h-14 md:w-16 md:h-16 p-1.5 flex items-center justify-center shadow-md shrink-0">
+              <img src={GUANA_LOGO} alt="GuiaSAI" className="w-full h-full object-contain" />
+            </div>
+            <div>
+              <span className="text-2xl md:text-3xl font-black tracking-tight">Guía<span className="text-orange-300">SAI</span></span>
+              <p className="text-emerald-100 text-xs md:text-sm font-semibold">RNT 48674 · San Andrés Islas, Colombia</p>
+            </div>
           </div>
           <h1 className="text-xl font-bold mt-2">Tu cotización de viaje</h1>
           <p className="text-emerald-100 text-sm mt-0.5">
@@ -458,7 +464,7 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 -mt-4 pb-24 space-y-4">
+      <div className="max-w-2xl lg:max-w-4xl mx-auto px-4 -mt-4 pb-24 space-y-4">
 
         {/* Card info viaje */}
         <div className="bg-white rounded-2xl shadow-sm p-5">
@@ -607,10 +613,10 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
 
         {/* CTA WhatsApp */}
         <div className="no-print bg-white rounded-2xl shadow-sm p-5">
-          <h3 className="text-sm font-bold text-gray-800 mb-1">¿Tienes preguntas?</h3>
-          <p className="text-xs text-gray-400 mb-3">Nuestro equipo en San Andrés está listo para ayudarte.</p>
+          <h3 className="text-sm md:text-base font-bold text-gray-800 mb-1">¿Tienes preguntas?</h3>
+          <p className="text-xs md:text-sm text-gray-400 mb-3">Servicio al cliente GuiaSAI: <span className="font-bold text-gray-600">+57 315 383 6043</span></p>
           <a
-            href={`https://wa.me/573206620695?text=${whatsappMsg}`}
+            href={`https://wa.me/573153836043?text=${whatsappMsg}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full bg-[#25D366] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#1da851] transition-colors"
@@ -630,8 +636,8 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs text-gray-400 pb-4">
-          GuanaGO · Especialistas en turismo · San Andrés Islas, Colombia
+        <p className="text-center text-xs md:text-sm text-gray-400 pb-4">
+          GuíaSAI S.A.S. · RNT 48674 · Turismo Raizal · San Andrés Islas, Colombia · WhatsApp +57 315 383 6043
         </p>
       </div>
     </div>
