@@ -226,8 +226,8 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
 
         {/* Logo */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-black text-gray-900 mb-1">GuanaGO</h1>
-          <p className="text-gray-500 text-sm">Tu guía definitiva de San Andrés</p>
+          <h1 className="text-4xl font-black text-gray-900 mb-1">Guía<span className="text-orange-500">SAI</span></h1>
+          <p className="text-gray-500 text-sm">Turismo Raizal · San Andrés Islas</p>
         </div>
 
         {/* Google */}
@@ -316,6 +316,24 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
             {isRegister ? 'Inicia sesión' : 'Regístrate gratis'}
           </button>
         </div>
+
+        {/* Acceso Proveedores */}
+        {onNavigate && (
+          <button
+            onClick={() => onNavigate(AppRoute.PROVEEDORES)}
+            className="w-full mt-5 p-4 rounded-2xl border-2 border-teal-200 hover:border-teal-400 hover:bg-teal-50 transition-all text-left active:scale-95"
+          >
+            <div className="flex gap-3 items-center">
+              <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center flex-shrink-0">
+                <Briefcase size={20} />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-black text-gray-900 text-sm">¿Tienes un alojamiento o tour?</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Regístralo en el catálogo GuiaSAI — sin necesidad de cuenta</p>
+              </div>
+            </div>
+          </button>
+        )}
 
       </div>
     </div>
