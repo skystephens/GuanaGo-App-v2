@@ -137,7 +137,7 @@ const CatalogPublico: React.FC<CatalogPublicoProps> = ({ onNavigate, onBack }) =
             </button>
           )}
           <div className="bg-emerald-50 w-10 h-10 rounded-xl flex items-center justify-center p-1 border border-emerald-100 shadow-sm shrink-0">
-            <img src={GUANA_LOGO} alt="GuanaGO" className="w-full h-full object-contain" />
+            <img src={GUANA_LOGO} alt="GuiaSAI" className="w-full h-full object-contain" />
           </div>
           <div className="flex-1">
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">San Andrés Isla</p>

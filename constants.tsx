@@ -4,7 +4,7 @@ import { Wifi, Wind, Utensils, Droplets, Sun, Pill, DollarSign, ShoppingBag, Cof
 import React from 'react';
 import { api } from './services/api';
 
-export const GUANA_LOGO = "/logo-guanago.png";
+export const GUANA_LOGO = "/logo-guiasai.png";
 
 export const DIRECTORY_DATA: GuanaLocation[] = [
   // FARMACIAS / DROGUERÍAS
