@@ -519,14 +519,14 @@ export const contactoDirecto = async (req, res) => {
     });
     res.json({
       success: true,
-      respuesta: '¡Mensaje recibido! 🙌 Un asesor de GuanaGO te responderá pronto.',
+      respuesta: '¡Mensaje recibido! 🙌 Un asesor de GuiaSAI te responderá pronto.',
       id_chat: idChat,
     });
   } catch (error) {
     console.error('❌ Error en contacto directo:', error);
     res.json({
       success: true,
-      respuesta: '¡Mensaje recibido! 🙌 Un asesor de GuanaGO te responderá pronto.',
+      respuesta: '¡Mensaje recibido! 🙌 Un asesor de GuiaSAI te responderá pronto.',
       id_chat: null,
     });
   }

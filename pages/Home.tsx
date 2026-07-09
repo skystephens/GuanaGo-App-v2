@@ -213,7 +213,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           </button>
         </div>
 
-        {/* CTA Vincular negocio — banner para negocios locales */}
+        {/* CTA Vincular negocio — OCULTO temporalmente (decisión Sky jul-2026: foco en marca GuiaSAI)
         <div className="mb-6">
           <button
             onClick={() => onNavigate(AppRoute.VINCULAR_COMERCIO)}
@@ -231,6 +231,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             </div>
           </button>
         </div>
+        */}
 
         {/* RIMM Caribbean Night Section */}
         <CaribbeanNightSection onNavigate={onNavigate} />

@@ -239,7 +239,7 @@ const GuanaChatbot: React.FC<GuanaChatbotProps> = ({ onCotizar }) => {
                      pantalla === 'confirmado'    ? 'Mensaje enviado' :
                      pantalla === 'chat_ia'       ? 'Guana IA' :
                      pantalla === 'contacto_ia'   ? 'Antes de empezar' :
-                     'GuanaGO'}
+                     'GuiaSAI'}
                   </span>
                   <span className="block text-[10px] text-emerald-100">
                     {pantalla === 'chat_ia' ? 'Responde al instante · Groq AI' : 'San Andrés Isla, Colombia'}
@@ -257,6 +257,7 @@ const GuanaChatbot: React.FC<GuanaChatbotProps> = ({ onCotizar }) => {
                 <p className="text-sm text-gray-600 leading-relaxed">
                   ¡Hola! 👋 ¿Cómo te podemos ayudar hoy?
                 </p>
+                {/* Opción Guana IA — OCULTA (decisión Sky jul-2026: sin IA por ahora, atención humana vía Chats_Atencion)
                 <button
                   onClick={abrirChatIA}
                   className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-left"
@@ -269,6 +270,7 @@ const GuanaChatbot: React.FC<GuanaChatbotProps> = ({ onCotizar }) => {
                     <p className="text-xs text-gray-500">Responde al instante sobre tours, precios y destino</p>
                   </div>
                 </button>
+                */}
                 {onCotizar && (
                   <button
                     onClick={() => { cerrar(); onCotizar(); }}
@@ -511,7 +513,7 @@ const GuanaChatbot: React.FC<GuanaChatbotProps> = ({ onCotizar }) => {
                 <div>
                   <p className="font-bold text-gray-800 text-base">¡Mensaje enviado!</p>
                   <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-                    Un asesor de GuanaGO te responderá pronto. Gracias por contactarnos 🌴
+                    Un asesor de GuiaSAI te responderá pronto. Gracias por contactarnos 🌴
                   </p>
                 </div>
                 <button
