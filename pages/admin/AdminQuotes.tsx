@@ -349,7 +349,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     }
   };
 
-  // ── PayU Payment Link ──────────────────────────────────────────────────────
+  // ── Wompi Payment Link (antes PayU — migrado jul-2026) ─────────────────────
   const [showPayModal, setShowPayModal]   = useState(false);
   const [payLoading, setPayLoading]       = useState(false);
   const [payResult, setPayResult]         = useState<{ pagoUrl: string; referenceCode: string; test: boolean } | null>(null);
@@ -2764,7 +2764,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
         </div>
       )}
 
-      {/* ── Modal PayU: Generar Link de Pago ── */}
+      {/* ── Modal Wompi: Generar Link de Pago ── */}
       {showPayModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75" onClick={() => setShowPayModal(false)}>
           <div className="bg-gray-900 rounded-2xl w-full max-w-md shadow-2xl border border-gray-700" onClick={e => e.stopPropagation()}>
@@ -2776,7 +2776,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 </div>
                 <div>
                   <h3 className="font-bold text-white">Generar Link de Pago</h3>
-                  <p className="text-xs text-gray-400">PayU Latam · Tarjeta / PSE / Efecty</p>
+                  <p className="text-xs text-gray-400">Wompi · Nequi / Tarjeta / PSE / Bancolombia</p>
                 </div>
               </div>
               <button onClick={() => setShowPayModal(false)} className="text-gray-400 hover:text-white">
@@ -2851,7 +2851,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                       Copiar Link
                     </button>
                     <a
-                      href={`https://wa.me/${(selectedCotizacion?.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${selectedCotizacion?.nombre?.split(' ')[0]}, aquí está el link para realizar el pago de tu reserva con GuíaSAI:\n\n${payResult.pagoUrl}\n\n¡Pago 100% seguro con PayU! 🔒`)}`}
+                      href={`https://wa.me/${(selectedCotizacion?.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${selectedCotizacion?.nombre?.split(' ')[0]}, aquí está el link para realizar el pago de tu reserva con GuíaSAI:\n\n${payResult.pagoUrl}\n\n¡Pago 100% seguro con Wompi (Bancolombia)! 🔒`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="py-3 bg-green-700 hover:bg-green-600 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 text-white no-underline"

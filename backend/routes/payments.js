@@ -1,21 +1,27 @@
 /**
- * PayU Latam — Payment Links
- * GuanaGO · GuíaSAI
+ * Wompi — Links de pago
+ * GuíaSAI · San Andrés Islas
  *
  * Flujo:
- *   POST /api/payments/create  → genera link de pago y lo persiste en Airtable (24h)
- *   GET  /pagar/:ref           → página HTML que auto-submite a PayU checkout
- *   POST /api/payments/webhook → confirmación de PayU, actualiza Airtable
+ *   POST /api/payments/create  → genera link de pago Wompi y lo persiste en Airtable (24h)
+ *   GET  /pagar/:ref           → página HTML con botón que abre Wompi Web Checkout
+ *   POST /api/payments/webhook → evento transaction.updated de Wompi, actualiza Airtable
+ *   GET  /pago-resultado       → página de resultado (Wompi redirige con ?id=<tx>&env=)
  *
- * Env vars requeridas:
- *   PAYU_MERCHANT_ID=508029        ← sandbox
- *   PAYU_ACCOUNT_ID=512321         ← sandbox Colombia
- *   PAYU_API_KEY=4Vj8eK4rloUd272L48hsrarnUA  ← sandbox
- *   PAYU_TEST=1 (sandbox) | PAYU_TEST=0 (producción)
+ * Env vars requeridas (Render → Environment):
+ *   WOMPI_PUBLIC_KEY       pub_test_xxx (sandbox) | pub_prod_xxx (producción)
+ *   WOMPI_INTEGRITY_SECRET test_integrity_xxx | prod_integrity_xxx
+ *   WOMPI_EVENTS_SECRET    test_events_xxx | prod_events_xxx (firma del webhook)
  *   AIRTABLE_API_KEY, AIRTABLE_BASE_ID
- *   BACKEND_URL=https://guanago-backend.onrender.com  ← URL del servicio Render
- *   FRONTEND_URL=https://www.guanago.travel            ← URL del frontend (botón "volver")
- *   BASE_URL=https://www.guanago.travel                ← fallback si no se definen los anteriores
+ *   BACKEND_URL / FRONTEND_URL / BASE_URL — igual que antes
+ *
+ * El modo test/producción se deduce del prefijo de WOMPI_PUBLIC_KEY.
+ * En el dashboard de Wompi configurar URL de eventos:
+ *   {BACKEND_URL}/api/payments/webhook
+ *
+ * Nota Airtable: los campos 'PayU_Reference' y 'PayU_Transaction_ID' de
+ * CotizacionesGG se reutilizan para los datos Wompi (renombrarlos en Airtable
+ * requiere actualizar este archivo a la vez — los nombres de campo son el API).
  */
 
 import express from 'express';
@@ -23,16 +29,31 @@ import crypto from 'crypto';
 
 const router = express.Router();
 
-// ─── PayU endpoints ───────────────────────────────────────────────────────────
-const PAYU_CHECKOUT = {
-  sandbox: 'https://sandbox.checkout.payulatam.com/ppp-web-gateway-payu/',
-  prod:    'https://checkout.payulatam.com/ppp-web-gateway-payu/',
+// ─── Wompi endpoints ──────────────────────────────────────────────────────────
+const WOMPI_CHECKOUT = 'https://checkout.wompi.co/p/';
+const WOMPI_API = {
+  test: 'https://sandbox.wompi.co/v1',
+  prod: 'https://production.wompi.co/v1',
 };
+
+function wompiEnv() {
+  const pub = (process.env.WOMPI_PUBLIC_KEY || '').trim();
+  return {
+    publicKey: pub,
+    integritySecret: (process.env.WOMPI_INTEGRITY_SECRET || '').trim(),
+    eventsSecret: (process.env.WOMPI_EVENTS_SECRET || '').trim(),
+    isTest: pub.startsWith('pub_test_'),
+  };
+}
+
+function sha256(str) {
+  return crypto.createHash('sha256').update(str).digest('hex');
+}
 
 // ─── Airtable — persistencia de pagos temporales ──────────────────────────────
 const PAGOS_TABLE = 'PagosTemporales';
 
-async function savePagoTemporal(referenceCode, fields, payuUrl, meta) {
+async function savePagoTemporal(referenceCode, payload) {
   const AT_KEY  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
   const AT_BASE = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
   if (!AT_KEY) throw new Error('AIRTABLE_API_KEY no configurado');
@@ -43,7 +64,7 @@ async function savePagoTemporal(referenceCode, fields, payuUrl, meta) {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${AT_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      records: [{ fields: { referenceCode, Payload: JSON.stringify({ fields, payuUrl, meta }), ExpiresAt: expiresAt } }],
+      records: [{ fields: { referenceCode, Payload: JSON.stringify(payload), ExpiresAt: expiresAt } }],
     }),
   });
 
@@ -69,7 +90,6 @@ async function getPagoTemporal(referenceCode) {
   const record = data.records?.[0];
   if (!record) return null;
 
-  // Verificar TTL
   const expiresAt = record.fields.ExpiresAt;
   if (expiresAt && new Date(expiresAt) < new Date()) {
     console.warn(`⏱️ Pago expirado: ${referenceCode}`);
@@ -83,10 +103,6 @@ async function getPagoTemporal(referenceCode) {
   }
 }
 
-function md5(str) {
-  return crypto.createHash('md5').update(str).digest('hex');
-}
-
 // ─── POST /api/payments/create ────────────────────────────────────────────────
 router.post('/create', async (req, res) => {
   const {
@@ -95,21 +111,15 @@ router.post('/create', async (req, res) => {
     buyerName, buyerEmail, buyerPhone,
   } = req.body;
 
-  const MERCHANT_ID  = (process.env.PAYU_MERCHANT_ID  || '').trim();
-  const ACCOUNT_ID   = (process.env.PAYU_ACCOUNT_ID   || '').trim();
-  const API_KEY      = (process.env.PAYU_API_KEY       || '').trim();
-  const IS_TEST      = (process.env.PAYU_TEST          || '').trim() === '0' ? '0' : '1';
-  // BACKEND_URL → URL del servicio Render (donde viven /pagar y /api/payments/webhook)
-  // FRONTEND_URL → URL del frontend para redirección post-pago (opcional)
-  const BACKEND_URL  = (process.env.BACKEND_URL  || process.env.BASE_URL || 'https://www.guanago.travel').trim().replace(/\/$/, '');
+  const { publicKey, integritySecret, isTest } = wompiEnv();
+  const BACKEND_URL = (process.env.BACKEND_URL || process.env.BASE_URL || 'https://www.guanago.travel').trim().replace(/\/$/, '');
 
-  if (!MERCHANT_ID || !API_KEY || !ACCOUNT_ID) {
+  if (!publicKey || !integritySecret) {
     return res.status(503).json({
-      error: 'PayU no configurado en el servidor.',
+      error: 'Wompi no configurado en el servidor.',
       missing: [
-        !MERCHANT_ID && 'PAYU_MERCHANT_ID',
-        !ACCOUNT_ID  && 'PAYU_ACCOUNT_ID',
-        !API_KEY     && 'PAYU_API_KEY',
+        !publicKey       && 'WOMPI_PUBLIC_KEY',
+        !integritySecret && 'WOMPI_INTEGRITY_SECRET',
       ].filter(Boolean),
     });
   }
@@ -121,40 +131,47 @@ router.post('/create', async (req, res) => {
 
   const sourceId      = cotizacionId || voucherId || 'VENTA';
   const referenceCode = `GG-${sourceId}-${Date.now()}`;
-  // COP requires integer amount (no decimals). 8% added to cover gateway processing cost.
-  const subtotal  = Math.round(parsed);
-  const fee       = Math.round(parsed * 0.08);
-  const total     = subtotal + fee;
-  const amountStr = String(total);
+  // COP entero. 8% agregado para cubrir costo de pasarela (política comercial vigente).
+  const subtotal      = Math.round(parsed);
+  const fee           = Math.round(parsed * 0.08);
+  const total         = subtotal + fee;
+  const amountInCents = total * 100;
   const currency      = 'COP';
-  const payuUrl       = IS_TEST === '1' ? PAYU_CHECKOUT.sandbox : PAYU_CHECKOUT.prod;
 
-  const signature = md5(`${API_KEY}~${MERCHANT_ID}~${referenceCode}~${amountStr}~${currency}`);
+  // Firma de integridad Wompi: SHA256(referencia + montoEnCentavos + moneda + secreto)
+  const integrity = sha256(`${referenceCode}${amountInCents}${currency}${integritySecret}`);
 
-  const fields = {
-    merchantId:      MERCHANT_ID,
-    accountId:       ACCOUNT_ID,
-    description:     description || 'Servicios Turísticos GuíaSAI — San Andrés Isla',
-    referenceCode,
-    amount:          amountStr,
-    tax:             '0',
-    taxReturnBase:   '0',
-    currency,
-    signature,
-    test:            IS_TEST,
-    buyerEmail:      buyerEmail    || '',
-    buyerFullName:   buyerName     || '',
-    mobilePhone:     (buyerPhone   || '').replace(/\s/g, ''),
-    responseUrl:     `${BACKEND_URL}/pago-resultado`,
-    confirmationUrl: `${BACKEND_URL}/api/payments/webhook`,
-  };
+  const params = new URLSearchParams({
+    'public-key':          publicKey,
+    'currency':            currency,
+    'amount-in-cents':     String(amountInCents),
+    'reference':           referenceCode,
+    'signature:integrity': integrity,
+    'redirect-url':        `${BACKEND_URL}/pago-resultado`,
+  });
+  if (buyerEmail) params.set('customer-data:email', buyerEmail);
+  if (buyerName)  params.set('customer-data:full-name', buyerName);
+  if (buyerPhone) {
+    params.set('customer-data:phone-number', String(buyerPhone).replace(/\D/g, '').replace(/^57/, ''));
+    params.set('customer-data:phone-number-prefix', '+57');
+  }
+
+  const checkoutUrl = `${WOMPI_CHECKOUT}?${params.toString()}`;
 
   try {
-    await savePagoTemporal(referenceCode, fields, payuUrl, {
-      cotizacionId, voucherId, amount: parsed, description, buyerName, buyerEmail,
+    await savePagoTemporal(referenceCode, {
+      checkoutUrl,
+      description: description || 'Servicios Turísticos GuíaSAI — San Andrés Isla',
+      amountTotal: total,
+      subtotal,
+      fee,
+      currency,
+      buyerName:  buyerName  || '',
+      buyerEmail: buyerEmail || '',
+      isTest,
+      meta: { cotizacionId, voucherId, amount: parsed },
     });
-    console.log(`💳 Link de pago creado: ${referenceCode} · $${subtotal} + $${fee} fee = $${amountStr} COP · test=${IS_TEST}`);
-    console.log(`🔑 Firma: MD5("${API_KEY}~${MERCHANT_ID}~${referenceCode}~${amountStr}~${currency}") = ${signature}`);
+    console.log(`💳 Link Wompi creado: ${referenceCode} · $${subtotal} + $${fee} fee = $${total} COP · test=${isTest}`);
   } catch (err) {
     console.error('❌ Error guardando pago en Airtable:', err.message);
     return res.status(500).json({ error: 'No se pudo guardar el link de pago. Intenta de nuevo.' });
@@ -164,7 +181,7 @@ router.post('/create', async (req, res) => {
     success: true,
     pagoUrl: `${BACKEND_URL}/pagar/${referenceCode}`,
     referenceCode,
-    test: IS_TEST === '1',
+    test: isTest,
     subtotal,
     feeAmount: fee,
     totalAmount: total,
@@ -193,12 +210,7 @@ router.get('/:referenceCode', async (req, res) => {
 </div></body></html>`);
   }
 
-  const { fields, payuUrl } = data;
-  const amountDisplay = parseFloat(fields.amount).toLocaleString('es-CO', { minimumFractionDigits: 0 });
-
-  const formInputs = Object.entries(fields)
-    .map(([k, v]) => `<input type="hidden" name="${k}" value="${String(v).replace(/"/g, '&quot;')}">`)
-    .join('\n    ');
+  const amountDisplay = (data.amountTotal || 0).toLocaleString('es-CO', { minimumFractionDigits: 0 });
 
   res.send(`<!DOCTYPE html>
 <html lang="es">
@@ -215,92 +227,94 @@ router.get('/:referenceCode', async (req, res) => {
     .amount{font-size:42px;font-weight:800;color:#1e293b;margin-bottom:4px;}
     .currency{color:#64748b;font-size:13px;margin-bottom:8px;}
     .desc{color:#475569;font-size:14px;margin-bottom:28px;background:#f8fafc;padding:12px 16px;border-radius:10px;line-height:1.5;}
-    .btn{background:linear-gradient(135deg,#FF6600,#e55a00);color:white;border:none;padding:16px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;width:100%;transition:opacity .2s;}
+    .btn{display:block;background:linear-gradient(135deg,#FF6600,#e55a00);color:white;text-decoration:none;padding:16px;border-radius:12px;font-size:16px;font-weight:700;width:100%;transition:opacity .2s;}
     .btn:hover{opacity:.9}
-    .spinner{display:none;margin:16px auto;width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#FF6600;border-radius:50%;animation:spin 1s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg)}}
     .secure{color:#94a3b8;font-size:11px;margin-top:20px;line-height:1.6;}
-    .payu-logo{color:#0061b0;font-weight:700;font-size:13px;}
+    .wompi-logo{color:#1d1d43;font-weight:700;font-size:13px;}
+    ${data.isTest ? '.test-banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;margin-bottom:16px;}' : ''}
   </style>
 </head>
 <body>
   <div class="card">
     <div class="logo">GuíaSAI</div>
-    <div class="sub">San Andrés Isla · Especialistas en Turismo</div>
+    <div class="sub">RNT 48674 · San Andrés Islas · Turismo Raizal</div>
+    ${data.isTest ? '<div class="test-banner">⚠️ MODO PRUEBAS — no se cobrará dinero real</div>' : ''}
 
     <div class="amount">$${amountDisplay}</div>
     <div class="currency">COP — Pesos Colombianos</div>
 
-    <div class="desc">${fields.description}</div>
+    <div class="desc">${data.description}</div>
 
-    <form id="payuForm" method="POST" action="${payuUrl}">
-      ${formInputs}
-    </form>
-
-    <button class="btn" id="payBtn" onclick="pay()">
-      🔒 Pagar con Tarjeta
-    </button>
-    <div class="spinner" id="spinner"></div>
+    <a class="btn" href="${data.checkoutUrl}">🔒 Pagar ahora</a>
 
     <div class="secure">
       Pago 100% seguro procesado por<br>
-      <span class="payu-logo">PayU Latam</span> · Encriptación SSL<br>
-      Visa · Mastercard · PSE · Efecty
+      <span class="wompi-logo">Wompi · Bancolombia</span> · Encriptación SSL<br>
+      Nequi · Tarjetas · PSE · Botón Bancolombia
     </div>
   </div>
-  <script>
-    function pay() {
-      document.getElementById('payBtn').style.display = 'none';
-      document.getElementById('spinner').style.display = 'block';
-      document.getElementById('payuForm').submit();
-    }
-  </script>
 </body>
 </html>`);
 });
 
-// ─── POST /api/payments/webhook — confirmación de PayU ────────────────────────
-router.post('/webhook', express.urlencoded({ extended: true }), async (req, res) => {
-  const {
-    reference_sale, value, currency,
-    state_pol, sign, transaction_id,
-  } = req.body;
+// ─── POST /api/payments/webhook — eventos de Wompi ────────────────────────────
+// Configurar en el dashboard Wompi: URL de eventos = {BACKEND_URL}/api/payments/webhook
+router.post('/webhook', express.json(), async (req, res) => {
+  const evento = req.body || {};
+  const tx = evento?.data?.transaction;
 
-  const API_KEY     = process.env.PAYU_API_KEY;
-  const MERCHANT_ID = process.env.PAYU_MERCHANT_ID;
-
-  console.log('💳 PayU webhook:', { reference_sale, state_pol, value });
-
-  // Validar firma: MD5("apiKey~merchantId~referenceCode~newAmount~currency~state_pol")
-  const newAmount = parseFloat(value || '0').toFixed(1);
-  const expected  = md5(`${API_KEY}~${MERCHANT_ID}~${reference_sale}~${newAmount}~${currency}~${state_pol}`);
-
-  if (sign !== expected) {
-    console.warn('⚠️ PayU webhook firma inválida. Recibida:', sign, '| Esperada:', expected);
-    return res.status(400).send('Invalid signature');
+  if (evento.event !== 'transaction.updated' || !tx) {
+    return res.status(200).send('OK'); // evento no relevante — confirmar recepción
   }
 
-  // state_pol: 4=Aprobado 6=Rechazado 7=Pendiente 104=Error
-  const ESTADO_MAP = { '4': 'Pagado', '6': 'Rechazado', '7': 'Pendiente pago', '104': 'Error pago' };
-  const estadoNuevo = ESTADO_MAP[state_pol] || `Estado ${state_pol}`;
-  console.log(`✅ ${reference_sale} → ${estadoNuevo}`);
+  console.log('💳 Wompi webhook:', { reference: tx.reference, status: tx.status, amount: tx.amount_in_cents });
+
+  // ── Validar firma del evento ──
+  // checksum = SHA256(concat(valores de signature.properties en orden) + timestamp + EVENTS_SECRET)
+  const { eventsSecret } = wompiEnv();
+  if (eventsSecret) {
+    const props     = evento?.signature?.properties || [];
+    const checksum  = evento?.signature?.checksum || '';
+    const timestamp = evento?.timestamp;
+    const getPath   = (obj, path) => path.split('.').reduce((o, k) => (o == null ? o : o[k]), evento.data);
+    const concat    = props.map(p => String(getPath(evento.data, p) ?? '')).join('');
+    const expected  = sha256(`${concat}${timestamp}${eventsSecret}`);
+    if (checksum.toLowerCase() !== expected.toLowerCase()) {
+      console.warn('⚠️ Wompi webhook firma inválida. Recibida:', checksum, '| Esperada:', expected);
+      return res.status(400).send('Invalid signature');
+    }
+  } else {
+    console.warn('⚠️ WOMPI_EVENTS_SECRET no configurado — webhook aceptado SIN validar firma');
+  }
+
+  // ── Mapear estado ──
+  const ESTADO_MAP = {
+    APPROVED: 'Pagado',
+    DECLINED: 'Rechazado',
+    PENDING:  'Pendiente pago',
+    VOIDED:   'Anulado',
+    ERROR:    'Error pago',
+  };
+  const estadoNuevo = ESTADO_MAP[tx.status] || `Estado ${tx.status}`;
+  const valorCOP    = (tx.amount_in_cents || 0) / 100;
+  console.log(`✅ ${tx.reference} → ${estadoNuevo}`);
 
   // Extraer cotizacionId de referenceCode "GG-{id}-{timestamp}"
-  const match    = (reference_sale || '').match(/^GG-(.+)-\d+$/);
+  const match    = (tx.reference || '').match(/^GG-(.+)-\d+$/);
   const entityId = match?.[1];
 
-  if (entityId && state_pol === '4') {
+  if (entityId && tx.status === 'APPROVED') {
     const AT_KEY  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
     const AT_BASE = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
     const AT_HDR  = { 'Authorization': `Bearer ${AT_KEY}`, 'Content-Type': 'application/json' };
     const AT      = (table) => `https://api.airtable.com/v0/${AT_BASE}/${encodeURIComponent(table)}`;
 
-    // Número de reserva: GG-{año}-{últimos 4 del transaction_id}
-    const year    = new Date().getFullYear();
-    const txSuffix = (transaction_id || Date.now().toString()).slice(-4).toUpperCase();
+    // Número de reserva: GG-{año}-{últimos 4 del transaction id}
+    const year       = new Date().getFullYear();
+    const txSuffix   = (tx.id || Date.now().toString()).slice(-4).toUpperCase();
     const numReserva = `GG-${year}-${txSuffix}`;
 
-    // 1. Actualizar CotizacionesGG con todos los datos del pago
+    // 1. Actualizar CotizacionesGG (campos PayU_* reutilizados para Wompi — ver nota arriba)
     try {
       await fetch(`${AT('CotizacionesGG')}/${entityId}`, {
         method: 'PATCH',
@@ -308,9 +322,9 @@ router.post('/webhook', express.urlencoded({ extended: true }), async (req, res)
         body: JSON.stringify({
           fields: {
             'Estado':              'Pagado',
-            'PayU_Reference':      reference_sale,
-            'PayU_Transaction_ID': transaction_id || '',
-            'Valor_Pagado':        parseFloat(value || '0'),
+            'PayU_Reference':      tx.reference,
+            'PayU_Transaction_ID': tx.id || '',
+            'Valor_Pagado':        valorCOP,
             'Numero_Reserva':      numReserva,
           },
         }),
@@ -322,20 +336,17 @@ router.post('/webhook', express.urlencoded({ extended: true }), async (req, res)
 
     // 2. Crear registro en tabla Pagos
     try {
-      const metodoPago = req.body.payment_method_name || req.body.lapPaymentMethod || 'PayU';
-      const emailPagador = req.body.email_buyer || req.body.payer_email || '';
-
       await fetch(AT('Pagos'), {
         method: 'POST',
         headers: AT_HDR,
         body: JSON.stringify({
           fields: {
             'ID':          numReserva,
-            'Monto':       parseFloat(value || '0'),
-            'Metodo_Pago': metodoPago,
+            'Monto':       valorCOP,
+            'Metodo_Pago': tx.payment_method_type || 'Wompi',
             'Estado':      'Completado',
             'Fecha_Pago':  new Date().toISOString(),
-            'Referencia':  reference_sale,
+            'Referencia':  tx.reference,
           },
         }),
       });
@@ -344,7 +355,7 @@ router.post('/webhook', express.urlencoded({ extended: true }), async (req, res)
       console.error('❌ Pagos create error:', err.message);
     }
 
-    // 3. Disparar webhook Make (si está configurado) para email + Google Drive
+    // 3. Disparar webhook Make (email + Google Drive) — mismo payload que antes
     const MAKE_WEBHOOK_PAGOS = process.env.MAKE_WEBHOOK_PAGOS;
     if (MAKE_WEBHOOK_PAGOS) {
       fetch(MAKE_WEBHOOK_PAGOS, {
@@ -352,12 +363,12 @@ router.post('/webhook', express.urlencoded({ extended: true }), async (req, res)
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cotizacion_id:   entityId,
-          reference_sale,
-          transaction_id,
-          valor:           parseFloat(value || '0'),
-          moneda:          currency,
-          metodo_pago:     req.body.payment_method_name || '',
-          email_comprador: req.body.email_buyer || '',
+          reference_sale:  tx.reference,
+          transaction_id:  tx.id || '',
+          valor:           valorCOP,
+          moneda:          tx.currency || 'COP',
+          metodo_pago:     tx.payment_method_type || 'Wompi',
+          email_comprador: tx.customer_email || '',
           numero_reserva:  numReserva,
           fecha_pago:      new Date().toISOString(),
         }),
@@ -368,64 +379,56 @@ router.post('/webhook', express.urlencoded({ extended: true }), async (req, res)
   res.status(200).send('OK');
 });
 
-// ─── GET /pago-resultado — página de resultado post-pago ──────────────────────
-// PayU redirige aquí con query params después de que el usuario paga (o falla)
-// Exportado como named export para montarlo en server.js en /pago-resultado
 // ─── GET /api/payments/debug-sign — diagnóstico de firma (solo sandbox) ───────
 router.get('/debug-sign', (req, res) => {
-  const MERCHANT_ID = (process.env.PAYU_MERCHANT_ID || '').trim();
-  const API_KEY     = (process.env.PAYU_API_KEY     || '').trim();
-  const IS_TEST     = (process.env.PAYU_TEST        || '1').trim();
-
-  if (IS_TEST === '0') return res.status(403).json({ error: 'Solo disponible en sandbox' });
+  const { publicKey, integritySecret, isTest } = wompiEnv();
+  if (!isTest) return res.status(403).json({ error: 'Solo disponible en sandbox (pub_test_)' });
 
   const { amount = '100000', ref = 'TEST-REF' } = req.query;
-  const amountStr = String(Math.round(parseFloat(amount)));
-  const currency  = 'COP';
-  const input     = `${API_KEY}~${MERCHANT_ID}~${ref}~${amountStr}~${currency}`;
-  const signature = md5(input);
+  const amountInCents = Math.round(parseFloat(amount)) * 100;
+  const input = `${ref}${amountInCents}COP${integritySecret}`;
 
   res.json({
     vars: {
-      PAYU_MERCHANT_ID: MERCHANT_ID || '❌ NO CONFIGURADO',
-      PAYU_API_KEY:     API_KEY ? `${API_KEY.slice(0, 6)}...${API_KEY.slice(-4)}` : '❌ NO CONFIGURADO',
-      PAYU_TEST:        IS_TEST,
+      WOMPI_PUBLIC_KEY:       publicKey ? `${publicKey.slice(0, 12)}...` : '❌ NO CONFIGURADO',
+      WOMPI_INTEGRITY_SECRET: integritySecret ? `${integritySecret.slice(0, 10)}...` : '❌ NO CONFIGURADO',
+      WOMPI_EVENTS_SECRET:    wompiEnv().eventsSecret ? 'configurado' : '❌ NO CONFIGURADO',
+      modo:                   isTest ? 'test' : 'producción',
     },
-    formula: `MD5("${input}")`,
-    signature,
-    expected_for_sandbox: md5(`4Vj8eK4rloUd272L48hsrarnUA~508029~${ref}~${amountStr}~${currency}`),
-    match: signature === md5(`4Vj8eK4rloUd272L48hsrarnUA~508029~${ref}~${amountStr}~${currency}`),
+    formula: `SHA256("${ref}" + "${amountInCents}" + "COP" + INTEGRITY_SECRET)`,
+    signature: sha256(input),
   });
 });
 
-export function resultadoPago(req, res) {
-  const {
-    transactionState, referenceCode, TX_VALUE, currency,
-    description, buyerFullName, message, sign,
-    transactionId, authorizationCode,
-  } = req.query;
+// ─── GET /pago-resultado — página de resultado post-pago ──────────────────────
+// Wompi redirige aquí con ?id=<transaction_id>&env=test|prod
+export async function resultadoPago(req, res) {
+  const txId = req.query.id;
+  const { isTest } = wompiEnv();
+  const apiBase = (req.query.env === 'test' || isTest) ? WOMPI_API.test : WOMPI_API.prod;
 
-  const API_KEY     = (process.env.PAYU_API_KEY     || '').trim();
-  const MERCHANT_ID = (process.env.PAYU_MERCHANT_ID || '').trim();
-
-  // Validar firma
-  let firmaValida = true;
-  if (API_KEY && MERCHANT_ID && sign && referenceCode && TX_VALUE && currency && transactionState) {
-    const expected = md5(`${API_KEY}~${MERCHANT_ID}~${referenceCode}~${parseFloat(TX_VALUE).toFixed(1)}~${currency}~${transactionState}`);
-    firmaValida = sign === expected;
-    if (!firmaValida) console.warn('⚠️ /pago-resultado firma inválida:', { sign, expected });
+  let tx = null;
+  if (txId) {
+    try {
+      const r = await fetch(`${apiBase}/transactions/${txId}`);
+      if (r.ok) tx = (await r.json())?.data || null;
+    } catch (err) {
+      console.error('⚠️ /pago-resultado consulta Wompi error:', err.message);
+    }
   }
 
   const STATE_MAP = {
-    '4':   { emoji: '✅', titulo: '¡Pago aprobado!',  color: '#16a34a', bg: '#dcfce7', msg: 'Tu pago fue procesado exitosamente.' },
-    '6':   { emoji: '❌', titulo: 'Pago rechazado',    color: '#dc2626', bg: '#fee2e2', msg: message || 'El pago no pudo procesarse. Intenta con otro método.' },
-    '7':   { emoji: '⏳', titulo: 'Pago pendiente',    color: '#d97706', bg: '#fef3c7', msg: 'Tu pago está siendo validado. Te notificaremos pronto.' },
-    '104': { emoji: '⚠️', titulo: 'Error en el pago', color: '#7c3aed', bg: '#ede9fe', msg: message || 'Ocurrió un error. Contacta a tu asesor.' },
+    APPROVED: { emoji: '✅', titulo: '¡Pago aprobado!',  color: '#16a34a', bg: '#dcfce7', msg: 'Tu pago fue procesado exitosamente. Recibirás la confirmación de tu reserva.' },
+    DECLINED: { emoji: '❌', titulo: 'Pago rechazado',   color: '#dc2626', bg: '#fee2e2', msg: 'El pago no pudo procesarse. Intenta con otro método de pago.' },
+    PENDING:  { emoji: '⏳', titulo: 'Pago pendiente',   color: '#d97706', bg: '#fef3c7', msg: 'Tu pago está siendo validado. Te notificaremos pronto.' },
+    VOIDED:   { emoji: '↩️', titulo: 'Pago anulado',     color: '#64748b', bg: '#f1f5f9', msg: 'La transacción fue anulada.' },
+    ERROR:    { emoji: '⚠️', titulo: 'Error en el pago', color: '#7c3aed', bg: '#ede9fe', msg: 'Ocurrió un error. Contacta a tu asesor.' },
   };
 
-  const estado   = STATE_MAP[transactionState] || STATE_MAP['104'];
-  const monto    = TX_VALUE ? parseFloat(TX_VALUE).toLocaleString('es-CO', { minimumFractionDigits: 0 }) : '—';
-  const aprobado = transactionState === '4';
+  const estado   = STATE_MAP[tx?.status] || STATE_MAP['ERROR'];
+  const monto    = tx?.amount_in_cents ? (tx.amount_in_cents / 100).toLocaleString('es-CO', { minimumFractionDigits: 0 }) : '—';
+  const aprobado = tx?.status === 'APPROVED';
+  const nombre   = tx?.customer_data?.full_name || '';
   const homeUrl  = (process.env.FRONTEND_URL || process.env.BASE_URL || 'https://www.guanago.travel');
   const whatsapp = 'https://wa.me/573153836043';
 
@@ -458,22 +461,21 @@ export function resultadoPago(req, res) {
 <body>
   <div class="card">
     <div class="logo">GuíaSAI</div>
-    <div class="sub">San Andrés Isla · Especialistas en Turismo</div>
+    <div class="sub">RNT 48674 · San Andrés Islas · Turismo Raizal</div>
     <div class="badge">${estado.emoji} ${estado.titulo}</div>
-    <h2>${buyerFullName ? `Hola, ${String(buyerFullName).split(' ')[0]}` : 'Resultado de tu pago'}</h2>
+    <h2>${nombre ? `Hola, ${String(nombre).split(' ')[0]}` : 'Resultado de tu pago'}</h2>
     <p class="msg">${estado.msg}</p>
     <dl class="details">
-      ${description ? `<dt>Servicio</dt><dd>${description}</dd>` : ''}
-      ${TX_VALUE    ? `<dt>Monto</dt><dd>$${monto} ${currency || 'COP'}</dd>` : ''}
-      ${authorizationCode && aprobado ? `<dt>Autorización</dt><dd>${authorizationCode}</dd>` : ''}
-      ${referenceCode ? `<dt>Referencia</dt><dd>${referenceCode}</dd>` : ''}
+      ${tx?.amount_in_cents ? `<dt>Monto</dt><dd>$${monto} ${tx?.currency || 'COP'}</dd>` : ''}
+      ${tx?.payment_method_type ? `<dt>Método</dt><dd>${tx.payment_method_type}</dd>` : ''}
+      ${tx?.reference ? `<dt>Referencia</dt><dd>${tx.reference}</dd>` : ''}
     </dl>
     ${aprobado
-      ? `<a class="btn btn-primary" href="${homeUrl}">🌴 Volver a GuanaGO</a>`
+      ? `<a class="btn btn-primary" href="${homeUrl}">🌴 Volver a GuíaSAI</a>`
       : `<a class="btn btn-wa" href="${whatsapp}" target="_blank">💬 Hablar con un asesor</a>
          <a class="btn btn-primary" href="${homeUrl}">← Volver al inicio</a>`
     }
-    <p class="ref">${transactionId ? `TX: ${transactionId}` : ''}${!firmaValida ? ' · ⚠️ Firma no verificada' : ''}</p>
+    <p class="ref">${txId ? `TX: ${txId}` : ''}</p>
   </div>
 </body>
 </html>`);
