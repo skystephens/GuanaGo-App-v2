@@ -35,7 +35,7 @@ function ArtistaDashboard() {
     <div className="p-4 space-y-4">
       <div className="rounded-2xl bg-purple-50 border border-purple-100 p-4">
         <div className="text-xs font-black uppercase tracking-widest text-purple-500 mb-2">Perfil Artista</div>
-        <div className="text-gray-900 font-bold text-lg">Tu vitrina en GuanaGO</div>
+        <div className="text-gray-900 font-bold text-lg">Tu vitrina en GuiaSAI</div>
         <p className="text-sm text-gray-600 mt-1">
           Presenta tu portafolio: músicos, artesanos, pintores, creadores digitales y makers. Centraliza biografía,
           redes, tarifas y disponibilidad.

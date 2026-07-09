@@ -1464,7 +1464,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                       </button>
                       {cot.telefono && (
                         <a
-                          href={`https://wa.me/${cot.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${cot.nombre || ''}, te contactamos de GuanaGO respecto a tu cotización para San Andrés.`)}`}
+                          href={`https://wa.me/${cot.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${cot.nombre || ''}, te contactamos de GuiaSAI respecto a tu cotización para San Andrés.`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={e => e.stopPropagation()}

@@ -98,7 +98,7 @@ const MisCotizaciones: React.FC<Props> = ({ onBack, onNavigate, initialTelefono 
           </button>
           <div>
             <h1 className="text-lg font-black">Mis Cotizaciones</h1>
-            <p className="text-xs text-emerald-100">GuanaGO · San Andrés Islas</p>
+            <p className="text-xs text-emerald-100">GuiaSAI · San Andrés Islas</p>
           </div>
         </div>
 

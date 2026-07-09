@@ -21,7 +21,7 @@ const SocioAlojamientoProductos: React.FC = () => {
         </div>
         <h2 className="text-2xl font-bold mb-2">Producto enviado</h2>
         <p className="text-gray-400 mb-8 max-w-xs">
-          Tu producto/servicio fue registrado y está pendiente de aprobación por el equipo de GuanaGO.
+          Tu producto/servicio fue registrado y está pendiente de aprobación por el equipo de GuiaSAI.
         </p>
         <pre className="bg-gray-800 rounded-xl p-4 text-xs text-left max-w-full overflow-x-auto">{JSON.stringify(result, null, 2)}</pre>
         <button onClick={() => { setSubmitted(false); setResult(null); }} className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 rounded-xl mt-6">Registrar otro producto</button>

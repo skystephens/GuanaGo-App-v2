@@ -88,7 +88,8 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
   // ── TURISTA autenticado: Inicio, Mapa, Cotizaciones, Mi viaje, Perfil ────────
   const touristNavAuth = [
     { route: AppRoute.HOME,              icon: <Compass size={22} />,      label: t('nav.home') },
-    { route: AppRoute.INTERACTIVE_MAP,   icon: <MapIcon size={22} />,      label: t('nav.map') },
+    // Mapa oculto (decisión Sky jul-2026: sin mapa por ahora)
+    // { route: AppRoute.INTERACTIVE_MAP,   icon: <MapIcon size={22} />,      label: t('nav.map') },
     { route: AppRoute.MIS_COTIZACIONES,  icon: <FileText size={22} />,     label: 'Cotizaciones' },
     { route: AppRoute.MI_VIAJE,          icon: <CalendarDays size={22} />, label: t('nav.myTrip') },
     { route: AppRoute.PROFILE,           icon: <UserCircle size={22} />,   label: t('nav.profile') },
@@ -97,7 +98,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
   // ── TURISTA anónimo: Inicio, Mapa, Cotizaciones, Servicios ▾, Entrar ────────
   const touristNavGuest = [
     { route: AppRoute.HOME,              icon: <Compass size={22} />,      label: t('nav.home'),     special: false },
-    { route: AppRoute.INTERACTIVE_MAP,   icon: <MapIcon size={22} />,      label: t('nav.map'),      special: false },
+    // { route: AppRoute.INTERACTIVE_MAP,   icon: <MapIcon size={22} />,      label: t('nav.map'),      special: false },
     { route: AppRoute.MIS_COTIZACIONES,  icon: <FileText size={22} />,     label: 'Cotizaciones',    special: false },
     { route: 'SERVICES' as AppRoute,     icon: <LayoutGrid size={22} />,   label: t('nav.services'), special: true  },
     { route: AppRoute.AUTH_GATE,         icon: <UserCircle size={22} />,   label: t('nav.login'),    special: false },
@@ -106,7 +107,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate, role,
   // ── RESIDENTE: Inicio, Mapa, Concursos, Embajador, Perfil ───────────────────
   const residenteNav = [
     { route: AppRoute.HOME,            icon: <Compass size={22} />,      label: t('nav.home') },
-    { route: AppRoute.INTERACTIVE_MAP, icon: <MapIcon size={22} />,      label: t('nav.map') },
+    // { route: AppRoute.INTERACTIVE_MAP, icon: <MapIcon size={22} />,      label: t('nav.map') },
     { route: AppRoute.CONCURSOS,       icon: <Trophy size={22} />,       label: t('nav.contests') },
     { route: AppRoute.EMBAJADOR,       icon: <Users size={22} />,        label: t('nav.ambassador') },
     { route: AppRoute.PROFILE,         icon: <UserCircle size={22} />,   label: t('nav.profile') },

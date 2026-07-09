@@ -579,7 +579,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                 </div>
                 <div>
                   <h2 className="text-base font-bold leading-tight">Cotiza tu viaje</h2>
-                  <p className="text-xs text-emerald-100">San Andrés · GuanaGO</p>
+                  <p className="text-xs text-emerald-100">San Andrés · GuiaSAI</p>
                 </div>
               </div>
               <button
@@ -1193,7 +1193,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                   <div>
                     <h3 className="text-2xl font-black text-gray-800">¡Solicitud enviada!</h3>
                     <p className="text-gray-500 mt-2 text-sm leading-relaxed">
-                      Un asesor de GuanaGO te escribirá por WhatsApp a{' '}
+                      Un asesor de GuiaSAI te escribirá por WhatsApp a{' '}
                       <span className="font-bold text-emerald-600">{telefono}</span>{' '}
                       en las próximas horas con tu propuesta personalizada.
                     </p>
@@ -1209,7 +1209,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                   </div>
 
                   <a
-                    href={`https://wa.me/573206620695?text=${encodeURIComponent(`Hola GuanaGO! Acabo de cotizar mi viaje a San Andrés. Mi número: ${telefono}`)}`}
+                    href={`https://wa.me/573206620695?text=${encodeURIComponent(`Hola GuiaSAI! Acabo de cotizar mi viaje a San Andrés. Mi número: ${telefono}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-[#1da851] transition-colors w-full justify-center"
