@@ -93,6 +93,7 @@ import CocoArtHistoria from './pages/CocoArtHistoria';
 
 // Vincular Comercio
 import VincularComercio from './pages/VincularComercio';
+import Proveedores from './pages/Proveedores';
 import AliadoDiagnostico from './pages/AliadoDiagnostico';
 
 // Admin — Aliados & Arquitectura
@@ -161,6 +162,9 @@ const App: React.FC = () => {
       });
       setPublicPrintMode(params.get('pdf') === '1');
       setCurrentRoute(AppRoute.PUBLIC_QUOTE);
+    }
+    if (params.get('p') === 'proveedores') {
+      setCurrentRoute(AppRoute.PROVEEDORES);
     }
     const miscotTel = params.get('miscot');
     if (miscotTel) {
@@ -319,6 +323,7 @@ const App: React.FC = () => {
       case AppRoute.CATALOG_PUBLICO: return <CatalogPublico onNavigate={navigateTo} onBack={goBack} />;
       case AppRoute.COCO_ART_HISTORIA: return <CocoArtHistoria onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.VINCULAR_COMERCIO: return <VincularComercio onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.PROVEEDORES: return <Proveedores onBack={goBack} />;
       case AppRoute.ALIADO_DIAGNOSTICO: return <AliadoDiagnostico onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_ALIADOS: return <AdminAliados onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_RED_ALIADOS: return <AdminRedAliados onBack={goBack} onNavigate={navigateTo} />;
