@@ -7,7 +7,7 @@
 import { GUANA_LOGO } from '../constants';
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Calendar, Users, Phone, Mail, MapPin, Anchor, Bed,
+  Calendar, Users, User, Phone, Mail, MapPin, Anchor, Bed,
   Car, Package as PackageIcon, Loader2, AlertCircle, MessageCircle,
   CheckCircle2, DollarSign, FileText, ArrowLeft, ChevronLeft, ChevronRight, X,
 } from 'lucide-react';
@@ -471,13 +471,25 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
           <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
             <Calendar size={13} className="text-emerald-500" /> Tu viaje
           </h2>
-          <div className="space-y-2">
+          <div className="space-y-3">
+            {cotizacion.nombre && cotizacion.nombre !== 'Cliente Web' && (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+                  <User size={15} className="text-gray-400" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Nombre</p>
+                  <p className="text-sm md:text-base font-semibold text-gray-800">{cotizacion.nombre}</p>
+                </div>
+              </div>
+            )}
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
                 <Calendar size={15} className="text-emerald-500" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-800">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Fechas del viaje</p>
+                <p className="text-sm md:text-base font-semibold text-gray-800">
                   {fmtDateShort(cotizacion.fechaInicio)} → {fmtDateShort(cotizacion.fechaFin)}
                   {nights > 0 && <span className="text-gray-400 font-normal"> · {nights} {nights === 1 ? 'noche' : 'noches'}</span>}
                 </p>
@@ -485,23 +497,18 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
                 <Users size={15} className="text-blue-500" />
               </div>
-              <p className="text-sm text-gray-700">
-                {cotizacion.adultos} adulto{cotizacion.adultos !== 1 ? 's' : ''}
-                {cotizacion.ninos > 0 && ` · ${cotizacion.ninos} niño${cotizacion.ninos !== 1 ? 's' : ''}`}
-                {cotizacion.bebes > 0 && ` · ${cotizacion.bebes} bebé${cotizacion.bebes !== 1 ? 's' : ''}`}
-              </p>
-            </div>
-            {cotizacion.nombre && cotizacion.nombre !== 'Cliente Web' && (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
-                  <Phone size={15} className="text-gray-400" />
-                </div>
-                <p className="text-sm text-gray-700">{cotizacion.nombre}</p>
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Número de pasajeros</p>
+                <p className="text-sm md:text-base text-gray-700">
+                  {cotizacion.adultos} adulto{cotizacion.adultos !== 1 ? 's' : ''}
+                  {cotizacion.ninos > 0 && ` · ${cotizacion.ninos} niño${cotizacion.ninos !== 1 ? 's' : ''}`}
+                  {cotizacion.bebes > 0 && ` · ${cotizacion.bebes} bebé${cotizacion.bebes !== 1 ? 's' : ''}`}
+                </p>
               </div>
-            )}
+            </div>
           </div>
         </div>
 
