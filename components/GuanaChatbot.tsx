@@ -297,6 +297,20 @@ const GuanaChatbot: React.FC<GuanaChatbotProps> = ({ onCotizar }) => {
                     <p className="text-xs text-gray-500">Un representante del equipo te responderá pronto</p>
                   </div>
                 </button>
+                <a
+                  href="https://wa.me/573153836043?text=Hola%20GuiaSAI%20%F0%9F%8C%B4%20quiero%20informaci%C3%B3n"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-green-200 hover:border-green-400 hover:bg-green-50 transition-all text-left"
+                >
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
+                    <Phone size={20} className="text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm text-gray-800">Escribir por WhatsApp</p>
+                    <p className="text-xs text-gray-500">Chatea directo con nuestro equipo</p>
+                  </div>
+                </a>
               </div>
             )}
 

@@ -13,10 +13,9 @@ import { GUANA_LOGO } from '../constants';
 
 // ── Formularios Airtable (staging) ──────────────────────────────────
 const FORM_ALOJAMIENTOS = 'https://airtable.com/embed/shrcjhdCLdSNlg6rX';
-// TODO: crear form view en tabla Servicios_Solicitudes y pegar el shr aquí
-const FORM_TOURS: string | null = null;
+const FORM_TOURS: string | null = 'https://airtable.com/embed/shrtj9wTNCYoMdfcM';
 
-const WHATSAPP_GUIASAI = 'https://wa.me/573000000000'; // TODO Sky: número real
+const WHATSAPP_GUIASAI = 'https://wa.me/573153836043';
 
 type Tab = 'alojamientos' | 'tours';
 
