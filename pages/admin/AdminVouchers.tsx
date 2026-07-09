@@ -6,9 +6,9 @@
  * IA:    Claude agent en modo admin para asistencia operativa
  */
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
-  ArrowLeft, Search, Plus, Loader2, Bot, Send, ChevronDown, ChevronUp,
+  ArrowLeft, Search, Plus, Loader2, Bot, Send, ChevronDown, ChevronUp, ChevronLeft,
   Sparkles, CheckCircle2, Clock, XCircle, RefreshCw, MapPin, Users,
   Calendar, Phone, Mail, Eye, X, ChevronRight, FileText, Pencil, Copy,
 } from 'lucide-react';
@@ -269,6 +269,217 @@ function AgenteVouchers({ vouchers }: { vouchers: VoucherRecord[] }) {
 }
 
 // ─── Voucher Card ─────────────────────────────────────────────────────────────
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VoucherCalendar — vista calendario (semana / mes / trimestre)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function ymdLocal(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function startOfWeek(d: Date): Date {
+  const r = new Date(d);
+  r.setDate(r.getDate() - ((r.getDay() + 6) % 7)); // lunes = inicio
+  r.setHours(0, 0, 0, 0);
+  return r;
+}
+
+function VoucherCalendar({ vouchers, onSelect }: {
+  vouchers: VoucherRecord[];
+  onSelect: (v: VoucherRecord) => void;
+}) {
+  const [vista, setVista] = useState<'semana' | 'mes' | 'trimestre'>('mes');
+  const [cursor, setCursor] = useState<Date>(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; });
+  const hoyStr = ymdLocal(new Date());
+
+  // Mapa fecha → vouchers (ordenados por hora)
+  const porFecha = useMemo(() => {
+    const map: Record<string, VoucherRecord[]> = {};
+    vouchers.forEach(v => {
+      const f = (v.fecha || '').slice(0, 10);
+      if (!f) return;
+      (map[f] = map[f] || []).push(v);
+    });
+    Object.values(map).forEach(l => l.sort((a, b) => (a.hora || '').localeCompare(b.hora || '')));
+    return map;
+  }, [vouchers]);
+
+  const navegar = (dir: -1 | 1) => {
+    const d = new Date(cursor);
+    if (vista === 'semana') d.setDate(d.getDate() + dir * 7);
+    else if (vista === 'mes') d.setMonth(d.getMonth() + dir, 1);
+    else d.setMonth(d.getMonth() + dir * 3, 1);
+    setCursor(d);
+  };
+
+  const titulo = (() => {
+    if (vista === 'semana') {
+      const ini = startOfWeek(cursor);
+      const fin = new Date(ini); fin.setDate(fin.getDate() + 6);
+      return `${ini.getDate()} ${MESES[ini.getMonth()].slice(0, 3)} – ${fin.getDate()} ${MESES[fin.getMonth()].slice(0, 3)} ${fin.getFullYear()}`;
+    }
+    if (vista === 'mes') return `${MESES[cursor.getMonth()]} ${cursor.getFullYear()}`;
+    const m2 = new Date(cursor); m2.setMonth(m2.getMonth() + 2);
+    return `${MESES[cursor.getMonth()].slice(0, 3)} – ${MESES[m2.getMonth()].slice(0, 3)} ${m2.getFullYear()}`;
+  })();
+
+  const Chip = ({ v, conHora }: { v: VoucherRecord; conHora?: boolean }) => {
+    const cfg = ESTADO_CFG[v.estado] ?? ESTADO_CFG['Pendiente'];
+    return (
+      <button
+        onClick={() => onSelect(v)}
+        title={`#${v.reservaNum} · ${v.titular} · ${v.tourName}${v.hora ? ' · ' + v.hora : ''} · ${v.estado}`}
+        className={`w-full text-left px-1.5 py-0.5 rounded-md text-[9px] font-bold truncate ${cfg.bg} ${cfg.text} hover:brightness-125 transition-all`}
+      >
+        {conHora && v.hora ? `${v.hora} · ` : ''}#{v.reservaNum} {v.titular}
+      </button>
+    );
+  };
+
+  // 42 celdas (6 semanas) desde el lunes anterior al día 1; recorta la fila final si sobra
+  const celdasMes = (base: Date): Date[] => {
+    const ini = startOfWeek(new Date(base.getFullYear(), base.getMonth(), 1));
+    const celdas = Array.from({ length: 42 }, (_, i) => { const d = new Date(ini); d.setDate(d.getDate() + i); return d; });
+    return celdas.slice(35).every(d => d.getMonth() !== base.getMonth()) ? celdas.slice(0, 35) : celdas;
+  };
+
+  const CeldaDia = ({ d, mesRef }: { d: Date; mesRef: number }) => {
+    const key = ymdLocal(d);
+    const lista = porFecha[key] || [];
+    const esHoy = key === hoyStr;
+    const otroMes = d.getMonth() !== mesRef;
+    return (
+      <div className={`min-h-[72px] border border-gray-800 rounded-lg p-1 flex flex-col gap-0.5 ${otroMes ? 'opacity-30' : ''} ${esHoy ? 'ring-1 ring-orange-500 bg-orange-950/20' : 'bg-gray-900'}`}>
+        <span className={`text-[9px] font-bold ${esHoy ? 'text-orange-400' : 'text-gray-500'}`}>{d.getDate()}</span>
+        {lista.slice(0, 3).map(v => <Chip key={v.id} v={v} />)}
+        {lista.length > 3 && (
+          <span className="text-[8px] text-gray-500 font-bold px-1">+{lista.length - 3} más</span>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-3 space-y-3">
+      {/* Barra de control */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-1">
+          <button onClick={() => navegar(-1)} className="w-7 h-7 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center">
+            <ChevronLeft size={13} />
+          </button>
+          <button
+            onClick={() => { const d = new Date(); d.setHours(0, 0, 0, 0); setCursor(d); }}
+            className="px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-[10px] font-bold text-gray-300"
+          >
+            Hoy
+          </button>
+          <button onClick={() => navegar(1)} className="w-7 h-7 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center">
+            <ChevronRight size={13} />
+          </button>
+          <span className="text-xs font-bold text-white ml-2 capitalize">{titulo}</span>
+        </div>
+        <div className="flex gap-1">
+          {(['semana', 'mes', 'trimestre'] as const).map(v => (
+            <button
+              key={v}
+              onClick={() => setVista(v)}
+              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-colors ${
+                vista === v ? 'bg-orange-600 text-white' : 'bg-gray-800 text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Vista SEMANA */}
+      {vista === 'semana' && (() => {
+        const ini = startOfWeek(cursor);
+        const dias = Array.from({ length: 7 }, (_, i) => { const d = new Date(ini); d.setDate(d.getDate() + i); return d; });
+        return (
+          <div className="grid grid-cols-7 gap-1">
+            {dias.map((d, i) => {
+              const key = ymdLocal(d);
+              const lista = porFecha[key] || [];
+              const esHoy = key === hoyStr;
+              return (
+                <div key={key} className={`min-h-[120px] border border-gray-800 rounded-lg p-1 flex flex-col gap-0.5 ${esHoy ? 'ring-1 ring-orange-500 bg-orange-950/20' : 'bg-gray-900'}`}>
+                  <span className={`text-[9px] font-bold text-center pb-0.5 ${esHoy ? 'text-orange-400' : 'text-gray-500'}`}>
+                    {DIAS_SEMANA[i]} {d.getDate()}
+                  </span>
+                  {lista.map(v => <Chip key={v.id} v={v} conHora />)}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
+
+      {/* Vista MES */}
+      {vista === 'mes' && (
+        <div>
+          <div className="grid grid-cols-7 gap-1 mb-1">
+            {DIAS_SEMANA.map(d => (
+              <span key={d} className="text-[9px] font-bold text-gray-600 text-center uppercase">{d}</span>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {celdasMes(cursor).map(d => <CeldaDia key={ymdLocal(d)} d={d} mesRef={cursor.getMonth()} />)}
+          </div>
+        </div>
+      )}
+
+      {/* Vista TRIMESTRE */}
+      {vista === 'trimestre' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {[0, 1, 2].map(offset => {
+            const base = new Date(cursor.getFullYear(), cursor.getMonth() + offset, 1);
+            return (
+              <div key={offset}>
+                <p className="text-[10px] font-bold text-gray-400 text-center mb-1 capitalize">
+                  {MESES[base.getMonth()]} {base.getFullYear()}
+                </p>
+                <div className="grid grid-cols-7 gap-0.5 mb-0.5">
+                  {DIAS_SEMANA.map(d => (
+                    <span key={d} className="text-[7px] font-bold text-gray-600 text-center">{d[0]}</span>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-0.5">
+                  {celdasMes(base).map(d => {
+                    const key = ymdLocal(d);
+                    const n = (porFecha[key] || []).length;
+                    const esHoy = key === hoyStr;
+                    const otroMes = d.getMonth() !== base.getMonth();
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => { if (n > 0) { setCursor(new Date(d)); setVista('semana'); } }}
+                        title={n > 0 ? `${n} reserva${n > 1 ? 's' : ''} — clic para ver la semana` : undefined}
+                        className={`aspect-square rounded flex flex-col items-center justify-center text-[8px] font-bold transition-colors ${
+                          otroMes ? 'opacity-20 text-gray-600' :
+                          n > 0 ? 'bg-orange-600/80 text-white hover:bg-orange-500 cursor-pointer' :
+                          esHoy ? 'ring-1 ring-orange-500 text-orange-400' : 'bg-gray-900 text-gray-500'
+                        }`}
+                      >
+                        {d.getDate()}
+                        {n > 0 && <span className="text-[6px] leading-none">{n}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function VoucherCard({ voucher, onSelect, onUpdateEstado, onEdit, onDuplicate }: {
   voucher: VoucherRecord;
@@ -1222,6 +1433,9 @@ const AdminVouchers: React.FC<AdminVouchersProps> = ({ onBack, onNavigate }) => 
             </button>
           </div>
         </div>
+
+        {/* Calendario de reservas */}
+        <VoucherCalendar vouchers={filtered} onSelect={setSelected} />
 
         {/* Lista */}
         {loading ? (
