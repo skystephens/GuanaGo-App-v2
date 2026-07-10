@@ -107,6 +107,15 @@ router.get('/:id', async (req, res) => {
 <body>
 <div class="card">
 
+  <!-- Marca GuiaSAI -->
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid #f3f4f6;">
+    <img src="https://guiasanandresislas.com/wp-content/uploads/2024/11/cropped-LOGO-GUIASAI-SIN-TEXTO1.png" alt="GuiaSAI" style="width:36px;height:36px;object-fit:contain;">
+    <div>
+      <p style="font-size:16px;font-weight:900;color:#111827;line-height:1;">Guía<span style="color:#f97316;">SAI</span></p>
+      <p style="font-size:8px;color:#9ca3af;font-weight:700;letter-spacing:.6px;margin-top:3px;">RNT 48674 · TURISMO RAIZAL · SAN ANDRÉS ISLAS</p>
+    </div>
+  </div>
+
   <!-- Header naranja -->
   <div style="background:linear-gradient(135deg,#f97316,#ea580c);padding:22px 18px 18px;position:relative;">
     <p style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.8);margin-bottom:6px;">Experiencia Reservada</p>
