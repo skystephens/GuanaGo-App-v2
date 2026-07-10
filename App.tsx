@@ -56,6 +56,8 @@ import AdminBackend from './pages/admin/AdminBackend';
 import AdminCaribbeanNight from './pages/admin/AdminCaribbeanNight';
 import AdminArtistas from './pages/admin/AdminArtistas';
 import AdminCampanas from './pages/admin/AdminCampanas';
+import Home2 from './pages/Home2';
+import AdminEditorHome from './pages/admin/AdminEditorHome';
 import AdminSocios from './pages/admin/AdminSocios';
 import AdminNegociosLocales from './pages/admin/AdminNegociosLocales';
 import NegocioLocalPerfil from './pages/partner/NegocioLocalPerfil';
@@ -166,6 +168,9 @@ const App: React.FC = () => {
     }
     if (params.get('p') === 'proveedores') {
       setCurrentRoute(AppRoute.PROVEEDORES);
+    }
+    if (params.get('p') === 'home2') {
+      setCurrentRoute(AppRoute.HOME2);
     }
     const miscotTel = params.get('miscot');
     if (miscotTel) {
@@ -306,6 +311,8 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_CARIBBEAN: return <AdminCaribbeanNight onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_ARTISTAS: return <AdminArtistas onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_CAMPANAS: return <AdminCampanas onBack={goBack} />;
+      case AppRoute.HOME2: return <Home2 onNavigate={navigateTo} onCotizar={() => cotizadorRef.current?.open()} />;
+      case AppRoute.ADMIN_EDITOR_HOME: return <AdminEditorHome onBack={goBack} />;
       case AppRoute.ARTISTA_PORTAL: return <ArtistaPortal onBack={goBack} onNavigate={navigateTo} artistaId={detailData?.artistaId} />;
       case AppRoute.ADMIN_SOCIOS: return <AdminSocios onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_NEGOCIOS_LOCALES: return <AdminNegociosLocales onBack={goBack} onNavigate={navigateTo} />;

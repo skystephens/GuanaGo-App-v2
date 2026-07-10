@@ -24,6 +24,7 @@ import coworkRoutes from './backend/routes/cowork.js';
 import publicQuoteRoutes from './backend/routes/publicQuote.js';
 import publicVoucherRoutes from './backend/routes/publicVoucher.js';
 import paymentsRoutes  from './backend/routes/payments.js';
+import homeConfigRoutes from './backend/routes/homeConfig.js';
 import hubRoutes      from './backend/routes/hub.js';
 import leadsRoutes       from './backend/routes/leads.js';
 import agentesRoutes     from './backend/routes/agentes.js';
@@ -227,6 +228,7 @@ app.use('/voucher', publicVoucherRoutes);
 // GET  /pagar/:referenceCode  → página de pago auto-submit a PayU
 // POST /api/payments/webhook  → confirmación de pago desde PayU
 app.use('/api/payments', paymentsRoutes);
+app.use('/api/home-config', homeConfigRoutes);
 app.use('/pagar', paymentsRoutes);
 
 // ==================== IMAGE PROXY (PDF generation) ====================

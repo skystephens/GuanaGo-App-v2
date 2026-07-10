@@ -600,6 +600,15 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
           {/* ── 4. Contenido & Cultura ── */}
           <Section label="Contenido & Cultura" color="orange">
             <BigButton
+              label="Editor del Home"
+              sub="Edita la portada como en WordPress: hero, paisajes, bandera del día, textos"
+              icon={<span className="text-lg">🖌️</span>}
+              gradient="from-teal-950 via-cyan-950 to-teal-950"
+              border="border-teal-600 hover:border-teal-400"
+              pulse="bg-teal-400"
+              onClick={() => onNavigate(AppRoute.ADMIN_EDITOR_HOME)}
+            />
+            <BigButton
               label="Campañas & Anuncios"
               sub="Copies prediseñados con data de Airtable · Bandera DIMAR · 80/20 · #LaivStieg"
               icon={<span className="text-lg">📣</span>}
