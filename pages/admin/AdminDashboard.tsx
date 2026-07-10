@@ -599,6 +599,15 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
 
           {/* ── 4. Contenido & Cultura ── */}
           <Section label="Contenido & Cultura" color="orange">
+            <BigButton
+              label="Campañas & Anuncios"
+              sub="Copies prediseñados con data de Airtable · Bandera DIMAR · 80/20 · #LaivStieg"
+              icon={<span className="text-lg">📣</span>}
+              gradient="from-orange-950 via-rose-950 to-orange-950"
+              border="border-orange-600 hover:border-orange-400"
+              pulse="bg-orange-400"
+              onClick={() => onNavigate(AppRoute.ADMIN_CAMPANAS)}
+            />
             <div className="grid grid-cols-3 gap-2">
               <MiniButton icon={<PackageIcon size={18} className="text-orange-400" />} label="Servicios" onClick={() => onNavigate(AppRoute.ADMIN_SERVICES)} />
               <MiniButton icon={<Music size={18} className="text-orange-400" />} label="Caribbean"
