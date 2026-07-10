@@ -8,7 +8,7 @@ import { GUANA_LOGO } from '../constants';
  * Los formularios escriben en tablas STAGING de Airtable (nunca en las productivas).
  * Sky revisa cada solicitud y la aprueba hacia AlojamientosTuristicos_SAI / ServiciosTuristicos_SAI.
  *
- * Acceso directo compartible: https://guanago.travel/?p=proveedores
+ * Acceso directo compartible: https://app.guiasanandresislas.com/?p=proveedores
  */
 
 // ── Formularios Airtable (staging) ──────────────────────────────────

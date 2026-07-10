@@ -571,7 +571,7 @@ function VoucherCard({ voucher, onSelect, onUpdateEstado, onEdit, onDuplicate }:
         <button
           onClick={e => {
             e.stopPropagation();
-            const url = `https://www.guanago.travel/voucher/${voucher.id}`;
+            const url = `https://app.guiasanandresislas.com/voucher/${voucher.id}`;
             navigator.clipboard.writeText(url)
               .then(() => alert('¡Enlace copiado! Compártelo con el cliente.'))
               .catch(() => window.open(url, '_blank'));

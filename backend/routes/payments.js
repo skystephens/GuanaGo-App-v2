@@ -112,7 +112,7 @@ router.post('/create', async (req, res) => {
   } = req.body;
 
   const { publicKey, integritySecret, isTest } = wompiEnv();
-  const BACKEND_URL = (process.env.BACKEND_URL || process.env.BASE_URL || 'https://www.guanago.travel').trim().replace(/\/$/, '');
+  const BACKEND_URL = (process.env.BACKEND_URL || process.env.BASE_URL || 'https://app.guiasanandresislas.com').trim().replace(/\/$/, '');
 
   if (!publicKey || !integritySecret) {
     return res.status(503).json({
@@ -429,7 +429,7 @@ export async function resultadoPago(req, res) {
   const monto    = tx?.amount_in_cents ? (tx.amount_in_cents / 100).toLocaleString('es-CO', { minimumFractionDigits: 0 }) : '—';
   const aprobado = tx?.status === 'APPROVED';
   const nombre   = tx?.customer_data?.full_name || '';
-  const homeUrl  = (process.env.FRONTEND_URL || process.env.BASE_URL || 'https://www.guanago.travel');
+  const homeUrl  = (process.env.FRONTEND_URL || process.env.BASE_URL || 'https://app.guiasanandresislas.com');
   const whatsapp = 'https://wa.me/573153836043';
 
   res.send(`<!DOCTYPE html>

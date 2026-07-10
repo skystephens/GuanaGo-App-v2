@@ -50,7 +50,7 @@ const Profile: React.FC<ProfileProps> = ({ role, isAuthenticated, onLogin, onSwi
           ? { 
               id: adminData?.id || 'admin', 
               name: adminData?.nombre || 'Super Admin', 
-              email: adminData?.email || 'admin@guanago.travel', 
+              email: adminData?.email || 'admin@app.guiasanandresislas.com', 
               role: 'admin', 
               image: `https://ui-avatars.com/api/?name=${encodeURIComponent(adminData?.nombre || 'Admin')}&background=8B5CF6&color=fff&bold=true`, 
               status: 'active', 
@@ -70,7 +70,7 @@ const Profile: React.FC<ProfileProps> = ({ role, isAuthenticated, onLogin, onSwi
           ? { 
               id: adminInfo?.id || 'admin', 
               name: adminInfo?.nombre || 'Super Admin', 
-              email: adminInfo?.email || 'admin@guanago.travel', 
+              email: adminInfo?.email || 'admin@app.guiasanandresislas.com', 
               role: 'admin', 
               image: `https://ui-avatars.com/api/?name=${encodeURIComponent(adminInfo?.nombre || 'Admin')}&background=8B5CF6&color=fff&bold=true`, 
               status: 'active', 

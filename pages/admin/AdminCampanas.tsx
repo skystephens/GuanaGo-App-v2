@@ -73,9 +73,9 @@ function generarCopies(opts: {
   const precioTxt = precio ? `${fmtCOP(Number(precio))} COP ${unidad}` : '';
   const cta = {
     instagram: 'Cotiza en el link de la bio 🔗 o escríbenos al WhatsApp 315 383 6043',
-    whatsapp: 'Responde este mensaje o cotiza directo aquí 👉 https://guanago.travel',
+    whatsapp: 'Responde este mensaje o cotiza directo aquí 👉 https://app.guiasanandresislas.com',
     estado: '👉 Escríbenos: 315 383 6043',
-    ads: 'Cotiza ahora en guanago.travel',
+    ads: 'Cotiza ahora en app.guiasanandresislas.com',
   }[canal];
   const rnd = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 

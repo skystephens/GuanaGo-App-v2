@@ -309,7 +309,7 @@ export function generateQuoteHTML(
         <div style="font-size:13px;font-weight:700;color:#15201c;margin-bottom:4px;">¿Listo para tu aventura en San Andrés? 🌴</div>
         <div style="font-size:12px;color:#6b7b74;margin-bottom:12px;">Confirma tu reserva o ajusta los servicios con tu asesor GuanaGO</div>
         <div style="font-size:13px;font-weight:600;color:#16a37a;">
-          📱 WhatsApp: +57 320 662 0695&nbsp;&nbsp;·&nbsp;&nbsp;🌐 guanago.travel
+          📱 WhatsApp: +57 320 662 0695&nbsp;&nbsp;·&nbsp;&nbsp;🌐 app.guiasanandresislas.com
         </div>
         <div style="font-size:10px;color:#6b7b74;margin-top:12px;">GuanaGO © ${new Date().getFullYear()} · San Andrés Isla, Colombia · RNT 48674</div>
       </div>

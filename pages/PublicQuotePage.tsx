@@ -633,7 +633,7 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
           </a>
           {cotizacion.email && (
             <a
-              href={`mailto:info@guanago.travel?subject=Consulta cotización&body=Hola, tengo preguntas sobre mi cotización.`}
+              href={`mailto:info@app.guiasanandresislas.com?subject=Consulta cotización&body=Hola, tengo preguntas sobre mi cotización.`}
               className="flex items-center justify-center gap-2 w-full mt-2 bg-gray-50 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-100 transition-colors"
             >
               <Mail size={14} />
