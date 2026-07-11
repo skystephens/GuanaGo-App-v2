@@ -600,6 +600,15 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
           {/* ── 4. Contenido & Cultura ── */}
           <Section label="Contenido & Cultura" color="orange">
             <BigButton
+              label="CRM · Torre Comercial 🏝️"
+              sub="Tycoon GuiaSAI: departamentos en vivo, pipeline de leads, guiones de venta"
+              icon={<span className="text-lg">🎯</span>}
+              gradient="from-emerald-950 via-teal-950 to-emerald-950"
+              border="border-emerald-600 hover:border-emerald-400"
+              pulse="bg-emerald-400"
+              onClick={() => onNavigate(AppRoute.ADMIN_CRM)}
+            />
+            <BigButton
               label="Editor del Home"
               sub="Edita la portada como en WordPress: hero, paisajes, bandera del día, textos"
               icon={<span className="text-lg">🖌️</span>}
