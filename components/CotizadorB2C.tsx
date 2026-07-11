@@ -141,7 +141,7 @@ const Counter: React.FC<{
     <div className="flex items-center gap-3">
       <button
         onClick={() => onChange(Math.max(min, value - 1))}
-        className="w-9 h-9 rounded-full border-2 border-emerald-400 text-emerald-600 flex items-center justify-center hover:bg-emerald-50 transition-colors disabled:opacity-30"
+        className="w-9 h-9 rounded-full border-2 border-teal-500 text-teal-700 flex items-center justify-center hover:bg-teal-50 transition-colors disabled:opacity-30"
         disabled={value <= min}
       >
         <Minus size={14} />
@@ -149,7 +149,7 @@ const Counter: React.FC<{
       <span className="w-6 text-center font-bold text-gray-800 text-base">{value}</span>
       <button
         onClick={() => onChange(Math.min(max, value + 1))}
-        className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 transition-colors disabled:opacity-30"
+        className="w-9 h-9 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-colors disabled:opacity-30"
         disabled={value >= max}
       >
         <Plus size={14} />
@@ -188,8 +188,8 @@ const ServiceCard: React.FC<{
       onClick={onToggle}
       className={`relative rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-200 active:scale-95 ${
         selected
-          ? 'border-emerald-500 shadow-lg shadow-emerald-100'
-          : 'border-gray-200 hover:border-emerald-300'
+          ? 'border-teal-500 shadow-lg shadow-teal-100'
+          : 'border-gray-200 hover:border-teal-300'
       }`}
     >
       <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
@@ -206,8 +206,8 @@ const ServiceCard: React.FC<{
           </div>
         )}
         {selected && (
-          <div className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center">
-            <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg">
+          <div className="absolute inset-0 bg-teal-500/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center shadow-lg">
               <Check size={20} className="text-white" />
             </div>
           </div>
@@ -262,16 +262,16 @@ const ServiceCard: React.FC<{
           {price > 0 ? (
             <div>
               <p className="text-[10px] text-gray-400">desde</p>
-              <p className="text-xs font-bold text-emerald-600 leading-tight">{fmtCOP(price)}</p>
+              <p className="text-xs font-bold text-teal-700 leading-tight">{fmtCOP(price)}</p>
               <p className="text-[10px] text-gray-400">/ {priceLabel || 'persona'}</p>
             </div>
           ) : (
-            <p className="text-[10px] text-emerald-600 font-medium">Consultar precio</p>
+            <p className="text-[10px] text-teal-700 font-medium">Consultar precio</p>
           )}
           {total > 0 && selected && (
             <div className="text-right">
               <p className="text-[10px] text-gray-400">total</p>
-              <p className="text-xs font-bold text-emerald-700">{fmtCOP(total)}</p>
+              <p className="text-xs font-bold text-teal-800">{fmtCOP(total)}</p>
             </div>
           )}
         </div>
@@ -558,7 +558,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
       {!isOpen && (
         <button
           onClick={open}
-          className="fixed bottom-24 right-4 z-40 flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg shadow-emerald-200 px-4 py-3 hover:from-emerald-600 hover:to-teal-600 active:scale-95 transition-all duration-200"
+          className="fixed bottom-24 right-4 z-40 flex items-center gap-2 bg-gradient-to-r from-[#003D5C] to-[#2AABBB] text-white rounded-full shadow-lg shadow-cyan-200 px-4 py-3 hover:from-[#00293e] hover:to-[#1f96a5] active:scale-95 transition-all duration-200"
           aria-label="Cotizar viaje"
         >
           <MessageSquare size={20} />
@@ -571,7 +571,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
         <div className="fixed inset-0 z-50 flex flex-col bg-white" style={{ maxHeight: '100dvh', overflowY: 'hidden' }}>
 
           {/* Header */}
-          <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white flex-shrink-0">
+          <div className="bg-gradient-to-r from-teal-500 to-teal-500 text-white flex-shrink-0">
             <div className="flex items-center justify-between px-4 pt-4 pb-3">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
@@ -579,7 +579,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                 </div>
                 <div>
                   <h2 className="text-base font-bold leading-tight">Cotiza tu viaje</h2>
-                  <p className="text-xs text-emerald-100">San Andrés · GuiaSAI</p>
+                  <p className="text-xs text-teal-100">San Andrés · GuiaSAI</p>
                 </div>
               </div>
               <button
@@ -603,7 +603,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                     />
                   ))}
                 </div>
-                <p className="text-xs text-emerald-100">
+                <p className="text-xs text-teal-100">
                   Paso {Math.min(stepIndex + 1, totalVisible)} de {totalVisible} — {STEP_LABELS[step]}
                 </p>
               </div>
@@ -622,10 +622,10 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                     <p className="text-sm text-gray-500 mt-1">Elige tus fechas y cuántas personas viajan.</p>
                   </div>
 
-                  <div className="bg-emerald-50 rounded-2xl p-4 space-y-4">
+                  <div className="bg-teal-50 rounded-2xl p-4 space-y-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                        <Calendar size={14} className="inline mr-1 text-emerald-500" />
+                        <Calendar size={14} className="inline mr-1 text-teal-500" />
                         Fecha de llegada *
                       </label>
                       <input
@@ -636,13 +636,13 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                           setFechaInicio(e.target.value);
                           if (fechaFin && e.target.value >= fechaFin) setFechaFin('');
                         }}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-emerald-400 focus:outline-none bg-white"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-teal-500 focus:outline-none bg-white"
                         autoFocus
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                        <Calendar size={14} className="inline mr-1 text-emerald-500" />
+                        <Calendar size={14} className="inline mr-1 text-teal-500" />
                         Fecha de salida *
                       </label>
                       <input
@@ -652,12 +652,12 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                           ? new Date(new Date(fechaInicio).getTime() + 86400000).toISOString().split('T')[0]
                           : new Date().toISOString().split('T')[0]}
                         onChange={e => setFechaFin(e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-emerald-400 focus:outline-none bg-white"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-teal-500 focus:outline-none bg-white"
                         disabled={!fechaInicio}
                       />
                     </div>
                     {fechaInicio && fechaFin && (
-                      <div className="flex items-center gap-2 bg-emerald-500 text-white px-3 py-2 rounded-xl text-sm font-semibold">
+                      <div className="flex items-center gap-2 bg-orange-500 text-white px-3 py-2 rounded-xl text-sm font-semibold">
                         <Check size={14} />
                         {nights} {nights === 1 ? 'noche' : 'noches'} en San Andrés Islas
                       </div>
@@ -666,7 +666,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
 
                   <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
-                      <Users size={16} className="text-emerald-500" />
+                      <Users size={16} className="text-teal-500" />
                       <h4 className="text-sm font-bold text-gray-700">Pasajeros</h4>
                     </div>
                     <Counter label="Adultos" sublabel="18+ años"  value={adultos} min={1} onChange={setAdultos} />
@@ -688,7 +688,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                      Teléfono / WhatsApp <span className="text-emerald-500">*</span>
+                      Teléfono / WhatsApp <span className="text-teal-500">*</span>
                     </label>
                     <div className="relative">
                       <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -697,7 +697,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                         value={telefono}
                         onChange={e => setTelefono(e.target.value)}
                         placeholder="+57 300 123 4567"
-                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-emerald-400 focus:outline-none"
+                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-teal-500 focus:outline-none"
                         autoFocus
                       />
                     </div>
@@ -714,7 +714,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                         value={nombre}
                         onChange={e => setNombre(e.target.value)}
                         placeholder="Tu nombre"
-                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-emerald-400 focus:outline-none"
+                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-teal-500 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -730,7 +730,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                         placeholder="tu@email.com"
-                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-emerald-400 focus:outline-none"
+                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-teal-500 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -746,8 +746,8 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                           onClick={() => toggleReq(r)}
                           className={`px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-all ${
                             requerimiento.includes(r)
-                              ? 'bg-emerald-500 border-emerald-500 text-white'
-                              : 'border-gray-200 text-gray-600 hover:border-emerald-300'
+                              ? 'bg-teal-500 border-teal-500 text-white'
+                              : 'border-gray-200 text-gray-600 hover:border-teal-300'
                           }`}
                         >
                           {r}
@@ -767,7 +767,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                         onChange={e => setNotas(e.target.value)}
                         placeholder="Ej: Celebramos aniversario, viajamos con niños pequeños..."
                         rows={3}
-                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-emerald-400 focus:outline-none resize-none"
+                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-teal-500 focus:outline-none resize-none"
                       />
                     </div>
                   </div>
@@ -783,7 +783,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                   </div>
 
                   {selectedTours.size > 0 && (
-                    <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl text-sm text-emerald-700 font-medium">
+                    <div className="flex items-center gap-2 bg-teal-50 border border-teal-200 px-3 py-2 rounded-xl text-sm text-teal-800 font-medium">
                       <Check size={14} />
                       {selectedTours.size} {selectedTours.size === 1 ? 'actividad seleccionada' : 'actividades seleccionadas'}
                     </div>
@@ -791,7 +791,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
 
                   {catalogLoading ? (
                     <div className="flex items-center justify-center py-16">
-                      <Loader2 size={24} className="text-emerald-500 animate-spin" />
+                      <Loader2 size={24} className="text-teal-500 animate-spin" />
                       <span className="ml-3 text-gray-400 text-sm">Cargando catálogo...</span>
                     </div>
                   ) : (
@@ -812,7 +812,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                     </div>
                   )}
 
-                  <button onClick={goNext} className="w-full text-center text-sm text-gray-400 py-2 hover:text-emerald-500 transition-colors">
+                  <button onClick={goNext} className="w-full text-center text-sm text-gray-400 py-2 hover:text-teal-500 transition-colors">
                     Saltar este paso →
                   </button>
                 </div>
@@ -866,8 +866,8 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                           onClick={() => set(!val)}
                           className={`px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all ${
                             val
-                              ? 'bg-emerald-500 text-white border-emerald-500'
-                              : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-300'
+                              ? 'bg-orange-500 text-white border-teal-500'
+                              : 'bg-white border-gray-200 text-gray-600 hover:border-teal-300'
                           }`}
                         >
                           {label}
@@ -879,13 +879,13 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                     <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-sm">
                       <div className="flex justify-between items-center mb-2">
                         <label className="text-xs font-semibold text-gray-500">Precio máx / noche</label>
-                        <span className="text-xs font-bold text-emerald-600 font-mono">{fmtCOP(filtroPrecioMax)}</span>
+                        <span className="text-xs font-bold text-teal-700 font-mono">{fmtCOP(filtroPrecioMax)}</span>
                       </div>
                       <input
                         type="range" min={80000} max={1800000} step={20000}
                         value={filtroPrecioMax}
                         onChange={e => setFiltroPrecioMax(Number(e.target.value))}
-                        className="w-full accent-emerald-500"
+                        className="w-full accent-teal-500"
                       />
                     </div>
 
@@ -902,7 +902,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                       const cubreGrupo = capacidadCubierta >= pax;
                       return (
                         <div className={`flex items-center gap-2 border px-3 py-2 rounded-xl text-xs font-semibold ${
-                          cubreGrupo ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-amber-50 border-amber-200 text-amber-700'
+                          cubreGrupo ? 'bg-teal-50 border-teal-200 text-teal-800' : 'bg-amber-50 border-amber-200 text-amber-700'
                         }`}>
                           <Check size={13} />
                           {selectedHotels.size} {selectedHotels.size === 1 ? 'alojamiento seleccionado' : 'alojamientos seleccionados'} · capacidad cubierta {capacidadCubierta}/{pax} pax
@@ -913,7 +913,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
 
                     {catalogLoading ? (
                       <div className="flex items-center justify-center py-16">
-                        <Loader2 size={24} className="text-emerald-500 animate-spin" />
+                        <Loader2 size={24} className="text-teal-500 animate-spin" />
                         <span className="ml-3 text-gray-400 text-sm">Cargando alojamientos...</span>
                       </div>
                     ) : (
@@ -935,18 +935,18 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                               onClick={() => setSheetAloj(aloj)}
                               className={`relative rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-200 active:scale-95 flex flex-col bg-white ${
                                 isSelected
-                                  ? 'border-emerald-500 shadow-lg shadow-emerald-100'
-                                  : 'border-gray-200 hover:border-emerald-300'
+                                  ? 'border-teal-500 shadow-lg shadow-teal-100'
+                                  : 'border-gray-200 hover:border-teal-300'
                               }`}
                             >
                               {/* Foto */}
-                              <div className="h-24 relative overflow-hidden bg-gradient-to-br from-emerald-100 to-teal-100">
+                              <div className="h-24 relative overflow-hidden bg-gradient-to-br from-teal-100 to-teal-100">
                                 {aloj.image ? (
                                   <img src={aloj.image} alt="" className="w-full h-full object-cover"
                                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center">
-                                    <Bed size={28} className="text-emerald-300" />
+                                    <Bed size={28} className="text-teal-300" />
                                   </div>
                                 )}
                                 {/* Badge colección */}
@@ -964,8 +964,8 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                                 )}
                                 {/* Check de seleccionado */}
                                 {isSelected && (
-                                  <div className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center">
-                                    <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shadow">
+                                  <div className="absolute inset-0 bg-teal-500/20 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center shadow">
                                       <Check size={16} className="text-white" />
                                     </div>
                                   </div>
@@ -979,7 +979,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                                   <div className="flex flex-wrap gap-1">
                                     {amenList.map(a => (
                                       <span key={a.label} className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded ${
-                                        a.val ? 'text-emerald-700 bg-emerald-50' : 'text-gray-300 bg-gray-50'
+                                        a.val ? 'text-teal-800 bg-teal-50' : 'text-gray-300 bg-gray-50'
                                       }`}>{a.label}</span>
                                     ))}
                                   </div>
@@ -988,13 +988,13 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                                   {desde > 0 ? (
                                     <>
                                       <p className="text-[9px] text-gray-400">desde</p>
-                                      <p className="text-sm font-black text-emerald-600 font-mono leading-tight">${desde.toLocaleString('es-CO')}</p>
+                                      <p className="text-sm font-black text-teal-700 font-mono leading-tight">${desde.toLocaleString('es-CO')}</p>
                                       {completo && (
                                         <p className="text-[9px] text-gray-400 mt-0.5">o completo: ${completo.toLocaleString('es-CO')}/n</p>
                                       )}
                                     </>
                                   ) : (
-                                    <p className="text-[10px] text-emerald-500 font-medium">A consultar</p>
+                                    <p className="text-[10px] text-teal-500 font-medium">A consultar</p>
                                   )}
                                 </div>
                               </div>
@@ -1006,13 +1006,13 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                             <Bed size={28} className="mx-auto mb-2 opacity-30" />
                             <p className="text-sm">Sin resultados con esos filtros</p>
                             <button onClick={() => { setFiltroColeccion('Todas'); setFiltroVistaMar(false); setFiltroCocina(false); setFiltroPiscina(false); setFiltroPrecioMax(1800000); }}
-                              className="mt-2 text-xs text-emerald-500 underline">Limpiar filtros</button>
+                              className="mt-2 text-xs text-teal-500 underline">Limpiar filtros</button>
                           </div>
                         )}
                       </div>
                     )}
 
-                    <button onClick={goNext} className="w-full text-center text-sm text-gray-400 py-2 hover:text-emerald-500 transition-colors">
+                    <button onClick={goNext} className="w-full text-center text-sm text-gray-400 py-2 hover:text-teal-500 transition-colors">
                       Saltar este paso →
                     </button>
                   </div>
@@ -1030,7 +1030,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                   {/* Fechas + pax */}
                   <div className="bg-gray-50 rounded-2xl p-4 space-y-1.5">
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                      <Calendar size={13} className="text-emerald-500" /> Viaje
+                      <Calendar size={13} className="text-teal-500" /> Viaje
                     </h4>
                     {fechaInicio && (
                       <p className="text-sm text-gray-700">
@@ -1050,7 +1050,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                   {/* Contacto */}
                   <div className="bg-gray-50 rounded-2xl p-4 space-y-1">
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                      <Phone size={13} className="text-emerald-500" /> Contacto
+                      <Phone size={13} className="text-teal-500" /> Contacto
                     </h4>
                     <p className="text-sm text-gray-700 font-semibold">{telefono}</p>
                     {nombre && <p className="text-sm text-gray-500">{nombre}</p>}
@@ -1058,7 +1058,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                     {requerimiento.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2">
                         {requerimiento.map(r => (
-                          <span key={r} className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-medium">{r}</span>
+                          <span key={r} className="bg-teal-100 text-teal-800 text-xs px-2 py-0.5 rounded-full font-medium">{r}</span>
                         ))}
                       </div>
                     )}
@@ -1068,14 +1068,14 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                   {toursSeleccionados.length > 0 && (
                     <div className="bg-gray-50 rounded-2xl p-4">
                       <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                        <Anchor size={13} className="text-emerald-500" /> Actividades ({toursSeleccionados.length})
+                        <Anchor size={13} className="text-teal-500" /> Actividades ({toursSeleccionados.length})
                       </h4>
                       {toursSeleccionados.map(s => {
                         const p = getServicePrice(s);
                         return (
                           <div key={s.id} className="flex items-center justify-between text-sm py-1">
                             <span className="text-gray-700 flex-1 pr-2 text-xs">{getServiceName(s)}</span>
-                            <span className="text-emerald-600 font-semibold text-xs whitespace-nowrap">
+                            <span className="text-teal-700 font-semibold text-xs whitespace-nowrap">
                               {p > 0 ? fmtCOP(p * pax) : 'A consultar'}
                             </span>
                           </div>
@@ -1088,7 +1088,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                   {hotelesSeleccionados.length > 0 && (
                     <div className="bg-gray-50 rounded-2xl p-4">
                       <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                        <Bed size={13} className="text-emerald-500" /> Alojamiento ({hotelesSeleccionados.length})
+                        <Bed size={13} className="text-teal-500" /> Alojamiento ({hotelesSeleccionados.length})
                       </h4>
                       {hotelesSeleccionados.map((a: any) => {
                         const p      = getDesdePrecio(a) || getHotelPriceByPax(a, pax);
@@ -1102,7 +1102,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                                   style={{ background: colColor }}>{a.coleccion}</span>
                               )}
                               <span className="text-gray-700 flex-1 pr-2 text-xs font-medium">{getOpaqueTitle(a)}</span>
-                              <span className="text-emerald-600 font-semibold text-xs whitespace-nowrap">
+                              <span className="text-teal-700 font-semibold text-xs whitespace-nowrap">
                                 {p > 0 ? fmtCOP(p * nights) : 'A consultar'}
                               </span>
                             </div>
@@ -1126,14 +1126,14 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                   {ADDONS_LIST.some(a => selectedAddons[a.key]) && (
                     <div className="bg-gray-50 rounded-2xl p-4">
                       <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                        <Plus size={13} className="text-emerald-500" /> Adicionales
+                        <Plus size={13} className="text-teal-500" /> Adicionales
                       </h4>
                       {ADDONS_LIST.filter(a => selectedAddons[a.key]).map(addon => {
                         const precio = addon.porPax ? addon.precio * pax : addon.precio;
                         return (
                           <div key={addon.key} className="flex items-center justify-between text-xs py-1">
                             <span className="text-gray-700">{addon.emoji} {addon.nombre}</span>
-                            <span className="text-emerald-600 font-semibold">{fmtCOP(precio)}</span>
+                            <span className="text-teal-700 font-semibold">{fmtCOP(precio)}</span>
                           </div>
                         );
                       })}
@@ -1147,12 +1147,12 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                   )}
 
                   {total > 0 && (
-                    <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl p-4">
+                    <div className="bg-gradient-to-r from-teal-500 to-teal-500 text-white rounded-2xl p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-emerald-100 text-xs font-medium">Estimado total</p>
+                          <p className="text-teal-100 text-xs font-medium">Estimado total</p>
                           <p className="text-2xl font-black">{fmtCOP(total)}</p>
-                          <p className="text-emerald-100 text-xs mt-0.5">
+                          <p className="text-teal-100 text-xs mt-0.5">
                             {pax} personas · {nights} noches · tarifa B2C · sujeto a disponibilidad
                           </p>
                         </div>
@@ -1187,24 +1187,24 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
               {/* ── STEP: done ── */}
               {step === 'done' && (
                 <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-2 space-y-6 py-8">
-                  <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <CheckCircle2 size={48} className="text-emerald-500" />
+                  <div className="w-24 h-24 rounded-full bg-teal-100 flex items-center justify-center">
+                    <CheckCircle2 size={48} className="text-teal-500" />
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-gray-800">¡Solicitud enviada!</h3>
                     <p className="text-gray-500 mt-2 text-sm leading-relaxed">
                       Un asesor de GuiaSAI te escribirá por WhatsApp a{' '}
-                      <span className="font-bold text-emerald-600">{telefono}</span>{' '}
+                      <span className="font-bold text-teal-700">{telefono}</span>{' '}
                       en las próximas horas con tu propuesta personalizada.
                     </p>
                   </div>
 
-                  <div className="bg-emerald-50 rounded-2xl p-4 w-full text-left space-y-2">
-                    <p className="text-sm font-bold text-emerald-700">¿Qué sigue?</p>
+                  <div className="bg-teal-50 rounded-2xl p-4 w-full text-left space-y-2">
+                    <p className="text-sm font-bold text-teal-800">¿Qué sigue?</p>
                     <ul className="text-sm text-gray-600 space-y-1.5">
-                      <li className="flex items-start gap-2"><span className="text-emerald-500">✓</span> Recibirás tu cotización detallada por WhatsApp</li>
-                      <li className="flex items-start gap-2"><span className="text-emerald-500">✓</span> Puedes ajustar servicios y fechas con tu asesor</li>
-                      <li className="flex items-start gap-2"><span className="text-emerald-500">✓</span> Confirma y paga de forma segura</li>
+                      <li className="flex items-start gap-2"><span className="text-teal-500">✓</span> Recibirás tu cotización detallada por WhatsApp</li>
+                      <li className="flex items-start gap-2"><span className="text-teal-500">✓</span> Puedes ajustar servicios y fechas con tu asesor</li>
+                      <li className="flex items-start gap-2"><span className="text-teal-500">✓</span> Confirma y paga de forma segura</li>
                     </ul>
                   </div>
 
@@ -1225,7 +1225,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                     {onNavigate && (
                       <button
                         onClick={() => { close(); onNavigate(AppRoute.MIS_COTIZACIONES, { telefono }); }}
-                        className="flex-1 text-sm text-emerald-600 font-semibold border-2 border-emerald-200 py-2.5 rounded-full hover:bg-emerald-50 transition-colors"
+                        className="flex-1 text-sm text-teal-700 font-semibold border-2 border-teal-200 py-2.5 rounded-full hover:bg-teal-50 transition-colors"
                       >
                         Ver mis cotizaciones
                       </button>
@@ -1259,7 +1259,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                   <button
                     onClick={submit}
                     disabled={loading}
-                    className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-md hover:from-emerald-600 hover:to-teal-600 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 bg-gradient-to-r from-teal-500 to-teal-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-md hover:from-teal-700 hover:to-teal-600 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <><Loader2 size={16} className="animate-spin" /> Enviando...</>
@@ -1273,7 +1273,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                   <button
                     onClick={goNext}
                     disabled={!canProceed()}
-                    className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-md hover:from-emerald-600 hover:to-teal-600 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                    className="flex items-center gap-2 bg-gradient-to-r from-teal-500 to-teal-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-md hover:from-teal-700 hover:to-teal-600 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                   >
                     Siguiente <ChevronRight size={16} />
                   </button>
@@ -1328,7 +1328,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                         key={addon.key}
                         onClick={() => setSelectedAddons(prev => ({ ...prev, [addon.key]: !prev[addon.key] }))}
                         className={`w-full flex items-center gap-3 p-3 rounded-2xl border-2 mb-2 transition-all text-left ${
-                          isOn ? 'border-emerald-500 bg-emerald-50' : 'border-gray-100 bg-white hover:border-gray-200'
+                          isOn ? 'border-teal-500 bg-teal-50' : 'border-gray-100 bg-white hover:border-gray-200'
                         }`}
                       >
                         <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-lg flex-shrink-0">
@@ -1341,7 +1341,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                         <div className="flex-shrink-0 text-right">
                           <p className="text-xs font-black text-gray-700">{fmtCOP(precio)}</p>
                           <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center ml-auto mt-1 ${
-                            isOn ? 'bg-emerald-500 border-emerald-500' : 'border-gray-200'
+                            isOn ? 'bg-teal-500 border-teal-500' : 'border-gray-200'
                           }`}>
                             {isOn && <Check size={11} className="text-white" />}
                           </div>
@@ -1352,8 +1352,8 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                 </div>
 
                 {/* Nota */}
-                <div className="mx-4 mb-4 bg-emerald-50 border border-emerald-100 rounded-xl p-3">
-                  <p className="text-xs text-emerald-800 leading-relaxed">
+                <div className="mx-4 mb-4 bg-teal-50 border border-teal-100 rounded-xl p-3">
+                  <p className="text-xs text-teal-900 leading-relaxed">
                     📱 <strong>Tu WhatsApp es tu cuenta.</strong> Al solicitar la cotización, si ya cotizaste antes, esta queda bajo el mismo cliente. Un asesor la revisa y te envía el <strong>link de pago seguro</strong>.
                   </p>
                 </div>
@@ -1381,7 +1381,7 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                     toggleHotel(sheetAloj.id);
                     setSheetAloj(null);
                   }}
-                  className="bg-emerald-500 text-white px-5 py-3 rounded-xl font-bold text-sm hover:bg-emerald-600 active:scale-95 transition-all flex-shrink-0"
+                  className="bg-orange-500 text-white px-5 py-3 rounded-xl font-bold text-sm hover:bg-orange-600 active:scale-95 transition-all flex-shrink-0"
                 >
                   {selectedHotels.has(sheetAloj.id) ? 'Quitar selección' : 'Agregar a mi viaje'}
                 </button>
