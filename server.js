@@ -25,6 +25,7 @@ import publicQuoteRoutes from './backend/routes/publicQuote.js';
 import publicVoucherRoutes from './backend/routes/publicVoucher.js';
 import paymentsRoutes  from './backend/routes/payments.js';
 import homeConfigRoutes from './backend/routes/homeConfig.js';
+import paquetesIntlRoutes from './backend/routes/paquetesInternacionales.js';
 import hubRoutes      from './backend/routes/hub.js';
 import leadsRoutes       from './backend/routes/leads.js';
 import agentesRoutes     from './backend/routes/agentes.js';
@@ -229,6 +230,7 @@ app.use('/voucher', publicVoucherRoutes);
 // POST /api/payments/webhook  → confirmación de pago desde PayU
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/home-config', homeConfigRoutes);
+app.use('/api/paquetes-internacionales', paquetesIntlRoutes);
 app.use('/pagar', paymentsRoutes);
 
 // ==================== IMAGE PROXY (PDF generation) ====================

@@ -18,6 +18,7 @@ const API = typeof window !== 'undefined' && window.location.hostname === 'local
 
 interface HomeConfig { [k: string]: string }
 interface Experiencia { nombre: string; precio: number; unidad: string; tag: string; meta: string; img: string }
+interface PaqueteIntl { id: string; nombre: string; categoria: string; duracion: string; origen: string; salidas: string; precioDesde: number; imagen: string }
 
 interface Props { onNavigate: (route: AppRoute) => void; onCotizar?: () => void }
 
@@ -32,9 +33,11 @@ const BANDERAS: Record<string, { dot: string; label: string }> = {
 const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
   const [cfg, setCfg] = useState<HomeConfig>({});
   const [heroIdx, setHeroIdx] = useState(0);
+  const [paquetes, setPaquetes] = useState<PaqueteIntl[]>([]);
 
   useEffect(() => {
     fetch(`${API}/api/home-config`).then(r => r.json()).then(setCfg).catch(() => {});
+    fetch(`${API}/api/paquetes-internacionales`).then(r => r.json()).then(d => Array.isArray(d) && setPaquetes(d)).catch(() => {});
   }, []);
 
   const heroImgs = useMemo(
@@ -217,6 +220,58 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
           <img src={cfg.raizal_imagen} alt="Cultura Raizal" className="rounded-2xl shadow-2xl w-full object-cover max-h-[380px]" />
         </div>
       </section>
+
+
+      {/* ══ DESTINOS INTERNACIONALES ══ */}
+      {paquetes.length > 0 && (
+        <section id="internacional" className="py-16 bg-white">
+          <div className="max-w-6xl mx-auto px-5">
+            <div className="flex items-end justify-between flex-wrap gap-3 mb-8">
+              <div>
+                <p className="text-[11px] font-bold tracking-[.14em] uppercase text-teal-600">Desde Bogotá y Medellín · Con asesoría GuiaSAI</p>
+                <h2 className="text-3xl font-black text-[#003D5C] mt-1">Destinos internacionales</h2>
+              </div>
+              <a href={`${wa}?text=${encodeURIComponent('Hola GuiaSAI 🌍 quiero información sobre los paquetes internacionales')}`} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-orange-500 hover:text-orange-600">
+                Habla con un asesor →
+              </a>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {paquetes.map(p => {
+                const emoji = p.categoria === 'Europa' ? '🇪🇺' : p.categoria === 'Asia' ? '🌏' : '🕌';
+                const primeraSalida = (p.salidas || '').split('|')[0].trim();
+                return (
+                  <a
+                    key={p.id}
+                    href={`${wa}?text=${encodeURIComponent(`Hola GuiaSAI 🌍 quiero información del paquete: ${p.nombre}`)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all"
+                  >
+                    {p.imagen ? (
+                      <div className="h-40 bg-cover bg-center" style={{ backgroundImage: `url('${p.imagen}')` }} />
+                    ) : (
+                      <div className="h-40 flex items-center justify-center text-5xl" style={{ background: 'linear-gradient(115deg,#003D5C,#2AABBB)' }}>{emoji}</div>
+                    )}
+                    <div className="p-4">
+                      <p className="text-[9px] font-bold tracking-wider uppercase text-teal-600">{p.categoria} · {p.duracion}</p>
+                      <h3 className="font-bold text-[15px] text-gray-800 mt-1 leading-snug">{p.nombre}</h3>
+                      <p className="text-[11px] text-slate-400 mt-1">Salida desde {p.origen}{primeraSalida ? ` · ${primeraSalida}` : ''}</p>
+                      <div className="flex items-center justify-between mt-3">
+                        <div>
+                          <p className="text-[9px] uppercase tracking-wide text-slate-400 font-semibold">Desde · por persona</p>
+                          <p className="font-black text-[#003D5C]">USD ${Math.round(p.precioDesde).toLocaleString('en-US')}</p>
+                        </div>
+                        <span className="text-xs font-bold text-orange-500">Más info →</span>
+                      </div>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-slate-400 mt-4">Precios en USD por persona en acomodación doble; el pago se realiza en pesos colombianos según la TRM vigente. Programas operados con mayoristas aliados.</p>
+          </div>
+        </section>
+      )}
 
       {/* ══ POR QUÉ GUIASAI ══ */}
       <section className="py-16">
