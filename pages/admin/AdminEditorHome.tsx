@@ -94,7 +94,7 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
   const secciones = [...new Set(CAMPOS.map(c => c.seccion))];
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white pb-28">
+    <div className="min-h-screen bg-gray-950 text-white pb-44">
       {/* Header */}
       <div className="bg-gray-900 border-b border-gray-800 px-4 pt-10 pb-4 sticky top-0 z-10">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
@@ -109,6 +109,10 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-bold text-gray-300">
             <Eye size={13} /> Vista previa
           </a>
+          <button onClick={guardar} disabled={!hayCambios || saving}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 disabled:opacity-40 text-xs font-black text-white transition-colors">
+            {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />} Guardar
+          </button>
         </div>
       </div>
 
@@ -159,7 +163,7 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
       </div>
 
       {/* Barra de guardado */}
-      <div className="fixed bottom-0 inset-x-0 bg-gray-900/95 backdrop-blur border-t border-gray-800 px-4 py-3 z-20">
+      <div className="fixed bottom-20 inset-x-3 md:inset-x-0 md:bottom-0 bg-gray-900/95 backdrop-blur border border-gray-800 md:border-x-0 md:border-b-0 rounded-2xl md:rounded-none px-4 py-3 z-20 shadow-2xl">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           {msg && (
             <p className={`flex items-center gap-1.5 text-xs font-semibold flex-1 ${msg.ok ? 'text-emerald-400' : 'text-red-400'}`}>
