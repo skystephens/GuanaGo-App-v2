@@ -17,6 +17,11 @@ const API = typeof window !== 'undefined' && window.location.hostname === 'local
   ? 'http://localhost:5000'
   : '';
 
+interface CatItem {
+  id: string; tabla: string; nombre: string; tipo: string;
+  precio: number; imagen: string; descripcion: string; destacado: boolean;
+}
+
 interface Props { onBack: () => void }
 
 const CAMPOS: { clave: string; label: string; tipo: 'text' | 'textarea' | 'imagenes' | 'bandera' | 'json'; ayuda?: string; seccion: string }[] = [
@@ -33,7 +38,7 @@ const CAMPOS: { clave: string; label: string; tipo: 'text' | 'textarea' | 'image
   { seccion: 'Grupos & eventos', clave: 'grupos_titulo', label: 'Título', tipo: 'text' },
   { seccion: 'Grupos & eventos', clave: 'grupos_texto',  label: 'Texto', tipo: 'textarea' },
   { seccion: 'Contacto', clave: 'whatsapp', label: 'WhatsApp (solo números con 57)', tipo: 'text' },
-  { seccion: 'Experiencias destacadas', clave: 'experiencias', label: 'Tarjetas de experiencias (JSON)', tipo: 'json', ayuda: 'Lista de tarjetas: nombre, precio, unidad, tag, meta, img. Edita con cuidado el formato.' },
+  // experiencias se edita visualmente con el selector de catálogo (ver abajo)
 ];
 
 const ICONO_SECCION: Record<string, React.ReactNode> = {
@@ -47,16 +52,28 @@ const ICONO_SECCION: Record<string, React.ReactNode> = {
 
 const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
   const [cfg, setCfg] = useState<Record<string, string>>({});
+  const [catalogo, setCatalogo] = useState<CatItem[]>([]);
+  const [busqCat, setBusqCat] = useState('');
+  const [selIds, setSelIds] = useState<string[]>([]);
   const [original, setOriginal] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null);
 
   useEffect(() => {
-    fetch(`${API}/api/home-config`)
-      .then(r => r.json())
-      .then(d => { setCfg(d); setOriginal(d); })
-      .catch(() => setMsg({ ok: false, texto: 'No se pudo cargar la configuración' }))
+    Promise.all([
+      fetch(`${API}/api/home-config`).then(r => r.json()),
+      fetch(`${API}/api/home-config/catalogo-selector`).then(r => r.json()),
+    ]).then(([configData, catData]) => {
+      setCfg(configData);
+      setOriginal(configData);
+      if (Array.isArray(catData)) setCatalogo(catData);
+      // Pre-seleccionar los que ya están en el JSON guardado
+      try {
+        const actuales = JSON.parse(configData.experiencias || '[]');
+        setSelIds(actuales.map((e: any) => e.id).filter(Boolean));
+      } catch {}
+    }).catch(() => setMsg({ ok: false, texto: 'No se pudo cargar la configuración' }))
       .finally(() => setLoading(false));
   }, []);
 
@@ -161,6 +178,67 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
           </div>
         ))}
       </div>
+
+      {/* ── Selector visual de experiencias destacadas ── */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+          <p className="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            ✨ Experiencias destacadas en el Home
+          </p>
+          <p className="text-[10px] text-gray-500 mb-3">Selecciona hasta 5 servicios del catálogo real. Se muestran en el orden que los eliges.</p>
+          {selIds.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {selIds.map(id => {
+                const it = catalogo.find(c => c.id === id);
+                if (!it) return null;
+                return (
+                  <div key={id} className="flex items-center gap-1.5 bg-orange-950/40 border border-orange-800 text-orange-300 text-[10px] font-bold px-2.5 py-1.5 rounded-xl">
+                    {it.nombre.slice(0, 28)} · ${Math.round(it.precio / 1000)}k
+                    <button onClick={() => toggleSel(id)} className="text-orange-400 hover:text-white">×</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <input
+            type="text"
+            value={busqCat}
+            onChange={e => setBusqCat(e.target.value)}
+            placeholder="Buscar en catálogo..."
+            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs mb-3"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+            {catalogo
+              .filter(it => !busqCat || it.nombre.toLowerCase().includes(busqCat.toLowerCase()) || it.tipo.toLowerCase().includes(busqCat.toLowerCase()))
+              .map(it => {
+                const activo = selIds.includes(it.id);
+                const lleno = selIds.length >= 5 && !activo;
+                return (
+                  <button
+                    key={it.id}
+                    onClick={() => !lleno && toggleSel(it.id)}
+                    disabled={lleno}
+                    className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
+                      activo ? 'border-orange-500 bg-orange-950/40' : lleno ? 'border-gray-800 opacity-40' : 'border-gray-800 hover:border-teal-500 bg-gray-900'
+                    }`}
+                  >
+                    {it.imagen
+                      ? <img src={it.imagen} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                      : <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-lg shrink-0">{it.tabla === 'tours' ? '🚤' : '🏠'}</div>
+                    }
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-bold truncate">{it.nombre}</p>
+                      <p className="text-[9.5px] text-gray-500">{it.tipo} · ${Math.round(it.precio).toLocaleString('es-CO')}</p>
+                    </div>
+                    {activo && <span className="text-orange-400 text-[10px] font-black shrink-0">#{selIds.indexOf(it.id) + 1}</span>}
+                  </button>
+                );
+              })
+            }
+            {catalogo.length === 0 && (
+              <p className="text-[11px] text-gray-600 col-span-2 py-4 text-center">Cargando catálogo...</p>
+            )}
+          </div>
+        </div>
 
       {/* Barra de guardado */}
       <div className="fixed bottom-20 inset-x-3 md:inset-x-0 md:bottom-0 bg-gray-900/95 backdrop-blur border border-gray-800 md:border-x-0 md:border-b-0 rounded-2xl md:rounded-none px-4 py-3 z-20 shadow-2xl">

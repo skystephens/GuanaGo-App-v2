@@ -127,4 +127,50 @@ router.put('/', async (req, res) => {
   }
 });
 
+
+// ── GET /api/home-config/catalogo-selector ────────────────────────────────────
+// Devuelve servicios y alojamientos del catálogo real para el selector visual
+// del Editor del Home (sin precios netos, solo datos públicos)
+router.get('/catalogo-selector', async (_req, res) => {
+  try {
+    const { key, base } = AT();
+    if (!key) return res.json([]);
+    const headers = { Authorization: `Bearer ${key}` };
+    const atGet = async (tabla, campos) => {
+      const qs = campos.map(c => `fields[]=${encodeURIComponent(c)}`).join('&');
+      const r = await fetch(
+        `https://api.airtable.com/v0/${base}/${encodeURIComponent(tabla)}?${qs}&maxRecords=80`,
+        { headers }
+      );
+      if (!r.ok) return [];
+      const d = await r.json();
+      return d.records || [];
+    };
+
+    const [tours, aloj] = await Promise.all([
+      atGet('ServiciosTuristicos_SAI', ['Servicio','Tipo de Servicio','Precio_GuanaGO','ImagenWP','Descripcion','Destacado']),
+      atGet('AlojamientosTuristicos_SAI', ['Servicio','Tipo de Alojamiento','Precio_GuanaGO','ImagenWP','Descripcion','Destacado']),
+    ]);
+
+    const mapear = (recs, tabla) => recs
+      .filter(r => r.fields?.Servicio)
+      .map(r => ({
+        id: r.id,
+        tabla,
+        nombre: r.fields['Servicio'] || '',
+        tipo: r.fields['Tipo de Servicio'] || r.fields['Tipo de Alojamiento'] || (tabla === 'tours' ? 'Tour' : 'Alojamiento'),
+        precio: Number(r.fields['Precio_GuanaGO'] || 0),
+        imagen: r.fields['ImagenWP'] || '',
+        descripcion: (r.fields['Descripcion'] || '').slice(0, 120),
+        destacado: !!r.fields['Destacado'],
+      }))
+      .sort((a, b) => (b.destacado ? 1 : 0) - (a.destacado ? 1 : 0) || a.nombre.localeCompare(b.nombre, 'es'));
+
+    res.json([...mapear(tours, 'tours'), ...mapear(aloj, 'alojamientos')]);
+  } catch (err) {
+    console.error('❌ catalogo-selector:', err.message);
+    res.json([]);
+  }
+});
+
 export default router;
