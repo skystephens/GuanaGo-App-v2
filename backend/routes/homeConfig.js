@@ -129,44 +129,71 @@ router.put('/', async (req, res) => {
 
 
 // ── GET /api/home-config/catalogo-selector ────────────────────────────────────
-// Devuelve servicios y alojamientos del catálogo real para el selector visual
-// del Editor del Home (sin precios netos, solo datos públicos)
+// Devuelve servicios y alojamientos para el selector visual del Editor del Home.
+// Usa los mismos nombres de campo que airtableService.getServices() en el front.
 router.get('/catalogo-selector', async (_req, res) => {
   try {
     const { key, base } = AT();
     if (!key) return res.json([]);
     const headers = { Authorization: `Bearer ${key}` };
-    const atGet = async (tabla, campos) => {
-      const qs = campos.map(c => `fields[]=${encodeURIComponent(c)}`).join('&');
-      const r = await fetch(
-        `https://api.airtable.com/v0/${base}/${encodeURIComponent(tabla)}?${qs}&maxRecords=80`,
-        { headers }
-      );
-      if (!r.ok) return [];
+
+    const fetchTabla = async (tabla, filtro = '') => {
+      const qs = filtro ? `?filterByFormula=${encodeURIComponent(filtro)}&maxRecords=100` : '?maxRecords=100';
+      const r = await fetch(`https://api.airtable.com/v0/${base}/${encodeURIComponent(tabla)}${qs}`, { headers });
+      if (!r.ok) { console.warn(`[catalogo-selector] ${tabla} ${r.status}`); return []; }
       const d = await r.json();
       return d.records || [];
     };
 
-    const [tours, aloj] = await Promise.all([
-      atGet('ServiciosTuristicos_SAI', ['Servicio','Tipo de Servicio','Precio_GuanaGO','ImagenWP','Descripcion','Destacado']),
-      atGet('AlojamientosTuristicos_SAI', ['Servicio','Tipo de Alojamiento','Precio_GuanaGO','ImagenWP','Descripcion','Destacado']),
+    const extraerImagen = (f) => {
+      // Prioridad: ImagenWP (URL WordPress, no expira) > Imagenurl (adjunto Airtable)
+      if (f['ImagenWP'] && typeof f['ImagenWP'] === 'string') {
+        const url = f['ImagenWP'].split(',')[0].trim();
+        if (url.startsWith('http')) return url;
+      }
+      const adjunto = f['Imagenurl'] || f['imagenurl'] || f['ImagenUrl'];
+      if (Array.isArray(adjunto) && adjunto[0]?.url) return adjunto[0].url;
+      if (Array.isArray(adjunto) && adjunto[0]?.thumbnails?.large?.url) return adjunto[0].thumbnails.large.url;
+      return '';
+    };
+
+    const [recsTours, recsAloj] = await Promise.all([
+      fetchTabla('ServiciosTuristicos_SAI'),
+      fetchTabla('AlojamientosTuristicos_SAI'),
     ]);
 
-    const mapear = (recs, tabla) => recs
-      .filter(r => r.fields?.Servicio)
+    const tours = recsTours
+      .filter(r => (r.fields['Servicio'] || r.fields['Nombre']) && r.fields['Publicado'])
       .map(r => ({
         id: r.id,
-        tabla,
-        nombre: r.fields['Servicio'] || '',
-        tipo: r.fields['Tipo de Servicio'] || r.fields['Tipo de Alojamiento'] || (tabla === 'tours' ? 'Tour' : 'Alojamiento'),
-        precio: Number(r.fields['Precio_GuanaGO'] || 0),
-        imagen: r.fields['ImagenWP'] || '',
-        descripcion: (r.fields['Descripcion'] || '').slice(0, 120),
+        tabla: 'tours',
+        nombre: r.fields['Servicio'] || r.fields['Nombre'] || '',
+        tipo: r.fields['Tipo de Servicio'] || 'Tour',
+        precio: Number(r.fields['Precio_GuanaGO'] || r.fields['Precio actualizado'] || 0),
+        imagen: extraerImagen(r.fields),
+        descripcion: (r.fields['Descripcion'] || '').slice(0, 80),
         destacado: !!r.fields['Destacado'],
-      }))
+      }));
+
+    const aloj = recsAloj
+      .filter(r => (r.fields['Servicio'] || r.fields['Nombre']) && r.fields['Publicado'])
+      .map(r => ({
+        id: r.id,
+        tabla: 'alojamientos',
+        nombre: r.fields['Servicio'] || r.fields['Nombre'] || '',
+        tipo: r.fields['Tipo de Alojamiento'] || r.fields['Tipo de Servicio'] || 'Alojamiento',
+        precio: Number(r.fields['Precio_GuanaGO'] || r.fields['Precio 2 Huespedes'] || r.fields['Precio actualizado'] || 0),
+        imagen: extraerImagen(r.fields),
+        descripcion: (r.fields['Descripcion'] || '').slice(0, 80),
+        destacado: !!r.fields['Destacado'],
+      }));
+
+    const todo = [...tours, ...aloj]
+      .filter(it => it.nombre)
       .sort((a, b) => (b.destacado ? 1 : 0) - (a.destacado ? 1 : 0) || a.nombre.localeCompare(b.nombre, 'es'));
 
-    res.json([...mapear(tours, 'tours'), ...mapear(aloj, 'alojamientos')]);
+    console.log(`✅ catalogo-selector: ${tours.length} tours + ${aloj.length} aloj`);
+    res.json(todo);
   } catch (err) {
     console.error('❌ catalogo-selector:', err.message);
     res.json([]);
