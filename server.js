@@ -26,6 +26,7 @@ import publicVoucherRoutes from './backend/routes/publicVoucher.js';
 import paymentsRoutes  from './backend/routes/payments.js';
 import homeConfigRoutes from './backend/routes/homeConfig.js';
 import paquetesIntlRoutes from './backend/routes/paquetesInternacionales.js';
+import tycoonRoutes from './backend/routes/tycoon.js';
 import hubRoutes      from './backend/routes/hub.js';
 import leadsRoutes       from './backend/routes/leads.js';
 import agentesRoutes     from './backend/routes/agentes.js';
@@ -231,6 +232,7 @@ app.use('/voucher', publicVoucherRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/home-config', homeConfigRoutes);
 app.use('/api/paquetes-internacionales', paquetesIntlRoutes);
+app.use('/api/tycoon', tycoonRoutes);
 app.use('/pagar', paymentsRoutes);
 
 // ==================== IMAGE PROXY (PDF generation) ====================

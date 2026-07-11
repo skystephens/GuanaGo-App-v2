@@ -58,6 +58,7 @@ import AdminArtistas from './pages/admin/AdminArtistas';
 import AdminCampanas from './pages/admin/AdminCampanas';
 import Home2 from './pages/Home2';
 import AdminEditorHome from './pages/admin/AdminEditorHome';
+import AdminTorreComercial2 from './pages/admin/AdminTorreComercial2';
 import AdminSocios from './pages/admin/AdminSocios';
 import AdminNegociosLocales from './pages/admin/AdminNegociosLocales';
 import NegocioLocalPerfil from './pages/partner/NegocioLocalPerfil';
@@ -313,6 +314,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_CAMPANAS: return <AdminCampanas onBack={goBack} />;
       case AppRoute.HOME2: return <Home2 onNavigate={navigateTo} onCotizar={() => cotizadorRef.current?.open()} />;
       case AppRoute.ADMIN_EDITOR_HOME: return <AdminEditorHome onBack={goBack} />;
+      case AppRoute.ADMIN_TORRE_COMERCIAL: return <AdminTorreComercial2 onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ARTISTA_PORTAL: return <ArtistaPortal onBack={goBack} onNavigate={navigateTo} artistaId={detailData?.artistaId} />;
       case AppRoute.ADMIN_SOCIOS: return <AdminSocios onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_NEGOCIOS_LOCALES: return <AdminNegociosLocales onBack={goBack} onNavigate={navigateTo} />;
