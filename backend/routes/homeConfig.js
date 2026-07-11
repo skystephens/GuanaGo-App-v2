@@ -48,6 +48,7 @@ export const HOME_DEFAULTS = {
   ], null, 0),
 };
 
+const TABLE_ID_HOME_CONFIG = 'tblQmeIYaFwPp2n3r'; // Home_Config
 let cache = { data: null, ts: 0 };
 const CACHE_MS = 60_000;
 
