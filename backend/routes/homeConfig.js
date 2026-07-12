@@ -137,18 +137,23 @@ router.get('/catalogo-selector', async (_req, res) => {
     if (!key) return res.json([]);
     const headers = { Authorization: `Bearer ${key}` };
 
-    // Solo los campos necesarios — evita payloads gigantes (algunos registros
-    // traen adjuntos pesados en Imagenurl, incluso videos de +100MB, que hacían
-    // que la respuesta completa fallara por timeout).
-    const CAMPOS = [
-      'Servicio', 'Nombre alternativo', 'Nombre',
-      'Tipo de Servicio', 'Tipo de Alojamiento',
-      'Precio actualizado', 'Precio 2 Huespedes', 'Precio_GuanaGO',
+    // Campos por tabla — solo los que existen realmente (pedir un campo
+    // inexistente hace que Airtable rechace TODA la petición con 422,
+    // que es lo que estaba pasando: pedíamos 'Nombre' y 'Tipo de Alojamiento'
+    // a tablas donde esos campos no existen → siempre devolvía vacío).
+    const CAMPOS_TOURS = [
+      'Servicio', 'Nombre alternativo', 'Tipo de Servicio',
+      'Precio actualizado', 'Precio_GuanaGO',
+      'ImagenWP', 'Descripcion', 'Destacado',
+    ];
+    const CAMPOS_ALOJ = [
+      'Servicio', 'Nombre alternativo', 'Tipo de Alojamiento', 'Tipo de Servicio',
+      'Precio actualizado', 'Precio_GuanaGO', 'Precio 2 Huespedes',
       'ImagenWP', 'Descripcion', 'Destacado',
     ];
 
-    const fetchTabla = async (tabla) => {
-      const fieldsQs = CAMPOS.map(c => `fields[]=${encodeURIComponent(c)}`).join('&');
+    const fetchTabla = async (tabla, campos) => {
+      const fieldsQs = campos.map(c => `fields[]=${encodeURIComponent(c)}`).join('&');
       const r = await fetch(`https://api.airtable.com/v0/${base}/${encodeURIComponent(tabla)}?${fieldsQs}&maxRecords=100`, { headers });
       if (!r.ok) { console.warn(`[catalogo-selector] ${tabla} ${r.status}: ${await r.text()}`); return []; }
       const d = await r.json();
@@ -165,8 +170,8 @@ router.get('/catalogo-selector', async (_req, res) => {
     };
 
     const [recsTours, recsAloj] = await Promise.all([
-      fetchTabla('ServiciosTuristicos_SAI'),
-      fetchTabla('AlojamientosTuristicos_SAI'),
+      fetchTabla('ServiciosTuristicos_SAI', CAMPOS_TOURS),
+      fetchTabla('AlojamientosTuristicos_SAI', CAMPOS_ALOJ),
     ]);
 
     const tours = recsTours
@@ -199,7 +204,7 @@ router.get('/catalogo-selector', async (_req, res) => {
       .filter(it => it.nombre)
       .sort((a, b) => (b.destacado ? 1 : 0) - (a.destacado ? 1 : 0) || a.nombre.localeCompare(b.nombre, 'es'));
 
-    console.log(`✅ catalogo-selector: ${tours.length} tours + ${aloj.length} aloj`);
+    console.log(`✅ catalogo-selector: ${tours.length} tours + ${aloj.length} aloj (de ${recsTours.length}+${recsAloj.length} recibidos)`);
     res.json(todo);
   } catch (err) {
     console.error('❌ catalogo-selector:', err.message);
