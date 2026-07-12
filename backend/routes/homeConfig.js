@@ -200,4 +200,28 @@ router.get('/catalogo-selector', async (_req, res) => {
   }
 });
 
+
+// ── GET /api/home-config/diag — diagnostico temporal de campos reales ─────────
+router.get('/diag', async (_req, res) => {
+  try {
+    const { key, base } = AT();
+    if (!key) return res.json({ error: 'sin key' });
+    const headers = { Authorization: `Bearer ${key}` };
+    const r1 = await fetch(`https://api.airtable.com/v0/${base}/${encodeURIComponent('ServiciosTuristicos_SAI')}?maxRecords=2`, { headers });
+    const d1 = await r1.json();
+    const r2 = await fetch(`https://api.airtable.com/v0/${base}/${encodeURIComponent('AlojamientosTuristicos_SAI')}?maxRecords=2`, { headers });
+    const d2 = await r2.json();
+    res.json({
+      tours_status: r1.status,
+      tours_sample: (d1.records || []).map(r => r.fields),
+      tours_error: d1.error || null,
+      aloj_status: r2.status,
+      aloj_sample: (d2.records || []).map(r => r.fields),
+      aloj_error: d2.error || null,
+    });
+  } catch (err) {
+    res.json({ error: err.message });
+  }
+});
+
 export default router;
