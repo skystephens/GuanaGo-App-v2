@@ -184,7 +184,7 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
           <p className="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
             ✨ Experiencias destacadas en el Home
           </p>
-          <p className="text-[10px] text-gray-500 mb-3">Selecciona hasta 5 servicios del catálogo real. Se muestran en el orden que los eliges.</p>
+          <p className="text-[10px] text-gray-500 mb-3">Selecciona hasta 16 servicios del catálogo real. Se muestran en el orden que los eliges.</p>
           {selIds.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {selIds.map(id => {
@@ -216,7 +216,7 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
               .filter(it => !busqCat || it.nombre.toLowerCase().includes(busqCat.toLowerCase()) || it.tipo.toLowerCase().includes(busqCat.toLowerCase()))
               .map(it => {
                 const activo = selIds.includes(it.id);
-                const lleno = selIds.length >= 5 && !activo;
+                const lleno = selIds.length >= 16 && !activo;
                 const badgeColor = it.tabla === 'tours' ? 'bg-teal-600' : 'bg-orange-500';
                 const fallback = it.tabla === 'tours'
                   ? 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=70'

@@ -33,6 +33,7 @@ const BANDERAS: Record<string, { dot: string; label: string }> = {
 const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
   const [cfg, setCfg] = useState<HomeConfig>({});
   const [heroIdx, setHeroIdx] = useState(0);
+  const [mostrarTodas, setMostrarTodas] = useState(false);
   const [paquetes, setPaquetes] = useState<PaqueteIntl[]>([]);
 
   useEffect(() => {
@@ -169,39 +170,50 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {experiencias.map(e => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {(mostrarTodas ? experiencias : experiencias.slice(0, 8)).map(e => (
               <button
                 key={e.nombre}
                 onClick={() => onCotizar?.()}
                 className="text-left bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all"
               >
-                <div className="h-44 bg-cover bg-center relative" style={{ backgroundImage: `url('${e.img}')` }}>
-                  <span className={`absolute top-3 left-3 text-white text-[9px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full backdrop-blur ${e.tag === 'Ruta Raizal' ? 'bg-orange-500/90' : 'bg-[#003D5C]/85'}`}>
+                <div className="h-36 md:h-40 bg-cover bg-center relative" style={{ backgroundImage: `url('${e.img}')` }}>
+                  <span className={`absolute top-2 left-2 text-white text-[8px] font-bold tracking-wider uppercase px-2 py-1 rounded-full backdrop-blur ${e.tag === 'Ruta Raizal' ? 'bg-orange-500/90' : 'bg-[#003D5C]/85'}`}>
                     {e.tag}
                   </span>
                 </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-[15px] text-gray-800">{e.nombre}</h3>
-                  <p className="text-[11px] text-slate-400 mt-0.5 mb-3">{e.meta}</p>
+                <div className="p-3">
+                  <h3 className="font-bold text-[13px] text-gray-800 leading-snug line-clamp-2">{e.nombre}</h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5 mb-2 line-clamp-1">{e.meta}</p>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[9px] uppercase tracking-wide text-slate-400 font-semibold">Desde · {e.unidad}</p>
-                      <p className="font-black text-[#003D5C]">{fmtCOP(e.precio)}</p>
+                      <p className="text-[8px] uppercase tracking-wide text-slate-400 font-semibold">Desde · {e.unidad}</p>
+                      <p className="font-black text-[#003D5C] text-[13px]">{fmtCOP(e.precio)}</p>
                     </div>
-                    <span className="text-xs font-bold text-orange-500">Reservar →</span>
+                    <span className="text-[10px] font-bold text-orange-500">Reservar →</span>
                   </div>
                 </div>
               </button>
             ))}
+          </div>
 
+          {experiencias.length > 8 && (
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={() => setMostrarTodas(v => !v)}
+                className="px-6 py-3 rounded-xl border-2 border-[#003D5C] text-[#003D5C] font-bold text-sm hover:bg-[#003D5C] hover:text-white transition-colors"
+              >
+                {mostrarTodas ? 'Ver menos' : `Ver las ${experiencias.length} experiencias destacadas`}
+              </button>
+            </div>
+          )}
+
+          <div className="flex justify-center mt-4">
             <button
               onClick={() => onNavigate(AppRoute.CATALOG_PUBLICO)}
-              className="bg-[#003D5C] rounded-2xl text-white flex flex-col items-center justify-center p-8 hover:bg-[#004d73] transition-colors min-h-[280px]"
+              className="text-sm font-bold text-orange-500 hover:text-orange-600"
             >
-              <p className="font-black text-xl mb-1">+70 experiencias más</p>
-              <p className="text-xs text-cyan-100/80 font-light mb-5 text-center">Tours, traslados, gastronomía y cultura — todo el catálogo GuiaSAI</p>
-              <span className="bg-orange-500 font-bold text-sm px-5 py-2.5 rounded-xl">Explorar catálogo</span>
+              Ver todo el catálogo completo →
             </button>
           </div>
         </div>
