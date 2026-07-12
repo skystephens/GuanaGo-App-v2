@@ -63,8 +63,7 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
   useEffect(() => {
     Promise.all([
       fetch(`${API}/api/home-config`).then(r => r.json()),
-      // El catálogo lo cargamos vía cachedApi igual que el cotizador
-      Promise.resolve(null),  // placeholder — se carga por separado abajo
+      fetch(`${API}/api/home-config/catalogo-selector`).then(r => r.json()).catch(() => []),
     ]).then(([configData, catData]) => {
       setCfg(configData);
       setOriginal(configData);
