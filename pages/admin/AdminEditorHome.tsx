@@ -210,7 +210,7 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[520px] overflow-y-auto pr-1">
             {catalogo.length === 0 && (
               <div className="col-span-4 py-8 text-center">
-                <p className="text-[11px] text-gray-500">Cargando catálogo...</p>
+                <p className="text-[11px] text-gray-500">El catálogo llegó vacío — revisa los logs de Render (línea "catalogo-selector") o recarga la página.</p>
               </div>
             )}
             {catalogo

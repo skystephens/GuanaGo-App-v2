@@ -17,7 +17,7 @@ const TABLE = 'Home_Config';
 const AT = () => {
   const key  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
   const base = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
-  return { key, url: `https://api.airtable.com/v0/${base}/${encodeURIComponent(TABLE)}` };
+  return { key, base, url: `https://api.airtable.com/v0/${base}/${encodeURIComponent(TABLE)}` };
 };
 
 // ── Defaults (el Home funciona aunque la tabla no exista) ─────────────────────
@@ -163,26 +163,26 @@ router.get('/catalogo-selector', async (_req, res) => {
     ]);
 
     const tours = recsTours
-      .filter(r => (r.fields['Servicio'] || r.fields['Nombre']) && r.fields['Publicado'])
+      .filter(r => (r.fields['Servicio'] || r.fields['Nombre'] || r.fields['Nombre alternativo']))
       .map(r => ({
         id: r.id,
         tabla: 'tours',
-        nombre: r.fields['Servicio'] || r.fields['Nombre'] || '',
+        nombre: r.fields['Servicio'] || r.fields['Nombre alternativo'] || r.fields['Nombre'] || '',
         tipo: r.fields['Tipo de Servicio'] || 'Tour',
-        precio: Number(r.fields['Precio_GuanaGO'] || r.fields['Precio actualizado'] || 0),
+        precio: Number(r.fields['Precio actualizado'] || r.fields['Precio_B2C'] || r.fields['Precio B2C'] || r.fields['Precio'] || 0),
         imagen: extraerImagen(r.fields),
         descripcion: (r.fields['Descripcion'] || '').slice(0, 80),
         destacado: !!r.fields['Destacado'],
       }));
 
     const aloj = recsAloj
-      .filter(r => (r.fields['Servicio'] || r.fields['Nombre']) && r.fields['Publicado'])
+      .filter(r => (r.fields['Servicio'] || r.fields['Nombre'] || r.fields['Nombre alternativo']))
       .map(r => ({
         id: r.id,
         tabla: 'alojamientos',
-        nombre: r.fields['Servicio'] || r.fields['Nombre'] || '',
+        nombre: r.fields['Servicio'] || r.fields['Nombre alternativo'] || r.fields['Nombre'] || '',
         tipo: r.fields['Tipo de Alojamiento'] || r.fields['Tipo de Servicio'] || 'Alojamiento',
-        precio: Number(r.fields['Precio_GuanaGO'] || r.fields['Precio 2 Huespedes'] || r.fields['Precio actualizado'] || 0),
+        precio: Number(r.fields['Precio actualizado'] || r.fields['Precio 2 Huespedes'] || r.fields['Precio_B2C'] || r.fields['Precio'] || 0),
         imagen: extraerImagen(r.fields),
         descripcion: (r.fields['Descripcion'] || '').slice(0, 80),
         destacado: !!r.fields['Destacado'],
