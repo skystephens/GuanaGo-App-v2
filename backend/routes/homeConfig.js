@@ -137,23 +137,30 @@ router.get('/catalogo-selector', async (_req, res) => {
     if (!key) return res.json([]);
     const headers = { Authorization: `Bearer ${key}` };
 
-    const fetchTabla = async (tabla, filtro = '') => {
-      const qs = filtro ? `?filterByFormula=${encodeURIComponent(filtro)}&maxRecords=100` : '?maxRecords=100';
-      const r = await fetch(`https://api.airtable.com/v0/${base}/${encodeURIComponent(tabla)}${qs}`, { headers });
-      if (!r.ok) { console.warn(`[catalogo-selector] ${tabla} ${r.status}`); return []; }
+    // Solo los campos necesarios — evita payloads gigantes (algunos registros
+    // traen adjuntos pesados en Imagenurl, incluso videos de +100MB, que hacían
+    // que la respuesta completa fallara por timeout).
+    const CAMPOS = [
+      'Servicio', 'Nombre alternativo', 'Nombre',
+      'Tipo de Servicio', 'Tipo de Alojamiento',
+      'Precio actualizado', 'Precio 2 Huespedes', 'Precio_GuanaGO',
+      'ImagenWP', 'Descripcion', 'Destacado',
+    ];
+
+    const fetchTabla = async (tabla) => {
+      const fieldsQs = CAMPOS.map(c => `fields[]=${encodeURIComponent(c)}`).join('&');
+      const r = await fetch(`https://api.airtable.com/v0/${base}/${encodeURIComponent(tabla)}?${fieldsQs}&maxRecords=100`, { headers });
+      if (!r.ok) { console.warn(`[catalogo-selector] ${tabla} ${r.status}: ${await r.text()}`); return []; }
       const d = await r.json();
       return d.records || [];
     };
 
     const extraerImagen = (f) => {
-      // Prioridad: ImagenWP (URL WordPress, no expira) > Imagenurl (adjunto Airtable)
+      // ImagenWP: URL de WordPress, string con posibles múltiples URLs separadas por coma
       if (f['ImagenWP'] && typeof f['ImagenWP'] === 'string') {
         const url = f['ImagenWP'].split(',')[0].trim();
         if (url.startsWith('http')) return url;
       }
-      const adjunto = f['Imagenurl'] || f['imagenurl'] || f['ImagenUrl'];
-      if (Array.isArray(adjunto) && adjunto[0]?.url) return adjunto[0].url;
-      if (Array.isArray(adjunto) && adjunto[0]?.thumbnails?.large?.url) return adjunto[0].thumbnails.large.url;
       return '';
     };
 
@@ -169,7 +176,7 @@ router.get('/catalogo-selector', async (_req, res) => {
         tabla: 'tours',
         nombre: r.fields['Servicio'] || r.fields['Nombre alternativo'] || r.fields['Nombre'] || '',
         tipo: r.fields['Tipo de Servicio'] || 'Tour',
-        precio: Number(r.fields['Precio actualizado'] || r.fields['Precio_B2C'] || r.fields['Precio B2C'] || r.fields['Precio'] || 0),
+        precio: Number(r.fields['Precio actualizado'] || r.fields['Precio_GuanaGO'] || 0),
         imagen: extraerImagen(r.fields),
         descripcion: (r.fields['Descripcion'] || '').slice(0, 80),
         destacado: !!r.fields['Destacado'],
@@ -182,7 +189,7 @@ router.get('/catalogo-selector', async (_req, res) => {
         tabla: 'alojamientos',
         nombre: r.fields['Servicio'] || r.fields['Nombre alternativo'] || r.fields['Nombre'] || '',
         tipo: r.fields['Tipo de Alojamiento'] || r.fields['Tipo de Servicio'] || 'Alojamiento',
-        precio: Number(r.fields['Precio actualizado'] || r.fields['Precio 2 Huespedes'] || r.fields['Precio_B2C'] || r.fields['Precio'] || 0),
+        precio: Number(r.fields['Precio actualizado'] || r.fields['Precio_GuanaGO'] || r.fields['Precio 2 Huespedes'] || 0),
         imagen: extraerImagen(r.fields),
         descripcion: (r.fields['Descripcion'] || '').slice(0, 80),
         destacado: !!r.fields['Destacado'],
@@ -200,28 +207,5 @@ router.get('/catalogo-selector', async (_req, res) => {
   }
 });
 
-
-// ── GET /api/home-config/diag — diagnostico temporal de campos reales ─────────
-router.get('/diag', async (_req, res) => {
-  try {
-    const { key, base } = AT();
-    if (!key) return res.json({ error: 'sin key' });
-    const headers = { Authorization: `Bearer ${key}` };
-    const r1 = await fetch(`https://api.airtable.com/v0/${base}/${encodeURIComponent('ServiciosTuristicos_SAI')}?maxRecords=2`, { headers });
-    const d1 = await r1.json();
-    const r2 = await fetch(`https://api.airtable.com/v0/${base}/${encodeURIComponent('AlojamientosTuristicos_SAI')}?maxRecords=2`, { headers });
-    const d2 = await r2.json();
-    res.json({
-      tours_status: r1.status,
-      tours_sample: (d1.records || []).map(r => r.fields),
-      tours_error: d1.error || null,
-      aloj_status: r2.status,
-      aloj_sample: (d2.records || []).map(r => r.fields),
-      aloj_error: d2.error || null,
-    });
-  } catch (err) {
-    res.json({ error: err.message });
-  }
-});
 
 export default router;
