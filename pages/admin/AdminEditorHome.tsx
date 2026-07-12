@@ -207,37 +207,63 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
             placeholder="Buscar en catálogo..."
             className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs mb-3"
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[520px] overflow-y-auto pr-1">
+            {catalogo.length === 0 && (
+              <div className="col-span-4 py-8 text-center">
+                <p className="text-[11px] text-gray-500">Cargando catálogo...</p>
+              </div>
+            )}
             {catalogo
               .filter(it => !busqCat || it.nombre.toLowerCase().includes(busqCat.toLowerCase()) || it.tipo.toLowerCase().includes(busqCat.toLowerCase()))
               .map(it => {
                 const activo = selIds.includes(it.id);
                 const lleno = selIds.length >= 5 && !activo;
+                const badgeColor = it.tabla === 'tours' ? 'bg-teal-600' : 'bg-orange-500';
+                const fallback = it.tabla === 'tours'
+                  ? 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=70'
+                  : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=70';
                 return (
                   <button
                     key={it.id}
                     onClick={() => !lleno && toggleSel(it.id)}
                     disabled={lleno}
-                    className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
-                      activo ? 'border-orange-500 bg-orange-950/40' : lleno ? 'border-gray-800 opacity-40' : 'border-gray-800 hover:border-teal-500 bg-gray-900'
+                    className={`relative bg-white rounded-2xl overflow-hidden text-left transition-all border-2 flex flex-col ${
+                      activo ? 'border-orange-500 ring-2 ring-orange-300 shadow-lg scale-[1.02]'
+                      : lleno ? 'border-gray-200 opacity-40 cursor-not-allowed'
+                      : 'border-gray-100 hover:border-teal-400 hover:shadow-md cursor-pointer'
                     }`}
                   >
-                    {it.imagen
-                      ? <img src={it.imagen} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
-                      : <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-lg shrink-0">{it.tabla === 'tours' ? '🚤' : '🏠'}</div>
-                    }
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-bold truncate">{it.nombre}</p>
-                      <p className="text-[9.5px] text-gray-500">{it.tipo} · ${Math.round(it.precio).toLocaleString('es-CO')}</p>
+                    {/* Nº de orden cuando está seleccionado */}
+                    {activo && (
+                      <div className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-orange-500 text-white text-[10px] font-black flex items-center justify-center shadow">
+                        #{selIds.indexOf(it.id) + 1}
+                      </div>
+                    )}
+                    {/* Imagen */}
+                    <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-100">
+                      <img
+                        src={it.imagen || fallback}
+                        alt={it.nombre}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                        onError={e => { (e.target as HTMLImageElement).src = fallback; }}
+                      />
+                      <div className={`absolute top-2 left-2 ${badgeColor} text-white px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide`}>
+                        {it.tabla === 'tours' ? '⚓ Tour' : '🏠 Aloj.'}
+                      </div>
                     </div>
-                    {activo && <span className="text-orange-400 text-[10px] font-black shrink-0">#{selIds.indexOf(it.id) + 1}</span>}
+                    {/* Info */}
+                    <div className="p-2.5 flex flex-col gap-1 flex-1">
+                      <p className="text-[11px] font-bold text-gray-900 leading-snug line-clamp-2">{it.nombre}</p>
+                      <p className="text-[9px] text-gray-400 mt-auto pt-1 border-t border-gray-100">
+                        <span className="text-teal-700 font-black">${Math.round(it.precio).toLocaleString('es-CO')}</span>
+                        {' '}<span className="text-gray-400">COP / {it.tabla === 'tours' ? 'persona' : 'noche'}</span>
+                      </p>
+                    </div>
                   </button>
                 );
               })
             }
-            {catalogo.length === 0 && (
-              <p className="text-[11px] text-gray-600 col-span-2 py-4 text-center">Cargando catálogo...</p>
-            )}
           </div>
         </div>
 
