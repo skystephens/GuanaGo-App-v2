@@ -157,6 +157,53 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
         </div>
       </div>
 
+      {/* ══ TU DÍA EN SAN ANDRÉS — accesos rápidos ══ */}
+      <div className="max-w-6xl mx-auto px-5 pt-8">
+        <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Tu día en San Andrés</p>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
+          <button
+            onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY)}
+            className="bg-gradient-to-br from-fuchsia-600 to-pink-500 text-white p-4 md:p-5 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
+          >
+            <span className="text-2xl mb-2 block">📦</span>
+            <h4 className="font-bold text-sm">Paquetes</h4>
+            <p className="text-[11px] opacity-80">Alojamiento + Tours</p>
+          </button>
+          <button
+            onClick={() => onCotizar?.()}
+            className="bg-gradient-to-br from-[#003D5C] to-[#2AABBB] text-white p-4 md:p-5 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
+          >
+            <span className="text-2xl mb-2 block">⚓</span>
+            <h4 className="font-bold text-sm">Tours</h4>
+            <p className="text-[11px] opacity-80">Explora la isla</p>
+          </button>
+          <button
+            onClick={() => onNavigate(AppRoute.CATALOG_PUBLICO)}
+            className="bg-gradient-to-br from-orange-500 to-amber-500 text-white p-4 md:p-5 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
+          >
+            <span className="text-2xl mb-2 block">🏠</span>
+            <h4 className="font-bold text-sm">Alojamientos</h4>
+            <p className="text-[11px] opacity-80">Donde quedarte</p>
+          </button>
+          <button
+            onClick={() => onNavigate(AppRoute.TAXI_DETAIL)}
+            className="bg-gradient-to-br from-teal-600 to-emerald-500 text-white p-4 md:p-5 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
+          >
+            <span className="text-2xl mb-2 block">🚕</span>
+            <h4 className="font-bold text-sm">Traslados</h4>
+            <p className="text-[11px] opacity-80">Movilidad fácil</p>
+          </button>
+          <button
+            onClick={() => onNavigate(AppRoute.CULTURA_EVENTOS)}
+            className="col-span-2 md:col-span-1 bg-gradient-to-br from-purple-600 to-fuchsia-700 text-white p-4 md:p-5 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
+          >
+            <span className="text-2xl mb-2 block">🥥</span>
+            <h4 className="font-bold text-sm">Cultura & Eventos</h4>
+            <p className="text-[11px] opacity-80">Caribbean Night · Coco Art · Ruta Raizal</p>
+          </button>
+        </div>
+      </div>
+
       {/* ══ EXPERIENCIAS ══ */}
       <section id="experiencias" className="py-16">
         <div className="max-w-6xl mx-auto px-5">

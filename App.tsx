@@ -59,6 +59,7 @@ import AdminCampanas from './pages/admin/AdminCampanas';
 import Home2 from './pages/Home2';
 import AdminEditorHome from './pages/admin/AdminEditorHome';
 import AdminCRM from './pages/admin/AdminCRM';
+import CulturaEventos from './pages/CulturaEventos';
 import AdminTorreComercial2 from './pages/admin/AdminTorreComercial2';
 import AdminSocios from './pages/admin/AdminSocios';
 import AdminNegociosLocales from './pages/admin/AdminNegociosLocales';
@@ -240,7 +241,7 @@ const App: React.FC = () => {
 
   const renderScreen = () => {
     switch (currentRoute) {
-      case AppRoute.HOME: return <Home onNavigate={navigateTo} />;
+      case AppRoute.HOME: return <Home2 onNavigate={navigateTo} onCotizar={() => cotizadorRef.current?.open()} />;
       case AppRoute.UNIFIED_PANEL: return <UnifiedPanel userRole={userRole} onNavigate={navigateTo} onBack={goBack} isAuthenticated={isAuthenticated} onLogout={handleLogout} />;
       case AppRoute.DYNAMIC_ITINERARY: return <Planner onNavigate={navigateTo} onBack={goBack} initialCategory={detailData?.category} />;
       case AppRoute.MY_ITINERARY: return <MyItinerary onBack={goBack} onNavigate={navigateTo} />;
@@ -316,6 +317,7 @@ const App: React.FC = () => {
       case AppRoute.HOME2: return <Home2 onNavigate={navigateTo} onCotizar={() => cotizadorRef.current?.open()} />;
       case AppRoute.ADMIN_EDITOR_HOME: return <AdminEditorHome onBack={goBack} />;
       case AppRoute.ADMIN_CRM: return <AdminCRM onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.CULTURA_EVENTOS: return <CulturaEventos onNavigate={navigateTo} onBack={goBack} />;
       case AppRoute.ADMIN_TORRE_COMERCIAL: return <AdminTorreComercial2 onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ARTISTA_PORTAL: return <ArtistaPortal onBack={goBack} onNavigate={navigateTo} artistaId={detailData?.artistaId} />;
       case AppRoute.ADMIN_SOCIOS: return <AdminSocios onBack={goBack} onNavigate={navigateTo} />;
