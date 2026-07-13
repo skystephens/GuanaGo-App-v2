@@ -80,6 +80,38 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
   const cambios = Object.fromEntries(Object.entries(cfg).filter(([k, v]) => original[k] !== v));
   const hayCambios = Object.keys(cambios).length > 0;
 
+  const LIMITE_EXPERIENCIAS = 16;
+
+  const armarExperiencias = (ids: string[]) => {
+    const TAG_MAP: Record<string, string> = {
+      'Tour': 'Tour', 'Tour nautico': 'Náutico', 'Cultural': 'Ruta Raizal',
+      'Alojamiento': 'Alojamiento', 'Apartamento': 'Alojamiento', 'Posada': 'Alojamiento',
+    };
+    return JSON.stringify(ids.map(id => {
+      const it = catalogo.find(c => c.id === id);
+      if (!it) return null;
+      return {
+        id: it.id,
+        nombre: it.nombre,
+        precio: it.precio,
+        unidad: it.tabla === 'tours' ? 'por persona' : 'por noche',
+        tag: TAG_MAP[it.tipo] || it.tipo,
+        meta: it.descripcion?.slice(0, 80) || `${it.tipo} · GuiaSAI`,
+        img: it.imagen || '',
+      };
+    }).filter(Boolean));
+  };
+
+  const toggleSel = (id: string) => {
+    setSelIds(prev => {
+      const nueva = prev.includes(id)
+        ? prev.filter(s => s !== id)
+        : prev.length >= LIMITE_EXPERIENCIAS ? prev : [...prev, id];
+      setCfg(cfgPrev => ({ ...cfgPrev, experiencias: armarExperiencias(nueva) }));
+      return nueva;
+    });
+  };
+
   const guardar = async () => {
     // Validar JSON de experiencias antes de guardar
     if ('experiencias' in cambios) {
@@ -184,7 +216,7 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
           <p className="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
             ✨ Experiencias destacadas en el Home
           </p>
-          <p className="text-[10px] text-gray-500 mb-3">Selecciona hasta 16 servicios del catálogo real. Se muestran en el orden que los eliges.</p>
+          <p className="text-[10px] text-gray-500 mb-3">Selecciona hasta {LIMITE_EXPERIENCIAS} servicios del catálogo real. Se muestran en el orden que los eliges.</p>
           {selIds.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {selIds.map(id => {
@@ -216,7 +248,7 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
               .filter(it => !busqCat || it.nombre.toLowerCase().includes(busqCat.toLowerCase()) || it.tipo.toLowerCase().includes(busqCat.toLowerCase()))
               .map(it => {
                 const activo = selIds.includes(it.id);
-                const lleno = selIds.length >= 16 && !activo;
+                const lleno = selIds.length >= LIMITE_EXPERIENCIAS && !activo;
                 const badgeColor = it.tabla === 'tours' ? 'bg-teal-600' : 'bg-orange-500';
                 const fallback = it.tabla === 'tours'
                   ? 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=70'
