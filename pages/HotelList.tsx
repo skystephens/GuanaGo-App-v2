@@ -312,7 +312,7 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
 
         {/* Loading state */}
         {loading ? (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="bg-white rounded-3xl h-64 animate-pulse border border-gray-100"></div>
             ))}
@@ -322,7 +322,7 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
             <p className="text-sm text-gray-600 font-medium mb-4">
               {filteredAccommodations.length} alojamiento{filteredAccommodations.length !== 1 ? 's' : ''} disponible{filteredAccommodations.length !== 1 ? 's' : ''}
             </p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredAccommodations.map(hotel => (
                 <ServiceCatalogCard
                   key={hotel.id}
