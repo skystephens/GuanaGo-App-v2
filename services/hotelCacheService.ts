@@ -29,8 +29,8 @@ interface HotelCacheMetadata {
   syncError?: string;
 }
 
-const CACHE_KEY = 'guanago_hotels_cache_v2';
-const METADATA_KEY = 'guanago_hotels_metadata';
+const CACHE_KEY = 'guanago_hotels_cache_v3'; // v3: invalida cache viejo con 0 resultados (bug getServices('hotel') ya corregido)
+const METADATA_KEY = 'guanago_hotels_metadata_v3';
 const CACHE_VERSION = '2.0.0';
 const MAX_AGE = 1000 * 60 * 60 * 6; // 6 horas
 const SYNC_TIMEOUT = 10000; // 10 segundos
