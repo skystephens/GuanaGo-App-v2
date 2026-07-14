@@ -35,7 +35,7 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
   const [accommodations, setAccommodations] = useState<Tour[]>([]);
   const [filteredAccommodations, setFilteredAccommodations] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showSearchPanel, setShowSearchPanel] = useState(true);
+  const [showSearchPanel, setShowSearchPanel] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({
     checkIn: new Date().toISOString().split('T')[0],
     checkOut: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -280,7 +280,7 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
 
           {/* Botón buscar */}
           <button
-            onClick={applyFilters}
+            onClick={() => { applyFilters(); setShowSearchPanel(false); }}
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors active:scale-95"
           >
             <Search size={16} />
@@ -290,24 +290,24 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
       )}
 
       <div className="p-6">
-        {/* Resumen de búsqueda */}
+        {/* Resumen de búsqueda (compacto) */}
         {!showSearchPanel && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6 flex items-start justify-between">
+          <button
+            onClick={() => setShowSearchPanel(true)}
+            className="w-full bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6 flex items-center justify-between text-left hover:bg-emerald-100 transition-colors"
+          >
             <div className="text-sm">
               <p className="text-emerald-900 font-bold mb-1">
-                {filters.checkIn} → {filters.checkOut} • {filters.guests} huéspedes
+                📅 {filters.checkIn} → {filters.checkOut} · {filters.guests} huésped{filters.guests !== 1 ? 'es' : ''}
               </p>
               <p className="text-emerald-700 text-xs">
-                {nights} {nights === 1 ? 'noche' : 'noches'} • {filters.doubleBeds} camas dobles • {filters.singleBeds} sencillas
+                {nights} {nights === 1 ? 'noche' : 'noches'} · Toca para ajustar fechas, huéspedes o tipo de alojamiento
               </p>
             </div>
-            <button
-              onClick={() => setShowSearchPanel(true)}
-              className="text-emerald-600 hover:text-emerald-700"
-            >
-              <ChevronDown size={18} />
-            </button>
-          </div>
+            <span className="flex items-center gap-1 text-emerald-700 font-bold text-xs shrink-0 ml-3">
+              Editar <ChevronDown size={16} />
+            </span>
+          </button>
         )}
 
         {/* Loading state */}
