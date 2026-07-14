@@ -242,19 +242,30 @@ class HotelCacheService {
    * Obtener datos de la API
    */
   private async fetchFromAPI(): Promise<Tour[]> {
-    // Importar dinámicamente para evitar circular dependencies
-    const { airtableService } = await import('./airtableService');
-    
+    // Importar dinámicamente para evitar circular dependencies.
+    // getAlojamientosSAI se importa nombrada porque NO está incluida en el
+    // objeto `airtableService` (solo existe como export nombrado del módulo).
+    const { getAlojamientosSAI } = await import('./airtableService');
+
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error('API timeout'));
       }, SYNC_TIMEOUT);
 
-      airtableService
-        .getServices('hotel')
-        .then(data => {
+      // getServices('hotel') buscaba en ServiciosTuristicos_SAI (tabla de tours) un
+      // {Tipo de Servicio} que contuviera 'hotel' — eso nunca existe en los datos
+      // reales (los valores son 'Tour' o 'Alojamiento'), así que siempre devolvía 0.
+      // La tabla correcta de alojamientos es AlojamientosTuristicos_SAI, vía getAlojamientosSAI().
+      getAlojamientosSAI({ publishedOnly: true })
+        .then((data: any[]) => {
           clearTimeout(timeoutId);
-          resolve(data);
+          // Alinear nombres de campo con lo que espera HotelList/Tour
+          const mapeados = data.map((a: any) => ({
+            ...a,
+            accommodationType: a.tipoAlojamiento || a.accommodationType,
+            capacity: a.capacidad || String(a.capacidadMaxima || ''),
+          }));
+          resolve(mapeados as Tour[]);
         })
         .catch(err => {
           clearTimeout(timeoutId);
