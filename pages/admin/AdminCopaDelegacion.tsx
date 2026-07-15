@@ -90,16 +90,22 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
 
   const crearDelegacion = async () => {
     if (!nuevo.club.trim()) { setMsg('Falta el nombre del club'); return; }
-    const r = await fetch(`${API}/api/copa/delegaciones`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...nuevo, metaPax: Number(nuevo.metaPax) }),
-    });
-    const d = await r.json();
-    if (d.id) {
+    try {
+      const r = await fetch(`${API}/api/copa/delegaciones`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...nuevo, metaPax: Number(nuevo.metaPax) }),
+      });
+      const d = await r.json();
+      if (!r.ok || !d.id) {
+        setMsg(`❌ ${d.error || 'No se pudo crear la delegación'}`);
+        return;
+      }
       setNuevo(p => ({ ...p, club: '', ciudad: '', coordinador: '', whatsapp: '' }));
       await cargarTodo();
       setSelId(d.id);
-      setMsg('Delegación creada ✅');
+      setMsg(d.avisos?.length ? `Delegación creada ⚠️ ${d.avisos.join(' · ')}` : 'Delegación creada ✅');
+    } catch (e: any) {
+      setMsg(`❌ Error de conexión: ${e.message}`);
     }
   };
 
@@ -161,7 +167,7 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
     setCopiado(true); setTimeout(() => setCopiado(false), 2000);
   };
 
-  useEffect(() => { if (msg) { const t = setTimeout(() => setMsg(''), 3000); return () => clearTimeout(t); } }, [msg]);
+  useEffect(() => { if (msg) { const t = setTimeout(() => setMsg(''), msg.includes('❌') || msg.includes('⚠️') ? 8000 : 3000); return () => clearTimeout(t); } }, [msg]);
 
   if (loading) return <div className="min-h-screen bg-[#F5EFE3] flex items-center justify-center"><Loader2 className="animate-spin text-[#FF6600]" size={28} /></div>;
 
@@ -202,7 +208,7 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-5 space-y-4">
-        {msg && <div className="bg-emerald-100 border border-emerald-300 text-emerald-800 text-sm font-semibold rounded-lg px-4 py-2.5">{msg}</div>}
+        {msg && <div className={`text-sm font-semibold rounded-lg px-4 py-2.5 border ${msg.includes('❌') ? 'bg-red-100 border-red-300 text-red-800' : msg.includes('⚠️') ? 'bg-orange-100 border-orange-300 text-orange-800' : 'bg-emerald-100 border-emerald-300 text-emerald-800'}`}>{msg}</div>}
 
         {/* Crear nueva delegación */}
         <div className="bg-white border border-[#E7DFCE] rounded-lg shadow-sm overflow-hidden">

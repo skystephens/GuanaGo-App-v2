@@ -212,19 +212,53 @@ router.post('/delegaciones', async (req, res) => {
   try {
     const { headers } = AT();
     const codigo = generarCodigo();
-    const fields = {
+    const avisos = [];
+
+    const fieldsBase = {
       Club: club, Ciudad: ciudad || '', Coordinador: coordinador || '',
       Meta_Pax: Number(metaPax) || 0, Checkin: checkin || '', Checkout: checkout || '',
       Codigo_Acceso: codigo, Servicios_Activos: JSON.stringify(['alojamiento']),
-      Publicado: 'false', Estado: 'Cotizando', Evento: evento || 'Copa de la Isla',
+      Publicado: 'false', Estado: 'Cotizando',
     };
-    if (whatsapp) fields.WhatsApp = Number(String(whatsapp).replace(/\D/g, ''));
-    const r = await fetch(atUrl(TABLES.DELEGACIONES), {
-      method: 'POST', headers, body: JSON.stringify({ fields, typecast: true }),
-    });
-    if (!r.ok) throw new Error(`Airtable ${r.status}: ${await r.text()}`);
-    const rec = await r.json();
-    res.json(mapDelegacion(rec));
+
+    // Intento 1: con Evento y WhatsApp (los dos campos que pueden fallar
+    // por config de Airtable — nombre de campo o formato de número).
+    const intentar = async (fields) => {
+      const r = await fetch(atUrl(TABLES.DELEGACIONES), {
+        method: 'POST', headers, body: JSON.stringify({ fields, typecast: true }),
+      });
+      const texto = await r.text();
+      if (!r.ok) { const err = new Error(texto); err.status = r.status; throw err; }
+      return JSON.parse(texto);
+    };
+
+    let fields = { ...fieldsBase, Evento: evento || 'Copa de la Isla' };
+    const whatsappNum = whatsapp ? Number(String(whatsapp).replace(/\D/g, '')) : 0;
+    if (whatsappNum) fields.WhatsApp = whatsappNum;
+
+    let rec;
+    try {
+      rec = await intentar(fields);
+    } catch (e1) {
+      // Reintentar quitando el campo que Airtable rechazó, uno a la vez
+      if (/Evento/i.test(e1.message)) {
+        avisos.push('El campo "Evento" no existe (o tiene otro nombre) en Copa_Delegaciones — la delegación se creó sin torneo asignado. Revisa el nombre exacto del campo en Airtable.');
+        delete fields.Evento;
+        try { rec = await intentar(fields); }
+        catch (e2) {
+          if (/WhatsApp/i.test(e2.message)) { delete fields.WhatsApp; avisos.push('El campo "WhatsApp" rechazó el número — se creó sin WhatsApp.'); rec = await intentar(fields); }
+          else throw e2;
+        }
+      } else if (/WhatsApp/i.test(e1.message)) {
+        avisos.push('El campo "WhatsApp" rechazó el número — se creó sin WhatsApp. Revisa el tipo de campo en Airtable (debe ser Number).');
+        delete fields.WhatsApp;
+        rec = await intentar(fields);
+      } else {
+        throw e1;
+      }
+    }
+
+    res.json({ ...mapDelegacion(rec), avisos });
   } catch (err) {
     console.error('❌ copa/delegaciones POST:', err.message);
     res.status(500).json({ error: err.message });
