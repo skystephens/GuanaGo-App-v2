@@ -10,6 +10,11 @@ import { ArrowLeft, Loader2, Plus, Save, Send, Link as LinkIcon, Trash2, Copy, C
 const API = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 const cop = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
 
+const FECHAS_EVENTO: Record<string, { checkin: string; checkout: string }> = {
+  'Copa de la Isla': { checkin: '2026-12-17', checkout: '2026-12-22' },
+  'Seven Colors SAI': { checkin: '2026-10-06', checkout: '2026-10-12' },
+};
+
 interface Props { onBack: () => void }
 
 interface Del {
@@ -203,9 +208,13 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
         <div className="bg-white border border-[#E7DFCE] rounded-lg shadow-sm overflow-hidden">
           <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">+ Nueva delegación</h2>
           <div className="p-4">
-            <p className="text-xs text-[#6B7785] mb-3">Elige a qué torneo pertenece. El coordinador solo verá la info de <b>este</b> evento en su portal — nunca se mezclan cifras entre torneos.</p>
+            <p className="text-xs text-[#6B7785] mb-3">Elige a qué torneo pertenece — las fechas de llegada/salida se autocompletan (Copa de la Isla: 17-22 dic · Seven Colors SAI: 6-12 oct), pero puedes ajustarlas por delegación. El coordinador solo verá la info de <b>este</b> evento en su portal — nunca se mezclan cifras entre torneos.</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-              <select value={nuevo.evento} onChange={e => setNuevo(p => ({ ...p, evento: e.target.value }))} className="col-span-2 border-2 border-[#FF6600] rounded px-2.5 py-2 text-sm font-bold text-[#8A4B00] bg-[#FFF8F3]">
+              <select value={nuevo.evento} onChange={e => {
+                  const ev = e.target.value;
+                  const f = FECHAS_EVENTO[ev];
+                  setNuevo(p => ({ ...p, evento: ev, ...(f ? { checkin: f.checkin, checkout: f.checkout } : {}) }));
+                }} className="col-span-2 border-2 border-[#FF6600] rounded px-2.5 py-2 text-sm font-bold text-[#8A4B00] bg-[#FFF8F3]">
                 {eventosConocidos.map(ev => <option key={ev} value={ev}>{ev}</option>)}
               </select>
               <input placeholder="O escribe un torneo nuevo" onBlur={e => { if (e.target.value.trim()) setNuevo(p => ({ ...p, evento: e.target.value.trim() })); }} className="col-span-2 border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
