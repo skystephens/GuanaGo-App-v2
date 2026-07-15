@@ -27,6 +27,7 @@ import paymentsRoutes  from './backend/routes/payments.js';
 import homeConfigRoutes from './backend/routes/homeConfig.js';
 import paquetesIntlRoutes from './backend/routes/paquetesInternacionales.js';
 import crmRoutes from './backend/routes/crm.js';
+import copaIslaRoutes from './backend/routes/copaIsla.js';
 import tycoonRoutes from './backend/routes/tycoon.js';
 import hubRoutes      from './backend/routes/hub.js';
 import leadsRoutes       from './backend/routes/leads.js';
@@ -234,6 +235,7 @@ app.use('/api/payments', paymentsRoutes);
 app.use('/api/home-config', homeConfigRoutes);
 app.use('/api/paquetes-internacionales', paquetesIntlRoutes);
 app.use('/api/crm', crmRoutes);
+app.use('/api/copa', copaIslaRoutes);
 app.use('/api/tycoon', tycoonRoutes);
 app.use('/pagar', paymentsRoutes);
 

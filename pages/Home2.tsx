@@ -361,6 +361,9 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
               <p className="text-[11px] font-bold tracking-[.14em] uppercase text-cyan-200">Equipos deportivos · Familias · Empresas</p>
               <h2 className="text-3xl font-black mt-2">{cfg.grupos_titulo}</h2>
               <p className="text-cyan-100/85 font-light text-sm mt-3 leading-relaxed">{cfg.grupos_texto}</p>
+              <button onClick={() => onNavigate(AppRoute.COPA_PORTAL)} className="text-xs text-cyan-200 underline mt-3 hover:text-white">
+                ¿Tu delegación ya tiene código de acceso? Ingresa aquí →
+              </button>
             </div>
             <a href={`${wa}?text=${encodeURIComponent('Hola GuiaSAI 🌴 quiero cotizar para mi grupo')}`} target="_blank" rel="noopener noreferrer"
                className="bg-orange-500 hover:bg-orange-600 font-black px-7 py-4 rounded-2xl transition-colors shadow-lg">
