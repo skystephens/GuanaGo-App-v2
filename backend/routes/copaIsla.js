@@ -168,6 +168,7 @@ function mapDelegacion(rec) {
     serviciosActivos: (() => { try { return JSON.parse(rec.fields['Servicios_Activos'] || '[]'); } catch { return []; } })(),
     publicado: String(rec.fields['Publicado'] || '').toLowerCase() === 'true',
     estado: rec.fields['Estado'] || 'Cotizando',
+    evento: rec.fields['Evento'] || 'Copa de la Isla',
   };
 }
 
@@ -206,7 +207,7 @@ router.get('/delegaciones', async (_req, res) => {
 });
 
 router.post('/delegaciones', async (req, res) => {
-  const { club, ciudad, coordinador, whatsapp, metaPax, checkin, checkout } = req.body || {};
+  const { club, ciudad, coordinador, whatsapp, metaPax, checkin, checkout, evento } = req.body || {};
   if (!club) return res.status(400).json({ error: 'club es requerido' });
   try {
     const { headers } = AT();
@@ -215,7 +216,7 @@ router.post('/delegaciones', async (req, res) => {
       Club: club, Ciudad: ciudad || '', Coordinador: coordinador || '',
       Meta_Pax: Number(metaPax) || 0, Checkin: checkin || '', Checkout: checkout || '',
       Codigo_Acceso: codigo, Servicios_Activos: JSON.stringify(['alojamiento']),
-      Publicado: 'false', Estado: 'Cotizando',
+      Publicado: 'false', Estado: 'Cotizando', Evento: evento || 'Copa de la Isla',
     };
     if (whatsapp) fields.WhatsApp = Number(String(whatsapp).replace(/\D/g, ''));
     const r = await fetch(atUrl(TABLES.DELEGACIONES), {
@@ -263,6 +264,7 @@ router.patch('/delegaciones/:id', async (req, res) => {
     if (b.serviciosActivos !== undefined) fields.Servicios_Activos = JSON.stringify(b.serviciosActivos);
     if (b.publicado !== undefined) fields.Publicado = b.publicado ? 'true' : 'false';
     if (b.estado !== undefined) fields.Estado = b.estado;
+    if (b.evento !== undefined) fields.Evento = b.evento;
 
     const r = await fetch(`${atUrl(TABLES.DELEGACIONES)}/${req.params.id}`, {
       method: 'PATCH', headers, body: JSON.stringify({ fields, typecast: true }),
@@ -437,6 +439,7 @@ router.get('/portal/:codigo', async (req, res) => {
 
     res.json({
       actualizado: new Date().toISOString(),
+      evento: del.evento,
       delegacion: {
         club: del.club, ciudad: del.ciudad, lider: del.coordinador,
         meta: del.metaPax, inn: del.checkin, out: del.checkout,

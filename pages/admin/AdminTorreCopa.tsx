@@ -11,7 +11,7 @@ const API = typeof window !== 'undefined' && window.location.hostname === 'local
 const cop = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
 
 interface Props { onBack: () => void }
-interface Del { id: string; club: string; viajerosCount: number; noches: number; total: number; costoNeto: number; margen: number; margenPct: number; abono: number; estado: string; publicado: boolean; serviciosActivos: string[] }
+interface Del { id: string; club: string; viajerosCount: number; noches: number; total: number; costoNeto: number; margen: number; margenPct: number; abono: number; estado: string; publicado: boolean; serviciosActivos: string[]; evento: string }
 interface Tarifa { id: string; servicioId: string; nombre: string; unidad: string; precioVenta: number; precioNeto: number; proveedor: string }
 
 const AdminTorreCopa: React.FC<Props> = ({ onBack }) => {
@@ -20,6 +20,7 @@ const AdminTorreCopa: React.FC<Props> = ({ onBack }) => {
   const [catalogo, setCatalogo] = useState<Tarifa[]>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
+  const [filtroEvento, setFiltroEvento] = useState('Todos');
   const [editCat, setEditCat] = useState<Record<string, { precioVenta: string; precioNeto: string; proveedor: string }>>({});
 
   const cargar = async () => {
@@ -39,14 +40,17 @@ const AdminTorreCopa: React.FC<Props> = ({ onBack }) => {
   };
   useEffect(() => { cargar(); }, []);
 
-  const venta = dels.reduce((a, d) => a + d.total, 0);
-  const costo = dels.reduce((a, d) => a + d.costoNeto, 0);
+  const eventos = ['Todos', ...Array.from(new Set(dels.map(d => d.evento || 'Copa de la Isla')))];
+  const delsVista = filtroEvento === 'Todos' ? dels : dels.filter(d => (d.evento || 'Copa de la Isla') === filtroEvento);
+
+  const venta = delsVista.reduce((a, d) => a + d.total, 0);
+  const costo = delsVista.reduce((a, d) => a + d.costoNeto, 0);
   const margen = venta - costo;
   const margenPct = venta ? Math.round(margen / venta * 100) : 0;
 
   // Cuentas por pagar: agrupar por proveedor a través de todas las delegaciones activas
   const porPagar: Record<string, { monto: number; servicios: Set<string>; unidades: number }> = {};
-  dels.forEach(d => {
+  delsVista.forEach(d => {
     d.serviciosActivos.forEach(sid => {
       const t = catalogo.find(c => c.servicioId === sid);
       if (!t || !t.precioNeto) return;
@@ -93,7 +97,7 @@ const AdminTorreCopa: React.FC<Props> = ({ onBack }) => {
           <h1 className="text-2xl font-black uppercase mb-3">Torre de operación — Copa de la Isla</h1>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-0.5 rounded overflow-hidden">
             {[['Venta', cop(venta), '#F5EFE3'], ['Costo aliados', cop(costo), '#F5EFE3'], ['Margen bruto', cop(margen), '#7FD8A8'],
-              ['Margen %', `${margenPct}%`, '#FF6600'], ['Delegaciones', String(dels.length), '#F5EFE3'], ['Por pagar isla', cop(totalPagar), '#FF8B7A']]
+              ['Margen %', `${margenPct}%`, '#FF6600'], ['Delegaciones', String(delsVista.length), '#F5EFE3'], ['Por pagar isla', cop(totalPagar), '#FF8B7A']]
               .map(([k, v, c]) => (
               <div key={k} className="bg-[#03293F] p-2.5">
                 <p className="text-[8.5px] font-mono uppercase tracking-wider text-[#5E7E92] mb-1 whitespace-nowrap overflow-hidden text-ellipsis">{k}</p>
@@ -101,7 +105,16 @@ const AdminTorreCopa: React.FC<Props> = ({ onBack }) => {
               </div>
             ))}
           </div>
-          <div className="flex gap-1 mt-4 flex-wrap">
+          <div className="flex gap-1.5 mt-4 flex-wrap">
+            {eventos.map(ev => (
+              <button key={ev} onClick={() => setFiltroEvento(ev)}
+                className={`px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wide font-bold transition-colors ${
+                  filtroEvento === ev ? 'bg-[#FF6600] text-white' : 'bg-white/5 text-[#5E7E92] hover:bg-white/10'}`}>
+                {ev}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-1 mt-2 flex-wrap">
             {TABS.map(([v, label]) => (
               <button key={v} onClick={() => setTab(v as any)}
                 className={`px-3.5 py-2 text-[11px] font-bold font-mono uppercase tracking-wide rounded-t ${tab === v ? 'bg-white text-[#05263B]' : 'bg-white/10 text-[#9FB6C4]'}`}>
@@ -144,7 +157,7 @@ const AdminTorreCopa: React.FC<Props> = ({ onBack }) => {
                     <td className="px-4 py-2.5 text-right"><span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${d.margenPct >= 25 ? 'bg-emerald-50 text-emerald-700' : d.margenPct >= 15 ? 'bg-orange-50 text-orange-700' : 'bg-red-50 text-red-700'}`}>{d.margenPct}%</span></td>
                   </tr>
                 ))}
-                {dels.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-[#6B7785]">Sin delegaciones todavía.</td></tr>}
+                {delsVista.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-[#6B7785]">Sin delegaciones en este evento todavía.</td></tr>}
                 </tbody>
               </table>
             </div>

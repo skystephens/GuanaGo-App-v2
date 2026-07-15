@@ -11,6 +11,7 @@ const cop = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
 
 interface Snapshot {
   actualizado: string;
+  evento: string;
   delegacion: { club: string; ciudad: string; lider: string; meta: number; inn: string; out: string };
   pax: number; noches: number; inscritos: number; completos: number; abonados: number;
   total: number; abono: number; saldo: number;
@@ -49,9 +50,20 @@ const CopaPortal: React.FC = () => {
     return (
       <div className="min-h-screen bg-[#F5EFE3] flex items-center justify-center p-5" style={{ fontFamily: "'Archivo', sans-serif" }}>
         <div className="bg-white border border-[#E7DFCE] rounded-lg shadow-sm max-w-sm w-full overflow-hidden">
-          <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">Portal del Coordinador · Copa de la Isla</h2>
+          <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">Portal del Coordinador</h2>
           <div className="p-5">
-            <p className="text-sm text-[#6B7785] mb-4">Ingresa el código de 6 letras que te envió GuíaSAI para ver el avance de tu delegación.</p>
+            <p className="text-sm text-[#6B7785] mb-3">Ingresa el código de 6 letras que te envió GuíaSAI para ver el avance de tu delegación.</p>
+            <div className="bg-[#E8F1F2] border border-[#B9D8DB] rounded p-3 mb-4 text-xs text-[#0A5C64] leading-relaxed">
+              <b>¿Qué puedes hacer aquí?</b>
+              <ul className="mt-1.5 space-y-1 list-disc list-inside">
+                <li>Ver cuántos viajeros están inscritos y con datos completos</li>
+                <li>Ver los servicios contratados (alojamiento, traslados, tours) y su valor</li>
+                <li>Consultar el total, el abono del 30% y el saldo restante</li>
+                <li>Ver tus vouchers cuando el pago quede completo</li>
+                <li>Escribir directo a GuíaSAI por WhatsApp si algo no cuadra</li>
+              </ul>
+              <p className="mt-2 text-[11px] text-[#5E7E92]">Este portal es de solo lectura — los cambios los hace GuíaSAI desde su panel interno.</p>
+            </div>
             <input value={codigo} onChange={e => setCodigo(e.target.value.toUpperCase())} placeholder="EJEMPLO"
               maxLength={6} className="w-full border border-[#E7DFCE] rounded px-3 py-2.5 text-center font-mono text-lg font-bold tracking-widest mb-3" />
             {error && <p className="text-[#C4452F] text-xs font-semibold mb-3">{error}</p>}
@@ -73,7 +85,7 @@ const CopaPortal: React.FC = () => {
     <div className="min-h-screen bg-[#F5EFE3] text-[#111820] pb-10" style={{ fontFamily: "'Archivo', sans-serif" }}>
       <div className="bg-[#05263B] text-[#F5EFE3] px-4 pt-8 pb-4 border-b-4 border-[#FF6600]">
         <div className="max-w-3xl mx-auto">
-          <p className="text-[10px] font-mono tracking-widest uppercase text-[#FF6600] mb-1">Portal del Coordinador · Copa de la Isla</p>
+          <p className="text-[10px] font-mono tracking-widest uppercase text-[#FF6600] mb-1">Portal del Coordinador · {data.evento}</p>
           <h1 className="text-2xl font-black uppercase mb-1">{d.club}</h1>
           <p className="text-xs font-mono text-[#9FB6C4] mb-3">{d.ciudad} · {data.pax} viajeros · {d.inn} al {d.out} · {data.noches} noches</p>
           <div className="grid grid-cols-3 gap-0.5">

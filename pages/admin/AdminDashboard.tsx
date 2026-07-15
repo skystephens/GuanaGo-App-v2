@@ -600,8 +600,8 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
           {/* ── 4. Contenido & Cultura ── */}
           <Section label="Contenido & Cultura" color="orange">
             <BigButton
-              label="Copa de la Isla 🏐"
-              sub="Delegaciones, tarifas, viajeros, publicar al coordinador, link Wompi abono 30%"
+              label="Delegaciones · Torneos 🏐"
+              sub="Copa de la Isla + Seven Colors SAI — delegaciones, tarifas, viajeros, portal, link Wompi"
               icon={<span className="text-lg">🏐</span>}
               gradient="from-blue-950 via-cyan-950 to-blue-950"
               border="border-orange-600 hover:border-orange-400"
@@ -609,8 +609,8 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
               onClick={() => onNavigate(AppRoute.ADMIN_COPA_DELEGACION)}
             />
             <BigButton
-              label="Torre Copa (interno) 🔒"
-              sub="P&L, margen real, cuentas por pagar a aliados, estructura de costos"
+              label="Torre Torneos (interno) 🔒"
+              sub="P&L por torneo o consolidado, margen real, cuentas por pagar, estructura de costos"
               icon={<span className="text-lg">📊</span>}
               gradient="from-red-950 via-slate-950 to-red-950"
               border="border-red-700 hover:border-red-500"

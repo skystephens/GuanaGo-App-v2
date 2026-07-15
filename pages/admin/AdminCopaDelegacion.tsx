@@ -15,7 +15,7 @@ interface Props { onBack: () => void }
 interface Del {
   id: string; club: string; ciudad: string; coordinador: string; whatsapp: string;
   metaPax: number; checkin: string; checkout: string; codigoAcceso: string;
-  serviciosActivos: string[]; publicado: boolean; estado: string;
+  serviciosActivos: string[]; publicado: boolean; estado: string; evento: string;
   viajerosCount: number; pax: number; noches: number; total: number; abono: number;
 }
 interface Tarifa { id: string; servicioId: string; nombre: string; unidad: string; multiplicador: string; descripcion: string; precioVenta: number; proveedor: string }
@@ -29,13 +29,16 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
-  const [nuevo, setNuevo] = useState({ club: '', ciudad: '', coordinador: '', whatsapp: '', metaPax: '31', checkin: '2026-12-17', checkout: '2026-12-22' });
+  const [nuevo, setNuevo] = useState({ club: '', ciudad: '', coordinador: '', whatsapp: '', metaPax: '31', checkin: '2026-12-17', checkout: '2026-12-22', evento: 'Copa de la Isla' });
+  const [filtroEvento, setFiltroEvento] = useState<string>('Todos');
   const [bulk, setBulk] = useState({ texto: '', subgrupo: '' });
   const [nombreP, setNombreP] = useState({ nombre: '', doc: '', tel: '', sub: '', rol: 'Jugador' });
   const [copiado, setCopiado] = useState(false);
   const [pagoLink, setPagoLink] = useState<{ checkoutUrl: string; whatsappTexto: string } | null>(null);
 
   const sel = dels.find(d => d.id === selId) || null;
+  const eventosConocidos = Array.from(new Set(['Copa de la Isla', 'Seven Colors SAI', ...dels.map(d => d.evento)]));
+  const delsFiltradas = filtroEvento === 'Todos' ? dels : dels.filter(d => d.evento === filtroEvento);
 
   const cargarTodo = async () => {
     setLoading(true);
@@ -88,7 +91,7 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
     });
     const d = await r.json();
     if (d.id) {
-      setNuevo({ club: '', ciudad: '', coordinador: '', whatsapp: '', metaPax: '31', checkin: '2026-12-17', checkout: '2026-12-22' });
+      setNuevo(p => ({ ...p, club: '', ciudad: '', coordinador: '', whatsapp: '' }));
       await cargarTodo();
       setSelId(d.id);
       setMsg('Delegación creada ✅');
@@ -168,15 +171,27 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
           </div>
           <h1 className="text-2xl font-black uppercase mb-3">Delegaciones</h1>
 
+          {/* Filtro por evento */}
+          <div className="flex gap-1.5 mb-2.5 overflow-x-auto">
+            {['Todos', ...eventosConocidos.filter((e, i, a) => a.indexOf(e) === i)].map(ev => (
+              <button key={ev} onClick={() => setFiltroEvento(ev)}
+                className={`shrink-0 px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wide font-bold transition-colors ${
+                  filtroEvento === ev ? 'bg-[#FF6600] text-white' : 'bg-white/5 text-[#5E7E92] hover:bg-white/10'}`}>
+                {ev}
+              </button>
+            ))}
+          </div>
+
           {/* Selector de delegación */}
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {dels.map(d => (
+            {delsFiltradas.map(d => (
               <button key={d.id} onClick={() => setSelId(d.id)}
                 className={`shrink-0 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
                   selId === d.id ? 'bg-[#FF6600] text-white' : 'bg-white/10 text-[#9FB6C4] hover:bg-white/20'}`}>
                 {d.club} {d.publicado && '✓'}
               </button>
             ))}
+            {delsFiltradas.length === 0 && <p className="text-xs text-[#5E7E92] py-2">Sin delegaciones en este evento todavía.</p>}
           </div>
         </div>
       </div>
@@ -187,14 +202,21 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
         {/* Crear nueva delegación */}
         <div className="bg-white border border-[#E7DFCE] rounded-lg shadow-sm overflow-hidden">
           <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">+ Nueva delegación</h2>
-          <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-2.5">
-            <input placeholder="Club" value={nuevo.club} onChange={e => setNuevo(p => ({ ...p, club: e.target.value }))} className="col-span-2 border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
-            <input placeholder="Ciudad" value={nuevo.ciudad} onChange={e => setNuevo(p => ({ ...p, ciudad: e.target.value }))} className="border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
-            <input placeholder="Pax esperados" type="number" value={nuevo.metaPax} onChange={e => setNuevo(p => ({ ...p, metaPax: e.target.value }))} className="border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
-            <input placeholder="Coordinador" value={nuevo.coordinador} onChange={e => setNuevo(p => ({ ...p, coordinador: e.target.value }))} className="border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
-            <input placeholder="WhatsApp (57...)" value={nuevo.whatsapp} onChange={e => setNuevo(p => ({ ...p, whatsapp: e.target.value }))} className="border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
-            <input type="date" value={nuevo.checkin} onChange={e => setNuevo(p => ({ ...p, checkin: e.target.value }))} className="border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
-            <input type="date" value={nuevo.checkout} onChange={e => setNuevo(p => ({ ...p, checkout: e.target.value }))} className="border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
+          <div className="p-4">
+            <p className="text-xs text-[#6B7785] mb-3">Elige a qué torneo pertenece. El coordinador solo verá la info de <b>este</b> evento en su portal — nunca se mezclan cifras entre torneos.</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+              <select value={nuevo.evento} onChange={e => setNuevo(p => ({ ...p, evento: e.target.value }))} className="col-span-2 border-2 border-[#FF6600] rounded px-2.5 py-2 text-sm font-bold text-[#8A4B00] bg-[#FFF8F3]">
+                {eventosConocidos.map(ev => <option key={ev} value={ev}>{ev}</option>)}
+              </select>
+              <input placeholder="O escribe un torneo nuevo" onBlur={e => { if (e.target.value.trim()) setNuevo(p => ({ ...p, evento: e.target.value.trim() })); }} className="col-span-2 border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
+              <input placeholder="Club" value={nuevo.club} onChange={e => setNuevo(p => ({ ...p, club: e.target.value }))} className="col-span-2 border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
+              <input placeholder="Ciudad" value={nuevo.ciudad} onChange={e => setNuevo(p => ({ ...p, ciudad: e.target.value }))} className="border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
+              <input placeholder="Pax esperados" type="number" value={nuevo.metaPax} onChange={e => setNuevo(p => ({ ...p, metaPax: e.target.value }))} className="border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
+              <input placeholder="Coordinador" value={nuevo.coordinador} onChange={e => setNuevo(p => ({ ...p, coordinador: e.target.value }))} className="border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
+              <input placeholder="WhatsApp (57...)" value={nuevo.whatsapp} onChange={e => setNuevo(p => ({ ...p, whatsapp: e.target.value }))} className="border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
+              <input type="date" value={nuevo.checkin} onChange={e => setNuevo(p => ({ ...p, checkin: e.target.value }))} className="border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
+              <input type="date" value={nuevo.checkout} onChange={e => setNuevo(p => ({ ...p, checkout: e.target.value }))} className="border border-[#E7DFCE] rounded px-2.5 py-2 text-sm" />
+            </div>
           </div>
           <div className="px-4 pb-4"><button onClick={crearDelegacion} className="flex items-center gap-1.5 bg-[#05263B] text-white font-bold text-sm px-4 py-2 rounded"><Plus size={14} /> Crear delegación</button></div>
         </div>
@@ -220,6 +242,7 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
             <div className="bg-white border border-[#E7DFCE] rounded-b-lg -mt-1 p-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
+                  <span className="inline-block bg-[#0E7C86] text-white text-[9px] font-mono uppercase tracking-wide px-2 py-0.5 rounded mb-1">{sel.evento}</span>
                   <p className="font-bold text-base">{sel.club} <span className="text-[#6B7785] font-normal text-sm">· {sel.ciudad}</span></p>
                   <p className="text-xs text-[#6B7785]">{sel.coordinador} · {sel.checkin} → {sel.checkout} · {sel.noches} noches</p>
                 </div>
@@ -257,6 +280,7 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
             <div className="bg-white border border-[#E7DFCE] rounded-lg overflow-hidden">
               <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">Cotización</h2>
               <div className="p-4">
+                <p className="text-xs text-[#6B7785] mb-3"><b>Publicar</b> activa el portal del coordinador con el código {sel.codigoAcceso} (solo lectura). <b>Generar link de pago</b> crea un cobro Wompi por el 30% de abono — cópialo o envíalo directo por WhatsApp.</p>
                 {sel.total === 0 ? <p className="text-sm text-[#6B7785]">Sin servicios activos con tarifa.</p> : (
                   <>
                     <div className="flex justify-between items-baseline pt-2 border-t-2 border-[#05263B] mt-2">
