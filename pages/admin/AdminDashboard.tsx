@@ -600,6 +600,15 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
           {/* ── 4. Contenido & Cultura ── */}
           <Section label="Contenido & Cultura" color="orange">
             <BigButton
+              label="Calculadora de Traslados 🚕"
+              sub="Aeropuerto-Hotel, vehiculos sedan, tarifa diurna/nocturna automatica"
+              icon={<span className="text-lg">🚕</span>}
+              gradient="from-amber-950 via-orange-950 to-amber-950"
+              border="border-amber-600 hover:border-amber-400"
+              pulse="bg-amber-400"
+              onClick={() => onNavigate(AppRoute.ADMIN_TRASLADOS_CALC)}
+            />
+            <BigButton
               label="Delegaciones · Torneos 🏐"
               sub="Copa de la Isla + Seven Colors SAI — delegaciones, tarifas, viajeros, portal, link Wompi"
               icon={<span className="text-lg">🏐</span>}
