@@ -167,42 +167,9 @@ router.get('/catalogo-real', async (_req, res) => {
 });
 
 
-// ─── Catálogo REAL de traslados (Taxis_Traslados — tarifas actualizadas) ──
-// Precio_DiurnoPub / Precio_NocturnoPub: tarifa pública diurna/nocturna.
-
-let cacheTraslados = { data: null, ts: 0 };
-
-async function leerCatalogoTraslados() {
-  if (cacheTraslados.data && Date.now() - cacheTraslados.ts < 60_000) return cacheTraslados.data;
-  const { headers, base } = AT();
-  const CAMPOS = ['Ruta', 'Zona', 'Destino', 'Nombre', 'Precio_DiurnoPub', 'Precio_NocturnoPub', 'Publicado', 'Activo'];
-  const fieldsQs = CAMPOS.map(c => `fields[]=${encodeURIComponent(c)}`).join('&');
-  const r = await fetch(`https://api.airtable.com/v0/${base}/Taxis_Traslados?${fieldsQs}&maxRecords=100`, { headers });
-  if (!r.ok) { console.warn(`[copa/traslados] ${r.status}`); return []; }
-  const d = await r.json();
-  const catalogo = (d.records || [])
-    .map(rec => {
-      const f = rec.fields;
-      const nombre = f['Ruta'] || f['Zona'] || f['Destino'] || f['Nombre'] || '';
-      if (!nombre) return null;
-      return {
-        id: rec.id,
-        nombre,
-        precioDiurno: Number(f['Precio_DiurnoPub'] || 0),
-        precioNocturno: Number(f['Precio_NocturnoPub'] || 0),
-      };
-    })
-    .filter(Boolean)
-    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-  cacheTraslados = { data: catalogo, ts: Date.now() };
-  return catalogo;
-}
-
-router.get('/catalogo-traslados', async (_req, res) => {
-  try { res.json(await leerCatalogoTraslados()); }
-  catch (err) { res.status(500).json({ error: err.message }); }
-});
-
+// NOTA: catálogo de traslados pendiente — se rediseñará con sistema de
+// zonas/mapa (ver AdminTaxiZoneEditor) en vez de tarifa plana. Mientras
+// tanto, "Traslados" en el paquete grupal usa Copa_Tarifas (tarifa fija).
 // ─── Cálculo de cotización de una delegación ───────────────────────────────
 
 function nochesEntre(inn, out) {
