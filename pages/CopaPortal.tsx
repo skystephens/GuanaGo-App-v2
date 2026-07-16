@@ -15,7 +15,7 @@ interface Snapshot {
   delegacion: { club: string; ciudad: string; lider: string; meta: number; inn: string; out: string };
   pax: number; noches: number; inscritos: number; completos: number; abonados: number;
   total: number; abono: number; saldo: number;
-  servicios: { id: string; titulo: string; detalle: string; valor: number }[];
+  servicios: { id: string; titulo: string; detalle: string; valor: number; origen?: string }[];
   personas: { nombre: string; doc: string; rol: string; sub: string; datos: boolean; pago: string }[];
 }
 
@@ -125,7 +125,7 @@ const CopaPortal: React.FC = () => {
               <thead><tr className="text-[9.5px] uppercase text-[#6B7785] border-b border-[#E7DFCE]"><th className="text-left px-4 py-2">Servicio</th><th className="text-left px-2 py-2">Detalle</th><th className="text-left px-2 py-2">Estado</th><th className="text-right px-4 py-2">Valor</th></tr></thead>
               <tbody>{data.servicios.map(s => (
                 <tr key={s.id} className="border-b border-[#F2EEE5] last:border-0">
-                  <td className="px-4 py-2.5 font-bold">{s.titulo}</td>
+                  <td className="px-4 py-2.5 font-bold">{s.titulo}{s.origen === 'catalogo' && <span className="block text-[9px] font-mono text-[#0E7C86] font-normal">Actividad GuiaSAI</span>}</td>
                   <td className="px-2 py-2.5 text-[#6B7785] font-mono text-[11px]">{s.detalle}</td>
                   <td className="px-2 py-2.5"><span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${estadoServ.c}`}>{estadoServ.t}</span></td>
                   <td className="px-4 py-2.5 text-right font-mono font-bold">{cop(s.valor)}</td>

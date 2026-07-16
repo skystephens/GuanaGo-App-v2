@@ -105,6 +105,67 @@ router.put('/catalogo', async (req, res) => {
   }
 });
 
+
+// ─── Catálogo REAL de la plataforma (fuente única de verdad de precios) ────
+// Tours: ServiciosTuristicos_SAI · Alojamientos: AlojamientosTuristicos_SAI
+// Se reutiliza el mismo patrón que /api/home-config/catalogo-selector.
+
+let cacheCatalogoReal = { data: null, ts: 0 };
+
+async function leerCatalogoReal() {
+  if (cacheCatalogoReal.data && Date.now() - cacheCatalogoReal.ts < 60_000) return cacheCatalogoReal.data;
+  const { headers } = AT();
+
+  const CAMPOS_TOURS = ['Servicio', 'Nombre alternativo', 'Tipo de Servicio', 'Precio actualizado', 'Precio_GuanaGO', 'Precio Costo', 'ImagenWP', 'Publicado'];
+  const CAMPOS_ALOJ  = ['Servicio', 'Nombre alternativo', 'Tipo de Alojamiento', 'Tipo de Servicio', 'Precio actualizado', 'Precio_GuanaGO', 'Precio Costo', 'ImagenWP', 'Publicado'];
+
+  const fetchTabla = async (tabla, campos) => {
+    const fieldsQs = campos.map(c => `fields[]=${encodeURIComponent(c)}`).join('&');
+    const r = await fetch(`https://api.airtable.com/v0/${AT().base}/${encodeURIComponent(tabla)}?${fieldsQs}&maxRecords=100`, { headers });
+    if (!r.ok) { console.warn(`[copa/catalogo-real] ${tabla} ${r.status}`); return []; }
+    const d = await r.json();
+    return d.records || [];
+  };
+
+  const [recsTours, recsAloj] = await Promise.all([
+    fetchTabla('ServiciosTuristicos_SAI', CAMPOS_TOURS),
+    fetchTabla('AlojamientosTuristicos_SAI', CAMPOS_ALOJ),
+  ]);
+
+  const mapItem = (r, tabla) => {
+    const f = r.fields;
+    const nombre = f['Servicio'] || f['Nombre alternativo'] || '';
+    if (!nombre || !f['Publicado']) return null;
+    let imagen = '';
+    if (f['ImagenWP'] && typeof f['ImagenWP'] === 'string') {
+      const u = f['ImagenWP'].split(',')[0].trim();
+      if (u.startsWith('http')) imagen = u;
+    }
+    return {
+      id: r.id,
+      tabla,
+      nombre,
+      tipo: f['Tipo de Servicio'] || f['Tipo de Alojamiento'] || (tabla === 'tours' ? 'Tour' : 'Alojamiento'),
+      precioVenta: Number(f['Precio actualizado'] || f['Precio_GuanaGO'] || 0),
+      precioNeto: Number(f['Precio Costo'] || 0),
+      imagen,
+    };
+  };
+
+  const catalogo = [
+    ...recsTours.map(r => mapItem(r, 'tours')),
+    ...recsAloj.map(r => mapItem(r, 'alojamientos')),
+  ].filter(Boolean).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+
+  cacheCatalogoReal = { data: catalogo, ts: Date.now() };
+  return catalogo;
+}
+
+router.get('/catalogo-real', async (_req, res) => {
+  try { res.json(await leerCatalogoReal()); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ─── Cálculo de cotización de una delegación ───────────────────────────────
 
 function nochesEntre(inn, out) {
@@ -118,6 +179,8 @@ async function calcularDelegacion(fields, viajerosCount) {
   const catalogo = await leerCatalogo();
   let activos = [];
   try { activos = JSON.parse(fields['Servicios_Activos'] || '[]'); } catch { activos = []; }
+  let actividadesIds = [];
+  try { actividadesIds = JSON.parse(fields['Actividades_Catalogo'] || '[]'); } catch { actividadesIds = []; }
 
   const pax = viajerosCount || Number(fields['Meta_Pax']) || 0;
   const noches = nochesEntre(fields['Checkin'], fields['Checkout']);
@@ -137,7 +200,27 @@ async function calcularDelegacion(fields, viajerosCount) {
       valorVenta: mult * t.precioVenta,
       valorNeto: mult * t.precioNeto,
       proveedor: t.proveedor,
+      origen: 'grupal',
     });
+  }
+
+  // Actividades del catálogo real (tours/alojamientos con tarifa vigente de la plataforma)
+  if (actividadesIds.length) {
+    const catalogoReal = await leerCatalogoReal();
+    for (const id of actividadesIds) {
+      const it = catalogoReal.find(c => c.id === id);
+      if (!it) continue; // pudo despublicarse — se omite sin romper el cálculo
+      lineas.push({
+        servicioId: it.id,
+        titulo: it.nombre,
+        detalle: `${pax} pax`,
+        unidades: pax,
+        valorVenta: pax * it.precioVenta,
+        valorNeto: pax * it.precioNeto,
+        proveedor: it.tipo,
+        origen: 'catalogo',
+      });
+    }
   }
 
   const totalVenta = lineas.reduce((a, l) => a + l.valorVenta, 0);
@@ -166,6 +249,7 @@ function mapDelegacion(rec) {
     checkout: rec.fields['Checkout'] || '',
     codigoAcceso: rec.fields['Codigo_Acceso'] || '',
     serviciosActivos: (() => { try { return JSON.parse(rec.fields['Servicios_Activos'] || '[]'); } catch { return []; } })(),
+    actividadesCatalogo: (() => { try { return JSON.parse(rec.fields['Actividades_Catalogo'] || '[]'); } catch { return []; } })(),
     publicado: String(rec.fields['Publicado'] || '').toLowerCase() === 'true',
     estado: rec.fields['Estado'] || 'Cotizando',
     evento: rec.fields['Evento'] || 'Copa de la Isla',
@@ -296,16 +380,39 @@ router.patch('/delegaciones/:id', async (req, res) => {
     if (b.checkin !== undefined) fields.Checkin = b.checkin;
     if (b.checkout !== undefined) fields.Checkout = b.checkout;
     if (b.serviciosActivos !== undefined) fields.Servicios_Activos = JSON.stringify(b.serviciosActivos);
+    if (b.actividadesCatalogo !== undefined) fields.Actividades_Catalogo = JSON.stringify(b.actividadesCatalogo);
     if (b.publicado !== undefined) fields.Publicado = b.publicado ? 'true' : 'false';
     if (b.estado !== undefined) fields.Estado = b.estado;
     if (b.evento !== undefined) fields.Evento = b.evento;
 
-    const r = await fetch(`${atUrl(TABLES.DELEGACIONES)}/${req.params.id}`, {
-      method: 'PATCH', headers, body: JSON.stringify({ fields, typecast: true }),
-    });
-    if (!r.ok) throw new Error(`Airtable ${r.status}: ${await r.text()}`);
-    const rec = await r.json();
-    res.json(mapDelegacion(rec));
+    const intentar = async (f) => {
+      const r = await fetch(`${atUrl(TABLES.DELEGACIONES)}/${req.params.id}`, {
+        method: 'PATCH', headers, body: JSON.stringify({ fields: f, typecast: true }),
+      });
+      const texto = await r.text();
+      if (!r.ok) { const err = new Error(texto); throw err; }
+      return JSON.parse(texto);
+    };
+
+    let rec, aviso;
+    try {
+      rec = await intentar(fields);
+    } catch (e1) {
+      // Si el campo Actividades_Catalogo aún no existe en Airtable, guardamos
+      // el resto de cambios igual y avisamos, en vez de perder todo el PATCH.
+      if (/Actividades_Catalogo/i.test(e1.message)) {
+        const { Actividades_Catalogo, ...resto } = fields;
+        aviso = 'El campo "Actividades_Catalogo" no existe todavía en Airtable — créalo (Long text) para poder guardar actividades del catálogo.';
+        rec = await intentar(resto);
+      } else if (/Evento/i.test(e1.message)) {
+        const { Evento, ...resto } = fields;
+        aviso = 'El campo "Evento" no existe todavía en Airtable.';
+        rec = await intentar(resto);
+      } else {
+        throw e1;
+      }
+    }
+    res.json({ ...mapDelegacion(rec), aviso });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -481,7 +588,7 @@ router.get('/portal/:codigo', async (req, res) => {
       pax: calc.pax, noches: calc.noches,
       inscritos, completos, abonados,
       total: calc.total, abono: calc.abono, saldo: calc.saldo,
-      servicios: calc.lineas.map(l => ({ id: l.servicioId, titulo: l.titulo, detalle: l.detalle, valor: l.valorVenta })),
+      servicios: calc.lineas.map(l => ({ id: l.servicioId, titulo: l.titulo, detalle: l.detalle, valor: l.valorVenta, origen: l.origen })),
       personas: viajeros,
     });
   } catch (err) {

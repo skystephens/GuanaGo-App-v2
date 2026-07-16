@@ -20,11 +20,12 @@ interface Props { onBack: () => void }
 interface Del {
   id: string; club: string; ciudad: string; coordinador: string; whatsapp: string;
   metaPax: number; checkin: string; checkout: string; codigoAcceso: string;
-  serviciosActivos: string[]; publicado: boolean; estado: string; evento: string;
+  serviciosActivos: string[]; actividadesCatalogo: string[]; publicado: boolean; estado: string; evento: string;
   viajerosCount: number; pax: number; noches: number; total: number; abono: number;
 }
 interface Tarifa { id: string; servicioId: string; nombre: string; unidad: string; multiplicador: string; descripcion: string; precioVenta: number; proveedor: string }
 interface Viajero { id: string; nombre: string; documento: string; telefono: string; subgrupo: string; rol: string; estadoPago: string }
+interface CatReal { id: string; tabla: string; nombre: string; tipo: string; precioVenta: number; precioNeto: number; imagen: string }
 
 const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
   const [dels, setDels] = useState<Del[]>([]);
@@ -40,6 +41,8 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
   const [nombreP, setNombreP] = useState({ nombre: '', doc: '', tel: '', sub: '', rol: 'Jugador' });
   const [copiado, setCopiado] = useState(false);
   const [pagoLink, setPagoLink] = useState<{ checkoutUrl: string; whatsappTexto: string } | null>(null);
+  const [catReal, setCatReal] = useState<CatReal[]>([]);
+  const [buscarAct, setBuscarAct] = useState('');
 
   const sel = dels.find(d => d.id === selId) || null;
   const eventosConocidos = Array.from(new Set(['Copa de la Isla', 'Seven Colors SAI', ...dels.map(d => d.evento)]));
@@ -48,12 +51,14 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
   const cargarTodo = async () => {
     setLoading(true);
     try {
-      const [d1, d2] = await Promise.all([
+      const [d1, d2, d3] = await Promise.all([
         fetch(`${API}/api/copa/delegaciones`).then(r => r.json()),
         fetch(`${API}/api/copa/catalogo`).then(r => r.json()),
+        fetch(`${API}/api/copa/catalogo-real`).then(r => r.json()),
       ]);
       if (Array.isArray(d1)) { setDels(d1); if (!selId && d1[0]) setSelId(d1[0].id); }
       if (Array.isArray(d2)) setCatalogo(d2);
+      if (Array.isArray(d3)) setCatReal(d3);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -86,6 +91,14 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
       ? sel.serviciosActivos.filter(s => s !== servicioId)
       : [...sel.serviciosActivos, servicioId];
     patchDel(sel.id, { serviciosActivos: activos });
+  };
+
+  const toggleActividad = (id: string) => {
+    if (!sel) return;
+    const activos = sel.actividadesCatalogo.includes(id)
+      ? sel.actividadesCatalogo.filter(a => a !== id)
+      : [...sel.actividadesCatalogo, id];
+    patchDel(sel.id, { actividadesCatalogo: activos });
   };
 
   const crearDelegacion = async () => {
@@ -269,7 +282,8 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
 
             {/* Tarifas y servicios activos */}
             <div className="bg-white border-2 border-[#FF6600] rounded-lg overflow-hidden">
-              <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#8A4B00] bg-[#FFF3E9] px-4 py-3">Servicios · tarifas del catálogo global</h2>
+              <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#8A4B00] bg-[#FFF3E9] px-4 py-3">Paquete grupal · tarifas negociadas por evento</h2>
+              <p className="text-xs text-[#6B7785] px-4 pt-3">Alojamiento en bloque, traslados y alimentación con tarifa especial de grupo. Se edita en la Torre → Estructura de costos.</p>
               <div className="p-4 space-y-2">
                 {catalogo.map(t => {
                   const on = sel.serviciosActivos.includes(t.servicioId);
@@ -288,6 +302,47 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
                   );
                 })}
                 {catalogo.length === 0 && <p className="text-sm text-[#6B7785] text-center py-4">Cargando catálogo de tarifas...</p>}
+              </div>
+            </div>
+
+            {/* Actividades del catálogo real GuiaSAI */}
+            <div className="bg-white border-2 border-[#0E7C86] rounded-lg overflow-hidden">
+              <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#0A5C64] bg-[#E8F1F2] px-4 py-3">Actividades adicionales · catálogo GuiaSAI (tarifas en vivo)</h2>
+              <p className="text-xs text-[#6B7785] px-4 pt-3">Tours y experiencias reales de la plataforma — mismos precios que ve cualquier turista al cotizar hoy. Se cobran por persona.</p>
+              <div className="p-4">
+                <input value={buscarAct} onChange={e => setBuscarAct(e.target.value)} placeholder="Buscar actividad..." className="w-full border border-[#E7DFCE] rounded px-3 py-2 text-sm mb-3" />
+                {sel.actividadesCatalogo.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {sel.actividadesCatalogo.map(id => {
+                      const it = catReal.find(c => c.id === id);
+                      if (!it) return null;
+                      return (
+                        <div key={id} className="flex items-center gap-1.5 bg-[#E8F1F2] border border-[#B9D8DB] text-[#0A5C64] text-[10px] font-bold px-2.5 py-1.5 rounded-full">
+                          {it.nombre.slice(0, 26)} · {cop(it.precioVenta)}
+                          <button onClick={() => toggleActividad(id)} className="text-[#0A5C64] hover:text-[#C4452F]">×</button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-80 overflow-y-auto">
+                  {catReal
+                    .filter(it => !buscarAct || it.nombre.toLowerCase().includes(buscarAct.toLowerCase()))
+                    .map(it => {
+                      const on = sel.actividadesCatalogo.includes(it.id);
+                      return (
+                        <button key={it.id} onClick={() => toggleActividad(it.id)}
+                          className={`text-left rounded-lg overflow-hidden border-2 transition-all ${on ? 'border-[#0E7C86] ring-2 ring-[#B9D8DB]' : 'border-[#E7DFCE] hover:border-[#0E7C86]'}`}>
+                          {it.imagen ? <div className="h-20 bg-cover bg-center" style={{ backgroundImage: `url('${it.imagen}')` }} /> : <div className="h-20 bg-[#F5EFE3] flex items-center justify-center text-2xl">{it.tabla === 'tours' ? '⚓' : '🏠'}</div>}
+                          <div className="p-2">
+                            <p className="text-[11px] font-bold leading-snug line-clamp-2">{it.nombre}</p>
+                            <p className="text-[11px] font-mono font-bold text-[#0A5C64]">{cop(it.precioVenta)}<span className="text-[9px] text-[#6B7785] font-normal"> /pax</span></p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  {catReal.length === 0 && <p className="text-sm text-[#6B7785] text-center py-4 col-span-3">Cargando catálogo...</p>}
+                </div>
               </div>
             </div>
 
