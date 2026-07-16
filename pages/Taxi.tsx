@@ -1,8 +1,22 @@
-import React, { useState, useMemo } from 'react';
-import { ArrowLeft, MapPin, ChevronDown, Car, Truck, Info, Ticket, Phone, User, Mail, Clock, Plane } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { ArrowLeft, MapPin, ChevronDown, Car, Truck, Info, Ticket, Phone, User, Mail, Clock, Plane, Sun, Moon } from 'lucide-react';
 import { TAXI_ZONES } from '../constants';
 import TaxiZonesMapbox from '../components/TaxiZonesMapbox';
 import { api } from '../services/api';
+
+const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+
+interface HotelTraslado { id: string; nombre: string; colorZona: string; precioDiurno: number; precioNocturno: number }
+
+const COLOR_HEX: Record<string, string> = {
+  Amarillo: '#FACC15', Verde: '#22C55E', Magenta: '#EC4899', Azul: '#60A5FA', Rojo: '#EF4444', 'Sin color': '#D1D5DB',
+};
+
+const turnoDeHora = (fechaHora: string): 'diurno' | 'nocturno' => {
+  if (!fechaHora) return 'diurno';
+  const h = new Date(fechaHora).getHours();
+  return (h >= 6 && h < 21) ? 'diurno' : 'nocturno';
+};
 
 interface TaxiProps {
   onBack: () => void;
@@ -10,6 +24,8 @@ interface TaxiProps {
 
 const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
   const [selectedZoneId, setSelectedZoneId] = useState<string>('');
+  const [hoteles, setHoteles] = useState<HotelTraslado[]>([]);
+  const [selectedHotelId, setSelectedHotelId] = useState<string>('');
   const [passengers, setPassengers] = useState<number>(2);
    const [luggage, setLuggage] = useState<number>(1);
    const [tripType, setTripType] = useState<'airport_to_hotel' | 'hotel_to_airport' | 'point_to_point'>('airport_to_hotel');
@@ -34,10 +50,27 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
     TAXI_ZONES.find(z => z.id === selectedZoneId), 
   [selectedZoneId]);
 
-   // Pricing Logic: cada taxi lleva hasta 4 pax, se suman taxis adicionales con la misma tarifa base
-   const taxisNeeded = Math.ceil(passengers / 4);
-   const pricePerTaxi = selectedZone?.priceSmall || 0;
-   const price = selectedZone ? taxisNeeded * pricePerTaxi : 0;
+  useEffect(() => {
+    fetch(`${API_BASE}/api/traslados/hoteles`)
+      .then(r => r.json())
+      .then(d => Array.isArray(d) && setHoteles(d))
+      .catch(() => {});
+  }, []);
+
+  const esRutaAeropuerto = tripType === 'airport_to_hotel' || tripType === 'hotel_to_airport';
+  const selectedHotel = hoteles.find(h => h.id === selectedHotelId) || null;
+  const turno = turnoDeHora(arrivalTime);
+
+   // Pricing Logic: equipaje grande (mas piezas que pasajeros) -> max 3 pax/taxi, si no 4.
+   // Ruta aeropuerto usa tarifa real por hotel (diurno/nocturno) desde Taxis_Traslados.
+   // Punto a punto sigue usando la tarifa generica por zona (TAXI_ZONES) mientras se define el sistema.
+   const equipajeGrande = luggage > passengers && luggage > 0;
+   const capacidadPorTaxi = equipajeGrande ? 3 : 4;
+   const taxisNeeded = Math.ceil(passengers / capacidadPorTaxi);
+   const pricePerTaxi = esRutaAeropuerto
+     ? (selectedHotel ? (turno === 'diurno' ? selectedHotel.precioDiurno : selectedHotel.precioNocturno) : 0)
+     : (selectedZone?.priceSmall || 0);
+   const price = (esRutaAeropuerto ? selectedHotel : selectedZone) ? taxisNeeded * pricePerTaxi : 0;
 
   const handleIncrement = () => {
      if (passengers < 15) setPassengers(prev => prev + 1);
@@ -48,7 +81,8 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
   };
 
    const handleSubmit = async () => {
-      if (!selectedZoneId || !contactName || !contactPhone) {
+      const destinoValido = esRutaAeropuerto ? !!selectedHotelId : !!selectedZoneId;
+      if (!destinoValido || !contactName || !contactPhone) {
          setSubmitError('Completa zona, nombre y teléfono.');
          setSubmitMessage('');
          return;
@@ -60,9 +94,14 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
 
       try {
          const payload = {
-            origin: tripType === 'airport_to_hotel' ? 'Aeropuerto Intl.' : 'Hotel / Punto',
-            destination: TAXI_ZONES.find(z => z.id === selectedZoneId)?.name || 'Zona',
-            zoneId: selectedZoneId,
+            origin: tripType === 'airport_to_hotel' ? 'Aeropuerto Intl.' : (esRutaAeropuerto ? (selectedHotel?.nombre || 'Hotel') : 'Hotel / Punto'),
+            destination: esRutaAeropuerto
+               ? (tripType === 'airport_to_hotel' ? (selectedHotel?.nombre || 'Hotel') : 'Aeropuerto Intl.')
+               : (TAXI_ZONES.find(z => z.id === selectedZoneId)?.name || 'Zona'),
+            zoneId: esRutaAeropuerto ? undefined : selectedZoneId,
+            hotelId: esRutaAeropuerto ? selectedHotelId : undefined,
+            hotelNombre: esRutaAeropuerto ? selectedHotel?.nombre : undefined,
+            turno: esRutaAeropuerto ? turno : undefined,
             passengers,
             luggage,
             tripType,
@@ -73,6 +112,7 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
             contactPhone,
             contactEmail,
             taxisNeeded,
+            capacidadPorTaxi,
             priceEstimate: price
          };
 
@@ -139,10 +179,44 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
                />
 
                <div className="space-y-4">
-                  {/* Guía de Zonas y Precios */}
+                  {/* Guía de Zonas/Hoteles y Precios */}
                   <div className="space-y-2 max-h-72 overflow-y-auto">
-                    <p className="text-xs font-bold text-gray-600 uppercase tracking-widest sticky top-0 bg-white pb-2">Zonas y Tarifas</p>
-                    {TAXI_ZONES.map((zone) => (
+                    <p className="text-xs font-bold text-gray-600 uppercase tracking-widest sticky top-0 bg-white pb-2">
+                      {esRutaAeropuerto ? 'Hoteles y Tarifas · Aeropuerto' : 'Zonas y Tarifas'}
+                    </p>
+                    {esRutaAeropuerto ? (
+                      <>
+                        {hoteles.map((h) => (
+                          <button
+                            key={h.id}
+                            onClick={() => setSelectedHotelId(h.id)}
+                            className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer relative ${
+                              selectedHotelId === h.id
+                                ? 'bg-green-50 border-green-400 shadow-md'
+                                : 'bg-white border-gray-200 hover:border-green-300'
+                            }`}
+                          >
+                            <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" style={{ background: COLOR_HEX[h.colorZona] || '#D1D5DB' }}></div>
+                            <div className="flex justify-between items-center pl-2">
+                              <h3 className="font-bold text-gray-900 text-sm">{h.nombre}</h3>
+                            </div>
+                            <div className="flex items-center justify-between bg-gray-50 rounded-lg p-2 pl-3 mt-2">
+                              <div className="text-center flex items-center gap-1">
+                                <Sun size={11} className="text-orange-500" />
+                                <span className="font-bold text-gray-800 text-xs">${(h.precioDiurno / 1000).toFixed(0)}k</span>
+                              </div>
+                              <div className="h-4 w-px bg-gray-200"></div>
+                              <div className="text-center flex items-center gap-1">
+                                <Moon size={11} className="text-indigo-500" />
+                                <span className="font-bold text-gray-800 text-xs">${(h.precioNocturno / 1000).toFixed(0)}k</span>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                        {hoteles.length === 0 && <p className="text-xs text-gray-400 text-center py-4">Cargando hoteles...</p>}
+                      </>
+                    ) : (
+                    TAXI_ZONES.map((zone) => (
                       <button
                         key={zone.id}
                         onClick={() => setSelectedZoneId(zone.id)}
@@ -176,18 +250,31 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
                           </div>
                         </div>
                       </button>
-                    ))}
+                    ))
+                    )}
                   </div>
 
                   {/* Formulario de destino y pasajeros */}
                   <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                    {/* 1. Zone Selector */}
+                    {/* 1. Destino Selector */}
                     <div className="mb-4">
                        <label className="block text-sm font-bold text-gray-900 mb-2">¿Cuál es tu destino?</label>
                        <div className="relative">
                           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                              <MapPin size={20} />
                           </div>
+                          {esRutaAeropuerto ? (
+                            <select 
+                               value={selectedHotelId}
+                               onChange={(e) => setSelectedHotelId(e.target.value)}
+                               className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-green-500 focus:border-green-500 block p-4 pl-12 pr-10 appearance-none outline-none transition-all font-medium"
+                            >
+                               <option value="" disabled>Selecciona tu hotel...</option>
+                               {hoteles.map(h => (
+                                  <option key={h.id} value={h.id}>{h.nombre}</option>
+                               ))}
+                            </select>
+                          ) : (
                           <select 
                              value={selectedZoneId}
                              onChange={(e) => setSelectedZoneId(e.target.value)}
@@ -200,11 +287,20 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
                                 </option>
                              ))}
                           </select>
+                          )}
                           <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                              <ChevronDown size={20} />
                           </div>
                        </div>
-                       {selectedZone && (
+                       {esRutaAeropuerto && selectedHotel && (
+                          <div className="mt-3 flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                             {turno === 'diurno' ? <Sun size={14} className="text-orange-500" /> : <Moon size={14} className="text-indigo-500" />}
+                             <p className="text-xs text-gray-500">
+                                Tarifa <span className="font-bold">{turno}</span> ({turno === 'diurno' ? '6am–9pm' : '9pm–6am'}) según la hora indicada
+                             </p>
+                          </div>
+                       )}
+                       {!esRutaAeropuerto && selectedZone && (
                           <div className="mt-3 flex items-start gap-2 bg-gray-50 p-2 rounded-lg transition-all animate-in fade-in">
                               <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${selectedZone.color}`}></div>
                               <p className="text-xs text-gray-500">
@@ -241,12 +337,12 @@ const Taxi: React.FC<TaxiProps> = ({ onBack }) => {
                        {taxisNeeded > 1 ? (
                           <p className="text-xs text-blue-600 mt-2 ml-1 flex items-center gap-1 font-medium">
                              <Info size={12} />
-                             Se asignan {taxisNeeded} taxis (4 pax c/u). Tarifa por taxi: ${pricePerTaxi.toLocaleString()} COP.
+                             Se asignan {taxisNeeded} taxis ({capacidadPorTaxi} pax c/u{equipajeGrande ? ' · equipaje grande' : ''}). Tarifa por taxi: ${pricePerTaxi.toLocaleString()} COP.
                           </p>
                        ) : (
                           <p className="text-xs text-gray-400 mt-2 ml-1 flex items-center gap-1">
                              <Info size={12} />
-                             Tarifa estándar de Taxi (hasta 4 pasajeros)
+                             Tarifa estándar de Taxi (hasta {capacidadPorTaxi} pasajeros{equipajeGrande ? ' · equipaje grande' : ''})
                           </p>
                        )}
                     </div>
