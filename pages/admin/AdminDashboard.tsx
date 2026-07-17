@@ -600,6 +600,15 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
           {/* ── 4. Contenido & Cultura ── */}
           <Section label="Contenido & Cultura" color="orange">
             <BigButton
+              label="Margen Alojamiento Aliado 🏨"
+              sub="PriceTravel y aliados externos: precio base + margen por pax/noche"
+              icon={<span className="text-lg">🏨</span>}
+              gradient="from-rose-950 via-pink-950 to-rose-950"
+              border="border-pink-600 hover:border-pink-400"
+              pulse="bg-pink-400"
+              onClick={() => onNavigate(AppRoute.ADMIN_PRICETRAVEL_CALC)}
+            />
+            <BigButton
               label="Calculadora de Traslados 🚕"
               sub="Aeropuerto-Hotel, vehiculos sedan, tarifa diurna/nocturna automatica"
               icon={<span className="text-lg">🚕</span>}

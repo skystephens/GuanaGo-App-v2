@@ -64,6 +64,7 @@ import AdminCopaDelegacion from './pages/admin/AdminCopaDelegacion';
 import AdminTorreCopa from './pages/admin/AdminTorreCopa';
 import CopaPortal from './pages/CopaPortal';
 import AdminTrasladosCalc from './pages/admin/AdminTrasladosCalc';
+import AdminPriceTravelCalc from './pages/admin/AdminPriceTravelCalc';
 import AdminTorreComercial2 from './pages/admin/AdminTorreComercial2';
 import AdminSocios from './pages/admin/AdminSocios';
 import AdminNegociosLocales from './pages/admin/AdminNegociosLocales';
@@ -329,6 +330,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_TORRE_COPA: return <AdminTorreCopa onBack={goBack} />;
       case AppRoute.COPA_PORTAL: return <CopaPortal />;
       case AppRoute.ADMIN_TRASLADOS_CALC: return <AdminTrasladosCalc onBack={goBack} />;
+      case AppRoute.ADMIN_PRICETRAVEL_CALC: return <AdminPriceTravelCalc onBack={goBack} />;
       case AppRoute.ADMIN_TORRE_COMERCIAL: return <AdminTorreComercial2 onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ARTISTA_PORTAL: return <ArtistaPortal onBack={goBack} onNavigate={navigateTo} artistaId={detailData?.artistaId} />;
       case AppRoute.ADMIN_SOCIOS: return <AdminSocios onBack={goBack} onNavigate={navigateTo} />;
