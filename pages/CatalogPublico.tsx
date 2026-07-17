@@ -4,6 +4,7 @@ import {
   Tag, RefreshCw, ChevronRight, Star, X
 } from 'lucide-react';
 import { api } from '../services/api';
+import { getAlojamientosSAI } from '../services/airtableService';
 import { AppRoute, Tour } from '../types';
 import { getFromCache, saveToCache } from '../services/cacheService';
 import { GUANA_LOGO } from '../constants';
@@ -71,7 +72,7 @@ const CatalogPublico: React.FC<CatalogPublicoProps> = ({ onNavigate, onBack }) =
 
   const fetchServices = async (force = false) => {
     if (!force) {
-      const cached = getFromCache<Tour[]>('services_turisticos');
+      const cached = getFromCache<Tour[]>('catalogo_publico_completo');
       if (cached && cached.length > 0) {
         setServices(cached.filter(s => s.active !== false));
         setLoading(false);
@@ -81,10 +82,17 @@ const CatalogPublico: React.FC<CatalogPublicoProps> = ({ onNavigate, onBack }) =
     }
     setLoading(true);
     try {
-      const all = await api.services.listPublic();
-      const activos = (all || []).filter(s => s.active !== false);
+      // listPublic() solo trae tours (ServiciosTuristicos_SAI) — se fusiona
+      // aquí con los alojamientos reales (AlojamientosTuristicos_SAI) para
+      // que las pestañas Tours/Alojamiento del catálogo muestren datos reales.
+      const [tours, alojamientos] = await Promise.all([
+        api.services.listPublic(),
+        getAlojamientosSAI({ publishedOnly: true }).catch(() => []),
+      ]);
+      const all = [...(tours || []), ...(alojamientos || [])];
+      const activos = all.filter((s: any) => s.active !== false);
       setServices(activos);
-      if (all && all.length > 0) saveToCache('services_turisticos', all);
+      if (all.length > 0) saveToCache('catalogo_publico_completo', all);
     } catch {
       setServices([]);
     } finally {
@@ -95,10 +103,14 @@ const CatalogPublico: React.FC<CatalogPublicoProps> = ({ onNavigate, onBack }) =
   const refreshBackground = async () => {
     setSyncing(true);
     try {
-      const all = await api.services.listPublic();
-      if (all && all.length > 0) {
-        setServices(all.filter(s => s.active !== false));
-        saveToCache('services_turisticos', all);
+      const [tours, alojamientos] = await Promise.all([
+        api.services.listPublic(),
+        getAlojamientosSAI({ publishedOnly: true }).catch(() => []),
+      ]);
+      const all = [...(tours || []), ...(alojamientos || [])];
+      if (all.length > 0) {
+        setServices(all.filter((s: any) => s.active !== false));
+        saveToCache('catalogo_publico_completo', all);
       }
     } finally {
       setSyncing(false);
@@ -204,7 +216,21 @@ const CatalogPublico: React.FC<CatalogPublicoProps> = ({ onNavigate, onBack }) =
 
       {/* ── Grid de servicios ────────────────────────────────────── */}
       <div className="px-4">
-        {loading ? (
+        {categoria === 'taxi' ? (
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center bg-white rounded-3xl border border-gray-100 mx-1">
+            <div className="w-14 h-14 rounded-2xl bg-yellow-100 flex items-center justify-center mb-4">
+              <Car size={26} className="text-yellow-600" />
+            </div>
+            <p className="font-bold text-gray-800 mb-1">Los traslados se cotizan aparte</p>
+            <p className="text-xs text-gray-500 mb-5 max-w-xs">Tarifa exacta según tu hotel, cantidad de pasajeros y horario de llegada — usa nuestra calculadora de traslados.</p>
+            <button
+              onClick={() => onNavigate(AppRoute.TAXI_DETAIL)}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold text-sm px-6 py-3 rounded-xl transition-colors"
+            >
+              Ir a Calculadora de Traslados →
+            </button>
+          </div>
+        ) : loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="bg-white rounded-3xl h-64 animate-pulse border border-gray-100" />
