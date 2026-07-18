@@ -1145,6 +1145,7 @@ export async function getAlojamientosSAI(options?: { publishedOnly?: boolean }):
         accesoBar:       !!f['Acceso a Bar'],
         aceptaBebes:     !!f['Acepta Bebes'],
         coleccion:       f['Coleccion'] || '',
+        precioBajoPedido: !!f['Precio_Bajo_Pedido'],
         latLon:          f['Lat_Lon'] || f['LatLon'] || f['lat_lon'] || undefined,
         ubicacion:       f['Ubicacion'] || f['ubicacion'] || undefined,
       };

@@ -36,6 +36,31 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
   const [selectedTime, setSelectedTime] = useState('08:00 AM');
   const [added, setAdded] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false); // 🆕 Modal para hoteles
+  const [showQuoteModal, setShowQuoteModal] = useState(false); // 🆕 Solicitud sin precio
+  const [quoteForm, setQuoteForm] = useState({ nombre: '', telefono: '', llegada: '', salida: '', pax: 2, tipoHab: 'Doble' });
+  const [quoteEnviada, setQuoteEnviada] = useState(false);
+  const [quoteEnviando, setQuoteEnviando] = useState(false);
+
+  const enviarSolicitudCotizacion = async () => {
+    if (!quoteForm.nombre.trim() || !quoteForm.telefono.trim() || !quoteForm.llegada || !quoteForm.salida) return;
+    setQuoteEnviando(true);
+    const BACKEND_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+    const mensaje = `🏨 Solicitud de cotización — ${data.title || data.name || 'Alojamiento'}\n` +
+      `Llegada: ${quoteForm.llegada} · Salida: ${quoteForm.salida}\n` +
+      `Pasajeros: ${quoteForm.pax} · Habitación: ${quoteForm.tipoHab}`;
+    try {
+      await fetch(`${BACKEND_URL}/api/chatbot/atencion/contacto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mensaje, nombre: quoteForm.nombre, telefono: quoteForm.telefono }),
+      });
+      setQuoteEnviada(true);
+    } catch {
+      setQuoteEnviada(true); // igual mostramos confirmación — no bloquear al cliente por un error de red
+    } finally {
+      setQuoteEnviando(false);
+    }
+  };
   
   const [showLightbox, setShowLightbox] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -758,8 +783,12 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
         )}
 
         {/* Botón de Reservar - Modificado para hoteles */}
-        <button 
-          onClick={isHotel ? () => setShowDateModal(true) : handleAddToCart}
+        <button
+          onClick={
+            isHotel && (data as any).precioBajoPedido
+              ? () => setShowQuoteModal(true)
+              : (isHotel ? () => setShowDateModal(true) : handleAddToCart)
+          }
           disabled={added || (isHotel ? false : (isExceeding || isUnavailable || checkingAvailability))}
           className={`w-full font-black py-5 rounded-3xl shadow-2xl transition-all flex items-center justify-center gap-3 text-xs uppercase tracking-[2px]
              ${!isHotel && (isUnavailable || isExceeding || checkingAvailability)
@@ -779,10 +808,64 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
           ) : !isHotel && isExceeding ? (
              <span>Cupos Insuficientes</span>
           ) : (
-             <><ShoppingCart size={18} /><span>{isHotel ? 'Seleccionar Fechas' : `Reservar • $${totalPrice.toLocaleString()}`}</span></>
+             <><ShoppingCart size={18} /><span>{isHotel && (data as any).precioBajoPedido ? 'Solicitar Cotización' : isHotel ? 'Seleccionar Fechas' : `Reservar • $${totalPrice.toLocaleString()}`}</span></>
           )}
         </button>
       </div>
+
+      {/* Modal Solicitud de Cotización — hoteles sin precio público */}
+      {isHotel && showQuoteModal && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6" onClick={() => setShowQuoteModal(false)}>
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm max-h-[92vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+            {quoteEnviada ? (
+              <div className="text-center py-6">
+                <CheckCircle size={44} className="text-emerald-500 mx-auto mb-3" />
+                <h3 className="font-black text-lg text-gray-900 mb-1">¡Solicitud enviada!</h3>
+                <p className="text-sm text-gray-500 mb-5">Un asesor de GuíaSAI cotizará tu estadía en {data.title || data.name} y te contactará por WhatsApp con el precio.</p>
+                <button onClick={() => { setShowQuoteModal(false); setQuoteEnviada(false); }} className="w-full bg-gray-900 text-white font-bold py-3 rounded-2xl">Listo</button>
+              </div>
+            ) : (
+              <>
+                <h3 className="font-black text-lg text-gray-900 mb-1">Solicitar cotización</h3>
+                <p className="text-xs text-gray-500 mb-4">{data.title || data.name} · Te confirmamos el precio exacto según disponibilidad.</p>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase">Llegada</label>
+                      <input type="date" value={quoteForm.llegada} onChange={e => setQuoteForm(p => ({ ...p, llegada: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mt-1" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase">Salida</label>
+                      <input type="date" value={quoteForm.salida} onChange={e => setQuoteForm(p => ({ ...p, salida: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mt-1" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase">Pasajeros</label>
+                      <input type="number" min={1} value={quoteForm.pax} onChange={e => setQuoteForm(p => ({ ...p, pax: Math.max(1, Number(e.target.value)) }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mt-1" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase">Habitación</label>
+                      <select value={quoteForm.tipoHab} onChange={e => setQuoteForm(p => ({ ...p, tipoHab: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mt-1">
+                        <option>Sencilla</option><option>Doble</option><option>Triple</option><option>Familiar</option>
+                      </select>
+                    </div>
+                  </div>
+                  <input placeholder="Tu nombre" value={quoteForm.nombre} onChange={e => setQuoteForm(p => ({ ...p, nombre: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm" />
+                  <input placeholder="WhatsApp (con indicativo)" value={quoteForm.telefono} onChange={e => setQuoteForm(p => ({ ...p, telefono: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+                <button
+                  onClick={enviarSolicitudCotizacion}
+                  disabled={quoteEnviando || !quoteForm.nombre.trim() || !quoteForm.telefono.trim() || !quoteForm.llegada || !quoteForm.salida}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-black py-4 rounded-2xl mt-5 flex items-center justify-center gap-2"
+                >
+                  {quoteEnviando ? <Loader2 size={16} className="animate-spin" /> : null} Enviar solicitud
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Lightbox / Full Visor */}
       {showLightbox && (
