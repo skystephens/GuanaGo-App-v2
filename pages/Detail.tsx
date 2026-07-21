@@ -240,7 +240,21 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
           <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-10">
             <button onClick={onBack} className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-lg border border-white active:scale-95 transition-all"><ArrowLeft size={22} className="text-gray-900" /></button>
             <div className="flex gap-3">
-               <button className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-lg border border-white active:scale-95 transition-all"><Share2 size={20} className="text-gray-900" /></button>
+               <button
+                 onClick={async () => {
+                   // Deep-link real solo para hoteles (por ahora) — tours/paquetes
+                   // aún no tienen carga directa por ID, así que comparten la URL actual.
+                   const url = isHotel && data.id
+                     ? `https://app.guiasanandresislas.com/?hotel=${data.id}`
+                     : window.location.href;
+                   if (navigator.share) {
+                     try { await navigator.share({ title: data.title || data.name, url }); return; } catch {}
+                   }
+                   navigator.clipboard.writeText(url);
+                   alert('Link copiado: ' + url);
+                 }}
+                 className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-lg border border-white active:scale-95 transition-all"
+               ><Share2 size={20} className="text-gray-900" /></button>
             </div>
           </div>
 

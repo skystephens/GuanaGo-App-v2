@@ -164,6 +164,18 @@ const App: React.FC = () => {
     initializeCachedApi();
     const params = new URLSearchParams(window.location.search);
     const cotId  = params.get('cot');
+    const hotelId = params.get('hotel');
+    if (hotelId) {
+      import('./services/airtableService').then(({ getAlojamientosSAI }) => {
+        getAlojamientosSAI({ publishedOnly: true }).then((lista: any[]) => {
+          const hotel = lista.find(h => h.id === hotelId);
+          if (hotel) {
+            setDetailData(hotel);
+            setCurrentRoute(AppRoute.HOTEL_DETAIL);
+          }
+        }).catch(() => {});
+      });
+    }
     if (cotId) {
       setPublicCotId(cotId);
       setPublicQuoteCfg({
