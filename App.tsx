@@ -165,6 +165,7 @@ const App: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     const cotId  = params.get('cot');
     const hotelId = params.get('hotel');
+    const tourId = params.get('tour');
     if (hotelId) {
       import('./services/airtableService').then(({ getAlojamientosSAI }) => {
         getAlojamientosSAI({ publishedOnly: true }).then((lista: any[]) => {
@@ -172,6 +173,17 @@ const App: React.FC = () => {
           if (hotel) {
             setDetailData(hotel);
             setCurrentRoute(AppRoute.HOTEL_DETAIL);
+          }
+        }).catch(() => {});
+      });
+    }
+    if (tourId) {
+      import('./services/airtableService').then(({ getTours }) => {
+        getTours().then((lista: any[]) => {
+          const tour = lista.find(t => t.id === tourId);
+          if (tour) {
+            setDetailData(tour);
+            setCurrentRoute(AppRoute.TOUR_DETAIL);
           }
         }).catch(() => {});
       });

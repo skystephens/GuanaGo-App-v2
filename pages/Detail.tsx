@@ -242,11 +242,13 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
             <div className="flex gap-3">
                <button
                  onClick={async () => {
-                   // Deep-link real solo para hoteles (por ahora) — tours/paquetes
-                   // aún no tienen carga directa por ID, así que comparten la URL actual.
+                   // Deep-link real para hoteles y tours — paquetes aún no,
+                   // comparten la URL actual como respaldo.
                    const url = isHotel && data.id
                      ? `https://app.guiasanandresislas.com/?hotel=${data.id}`
-                     : window.location.href;
+                     : type === 'tour' && data.id
+                       ? `https://app.guiasanandresislas.com/?tour=${data.id}`
+                       : window.location.href;
                    if (navigator.share) {
                      try { await navigator.share({ title: data.title || data.name, url }); return; } catch {}
                    }
