@@ -3,7 +3,7 @@ import {
   ArrowLeft, Plus, Send, Trash2, Calendar, Users, DollarSign, Clock,
   CheckCircle2, AlertCircle, FileText, Search, Filter, User, Mail, Phone,
   Download, Eye, Loader2, Bot, ChevronDown, ChevronUp, Sparkles, Link2,
-  CreditCard, X, Pencil, Check, CalendarDays, MapPin, MessageSquare,
+  CreditCard, X, Pencil, Check, CalendarDays, MapPin, MessageSquare, Info,
 } from 'lucide-react';
 import QuotationMapView, { MapAccommodation } from '../../components/quotation/QuotationMapView';
 import DynamicItineraryBuilder from './DynamicItineraryBuilder';
@@ -2088,19 +2088,33 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                   )}
                                 </div>
                                 {(() => {
-                                  const svc = services.find(s => s.id === item.servicioId);
-                                  const desc = (svc as any)?.description || (svc as any)?.descripcion || '';
-                                  if (!desc) return null;
+                                  const svc = services.find(s => s.id === item.servicioId) as any;
+                                  if (!svc) return null;
+                                  const desc = svc?.description || svc?.descripcion || '';
+                                  const capacidad = svc?.capacidadMaxima || svc?.capacity || svc?.capacidad || 0;
+                                  const diasOp = svc?.operatingDays || svc?.diasOperacion || '';
+                                  if (!desc && !capacidad && !diasOp) return null;
                                   const isOpen = expandedDescId === item.id;
                                   return (
                                     <div className="mt-1">
-                                      <p className={`text-[11px] text-gray-500 leading-relaxed ${isOpen ? '' : 'line-clamp-1'}`}>{desc}</p>
                                       <button
                                         onClick={() => setExpandedDescId(isOpen ? null : item.id)}
-                                        className="text-[10px] text-emerald-400 hover:text-emerald-300 font-semibold mt-0.5"
+                                        className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-emerald-400 font-semibold transition-colors"
                                       >
-                                        {isOpen ? 'Ver menos ▲' : 'Ver descripción ▼'}
+                                        <Info className="w-3 h-3" />
+                                        {isOpen ? 'Ocultar info ▲' : 'Ver info del servicio ▼'}
                                       </button>
+                                      {isOpen && (
+                                        <div className="mt-1.5 p-2 bg-gray-800/60 border border-gray-700 rounded-lg space-y-1">
+                                          {desc && <p className="text-[11px] text-gray-400 leading-relaxed">{desc}</p>}
+                                          {(capacidad > 0 || diasOp) && (
+                                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-gray-500 pt-1 border-t border-gray-700/60">
+                                              {capacidad > 0 && <span>👥 Capacidad máx.: <b className="text-gray-300">{capacidad} pax</b></span>}
+                                              {diasOp && <span>📅 Opera: <b className="text-gray-300">{diasOp}</b></span>}
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
                                     </div>
                                   );
                                 })()}

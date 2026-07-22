@@ -165,6 +165,7 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
   const latLon: string      = svc?.latLon || '';
   const tipo: string        = svc?.tipoAlojamiento || (isHotel ? 'HOTEL' : item.servicioTipo);
   const capacidad: number   = svc?.capacidadMaxima || 0;
+  const diasOp: string      = svc?.operatingDays || svc?.diasOperacion || '';
 
   const mapAcc: MapAccommodation[] = latLon
     ? [{ id: item.servicioId || item.id, title: item.servicioNombre, latLon }]
@@ -225,6 +226,7 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
               <span className="text-xs text-gray-500">× {item.cantidad} {item.cantidad === 1 ? 'noche' : 'noches'}</span>
             )}
             {capacidad > 0 && <span className="text-[10px] text-gray-400">· cap. {capacidad} pax</span>}
+            {diasOp && <span className="text-[10px] text-gray-400">· opera: {diasOp}</span>}
           </div>
 
           {/* Descripción */}
