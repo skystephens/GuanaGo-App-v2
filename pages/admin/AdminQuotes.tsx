@@ -271,6 +271,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [selectedCotizacion, setSelectedCotizacion] = useState<Cotizacion | null>(null);
   const [items, setItems] = useState<CotizacionItem[]>([]);
   const [services, setServices] = useState<Tour[]>([]);
+  const [expandedDescId, setExpandedDescId] = useState<string | null>(null);
   const [alojamientos, setAlojamientos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
@@ -2086,6 +2087,23 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                     <AlertCircle className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
                                   )}
                                 </div>
+                                {(() => {
+                                  const svc = services.find(s => s.id === item.servicioId);
+                                  const desc = (svc as any)?.description || (svc as any)?.descripcion || '';
+                                  if (!desc) return null;
+                                  const isOpen = expandedDescId === item.id;
+                                  return (
+                                    <div className="mt-1">
+                                      <p className={`text-[11px] text-gray-500 leading-relaxed ${isOpen ? '' : 'line-clamp-1'}`}>{desc}</p>
+                                      <button
+                                        onClick={() => setExpandedDescId(isOpen ? null : item.id)}
+                                        className="text-[10px] text-emerald-400 hover:text-emerald-300 font-semibold mt-0.5"
+                                      >
+                                        {isOpen ? 'Ver menos ▲' : 'Ver descripción ▼'}
+                                      </button>
+                                    </div>
+                                  );
+                                })()}
                                 <div className="flex items-center gap-2 mt-0.5">
                                   <span className="text-[10px] text-gray-600 uppercase">
                                     {item.servicioNombre?.startsWith('✈️') ? 'tiquete' : item.servicioTipo}
