@@ -530,11 +530,13 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       if (!proceed) return;
     }
 
-    // Validar capacidad
+    // Validar capacidad — se avisa pero se permite continuar (grupos grandes,
+    // cotización de eventos como Copa de la Isla / Seven Colors, etc. suelen
+    // superar la capacidad "estándar" cargada en el servicio).
     const capacityCheck = validateCapacity(service, formData.adultos, formData.ninos, formData.bebes);
     if (!capacityCheck.valid) {
-      alert(capacityCheck.message);
-      return;
+      const proceedCapacity = confirm(`⚠️ ${capacityCheck.message}\n\n¿Agregar de todas formas? (útil para grupos que superan la capacidad estándar del servicio)`);
+      if (!proceedCapacity) return;
     }
 
     // Validar día de operación - verificar si el servicio opera en ALGÚN día del rango
