@@ -295,6 +295,7 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
 
   // ── Servicio no-hotel: fila simple ────────────────────────────────────────
   const img = imgs[0] || '';
+  const hasExtraInfo = !!(description || capacidad > 0 || diasOp);
   return (
     <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
       {img ? (
@@ -310,7 +311,22 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
         <div className="flex flex-wrap gap-2 mt-1 text-xs text-gray-500">
           {item.personas > 0 && <span>{item.personas} {item.personas === 1 ? 'persona' : 'personas'}</span>}
           {item.cantidad > 1 && <span>× {item.cantidad}</span>}
+          {capacidad > 0 && <span className="text-gray-400">· cap. {capacidad} pax</span>}
+          {diasOp && <span className="text-gray-400">· opera: {diasOp}</span>}
         </div>
+        {description && (
+          <p className={`text-xs text-gray-500 mt-1.5 leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>
+            {description}
+          </p>
+        )}
+        {hasExtraInfo && (
+          <button
+            onClick={() => setExpanded(e => !e)}
+            className="no-print text-xs text-emerald-600 font-semibold flex items-center gap-1 hover:text-emerald-700 mt-1"
+          >
+            {expanded ? 'Ver menos ▲' : 'Ver más info ▼'}
+          </button>
+        )}
       </div>
       {item.subtotal > 0 && (
         <div className="text-right shrink-0">
