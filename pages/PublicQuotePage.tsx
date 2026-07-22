@@ -231,7 +231,7 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
 
           {/* Descripción */}
           {description && (
-            <p className={`text-xs md:text-sm text-gray-500 mt-2 leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>
+            <p className={`text-xs md:text-sm text-gray-500 mt-2 leading-relaxed text-justify ${expanded ? '' : 'line-clamp-2'}`}>
               {description}
             </p>
           )}
@@ -315,7 +315,7 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
           {diasOp && <span className="text-gray-400">· opera: {diasOp}</span>}
         </div>
         {description && (
-          <p className={`text-xs text-gray-500 mt-1.5 leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>
+          <p className={`text-xs text-gray-500 mt-1.5 leading-relaxed text-justify ${expanded ? '' : 'line-clamp-2'}`}>
             {description}
           </p>
         )}
@@ -444,6 +444,7 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
           .no-print { display: none !important; }
           .line-clamp-2 { -webkit-line-clamp: unset !important; overflow: visible !important; }
           .pb-24 { padding-bottom: 0 !important; }
+          .min-h-screen { min-height: 0 !important; }
         }
       `}</style>
 

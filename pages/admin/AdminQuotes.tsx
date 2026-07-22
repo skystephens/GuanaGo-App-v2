@@ -2106,7 +2106,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                       </button>
                                       {isOpen && (
                                         <div className="mt-1.5 p-2 bg-gray-800/60 border border-gray-700 rounded-lg space-y-1">
-                                          {desc && <p className="text-[11px] text-gray-400 leading-relaxed">{desc}</p>}
+                                          {desc && <p className="text-[11px] text-gray-400 leading-relaxed text-justify">{desc}</p>}
                                           {(capacidad > 0 || diasOp) && (
                                             <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-gray-500 pt-1 border-t border-gray-700/60">
                                               {capacidad > 0 && <span>👥 Capacidad máx.: <b className="text-gray-300">{capacidad} pax</b></span>}
