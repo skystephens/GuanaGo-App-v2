@@ -55,6 +55,7 @@ interface ParsedQuoteAction {
   ninos?: number;
   bebes?: number;
   notasInternas?: string;
+  notasCliente?: string;
 }
 
 /**
@@ -347,6 +348,25 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       alert('Error guardando notas');
     } finally {
       setNotasSaving(false);
+    }
+  };
+
+  // ── Notas visibles al cliente (aparecen en la cotización final / PDF) ──────
+  const [editingNotasCliente, setEditingNotasCliente] = useState(false);
+  const [notasClienteValue, setNotasClienteValue]     = useState('');
+  const [notasClienteSaving, setNotasClienteSaving]   = useState(false);
+
+  const handleSaveNotasCliente = async () => {
+    if (!selectedCotizacion) return;
+    setNotasClienteSaving(true);
+    try {
+      await updateCotizacion(selectedCotizacion.id, { notasCliente: notasClienteValue });
+      setSelectedCotizacion(prev => prev ? { ...prev, notasCliente: notasClienteValue } : prev);
+      setEditingNotasCliente(false);
+    } catch {
+      alert('Error guardando notas — si el campo Notas_Cliente aún no existe en Airtable, créalo primero (Long text, tabla CotizacionesGG)');
+    } finally {
+      setNotasClienteSaving(false);
     }
   };
 
@@ -2336,6 +2356,59 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                     className={`text-sm leading-relaxed cursor-text rounded-lg px-1 py-1 hover:bg-gray-800 transition-colors ${selectedCotizacion.notasInternas ? 'text-gray-300' : 'text-gray-600 italic'}`}
                   >
                     {selectedCotizacion.notasInternas || 'Clic para agregar notas...'}
+                  </p>
+                )}
+              </div>
+
+              {/* Notas al Cliente — visibles en la cotización final / PDF */}
+              <div className="bg-emerald-950/30 border border-emerald-800/50 p-5 rounded-xl">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-base font-semibold text-white flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-emerald-400" /> Notas al Cliente
+                  </h3>
+                  {!editingNotasCliente ? (
+                    <button
+                      onClick={() => { setNotasClienteValue(selectedCotizacion.notasCliente || ''); setEditingNotasCliente(true); }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      Editar
+                    </button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveNotasCliente}
+                        disabled={notasClienteSaving}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs bg-green-600 hover:bg-green-500 text-white rounded-lg disabled:opacity-50"
+                      >
+                        {notasClienteSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                        Guardar
+                      </button>
+                      <button
+                        onClick={() => setEditingNotasCliente(false)}
+                        className="px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <p className="text-[11px] text-emerald-400/70 mb-3">Esto SÍ aparece al final de la cotización que ve el cliente (Preview y PDF).</p>
+                {editingNotasCliente ? (
+                  <textarea
+                    value={notasClienteValue}
+                    onChange={e => setNotasClienteValue(e.target.value)}
+                    rows={4}
+                    autoFocus
+                    className="w-full px-3 py-2.5 bg-gray-800 border border-gray-600 rounded-lg text-gray-200 text-sm focus:border-emerald-500 focus:outline-none resize-none leading-relaxed"
+                    placeholder="Ej: Recuerda llevar protector solar biodegradable. Traslado de aeropuerto incluido en horario diurno..."
+                  />
+                ) : (
+                  <p
+                    onClick={() => { setNotasClienteValue(selectedCotizacion.notasCliente || ''); setEditingNotasCliente(true); }}
+                    className={`text-sm leading-relaxed cursor-text rounded-lg px-1 py-1 hover:bg-gray-800/60 transition-colors ${selectedCotizacion.notasCliente ? 'text-gray-300' : 'text-gray-600 italic'}`}
+                  >
+                    {selectedCotizacion.notasCliente || 'Clic para agregar un comentario visible al cliente...'}
                   </p>
                 )}
               </div>

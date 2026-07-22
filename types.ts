@@ -480,6 +480,7 @@ export interface Cotizacion {
   precioTotal: number;
   descuento?: number;                 // Descuento en COP (nuevo)
   notasInternas?: string;
+  notasCliente?: string;               // Notas visibles al cliente en la cotización final/PDF
   items?: CotizacionItem[];           // Items de la cotización
 }
 

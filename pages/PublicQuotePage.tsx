@@ -637,6 +637,14 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
           </div>
         )}
 
+        {/* Notas / comentarios de GuiaSAI para el cliente */}
+        {cotizacion?.notasCliente && (
+          <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5">
+            <h3 className="text-sm md:text-base font-bold text-gray-800 mb-2">Notas de tu asesor</h3>
+            <p className="text-xs md:text-sm text-gray-600 leading-relaxed text-justify whitespace-pre-wrap">{cotizacion.notasCliente}</p>
+          </div>
+        )}
+
         {/* CTA WhatsApp */}
         <div className="no-print bg-white rounded-2xl shadow-sm p-5">
           <h3 className="text-sm md:text-base font-bold text-gray-800 mb-1">¿Tienes preguntas?</h3>

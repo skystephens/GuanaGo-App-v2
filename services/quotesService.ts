@@ -438,22 +438,28 @@ export async function updateCotizacion(
 
   try {
     const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES)}/${id}`;
-    
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: getHeaders(),
-      body: JSON.stringify({
-        fields: mapCotizacionToFields(updates)
-      })
-    });
+    const fields = mapCotizacionToFields(updates);
 
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({}));
-      console.error('❌ Airtable 422 body:', JSON.stringify(errorBody));
-      throw new Error(`Error ${response.status}: ${JSON.stringify(errorBody)}`);
+    const intentar = async (f: Record<string, any>) => {
+      const r = await fetch(url, { method: 'PATCH', headers: getHeaders(), body: JSON.stringify({ fields: f }) });
+      const texto = await r.text();
+      if (!r.ok) { const err: any = new Error(texto); err.status = r.status; throw err; }
+      return JSON.parse(texto);
+    };
+
+    let data;
+    try {
+      data = await intentar(fields);
+    } catch (e: any) {
+      if (/Notas_Cliente/i.test(e.message)) {
+        console.warn('⚠️ Campo "Notas_Cliente" no existe todavía en Airtable — se guardó el resto sin él. Créalo (Long text) en CotizacionesGG.');
+        const { Notas_Cliente, ...resto } = fields;
+        data = await intentar(resto);
+      } else {
+        throw e;
+      }
     }
 
-    const data = await response.json();
     console.log('✅ Cotización actualizada:', id);
     return mapRecordToCotizacion(data);
   } catch (error) {
@@ -546,7 +552,8 @@ function mapRecordToCotizacion(record: any): Cotizacion {
     estado: (f.Estado || 'Draft') as QuoteStatus,
     precioTotal: parseFloat(f['Precio total'] || f.precioTotal || '0') || 0,
     descuento: parseFloat(f.Descuento || '0') || 0,
-    notasInternas: f['Notas internas'] || f.notasInternas || ''
+    notasInternas: f['Notas internas'] || f.notasInternas || '',
+    notasCliente: f['Notas_Cliente'] || f.notasCliente || ''
   };
 }
 
@@ -567,6 +574,7 @@ function mapCotizacionToFields(cotizacion: Partial<Cotizacion>): Record<string, 
   if (cotizacion.precioTotal !== undefined && !isNaN(cotizacion.precioTotal as number)) fields['Precio total'] = cotizacion.precioTotal;
   // Nota: no existe campo "Descuento" en Airtable — el descuento se aplica en el cálculo del precioTotal
   if (cotizacion.notasInternas !== undefined && cotizacion.notasInternas) fields['Notas internas'] = cotizacion.notasInternas;
+  if (cotizacion.notasCliente !== undefined) fields['Notas_Cliente'] = cotizacion.notasCliente;
   
   return fields;
 }
