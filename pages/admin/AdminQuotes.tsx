@@ -360,7 +360,13 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     if (!selectedCotizacion) return;
     setNotasClienteSaving(true);
     try {
-      await updateCotizacion(selectedCotizacion.id, { notasCliente: notasClienteValue });
+      const resultado = await updateCotizacion(selectedCotizacion.id, { notasCliente: notasClienteValue });
+      const descartado = (resultado as any)?._camposDescartados?.includes('notasCliente');
+      if (descartado) {
+        alert('⚠️ No se guardó: el campo "Notas_Cliente" no existe en Airtable con ese nombre exacto (revisa mayúsculas y guion bajo en la tabla CotizacionesGG). El resto de la cotización se guardó bien.');
+        setNotasClienteSaving(false);
+        return;
+      }
       setSelectedCotizacion(prev => prev ? { ...prev, notasCliente: notasClienteValue } : prev);
       setEditingNotasCliente(false);
     } catch {

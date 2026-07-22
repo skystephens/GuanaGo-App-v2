@@ -439,6 +439,7 @@ export async function updateCotizacion(
   try {
     const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES)}/${id}`;
     const fields = mapCotizacionToFields(updates);
+    const camposDescartados: string[] = [];
 
     const intentar = async (f: Record<string, any>) => {
       const r = await fetch(url, { method: 'PATCH', headers: getHeaders(), body: JSON.stringify({ fields: f }) });
@@ -452,7 +453,8 @@ export async function updateCotizacion(
       data = await intentar(fields);
     } catch (e: any) {
       if (/Notas_Cliente/i.test(e.message)) {
-        console.warn('⚠️ Campo "Notas_Cliente" no existe todavía en Airtable — se guardó el resto sin él. Créalo (Long text) en CotizacionesGG.');
+        console.warn('⚠️ Campo "Notas_Cliente" no existe todavía en Airtable (o el nombre no coincide exactamente) — se guardó el resto sin él.');
+        camposDescartados.push('notasCliente');
         const { Notas_Cliente, ...resto } = fields;
         data = await intentar(resto);
       } else {
@@ -461,7 +463,9 @@ export async function updateCotizacion(
     }
 
     console.log('✅ Cotización actualizada:', id);
-    return mapRecordToCotizacion(data);
+    const resultado = mapRecordToCotizacion(data);
+    if (camposDescartados.length) (resultado as any)._camposDescartados = camposDescartados;
+    return resultado;
   } catch (error) {
     console.error('❌ Error actualizando cotización:', error);
     return null;
