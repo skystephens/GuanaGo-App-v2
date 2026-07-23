@@ -7,13 +7,71 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Hotel, MessageCircle, Search } from 'lucide-react';
+import { Hotel, MessageCircle, Search, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { GUANA_LOGO } from '../constants';
 
 const API = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 const cop = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
 
-interface HotelDisp { id: string; nombre: string; tipo: string; precioNoche: number; imagen: string; descripcion: string; habitacionesDisponibles: number; capacidadEstimada: number }
+interface HotelDisp { id: string; nombre: string; tipo: string; precioNoche: number; imagen: string; imagenes: string[]; descripcion: string; habitacionesDisponibles: number; capacidadEstimada: number }
+
+const TarjetaHotel: React.FC<{ h: HotelDisp; pax: string }> = ({ h, pax }) => {
+  const [idx, setIdx] = useState(0);
+  const fotos = h.imagenes?.length ? h.imagenes : (h.imagen ? [h.imagen] : []);
+  const hayVarias = fotos.length > 1;
+
+  return (
+    <div className="bg-white border border-[#E7DFCE] rounded-lg overflow-hidden">
+      <div className="relative h-32 bg-[#F5EFE3]">
+        {fotos.length > 0 ? (
+          <div className="h-32 bg-cover bg-center transition-all" style={{ backgroundImage: `url('${fotos[idx]}')` }} />
+        ) : (
+          <div className="h-32 flex items-center justify-center text-3xl">🏨</div>
+        )}
+        {hayVarias && (
+          <>
+            <button onClick={() => setIdx(i => (i - 1 + fotos.length) % fotos.length)}
+              className="absolute left-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70">
+              <ChevronLeft size={13} />
+            </button>
+            <button onClick={() => setIdx(i => (i + 1) % fotos.length)}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70">
+              <ChevronRight size={13} />
+            </button>
+            <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1">
+              {fotos.map((_, i) => (
+                <span key={i} className={`w-1.5 h-1.5 rounded-full ${i === idx ? 'bg-white' : 'bg-white/40'}`} />
+              ))}
+            </div>
+            <span className="absolute top-1.5 right-1.5 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{idx + 1}/{fotos.length}</span>
+          </>
+        )}
+      </div>
+      <div className="p-3">
+        <p className="font-bold text-sm">{h.nombre}</p>
+        <p className="text-[10px] text-[#6B7785] mb-2">{h.tipo} · {h.habitacionesDisponibles} habitaciones · capacidad estimada {h.capacidadEstimada} pax</p>
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-mono font-bold text-[#05263B] text-sm">
+            {h.precioNoche > 0 ? <>{cop(h.precioNoche)}<span className="text-[10px] font-normal text-[#6B7785]">/noche</span></> : <span className="text-[11px] text-[#8A4B00] font-bold">Precio bajo pedido</span>}
+          </span>
+          <a
+            href={`https://wa.me/573153836043?text=${encodeURIComponent(`Hola GuíaSAI, quiero cotizar ${h.nombre} para mi delegación${pax ? ` (${pax} pax)` : ''} — Copa de la Isla.`)}`}
+            target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1 text-[10px] font-bold bg-[#FF6600] text-white px-2.5 py-1.5 rounded"
+          >
+            <MessageCircle size={11} /> Cotizar
+          </a>
+        </div>
+        <a
+          href={`/?hotel=${h.id}`}
+          className="flex items-center justify-center gap-1 text-[10px] font-bold text-[#0E7C86] border border-[#0E7C86] rounded py-1.5 hover:bg-[#0E7C86]/5 transition-colors"
+        >
+          Ver hotel completo <ExternalLink size={11} />
+        </a>
+      </div>
+    </div>
+  );
+};
 
 const CopaDisponibilidadPublica: React.FC = () => {
   const [pax, setPax] = useState('');
@@ -70,27 +128,7 @@ const CopaDisponibilidadPublica: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {hoteles.map(h => (
-            <div key={h.id} className="bg-white border border-[#E7DFCE] rounded-lg overflow-hidden">
-              {h.imagen ? <div className="h-32 bg-cover bg-center" style={{ backgroundImage: `url('${h.imagen}')` }} /> : <div className="h-32 bg-[#F5EFE3] flex items-center justify-center text-3xl">🏨</div>}
-              <div className="p-3">
-                <p className="font-bold text-sm">{h.nombre}</p>
-                <p className="text-[10px] text-[#6B7785] mb-2">{h.tipo} · {h.habitacionesDisponibles} habitaciones · capacidad estimada {h.capacidadEstimada} pax</p>
-                <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-[#05263B] text-sm">
-                    {h.precioNoche > 0 ? <>{cop(h.precioNoche)}<span className="text-[10px] font-normal text-[#6B7785]">/noche</span></> : <span className="text-[11px] text-[#8A4B00] font-bold">Precio bajo pedido</span>}
-                  </span>
-                  <a
-                    href={`https://wa.me/573153836043?text=${encodeURIComponent(`Hola GuíaSAI, quiero cotizar ${h.nombre} para mi delegación${pax ? ` (${pax} pax)` : ''} — Copa de la Isla.`)}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-[10px] font-bold bg-[#FF6600] text-white px-2.5 py-1.5 rounded"
-                  >
-                    <MessageCircle size={11} /> Cotizar
-                  </a>
-                </div>
-              </div>
-            </div>
-          ))}
+          {hoteles.map(h => <TarjetaHotel key={h.id} h={h} pax={pax} />)}
           {!loading && hoteles.length === 0 && (
             <div className="col-span-2 text-center py-10 text-[#6B7785] text-sm">
               {pax ? `Ningún hotel verificado tiene capacidad estimada para ${pax} pax todavía — escríbenos, seguimos ampliando la lista.` : 'Aún no hay hoteles marcados como disponibles.'}

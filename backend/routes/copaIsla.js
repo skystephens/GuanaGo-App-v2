@@ -195,17 +195,17 @@ async function leerDisponibilidadGrupos() {
       if (!nombre) return null;
       const habitaciones = Number(f['Habitaciones_Disp_Diciembre'] || 0);
       const capPorHab = Number(f['Capacidad'] || 2) || 2;
-      let imagen = '';
+      let imagenes = [];
       if (f['ImagenWP'] && typeof f['ImagenWP'] === 'string') {
-        const u = f['ImagenWP'].split(',')[0].trim();
-        if (u.startsWith('http')) imagen = u;
+        imagenes = f['ImagenWP'].split(',').map(u => u.trim()).filter(u => u.startsWith('http'));
       }
       return {
         id: rec.id,
         nombre,
         tipo: f['Tipo de Alojamiento'] || 'Alojamiento',
         precioNoche: Number(f['Precio actualizado'] || f['Precio_GuanaGO'] || 0),
-        imagen,
+        imagen: imagenes[0] || '',
+        imagenes,
         descripcion: (f['Descripcion'] || '').slice(0, 160),
         habitacionesDisponibles: habitaciones,
         capacidadEstimada: habitaciones * capPorHab,
