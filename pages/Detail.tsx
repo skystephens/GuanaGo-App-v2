@@ -300,6 +300,9 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
            <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 flex items-center justify-between">
               <div>
                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Precio actual</p>
+                 {isHotel && (data as any).precioBajoPedido ? (
+                   <span className="text-lg font-black text-orange-500">Cotización bajo pedido</span>
+                 ) : (
                  <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-black text-emerald-600">${unitPriceDisplay.toLocaleString()}</span>
                     <span className="text-[10px] text-gray-400 font-bold uppercase">
@@ -308,6 +311,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                         : 'por persona'}
                     </span>
                  </div>
+                 )}
               </div>
               <div className="text-right">
                  <p className="text-[9px] font-black text-emerald-500 uppercase flex items-center justify-end gap-1"><ShieldCheck size={10}/> Mejor precio</p>

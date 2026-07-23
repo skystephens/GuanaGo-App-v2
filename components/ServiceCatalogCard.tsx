@@ -95,7 +95,7 @@ const ServiceCatalogCard: React.FC<ServiceCatalogCardProps> = ({
         {/* ── Precio + CTA ─── */}
         <div className="mt-auto pt-3 flex items-center justify-between border-t border-gray-100">
           <div>
-            {price > 0 ? (
+            {price > 0 && !(service as any).precioBajoPedido ? (
               <>
                 <span className="text-emerald-600 font-black text-base">
                   ${priceCOP ? price.toLocaleString('es-CO') : price.toLocaleString()}
