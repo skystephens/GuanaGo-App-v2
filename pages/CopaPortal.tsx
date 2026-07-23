@@ -18,10 +18,12 @@ interface Snapshot {
   servicios: { id: string; titulo: string; detalle: string; valor: number; origen?: string }[];
   personas: { nombre: string; doc: string; rol: string; sub: string; datos: boolean; pago: string }[];
 }
+interface HotelDisp { id: string; nombre: string; tipo: string; precioNoche: number; imagen: string; descripcion: string; habitacionesDisponibles: number; capacidadEstimada: number }
 
 const CopaPortal: React.FC = () => {
   const [codigo, setCodigo] = useState('');
   const [data, setData] = useState<Snapshot | null>(null);
+  const [hoteles, setHoteles] = useState<HotelDisp[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -40,6 +42,12 @@ const CopaPortal: React.FC = () => {
       const d = await r.json();
       if (!r.ok) { setError(d.error || 'No se pudo cargar'); setData(null); return; }
       setData(d);
+      if (d.pax > 0) {
+        fetch(`${API}/api/copa/disponibilidad?pax=${d.pax}`)
+          .then(r2 => r2.json())
+          .then(d2 => Array.isArray(d2?.hoteles) && setHoteles(d2.hoteles))
+          .catch(() => {});
+      }
     } catch { setError('No se pudo conectar'); }
     finally { setLoading(false); }
   };
@@ -134,6 +142,35 @@ const CopaPortal: React.FC = () => {
             </table>
           ) : <p className="text-center text-sm text-[#6B7785] py-6">Sin servicios contratados todavía.</p>}
         </div>
+
+        {/* Disponibilidad de alojamiento para el grupo */}
+        {hoteles.length > 0 && (
+          <div className="bg-white border border-[#E7DFCE] rounded overflow-hidden">
+            <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">Alojamiento disponible para {data.pax} pax</h2>
+            <p className="text-[11px] text-[#6B7785] px-4 pt-3">Hoteles verificados por GuíaSAI con espacio suficiente para tu delegación en las fechas del torneo. Capacidad estimada — se confirma al solicitar.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4">
+              {hoteles.map(h => (
+                <div key={h.id} className="border border-[#E7DFCE] rounded-lg overflow-hidden">
+                  {h.imagen ? <div className="h-28 bg-cover bg-center" style={{ backgroundImage: `url('${h.imagen}')` }} /> : <div className="h-28 bg-[#F5EFE3] flex items-center justify-center text-2xl">🏨</div>}
+                  <div className="p-3">
+                    <p className="font-bold text-sm">{h.nombre}</p>
+                    <p className="text-[10px] text-[#6B7785] mb-1.5">{h.tipo} · capacidad estimada {h.capacidadEstimada} pax</p>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold text-[#05263B] text-sm">{cop(h.precioNoche)}<span className="text-[10px] font-normal text-[#6B7785]">/noche</span></span>
+                      <a
+                        href={`https://wa.me/573153836043?text=${encodeURIComponent(`Hola GuíaSAI, soy ${data.delegacion.lider} de ${data.delegacion.club}. Quiero cotizar ${h.nombre} para ${data.pax} pax del ${data.delegacion.inn} al ${data.delegacion.out}.`)}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="text-[10px] font-bold bg-[#FF6600] text-white px-2.5 py-1.5 rounded"
+                      >
+                        Solicitar cotización
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="bg-white border border-[#E7DFCE] rounded overflow-hidden">
           <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">Tu grupo · {data.personas.length} personas</h2>

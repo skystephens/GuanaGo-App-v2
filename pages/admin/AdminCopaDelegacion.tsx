@@ -42,6 +42,7 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
   const [copiado, setCopiado] = useState(false);
   const [pagoLink, setPagoLink] = useState<{ checkoutUrl: string; whatsappTexto: string } | null>(null);
   const [catReal, setCatReal] = useState<CatReal[]>([]);
+  const [hotelesDisp, setHotelesDisp] = useState<any[]>([]);
   const [buscarAct, setBuscarAct] = useState('');
 
   const sel = dels.find(d => d.id === selId) || null;
@@ -74,6 +75,14 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
 
   useEffect(() => { cargarTodo(); }, []);
   useEffect(() => { if (selId) { cargarViajeros(selId); setPagoLink(null); } }, [selId]);
+  useEffect(() => {
+    const pax = sel?.viajerosCount || sel?.metaPax || 0;
+    if (!pax) { setHotelesDisp([]); return; }
+    fetch(`${API}/api/copa/disponibilidad?pax=${pax}`)
+      .then(r => r.json())
+      .then(d => Array.isArray(d?.hoteles) && setHotelesDisp(d.hoteles))
+      .catch(() => {});
+  }, [sel?.id, sel?.viajerosCount, sel?.metaPax]);
 
   const patchDel = async (id: string, cambios: any) => {
     setSavingId(id);
@@ -304,6 +313,27 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
                 {catalogo.length === 0 && <p className="text-sm text-[#6B7785] text-center py-4">Cargando catálogo de tarifas...</p>}
               </div>
             </div>
+
+            {/* Disponibilidad de hoteles verificados para este grupo */}
+            {hotelesDisp.length > 0 && (
+              <div className="bg-white border-2 border-[#1E6B4F] rounded-lg overflow-hidden">
+                <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#1E6B4F] bg-[#F3F8F5] px-4 py-3">
+                  Hoteles verificados con espacio para {sel.viajerosCount || sel.metaPax} pax
+                </h2>
+                <p className="text-xs text-[#6B7785] px-4 pt-3">Marcados por ti como disponibles para el evento (Disponible_Copa_Isla). Capacidad estimada según habitaciones — confirma con el hotel antes de cerrar.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-4">
+                  {hotelesDisp.map((h: any) => (
+                    <div key={h.id} className="flex items-center gap-2.5 border border-[#E7DFCE] rounded-lg p-2.5">
+                      {h.imagen ? <img src={h.imagen} className="w-14 h-14 rounded-lg object-cover shrink-0" /> : <div className="w-14 h-14 rounded-lg bg-[#F5EFE3] flex items-center justify-center shrink-0">🏨</div>}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-xs truncate">{h.nombre}</p>
+                        <p className="text-[10px] text-[#6B7785]">{h.habitacionesDisponibles} hab. · ~{h.capacidadEstimada} pax · {cop(h.precioNoche)}/noche</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Actividades del catálogo real GuiaSAI */}
             <div className="bg-white border-2 border-[#0E7C86] rounded-lg overflow-hidden">

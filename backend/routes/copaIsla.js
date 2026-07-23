@@ -170,6 +170,65 @@ router.get('/catalogo-real', async (_req, res) => {
 // NOTA: catálogo de traslados pendiente — se rediseñará con sistema de
 // zonas/mapa (ver AdminTaxiZoneEditor) en vez de tarifa plana. Mientras
 // tanto, "Traslados" en el paquete grupal usa Copa_Tarifas (tarifa fija).
+// ─── Disponibilidad de alojamientos para grupos del evento ────────────────
+// Lee AlojamientosTuristicos_SAI filtrando Disponible_Copa_Isla=true.
+// Capacidad estimada = Habitaciones_Disp_Diciembre × capacidad por habitación
+// (campo 'Capacidad' existente) — es un estimado para filtrar opciones,
+// la confirmación final la hace Sky con cada hotel.
+
+let cacheDisponibilidad = { data: null, ts: 0 };
+
+async function leerDisponibilidadGrupos() {
+  if (cacheDisponibilidad.data && Date.now() - cacheDisponibilidad.ts < 60_000) return cacheDisponibilidad.data;
+  const { headers, base } = AT();
+  const CAMPOS = ['Servicio', 'Nombre alternativo', 'Tipo de Alojamiento', 'Precio actualizado', 'Precio_GuanaGO',
+    'ImagenWP', 'Descripcion', 'Capacidad', 'Disponible_Copa_Isla', 'Habitaciones_Disp_Diciembre'];
+  const fieldsQs = CAMPOS.map(c => `fields[]=${encodeURIComponent(c)}`).join('&');
+  const r = await fetch(`https://api.airtable.com/v0/${base}/AlojamientosTuristicos_SAI?${fieldsQs}&maxRecords=100`, { headers });
+  if (!r.ok) { console.warn(`[copa/disponibilidad] ${r.status}: ${await r.text()}`); return []; }
+  const d = await r.json();
+  const hoteles = (d.records || [])
+    .filter(rec => rec.fields['Disponible_Copa_Isla'])
+    .map(rec => {
+      const f = rec.fields;
+      const nombre = f['Servicio'] || f['Nombre alternativo'] || '';
+      if (!nombre) return null;
+      const habitaciones = Number(f['Habitaciones_Disp_Diciembre'] || 0);
+      const capPorHab = Number(f['Capacidad'] || 2) || 2;
+      let imagen = '';
+      if (f['ImagenWP'] && typeof f['ImagenWP'] === 'string') {
+        const u = f['ImagenWP'].split(',')[0].trim();
+        if (u.startsWith('http')) imagen = u;
+      }
+      return {
+        id: rec.id,
+        nombre,
+        tipo: f['Tipo de Alojamiento'] || 'Alojamiento',
+        precioNoche: Number(f['Precio actualizado'] || f['Precio_GuanaGO'] || 0),
+        imagen,
+        descripcion: (f['Descripcion'] || '').slice(0, 160),
+        habitacionesDisponibles: habitaciones,
+        capacidadEstimada: habitaciones * capPorHab,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.capacidadEstimada - a.capacidadEstimada);
+  cacheDisponibilidad = { data: hoteles, ts: Date.now() };
+  return hoteles;
+}
+
+// GET /api/copa/disponibilidad?pax=35 — hoteles con capacidad estimada suficiente
+router.get('/disponibilidad', async (req, res) => {
+  try {
+    const pax = Number(req.query.pax) || 0;
+    const todos = await leerDisponibilidadGrupos();
+    const filtrados = pax > 0 ? todos.filter(h => h.capacidadEstimada >= pax) : todos;
+    res.json({ pax, hoteles: filtrados, totalDisponibles: todos.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Cálculo de cotización de una delegación ───────────────────────────────
 
 function nochesEntre(inn, out) {
