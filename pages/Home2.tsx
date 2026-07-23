@@ -365,10 +365,10 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
                 ¿Tu delegación ya tiene código de acceso? Ingresa aquí →
               </button>
             </div>
-            <a href={`${wa}?text=${encodeURIComponent('Hola GuiaSAI 🌴 quiero cotizar para mi grupo')}`} target="_blank" rel="noopener noreferrer"
+            <button onClick={() => onNavigate(AppRoute.COPA_DISPONIBILIDAD_PUBLICA)}
                className="bg-orange-500 hover:bg-orange-600 font-black px-7 py-4 rounded-2xl transition-colors shadow-lg">
-              Cotizar para mi grupo
-            </a>
+              Ver hoteles disponibles
+            </button>
           </div>
         </div>
       </section>

@@ -156,7 +156,9 @@ const CopaPortal: React.FC = () => {
                     <p className="font-bold text-sm">{h.nombre}</p>
                     <p className="text-[10px] text-[#6B7785] mb-1.5">{h.tipo} · capacidad estimada {h.capacidadEstimada} pax</p>
                     <div className="flex items-center justify-between">
-                      <span className="font-mono font-bold text-[#05263B] text-sm">{cop(h.precioNoche)}<span className="text-[10px] font-normal text-[#6B7785]">/noche</span></span>
+                      <span className="font-mono font-bold text-[#05263B] text-sm">
+                        {h.precioNoche > 0 ? <>{cop(h.precioNoche)}<span className="text-[10px] font-normal text-[#6B7785]">/noche</span></> : <span className="text-[11px] text-[#8A4B00] font-bold">Precio bajo pedido</span>}
+                      </span>
                       <a
                         href={`https://wa.me/573153836043?text=${encodeURIComponent(`Hola GuíaSAI, soy ${data.delegacion.lider} de ${data.delegacion.club}. Quiero cotizar ${h.nombre} para ${data.pax} pax del ${data.delegacion.inn} al ${data.delegacion.out}.`)}`}
                         target="_blank" rel="noopener noreferrer"

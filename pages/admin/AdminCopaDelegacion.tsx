@@ -327,7 +327,7 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
                       {h.imagen ? <img src={h.imagen} className="w-14 h-14 rounded-lg object-cover shrink-0" /> : <div className="w-14 h-14 rounded-lg bg-[#F5EFE3] flex items-center justify-center shrink-0">🏨</div>}
                       <div className="min-w-0 flex-1">
                         <p className="font-bold text-xs truncate">{h.nombre}</p>
-                        <p className="text-[10px] text-[#6B7785]">{h.habitacionesDisponibles} hab. · ~{h.capacidadEstimada} pax · {cop(h.precioNoche)}/noche</p>
+                        <p className="text-[10px] text-[#6B7785]">{h.habitacionesDisponibles} hab. · ~{h.capacidadEstimada} pax · {h.precioNoche > 0 ? `${cop(h.precioNoche)}/noche` : 'precio bajo pedido'}</p>
                       </div>
                     </div>
                   ))}
