@@ -494,7 +494,11 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
   const refreshServices = async () => {
     setServices([]);
-    await loadServices(true);
+    setAlojamientos([]);
+    await Promise.all([
+      loadServices(true),
+      cachedApi.getAlojamientos({ forceRefresh: true }).then(data => setAlojamientos(data)),
+    ]);
   };
 
   const handleCreateCotizacion = async () => {
