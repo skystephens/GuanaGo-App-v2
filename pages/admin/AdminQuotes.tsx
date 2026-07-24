@@ -56,6 +56,7 @@ interface ParsedQuoteAction {
   bebes?: number;
   notasInternas?: string;
   notasCliente?: string;
+  proximoSeguimiento?: string;
 }
 
 /**
@@ -373,6 +374,33 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       alert('Error guardando notas — si el campo Notas_Cliente aún no existe en Airtable, créalo primero (Long text, tabla CotizacionesGG)');
     } finally {
       setNotasClienteSaving(false);
+    }
+  };
+
+  // ── Próximo Seguimiento (CRM) — alimenta la alerta diaria del Dashboard ─────
+  const [seguimientoValue, setSeguimientoValue]   = useState('');
+  const [seguimientoSaving, setSeguimientoSaving] = useState(false);
+
+  useEffect(() => {
+    setSeguimientoValue(selectedCotizacion?.proximoSeguimiento || '');
+  }, [selectedCotizacion?.id]);
+
+  const handleSaveSeguimiento = async (fecha: string) => {
+    if (!selectedCotizacion) return;
+    setSeguimientoSaving(true);
+    try {
+      const resultado = await updateCotizacion(selectedCotizacion.id, { proximoSeguimiento: fecha });
+      const descartado = (resultado as any)?._camposDescartados?.includes('proximoSeguimiento');
+      if (descartado) {
+        alert('⚠️ No se guardó: el campo "Proximo_Seguimiento" no coincide exactamente en Airtable.');
+        return;
+      }
+      setSelectedCotizacion(prev => prev ? { ...prev, proximoSeguimiento: fecha } : prev);
+      setSeguimientoValue(fecha);
+    } catch {
+      alert('Error guardando la fecha de seguimiento');
+    } finally {
+      setSeguimientoSaving(false);
     }
   };
 
@@ -2428,6 +2456,30 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 <div className="flex items-center gap-2 mb-4">
                   <MessageSquare className="w-4 h-4 text-purple-400" />
                   <h3 className="text-base font-semibold text-white">Seguimiento CRM</h3>
+                </div>
+
+                {/* Fecha de próximo seguimiento — alimenta la alerta del Dashboard */}
+                <div className="flex items-center gap-2 mb-4 bg-orange-950/20 border border-orange-800/40 rounded-lg p-3">
+                  <Calendar className="w-4 h-4 text-orange-400 shrink-0" />
+                  <div className="flex-1">
+                    <label className="text-[10px] text-orange-300/80 font-bold uppercase block mb-1">Próximo seguimiento (aparece en la alerta del Dashboard)</label>
+                    <input
+                      type="date"
+                      value={seguimientoValue}
+                      onChange={(e) => handleSaveSeguimiento(e.target.value)}
+                      className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:border-orange-500 focus:outline-none"
+                    />
+                  </div>
+                  {seguimientoValue && (
+                    <button
+                      onClick={() => handleSaveSeguimiento('')}
+                      title="Quitar recordatorio"
+                      className="text-gray-500 hover:text-red-400 text-xs px-2 py-1"
+                    >
+                      ✕
+                    </button>
+                  )}
+                  {seguimientoSaving && <Loader2 className="w-3.5 h-3.5 animate-spin text-orange-400" />}
                 </div>
 
                 {/* Input nueva nota */}

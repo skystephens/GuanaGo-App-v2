@@ -457,6 +457,11 @@ export async function updateCotizacion(
         camposDescartados.push('notasCliente');
         const { Notas_Cliente, ...resto } = fields;
         data = await intentar(resto);
+      } else if (/Proximo_Seguimiento/i.test(e.message)) {
+        console.warn('⚠️ Campo "Proximo_Seguimiento" no coincide exactamente en Airtable — se guardó el resto sin él.');
+        camposDescartados.push('proximoSeguimiento');
+        const { Proximo_Seguimiento, ...resto } = fields;
+        data = await intentar(resto);
       } else {
         throw e;
       }
@@ -557,7 +562,8 @@ function mapRecordToCotizacion(record: any): Cotizacion {
     precioTotal: parseFloat(f['Precio total'] || f.precioTotal || '0') || 0,
     descuento: parseFloat(f.Descuento || '0') || 0,
     notasInternas: f['Notas internas'] || f.notasInternas || '',
-    notasCliente: f['Notas_Cliente'] || f.notasCliente || ''
+    notasCliente: f['Notas_Cliente'] || f.notasCliente || '',
+    proximoSeguimiento: f['Proximo_Seguimiento'] || f.proximoSeguimiento || ''
   };
 }
 
@@ -579,6 +585,7 @@ function mapCotizacionToFields(cotizacion: Partial<Cotizacion>): Record<string, 
   // Nota: no existe campo "Descuento" en Airtable — el descuento se aplica en el cálculo del precioTotal
   if (cotizacion.notasInternas !== undefined && cotizacion.notasInternas) fields['Notas internas'] = cotizacion.notasInternas;
   if (cotizacion.notasCliente !== undefined) fields['Notas_Cliente'] = cotizacion.notasCliente;
+  if (cotizacion.proximoSeguimiento !== undefined) fields['Proximo_Seguimiento'] = cotizacion.proximoSeguimiento || null;
   
   return fields;
 }
