@@ -326,6 +326,7 @@ router.post('/webhook', express.json(), async (req, res) => {
             'PayU_Transaction_ID': tx.id || '',
             'Valor_Pagado':        valorCOP,
             'Numero_Reserva':      numReserva,
+            'Etapa_CRM':           'Ganado',
           },
         }),
       });

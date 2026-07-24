@@ -24,6 +24,7 @@ interface Lead {
   fechaCreacion: string; fechaViaje: string; adultos: number;
   precio: number; estado: string; numeroReserva: string;
   etapa: string; temperatura: string; notas: string;
+  proximoSeguimiento: string;
 }
 interface Resumen {
   ventas: { hoy: number; sinAtender: number; pipeline: number; ganadosHoy: number };
@@ -44,18 +45,26 @@ const guiones = (lead: Lead) => {
   return [
     {
       titulo: '👋 Bienvenida de agencia',
+      etapaSugerida: 'Contactado',
+      diasSeguimiento: 2,
       texto: `Hola ${nombre} 🌴 Soy del equipo de GuíaSAI, recibimos tu cotización. Somos una agencia Raizal de San Andrés con Registro Nacional de Turismo 48674 — trabajamos únicamente con operadores oficiales de la isla y fomentamos el turismo cultural, así que cada servicio que reservas con nosotros apoya directamente al ecosistema local. ¿Te confirmo disponibilidad y tarifas para tus fechas?`,
     },
     {
       titulo: '🌦️ Garantía de clima',
+      etapaSugerida: 'Negociación',
+      diasSeguimiento: 2,
       texto: `${nombre}, un dato importante para tu tranquilidad: si la Capitanía de Puerto llegara a suspender las salidas al mar por clima, tu reserva está protegida — reprogramamos sin costo o la cambias por una experiencia cultural Raizal en tierra. Tu pago nunca se pierde con GuíaSAI ✅`,
     },
     {
       titulo: '💳 Empuje de cierre',
-      texto: `${nombre}, tu cotización está lista y las tarifas confirmadas 🎉 Para garantizar tu cupo solo falta el pago — te envío el link seguro de Wompi (Bancolombia): puedes pagar con Nequi, tarjeta o PSE. Los cupos con pago confirmado tienen prioridad. ¿Te lo envío?`,
+      etapaSugerida: 'Pago enviado',
+      diasSeguimiento: 1,
+      texto: `${nombre}, tu cotización está lista y las tarifas confirmadas 🎉 Para garantizar tu cupo transfiere a nuestra llave Bre-B: *@MPC846* (gratis e inmediato, desde cualquier banco o billetera). Cuando hagas la transferencia envíame el comprobante y te confirmo tu reserva al instante. Los cupos con pago confirmado tienen prioridad.`,
     },
     {
       titulo: '⏰ Seguimiento suave',
+      etapaSugerida: null as string | null,
+      diasSeguimiento: 3,
       texto: `Hola ${nombre} 🌴 ¿Cómo vas con la decisión de tu viaje a San Andrés? Sigo teniendo tus fechas apartadas de manera preliminar. Si tienes alguna duda sobre los tours, el alojamiento o la forma de pago, con gusto te la resuelvo — para eso estamos 🙌`,
     },
   ];
@@ -95,7 +104,7 @@ const AdminCRM: React.FC<Props> = ({ onBack, onNavigate }) => {
     return m;
   }, [leads]);
 
-  const actualizar = async (id: string, cambios: Partial<Pick<Lead, 'etapa' | 'temperatura' | 'notas'>>) => {
+  const actualizar = async (id: string, cambios: Partial<Pick<Lead, 'etapa' | 'temperatura' | 'notas' | 'proximoSeguimiento'>>) => {
     setSaving(true);
     try {
       const r = await fetch(`${API}/api/crm/leads/${id}`, {
@@ -116,6 +125,24 @@ const AdminCRM: React.FC<Props> = ({ onBack, onNavigate }) => {
     const tel = (lead.telefono || '').replace(/\D/g, '');
     const num = tel.startsWith('57') ? tel : `57${tel}`;
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(texto)}`, '_blank');
+  };
+
+  // Envía el guion por WhatsApp y avanza el pipeline automáticamente:
+  // - solo mueve la etapa hacia adelante (nunca retrocede un lead ya avanzado)
+  // - siempre programa el próximo seguimiento, para que aparezca en el Super Admin
+  const enviarGuion = (lead: Lead, g: ReturnType<typeof guiones>[number]) => {
+    const cambios: Partial<Pick<Lead, 'etapa' | 'proximoSeguimiento'>> = {};
+    if (g.etapaSugerida) {
+      const actual = ETAPAS.indexOf(lead.etapa || 'Nuevo');
+      const sugerida = ETAPAS.indexOf(g.etapaSugerida);
+      if (sugerida > actual) cambios.etapa = g.etapaSugerida;
+    }
+    const prox = new Date();
+    prox.setDate(prox.getDate() + g.diasSeguimiento);
+    cambios.proximoSeguimiento = prox.toISOString().slice(0, 10);
+
+    actualizar(lead.id, cambios);
+    abrirWA(lead, g.texto);
   };
 
   const sinAtender = resumen?.ventas.sinAtender || 0;
@@ -261,10 +288,11 @@ const AdminCRM: React.FC<Props> = ({ onBack, onNavigate }) => {
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">💬 WhatsApp con guión GuiaSAI</p>
             <div className="grid grid-cols-2 gap-1.5 mb-4">
               {guiones(sel).map(g => (
-                <button key={g.titulo} onClick={() => abrirWA(sel, g.texto)}
+                <button key={g.titulo} onClick={() => enviarGuion(sel, g)}
                   disabled={!sel.telefono}
                   className="py-2.5 px-2 rounded-xl bg-emerald-900/40 border border-emerald-800 hover:border-emerald-500 text-[10.5px] font-bold text-emerald-200 disabled:opacity-40 transition-colors">
                   {g.titulo}
+                  {g.etapaSugerida && <span className="block text-[8px] text-emerald-400/70 font-normal mt-0.5">→ {g.etapaSugerida}</span>}
                 </button>
               ))}
             </div>
@@ -274,16 +302,29 @@ const AdminCRM: React.FC<Props> = ({ onBack, onNavigate }) => {
             <textarea value={notasDraft} onChange={e => setNotasDraft(e.target.value)} rows={3}
               placeholder="Ej: fechas flexibles · verificar con propietario · llamar mañana 2pm"
               className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-xs leading-relaxed mb-2" />
-            <div className="flex gap-2">
+            <div className="flex gap-2 mb-2">
               <button onClick={() => actualizar(sel.id, { notas: notasDraft })} disabled={saving || notasDraft === sel.notas}
                 className="flex-1 flex items-center justify-center gap-1.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-40 font-black text-xs py-3 rounded-xl">
                 {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />} Guardar notas
               </button>
               <button onClick={() => onNavigate(AppRoute.ADMIN_QUOTES)}
                 className="flex-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 font-bold text-xs py-3 rounded-xl">
-                💳 Cotización & link de pago
+                Ver cotización
               </button>
             </div>
+
+            {/* Confirmación manual de pago Bre-B (@MPC846) — no hay webhook automático */}
+            {sel.etapa !== 'Ganado' && (
+              <button
+                onClick={() => {
+                  if (!confirm(`¿Confirmas que llegó la transferencia Bre-B de ${sel.nombre} (${fmtCOP(sel.precio)})? Esto moverá el lead a Ganado.`)) return;
+                  actualizar(sel.id, { etapa: 'Ganado' });
+                }}
+                className="w-full flex items-center justify-center gap-1.5 bg-emerald-700 hover:bg-emerald-600 font-black text-xs py-3 rounded-xl"
+              >
+                ✅ Confirmar pago recibido (Bre-B @MPC846)
+              </button>
+            )}
           </div>
         </div>
       )}

@@ -59,6 +59,7 @@ const mapLead = (rec) => ({
   etapa: rec.fields['Etapa_CRM'] || 'Nuevo',
   temperatura: rec.fields['Temperatura'] || '',
   notas: rec.fields['Notas_CRM'] || '',
+  proximoSeguimiento: rec.fields['Proximo_Seguimiento'] || '',
 });
 
 // ── GET /api/crm/leads ────────────────────────────────────────────────────────
@@ -74,11 +75,12 @@ router.get('/leads', async (_req, res) => {
 
 // ── PATCH /api/crm/leads/:id ──────────────────────────────────────────────────
 router.patch('/leads/:id', express.json(), async (req, res) => {
-  const { etapa, temperatura, notas } = req.body || {};
+  const { etapa, temperatura, notas, proximoSeguimiento } = req.body || {};
   const fields = {};
   if (etapa !== undefined) fields['Etapa_CRM'] = etapa;
   if (temperatura !== undefined) fields['Temperatura'] = temperatura;
   if (notas !== undefined) fields['Notas_CRM'] = notas;
+  if (proximoSeguimiento !== undefined) fields['Proximo_Seguimiento'] = proximoSeguimiento;
   if (!Object.keys(fields).length) return res.status(400).json({ error: 'Nada que actualizar' });
 
   try {
