@@ -13,7 +13,7 @@ import {
   ArrowLeft, RefreshCw, Loader2, Phone, Mail, X, Save,
   TrendingUp, Wallet, Ship, MessageCircle, Megaphone, Brain, Flame,
 } from 'lucide-react';
-import { AppRoute } from '../../types';
+import { AppRoute, QUOTE_STATUS_CONFIG } from '../../types';
 
 const API = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   ? 'http://localhost:5000'
@@ -21,7 +21,8 @@ const API = typeof window !== 'undefined' && window.location.hostname === 'local
 
 interface Lead {
   id: string; nombre: string; telefono: string; email: string;
-  fechaCreacion: string; fechaViaje: string; adultos: number;
+  fechaCreacion: string; fechaViaje: string; fechaFin: string;
+  adultos: number; ninos: number; bebes: number;
   precio: number; estado: string; numeroReserva: string;
   etapa: string; temperatura: string; notas: string;
   proximoSeguimiento: string;
@@ -38,6 +39,13 @@ const ETAPAS = ['Nuevo', 'Contactado', 'Negociación', 'Pago enviado', 'Ganado',
 const TEMPS: Record<string, string> = { Caliente: '🔥', Tibio: '🌡️', 'Frío': '❄️' };
 const fmtCOP = (n: number) => `$${Math.round(n).toLocaleString('es-CO')}`;
 const fmtCompacto = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : fmtCOP(n);
+const fmtFechaCorta = (d: string) => {
+  if (!d) return '—';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d);
+  if (!m) return d;
+  const dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return dt.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+};
 
 // ── Guiones de agencia (RNT 48674 · ecosistema local · turismo cultural) ──────
 const guiones = (lead: Lead) => {
@@ -213,23 +221,31 @@ const AdminCRM: React.FC<Props> = ({ onBack, onNavigate }) => {
                 <span className="text-gray-600">{porEtapa[etapa]?.length || 0}</span>
               </p>
               <div className="space-y-1.5">
-                {(porEtapa[etapa] || []).slice(0, 12).map(l => (
-                  <button
-                    key={l.id}
-                    onClick={() => setSel(l)}
-                    className="w-full text-left bg-gray-900 border border-gray-800 hover:border-teal-500 rounded-xl p-2 transition-colors"
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <p className="text-[11px] font-bold truncate">{l.nombre}</p>
-                      <span className="text-[11px]">{TEMPS[l.temperatura] || ''}</span>
-                    </div>
-                    <p className="text-[10px] text-cyan-300 font-bold">{fmtCOP(l.precio)}</p>
-                    <p className="text-[8.5px] text-gray-500">
-                      {l.adultos > 0 ? `${l.adultos} pax · ` : ''}{(l.fechaCreacion || '').slice(0, 10)}
-                      {l.numeroReserva ? ` · ${l.numeroReserva}` : ''}
-                    </p>
-                  </button>
-                ))}
+                {(porEtapa[etapa] || []).slice(0, 12).map(l => {
+                  const cfg = (QUOTE_STATUS_CONFIG as any)[l.estado] || (QUOTE_STATUS_CONFIG as any).Draft;
+                  const pax = l.adultos + (l.ninos || 0) + (l.bebes || 0);
+                  return (
+                    <button
+                      key={l.id}
+                      onClick={() => setSel(l)}
+                      className="w-full text-left bg-gray-900 border border-gray-800 hover:border-teal-500 rounded-xl p-2 transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <p className="text-[11px] font-bold truncate">{l.nombre}</p>
+                        <span className="text-[11px] shrink-0">{TEMPS[l.temperatura] || ''}</span>
+                      </div>
+                      <p className="text-[10px] text-cyan-300 font-bold">{fmtCOP(l.precio)}</p>
+                      <p className="text-[8.5px] text-gray-500">
+                        {l.fechaViaje ? `${fmtFechaCorta(l.fechaViaje)} → ${fmtFechaCorta(l.fechaFin)}` : (l.fechaCreacion || '').slice(0, 10)}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        {pax > 0 && <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-400">{pax} pax</span>}
+                        <span className={`text-[8px] px-1.5 py-0.5 rounded-full ${cfg.color} ${cfg.textColor}`}>{cfg.label}</span>
+                        {l.numeroReserva && <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400">{l.numeroReserva}</span>}
+                      </div>
+                    </button>
+                  );
+                })}
                 {(porEtapa[etapa]?.length || 0) > 12 && (
                   <p className="text-[9px] text-gray-600 px-1.5">+{porEtapa[etapa].length - 12} más</p>
                 )}
@@ -254,12 +270,23 @@ const AdminCRM: React.FC<Props> = ({ onBack, onNavigate }) => {
               <button onClick={() => setSel(null)} className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center shrink-0"><X size={14} /></button>
             </div>
 
-            <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-3 text-[11.5px] mb-4">
-              <b className="text-teal-400">{fmtCOP(sel.precio)}</b>
-              {sel.adultos > 0 && <> · {sel.adultos} adulto{sel.adultos > 1 ? 's' : ''}</>}
-              {sel.fechaViaje && <> · viaja {String(sel.fechaViaje).slice(0, 10)}</>}
-              {sel.numeroReserva && <> · <span className="text-emerald-400 font-bold">{sel.numeroReserva}</span></>}
-              <span className="text-gray-500"> · creada {String(sel.fechaCreacion).slice(0, 10)}</span>
+            <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-3 text-[11.5px] mb-4 space-y-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <b className="text-teal-400">{fmtCOP(sel.precio)}</b>
+                {(() => { const cfg = (QUOTE_STATUS_CONFIG as any)[sel.estado] || (QUOTE_STATUS_CONFIG as any).Draft;
+                  return <span className={`text-[9px] px-2 py-0.5 rounded-full ${cfg.color} ${cfg.textColor} font-bold`}>{cfg.label}</span>; })()}
+                {sel.numeroReserva && <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 font-bold">{sel.numeroReserva}</span>}
+              </div>
+              <p className="text-gray-400">
+                🗓️ {sel.fechaViaje ? `${fmtFechaCorta(sel.fechaViaje)} → ${fmtFechaCorta(sel.fechaFin)}` : 'sin fechas de viaje'}
+                {(sel.adultos + sel.ninos + sel.bebes) > 0 && (
+                  <> · 👥 {sel.adultos} adulto{sel.adultos !== 1 ? 's' : ''}
+                    {sel.ninos > 0 && `, ${sel.ninos} niño${sel.ninos !== 1 ? 's' : ''}`}
+                    {sel.bebes > 0 && `, ${sel.bebes} bebé${sel.bebes !== 1 ? 's' : ''}`}
+                  </>
+                )}
+              </p>
+              <p className="text-gray-500 text-[10px]">creada {String(sel.fechaCreacion).slice(0, 10)}</p>
             </div>
 
             {/* Temperatura */}
