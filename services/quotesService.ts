@@ -12,7 +12,8 @@ const AIRTABLE_API_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
 const TABLES = {
   COTIZACIONES: 'CotizacionesGG',
   COTIZACIONES_ITEMS: 'cotizaciones_Items',
-  SERVICIOS: 'ServiciosTuristicos_SAI'
+  SERVICIOS: 'ServiciosTuristicos_SAI',
+  ALOJAMIENTOS: 'AlojamientosTuristicos_SAI'
 };
 
 const getHeaders = () => ({
@@ -279,15 +280,60 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
       }
 
       // ── MODELO LEGACY: ítem vinculado al catálogo sin precio propio ──
-      const servicioId = f.Servicio?.[0];
-      if (!servicioId) continue;
+      const servicioIdTour = f.Servicio?.[0];
+      const servicioIdAloj = f['AlojamientosTuristicos_SAI']?.[0];
+      const servicioId = servicioIdTour || servicioIdAloj;
 
-      const servicioUrl = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.SERVICIOS)}/${servicioId}`;
+      if (!servicioId) {
+        // No hay link a ningún catálogo y tampoco precio propio guardado.
+        // Antes esto borraba el ítem en silencio (bug) — ahora se muestra
+        // igual, con precio 0, para que nunca desaparezca de la cotización.
+        items.push({
+          id: record.id,
+          cotizacionId,
+          servicioId: undefined,
+          servicioNombre: f.Nombre || '(sin nombre)',
+          servicioTipo: 'otro',
+          fecha: '', adultos: 0, ninos: 0, bebes: 0,
+          valorUnitario: 0,
+          personas: personasGuardado || 1,
+          cantidad: cantidadGuardado,
+          precioUnitario: 0,
+          subtotal: 0,
+          esPersonalizado,
+          status: 'disponible',
+          conflictos: []
+        });
+        continue;
+      }
+
+      const tablaServicio = servicioIdAloj ? TABLES.ALOJAMIENTOS : TABLES.SERVICIOS;
+      const servicioUrl = `${AIRTABLE_API_URL}/${encodeURIComponent(tablaServicio)}/${servicioId}`;
       const servicioResponse = await fetch(servicioUrl, { headers: getHeaders() });
-      if (!servicioResponse.ok) continue;
+      if (!servicioResponse.ok) {
+        // El fetch del catálogo falló (borrado, permisos, etc.) — igual se
+        // muestra el ítem con precio 0 en vez de desaparecerlo.
+        items.push({
+          id: record.id,
+          cotizacionId,
+          servicioId,
+          servicioNombre: f.Nombre || '(catálogo no disponible)',
+          servicioTipo: servicioIdAloj ? 'hotel' : 'otro',
+          fecha: '', adultos: 0, ninos: 0, bebes: 0,
+          valorUnitario: 0,
+          personas: personasGuardado || 1,
+          cantidad: cantidadGuardado,
+          precioUnitario: 0,
+          subtotal: 0,
+          esPersonalizado,
+          status: 'disponible',
+          conflictos: []
+        });
+        continue;
+      }
 
       const s = (await servicioResponse.json()).fields;
-      const precioServicio = parseFloat(s['Precio actualizado'] || '0') || 0;
+      const precioServicio = parseFloat(s['Precio actualizado'] || s['Precio_GuanaGO'] || '0') || 0;
 
       // Para el modelo legacy, personas = adultos+ninos de la cotización (default), cantidad = 1
       const cotRes = await fetch(
@@ -307,8 +353,8 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
         id: record.id,
         cotizacionId,
         servicioId,
-        servicioNombre: s.Servicio || s.nombre || '',
-        servicioTipo: (s.category || s.Categoria || 'tour') as CotizacionItem['servicioTipo'],
+        servicioNombre: s.Servicio || s.nombre || s['Nombre alternativo'] || '',
+        servicioTipo: (servicioIdAloj ? 'hotel' : (s.category || s.Categoria || 'tour')) as CotizacionItem['servicioTipo'],
         fecha: '',
         adultos, ninos, bebes: 0,
         valorUnitario: precioServicio,
