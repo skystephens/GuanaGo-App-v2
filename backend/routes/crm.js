@@ -117,6 +117,7 @@ router.get('/resumen', async (_req, res) => {
 
     // Ventas
     let ventasHoy = 0, sinAtender = 0, pipeline = 0, ganadosHoy = 0;
+    const seguimientosHoy = [];
     if (cotiz.status === 'fulfilled') {
       for (const rec of cotiz.value.records || []) {
         const f = rec.fields;
@@ -127,7 +128,24 @@ router.get('/resumen', async (_req, res) => {
         if (etapa === 'Nuevo' && !pagado) sinAtender++;
         if (!pagado && !['Perdido'].includes(etapa)) pipeline += Number(f['Precio total'] || 0);
         if (pagado && creado === hoy) ganadosHoy++;
+
+        // Seguimientos: fecha de Proximo_Seguimiento vencida o de hoy, y sin cerrar
+        const fechaSeg = normFecha(f['Proximo_Seguimiento']);
+        if (fechaSeg && fechaSeg <= hoy && !['Ganado', 'Perdido'].includes(etapa)) {
+          seguimientosHoy.push({
+            id: rec.id,
+            nombre: f['Nombre'] || 'Sin nombre',
+            telefono: f['Telefono'] || '',
+            etapa,
+            temperatura: f['Temperatura'] || '',
+            notas: f['Notas_CRM'] || '',
+            fechaSeguimiento: fechaSeg,
+            precio: Number(f['Precio total'] || 0),
+            vencido: fechaSeg < hoy,
+          });
+        }
       }
+      seguimientosHoy.sort((a, b) => a.fechaSeguimiento.localeCompare(b.fechaSeguimiento));
     }
 
     // Finanzas
@@ -161,6 +179,7 @@ router.get('/resumen', async (_req, res) => {
       finanzas: { cajaHoy, cajaMes },
       atencion: { chatsPendientes },
       operaciones: { toursHoy, vouchersPendientes },
+      seguimientosHoy,
       actualizado: new Date().toISOString(),
     };
     cacheResumen = { data: resumen, ts: Date.now() };

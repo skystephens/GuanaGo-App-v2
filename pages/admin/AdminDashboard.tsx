@@ -244,6 +244,8 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [atStatus, setAtStatus] = useState<'checking' | 'ok' | 'error'>('checking');
   const [chatsPendientes, setChatsPendientes] = useState<number | null>(null);
+  const [seguimientos, setSeguimientos] = useState<any[]>([]);
+  const [showSeguimientos, setShowSeguimientos] = useState(false);
 
   // Cargar reservas recientes
   const loadRecent = useCallback(async () => {
@@ -290,10 +292,22 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
     } catch { /* silencioso — no bloquear el dashboard */ }
   }, []);
 
+  // Cargar seguimientos de cotizaciones pendientes hoy (alerta diaria)
+  const loadSeguimientos = useCallback(async () => {
+    try {
+      const res = await fetch('/api/crm/resumen');
+      if (res.ok) {
+        const data = await res.json();
+        setSeguimientos(Array.isArray(data?.seguimientosHoy) ? data.seguimientosHoy : []);
+      }
+    } catch { /* silencioso — no bloquear el dashboard */ }
+  }, []);
+
   useEffect(() => {
     loadRecent();
     loadApprovals();
     loadChatsPendientes();
+    loadSeguimientos();
     const id = setInterval(() => {
       loadRecent();
       loadChatsPendientes();
@@ -439,6 +453,67 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
         </header>
 
         <div className="px-6 space-y-5 pt-2">
+
+        {/* ══════════════════════════════════════════════
+            SEGUIMIENTOS PENDIENTES — alerta diaria
+        ══════════════════════════════════════════════ */}
+        {seguimientos.length > 0 && (
+          <div className="bg-gradient-to-r from-orange-900/40 to-red-900/30 border border-orange-700/60 rounded-2xl overflow-hidden">
+            <button
+              onClick={() => setShowSeguimientos(v => !v)}
+              className="w-full flex items-center justify-between px-4 py-3.5"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500" />
+                </span>
+                <div className="text-left">
+                  <p className="text-sm font-bold text-orange-200">
+                    {seguimientos.length} seguimiento{seguimientos.length > 1 ? 's' : ''} pendiente{seguimientos.length > 1 ? 's' : ''} hoy
+                  </p>
+                  <p className="text-[10px] text-orange-300/70">
+                    {seguimientos.filter((s: any) => s.vencido).length > 0
+                      ? `${seguimientos.filter((s: any) => s.vencido).length} atrasado(s) — contactar a estos clientes`
+                      : 'Cotizaciones marcadas para dar seguimiento hoy'}
+                  </p>
+                </div>
+              </div>
+              {showSeguimientos ? <ChevronUp size={16} className="text-orange-300" /> : <ChevronDown size={16} className="text-orange-300" />}
+            </button>
+            {showSeguimientos && (
+              <div className="px-4 pb-4 space-y-2">
+                {seguimientos.map((s: any) => (
+                  <div key={s.id} className="bg-gray-900/60 border border-gray-800 rounded-xl p-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-200 truncate">
+                        {s.nombre} {s.temperatura === 'Caliente' && '🔥'} {s.vencido && <span className="text-red-400 text-[10px] font-bold ml-1">ATRASADO</span>}
+                      </p>
+                      <p className="text-[11px] text-gray-500 truncate">
+                        {s.etapa} · ${Math.round(s.precio).toLocaleString('es-CO')} {s.notas && `· ${s.notas.slice(0, 40)}`}
+                      </p>
+                    </div>
+                    {s.telefono && (
+                      <a
+                        href={`https://wa.me/${String(s.telefono).replace(/\D/g, '')}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg"
+                      >
+                        WhatsApp
+                      </a>
+                    )}
+                  </div>
+                ))}
+                <button
+                  onClick={() => onNavigate(AppRoute.ADMIN_CRM)}
+                  className="w-full text-center text-[11px] font-bold text-orange-300 hover:text-orange-200 pt-1"
+                >
+                  Ver todo en el CRM →
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ══════════════════════════════════════════════
             AGENTE IA — Briefing automático al entrar
