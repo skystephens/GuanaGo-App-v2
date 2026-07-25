@@ -224,18 +224,28 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
   }
 
   try {
-    // Obtener TODOS los items sin filtro
-    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES_ITEMS)}`;
-    
-    const response = await fetch(url, {
-      headers: getHeaders()
-    });
+    // Obtener TODOS los items, paginando hasta agotar el 'offset' de Airtable.
+    // ANTES: solo se pedía una página (máx. 100 registros de la API). Con la
+    // tabla ya en 268+ registros, cualquier ítem fuera de esa primera página
+    // desaparecía en cada recarga de la cotización, sin ningún error visible.
+    const baseUrl = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES_ITEMS)}`;
+    let allRecords: any[] = [];
+    let offset: string | undefined;
 
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}`);
-    }
+    do {
+      const url = offset ? `${baseUrl}?offset=${offset}` : baseUrl;
+      const response = await fetch(url, { headers: getHeaders() });
 
-    const data = await response.json();
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}`);
+      }
+
+      const page = await response.json();
+      allRecords = allRecords.concat(page.records || []);
+      offset = page.offset;
+    } while (offset);
+
+    const data = { records: allRecords };
     const items: CotizacionItem[] = [];
     
     // Filtrar en memoria por cotizacionId
