@@ -29,13 +29,6 @@ const BADGE_COLOR: Record<string, string> = {
   tour: 'bg-emerald-600', hotel: 'bg-teal-600', package: 'bg-amber-500', taxi: 'bg-yellow-500',
 };
 
-const FALLBACK_IMG: Record<string, string> = {
-  tour:    'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=80',
-  hotel:   'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80',
-  package: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80',
-  taxi:    'https://images.unsplash.com/photo-1549924231-f129b911e442?w=600&q=80',
-};
-
 // ── Helpers ─────────────────────────────────────────────────────
 function capturarPromotor(): string | null {
   // Leer ?ref= de la URL y persistir en sessionStorage
@@ -246,7 +239,7 @@ const CatalogPublico: React.FC<CatalogPublicoProps> = ({ onNavigate, onBack }) =
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filtered.map(service => {
               const cat = service.category || 'tour';
-              const img = service.image || FALLBACK_IMG[cat] || FALLBACK_IMG.tour;
+              const img = service.image || '';
               const precioFinal = getPrecioB2C(service);
               const badge = BADGE_COLOR[cat] || 'bg-gray-500';
               const catLabel = CATEGORIAS.find(c => c.id === cat)?.label || 'Servicio';
@@ -259,13 +252,15 @@ const CatalogPublico: React.FC<CatalogPublicoProps> = ({ onNavigate, onBack }) =
                 >
                   {/* Imagen */}
                   <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-100">
-                    <img
-                      src={img}
-                      alt={service.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover"
-                      onError={e => { (e.target as HTMLImageElement).src = FALLBACK_IMG[cat] || FALLBACK_IMG.tour; }}
-                    />
+                    {img && (
+                      <img
+                        src={img}
+                        alt={service.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    )}
                     <div className={`absolute top-3 left-3 ${badge} text-white px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide`}>
                       {catLabel}
                     </div>

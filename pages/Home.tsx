@@ -274,20 +274,15 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                      else onNavigate(AppRoute.TOUR_DETAIL, item);
                   }}
                 >
-                  <div className="w-full aspect-square relative overflow-hidden">
-                     <img 
-                       src={item.image} 
-                       alt={item.title} 
-                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                       onError={(e) => {
-                         const fallbacks: Record<string, string> = {
-                           tour: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80',
-                           hotel: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80',
-                           package: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80',
-                         };
-                         (e.target as HTMLImageElement).src = fallbacks[item.category] || fallbacks.tour;
-                       }} 
-                     />
+                  <div className="w-full aspect-square relative overflow-hidden bg-gray-100">
+                     {item.image && (
+                       <img 
+                         src={item.image} 
+                         alt={item.title} 
+                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} 
+                       />
+                     )}
                      <div className={`absolute top-2 right-2 ${getCategoryColor(item.category)} text-white px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm`}>
                         {getCategoryIcon(item.category)}
                         <span className="text-[8px] md:text-[10px] font-black uppercase">{getCategoryLabel(item.category)}</span>
@@ -356,15 +351,15 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                     className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col cursor-pointer border border-gray-100 hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95 group"
                     onClick={() => onNavigate(AppRoute.HOTEL_DETAIL, item)}
                   >
-                    <div className="w-full aspect-square relative overflow-hidden">
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80';
-                        }}
-                      />
+                    <div className="w-full aspect-square relative overflow-hidden bg-gray-100">
+                      {item.image && (
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      )}
                       <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
                         <Bed size={10} />
                         <span className="text-[8px] md:text-[10px] font-black uppercase">Hotel</span>

@@ -250,9 +250,6 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
                 const activo = selIds.includes(it.id);
                 const lleno = selIds.length >= LIMITE_EXPERIENCIAS && !activo;
                 const badgeColor = it.tabla === 'tours' ? 'bg-teal-600' : 'bg-orange-500';
-                const fallback = it.tabla === 'tours'
-                  ? 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=70'
-                  : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=70';
                 return (
                   <button
                     key={it.id}
@@ -272,13 +269,15 @@ const AdminEditorHome: React.FC<Props> = ({ onBack }) => {
                     )}
                     {/* Imagen */}
                     <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-100">
-                      <img
-                        src={it.imagen || fallback}
-                        alt={it.nombre}
-                        loading="lazy"
-                        className="w-full h-full object-cover"
-                        onError={e => { (e.target as HTMLImageElement).src = fallback; }}
-                      />
+                      {it.imagen && (
+                        <img
+                          src={it.imagen}
+                          alt={it.nombre}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      )}
                       <div className={`absolute top-2 left-2 ${badgeColor} text-white px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide`}>
                         {it.tabla === 'tours' ? '⚓ Tour' : '🏠 Aloj.'}
                       </div>

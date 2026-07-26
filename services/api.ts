@@ -43,7 +43,7 @@ const transformAirtableService = (record: any): Tour => {
       || fields.Imagen 
       || fields.image 
       || fields.Image 
-      || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400'),
+      || ''),
     gallery: (
       (Array.isArray(fields.Galeria) ? fields.Galeria.map((img: any) => img.url || img) : [])
       || (Array.isArray(fields.Fotos) ? fields.Fotos.map((img: any) => img.url || img) : [])

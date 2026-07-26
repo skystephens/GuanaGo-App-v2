@@ -77,7 +77,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
     ...data,
     id: data.id || crypto.randomUUID?.() || `hotel-${Date.now()}`,
     title: data.title || data.nombre || 'Alojamiento',
-    image: data.image || (gallery && gallery[0]) || 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800',
+    image: data.image || (gallery && gallery[0]) || '',
     description: data.description || data.descripcion || 'Descripción no disponible',
     price: data.price || 0,
     rating: data.rating || 4.5,
@@ -228,13 +228,15 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
     <div className="bg-gray-50 min-h-screen relative pb-64 font-sans overflow-x-hidden">
       {/* Header Image Section - Modern Floating Look */}
       <div className="relative px-4 pt-4">
-        <div className="relative h-[400px] w-full rounded-[40px] overflow-hidden shadow-2xl">
-          <img 
-            src={safeData.image} 
-            alt={safeData.title} 
-            className="w-full h-full object-cover transition-transform duration-700 hover:scale-110 cursor-pointer"
-            onClick={() => openLightbox(0)}
-          />
+        <div className="relative h-[400px] w-full rounded-[40px] overflow-hidden shadow-2xl bg-gray-200">
+          {safeData.image && (
+            <img 
+              src={safeData.image} 
+              alt={safeData.title} 
+              className="w-full h-full object-cover transition-transform duration-700 hover:scale-110 cursor-pointer"
+              onClick={() => openLightbox(0)}
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
           
           <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-10">
@@ -260,6 +262,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
             </div>
           </div>
 
+          {gallery.length > 0 && (
           <div className="absolute bottom-6 right-6">
             <button 
               onClick={() => openLightbox(0)}
@@ -268,6 +271,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
               <Maximize2 size={14} /> Ver {gallery.length} fotos
             </button>
           </div>
+          )}
         </div>
       </div>
 

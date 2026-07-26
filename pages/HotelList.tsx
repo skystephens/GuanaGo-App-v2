@@ -74,7 +74,7 @@ const HotelList: React.FC<HotelListProps> = ({ onBack, onNavigate }) => {
       hotels = hotels.map(hotel => ({
         ...hotel,
         // Asegurar que siempre hay una imagen principal
-        image: hotel.image || hotel.images?.[0] || hotel.gallery?.[0] || 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800',
+        image: hotel.image || hotel.images?.[0] || hotel.gallery?.[0] || '',
         // Asegurar que siempre hay un título
         title: hotel.title || hotel.nombre || hotel.name || 'Alojamiento',
         // Asegurar que siempre hay una descripción
