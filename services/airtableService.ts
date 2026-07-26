@@ -862,16 +862,9 @@ export async function getServices(category?: string) {
     const all = extractImageUrls(f);
     if (all.length > 0) return all[0];
 
-    // Fallbacks por categoría
-    const tipoServicio = (f['Tipo de Servicio'] || '').toLowerCase();
-    if (tipoServicio.includes('alojamiento') || tipoServicio.includes('hotel')) {
-      return 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800';
-    } else if (tipoServicio.includes('restaurante')) {
-      return 'https://images.unsplash.com/photo-1504674900926-04378db7bcb7?w=800';
-    } else if (tipoServicio.includes('traslado') || tipoServicio.includes('taxi')) {
-      return 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=800';
-    }
-    return 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800';
+    // Sin foto real en Airtable → no se rellena con una foto de stock genérica.
+    // El llamador debe manejar el string vacío ocultando el bloque de imagen.
+    return '';
   };
 
   return records.map(record => {

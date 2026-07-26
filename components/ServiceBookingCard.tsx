@@ -3,7 +3,6 @@ import { MapPin, Users, Calendar, ChevronRight, Plus, Minus, ShoppingCart } from
 import { useCart } from '../context/CartContext';
 import { Tour, AppRoute } from '../types';
 
-const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=600&q=80';
 
 interface ServiceBookingCardProps {
   service: Tour & {
@@ -63,7 +62,7 @@ const ServiceBookingCard: React.FC<ServiceBookingCardProps> = ({ service, onView
 
   const [added, setAdded] = useState(false);
 
-  const imageUrl = service.image || (service.images && service.images[0]) || FALLBACK_IMAGE;
+  const imageUrl = service.image || (service.images && service.images[0]) || '';
   const title = service.title || (service as any).nombre || 'Servicio';
   const location = service.location || 'San Andrés Isla';
   const capacity = service.capacity || (service as any).capacidad || '—';
@@ -119,13 +118,17 @@ const ServiceBookingCard: React.FC<ServiceBookingCardProps> = ({ service, onView
     <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 flex flex-col">
       {/* Image */}
       <div className="relative h-48 overflow-hidden bg-gray-100">
-        <img
-          src={imageUrl}
-          alt={title}
-          loading="lazy"
-          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={title}
+            loading="lazy"
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-100" aria-hidden="true" />
+        )}
         {/* Category badge */}
         <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-bold backdrop-blur-sm ${badge.color}`}>
           {badge.label}

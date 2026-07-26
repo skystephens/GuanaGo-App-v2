@@ -4,13 +4,6 @@ import { Tour } from '../types';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedTitle, getLocalizedDescription } from '../services/airtableService';
 
-const FALLBACK: Record<string, string> = {
-  tour:    'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=80',
-  hotel:   'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80',
-  package: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80',
-  taxi:    'https://images.unsplash.com/photo-1549924231-f129b911e442?w=600&q=80',
-};
-
 const BADGE: Record<string, { label: string; color: string }> = {
   tour:    { label: 'Tour',        color: 'bg-emerald-600' },
   hotel:   { label: 'Alojamiento', color: 'bg-teal-600'    },
@@ -43,8 +36,7 @@ const ServiceCatalogCard: React.FC<ServiceCatalogCardProps> = ({
   const imageUrl =
     service.image ||
     (service.images && service.images[0]) ||
-    FALLBACK[category] ||
-    FALLBACK.tour;
+    '';
   const title = getLocalizedTitle(service, i18n.language) || (service as any).nombre || 'Servicio turístico';
   const location = (service as any).location || 'San Andrés Isla';
   const price    = service.price || 0;
@@ -59,15 +51,19 @@ const ServiceCatalogCard: React.FC<ServiceCatalogCardProps> = ({
     >
       {/* ── Imagen ─────────────────────────────── */}
       <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-100">
-        <img
-          src={imageUrl}
-          alt={title}
-          loading="lazy"
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = FALLBACK[category] || FALLBACK.tour;
-          }}
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={title}
+            loading="lazy"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100" aria-hidden="true" />
+        )}
         {/* Badge categoría */}
         <div className={`absolute top-3 left-3 ${badge.color} text-white px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide shadow-sm`}>
           {badge.label}
