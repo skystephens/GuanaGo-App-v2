@@ -157,9 +157,11 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
   const svc = services.find(s => s.id === item.servicioId) as any;
 
   const isHotel = item.servicioTipo === 'hotel';
+  const itemOwnImages = (item.images && item.images.length > 0) ? item.images : [];
   const imgs: string[] = (svc?.images?.length > 0 ? svc.images
     : svc?.gallery?.length > 0 ? svc.gallery
-    : svc?.image ? [svc.image] : []) as string[];
+    : svc?.image ? [svc.image]
+    : itemOwnImages) as string[];
   const description: string = svc?.description || svc?.descripcion || '';
   const ubicacion: string   = svc?.ubicacion || '';
   const latLon: string      = svc?.latLon || '';

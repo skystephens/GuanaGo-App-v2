@@ -841,6 +841,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
 
       const newItem: Omit<CotizacionItem, 'id'> = {
         cotizacionId: selectedCotizacion.id,
+        servicioId: grupoHotelSel?.id,   // vincula al hotel real → tipo 'hotel' + fotos correctas al recargar
         servicioNombre: `${prefijo}${fila.tipo.trim()}`,
         servicioTipo: 'hotel',
         fecha: selectedCotizacion.fechaInicio,
