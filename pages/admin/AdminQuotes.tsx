@@ -441,8 +441,8 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   // Modo agregar item: catálogo o ítem libre
   const [addItemMode, setAddItemMode] = useState<'catalog' | 'free' | 'grupo'>('catalog');
   const [grupoNombreHotel, setGrupoNombreHotel] = useState('');
-  const [grupoFilas, setGrupoFilas] = useState<{ tipo: string; tarifaNoche: string; habitaciones: string; noches: string }[]>([
-    { tipo: '', tarifaNoche: '', habitaciones: '', noches: '1' },
+  const [grupoFilas, setGrupoFilas] = useState<{ tipo: string; tarifaNoche: string; pasajeros: string; noches: string }[]>([
+    { tipo: '', tarifaNoche: '', pasajeros: '', noches: '1' },
   ]);
   const [freeItemForm, setFreeItemForm] = useState<{
     nombre: string; tipo: CotizacionItem['servicioTipo']; valorUnitario: string; personas: string; cantidad: string;
@@ -823,18 +823,18 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const handleAddGrupoFilas = async () => {
     if (!selectedCotizacion) return;
     const filasValidas = grupoFilas.filter(f =>
-      f.tipo.trim() && parseFloat(f.tarifaNoche) > 0 && parseInt(f.habitaciones) > 0 && parseInt(f.noches) > 0
+      f.tipo.trim() && parseFloat(f.tarifaNoche) > 0 && parseInt(f.pasajeros) > 0 && parseInt(f.noches) > 0
     );
-    if (filasValidas.length === 0) { alert('Completa al menos una fila con tipo, tarifa/noche, #habitaciones y #noches'); return; }
+    if (filasValidas.length === 0) { alert('Completa al menos una fila con tipo, tarifa/noche, #pasajeros y #noches'); return; }
 
     const prefijo = grupoNombreHotel.trim() ? `${grupoNombreHotel.trim()} — ` : '';
     let updatedItems = [...items];
 
     for (const fila of filasValidas) {
       const valorUnitario = parseFloat(fila.tarifaNoche);
-      const habitaciones = parseInt(fila.habitaciones);
+      const pasajeros = parseInt(fila.pasajeros);
       const noches = parseInt(fila.noches);
-      const subtotal = valorUnitario * habitaciones * noches;
+      const subtotal = valorUnitario * pasajeros * noches;
 
       const newItem: Omit<CotizacionItem, 'id'> = {
         cotizacionId: selectedCotizacion.id,
@@ -843,7 +843,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
         fecha: selectedCotizacion.fechaInicio,
         adultos: 0, ninos: 0, bebes: 0,
         valorUnitario,
-        personas: habitaciones,   // #Pax se usa aquí como # de habitaciones
+        personas: pasajeros,   // tarifa por pasajero/noche × # pasajeros de ese tipo de habitación
         cantidad: noches,
         precioUnitario: valorUnitario,
         subtotal,
@@ -860,7 +860,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
     setSelectedCotizacion(prev => prev ? { ...prev, precioTotal: newTotal } : prev);
     setGrupoNombreHotel('');
-    setGrupoFilas([{ tipo: '', tarifaNoche: '', habitaciones: '', noches: '1' }]);
+    setGrupoFilas([{ tipo: '', tarifaNoche: '', pasajeros: '', noches: '1' }]);
   };
 
   const handleOpenEditHeader = () => {
@@ -2993,22 +2993,22 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                           </div>
                           <div className="grid grid-cols-3 gap-2">
                             <div>
-                              <label className="block text-[10px] text-gray-500 mb-1">Tarifa/noche</label>
+                              <label className="block text-[10px] text-gray-500 mb-1">Tarifa/pasajero/noche</label>
                               <input
                                 type="number"
                                 value={fila.tarifaNoche}
                                 onChange={e => setGrupoFilas(rows => rows.map((r, i) => i === idx ? { ...r, tarifaNoche: e.target.value } : r))}
-                                placeholder="549610"
+                                placeholder="274805"
                                 className="w-full px-2 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:border-teal-500 focus:outline-none"
                               />
                             </div>
                             <div>
-                              <label className="block text-[10px] text-gray-500 mb-1"># Habitaciones</label>
+                              <label className="block text-[10px] text-gray-500 mb-1"># Pasajeros</label>
                               <input
                                 type="number"
-                                value={fila.habitaciones}
-                                onChange={e => setGrupoFilas(rows => rows.map((r, i) => i === idx ? { ...r, habitaciones: e.target.value } : r))}
-                                placeholder="12"
+                                value={fila.pasajeros}
+                                onChange={e => setGrupoFilas(rows => rows.map((r, i) => i === idx ? { ...r, pasajeros: e.target.value } : r))}
+                                placeholder="24"
                                 className="w-full px-2 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:border-teal-500 focus:outline-none"
                               />
                             </div>
@@ -3022,9 +3022,10 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                               />
                             </div>
                           </div>
-                          {parseFloat(fila.tarifaNoche) > 0 && parseInt(fila.habitaciones) > 0 && parseInt(fila.noches) > 0 && (
+                          <p className="text-[9px] text-gray-500">Tarifa por pasajero (no por habitación) — si la habitación cuesta $549.610/noche entre 2, la tarifa por pasajero es $274.805</p>
+                          {parseFloat(fila.tarifaNoche) > 0 && parseInt(fila.pasajeros) > 0 && parseInt(fila.noches) > 0 && (
                             <p className="text-[10px] text-teal-400 text-right">
-                              = ${(parseFloat(fila.tarifaNoche) * parseInt(fila.habitaciones) * parseInt(fila.noches)).toLocaleString('es-CO')}
+                              = ${(parseFloat(fila.tarifaNoche) * parseInt(fila.pasajeros) * parseInt(fila.noches)).toLocaleString('es-CO')}
                             </p>
                           )}
                         </div>
@@ -3032,7 +3033,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                     </div>
 
                     <button
-                      onClick={() => setGrupoFilas(rows => [...rows, { tipo: '', tarifaNoche: '', habitaciones: '', noches: rows[rows.length - 1]?.noches || '1' }])}
+                      onClick={() => setGrupoFilas(rows => [...rows, { tipo: '', tarifaNoche: '', pasajeros: '', noches: rows[rows.length - 1]?.noches || '1' }])}
                       className="w-full py-2 border border-dashed border-gray-700 rounded-lg text-xs text-gray-400 hover:border-teal-500 hover:text-teal-400 transition-colors"
                     >
                       + Agregar tipo de habitación
@@ -3041,8 +3042,8 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                     {/* Preview del total combinado */}
                     {(() => {
                       const totalGrupo = grupoFilas.reduce((sum, f) => {
-                        const v = parseFloat(f.tarifaNoche) || 0, h = parseInt(f.habitaciones) || 0, n = parseInt(f.noches) || 0;
-                        return sum + (v * h * n);
+                        const v = parseFloat(f.tarifaNoche) || 0, p = parseInt(f.pasajeros) || 0, n = parseInt(f.noches) || 0;
+                        return sum + (v * p * n);
                       }, 0);
                       return totalGrupo > 0 ? (
                         <div className="flex justify-between items-center py-2 px-3 bg-gray-800 rounded-lg text-sm">
