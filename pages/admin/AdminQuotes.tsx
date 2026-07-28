@@ -439,7 +439,11 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   };
 
   // Modo agregar item: catálogo o ítem libre
-  const [addItemMode, setAddItemMode] = useState<'catalog' | 'free'>('catalog');
+  const [addItemMode, setAddItemMode] = useState<'catalog' | 'free' | 'grupo'>('catalog');
+  const [grupoNombreHotel, setGrupoNombreHotel] = useState('');
+  const [grupoFilas, setGrupoFilas] = useState<{ tipo: string; tarifaNoche: string; habitaciones: string; noches: string }[]>([
+    { tipo: '', tarifaNoche: '', habitaciones: '', noches: '1' },
+  ]);
   const [freeItemForm, setFreeItemForm] = useState<{
     nombre: string; tipo: CotizacionItem['servicioTipo']; valorUnitario: string; personas: string; cantidad: string;
     aerolinea: string; origen: string; destino: string; tipoVuelo: string; notasTiquete: string;
@@ -810,6 +814,53 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     } else {
       alert('❌ Error al agregar el ítem');
     }
+  };
+
+  // ── Modo Grupo/Hotel: agrega N ítems de hotel de una sola vez, uno por
+  // tipo de habitación, igual que la cotización que entrega un hotel
+  // (12 dobles + 3 cuádruples + 4 séxtuples, etc). No toca el catálogo ni
+  // el modo 'free' existente — es un atajo que arma varios ítems personalizados.
+  const handleAddGrupoFilas = async () => {
+    if (!selectedCotizacion) return;
+    const filasValidas = grupoFilas.filter(f =>
+      f.tipo.trim() && parseFloat(f.tarifaNoche) > 0 && parseInt(f.habitaciones) > 0 && parseInt(f.noches) > 0
+    );
+    if (filasValidas.length === 0) { alert('Completa al menos una fila con tipo, tarifa/noche, #habitaciones y #noches'); return; }
+
+    const prefijo = grupoNombreHotel.trim() ? `${grupoNombreHotel.trim()} — ` : '';
+    let updatedItems = [...items];
+
+    for (const fila of filasValidas) {
+      const valorUnitario = parseFloat(fila.tarifaNoche);
+      const habitaciones = parseInt(fila.habitaciones);
+      const noches = parseInt(fila.noches);
+      const subtotal = valorUnitario * habitaciones * noches;
+
+      const newItem: Omit<CotizacionItem, 'id'> = {
+        cotizacionId: selectedCotizacion.id,
+        servicioNombre: `${prefijo}${fila.tipo.trim()}`,
+        servicioTipo: 'hotel',
+        fecha: selectedCotizacion.fechaInicio,
+        adultos: 0, ninos: 0, bebes: 0,
+        valorUnitario,
+        personas: habitaciones,   // #Pax se usa aquí como # de habitaciones
+        cantidad: noches,
+        precioUnitario: valorUnitario,
+        subtotal,
+        esPersonalizado: true,
+        status: 'disponible',
+        conflictos: []
+      };
+      const created = await addCotizacionItem(newItem);
+      if (created) updatedItems = [...updatedItems, created];
+    }
+
+    setItems(updatedItems);
+    const newTotal = updatedItems.reduce((sum, i) => sum + i.subtotal, 0);
+    await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
+    setSelectedCotizacion(prev => prev ? { ...prev, precioTotal: newTotal } : prev);
+    setGrupoNombreHotel('');
+    setGrupoFilas([{ tipo: '', tarifaNoche: '', habitaciones: '', noches: '1' }]);
   };
 
   const handleOpenEditHeader = () => {
@@ -2595,7 +2646,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
               <div className="bg-gray-900 p-6 rounded-xl">
                 <h3 className="text-xl font-semibold mb-4">Agregar Item</h3>
 
-                {/* Tabs Catálogo / Ítem Libre */}
+                {/* Tabs Catálogo / Ítem Libre / Grupo */}
                 <div className="flex gap-1 mb-4 bg-gray-800 p-1 rounded-lg">
                   <button
                     onClick={() => setAddItemMode('catalog')}
@@ -2612,6 +2663,15 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                     }`}
                   >
                     Ítem Libre
+                  </button>
+                  <button
+                    onClick={() => setAddItemMode('grupo')}
+                    title="Para hoteles/grupos grandes: agrega varios tipos de habitación de una vez"
+                    className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${
+                      addItemMode === 'grupo' ? 'bg-teal-600 text-white' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    🏨 Grupo
                   </button>
                 </div>
 
@@ -2685,7 +2745,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                       )}
                     </div>
                   </>
-                ) : (
+                ) : addItemMode === 'free' ? (
                   /* ── ÍTEM LIBRE ── */
                   <div className="space-y-3">
                     {/* Tipo primero */}
@@ -2890,6 +2950,114 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                     >
                       <Plus className="w-4 h-4" />
                       {freeItemForm.tipo === 'tiquete' ? 'Agregar Tiquete Aéreo' : 'Agregar Ítem'}
+                    </button>
+                  </div>
+                ) : (
+                  /* ── GRUPO / HOTEL: desglose por tipo de habitación ──
+                     Para cotizaciones de hoteles a grupos grandes (delegaciones,
+                     equipos, eventos) donde el hotel entrega su propia tarifa
+                     por tipo de habitación. Crea un ítem por fila, igual que
+                     la tabla que manda el hotel — no afecta Catálogo ni Ítem Libre. */
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Nombre del hotel (opcional, se antepone a cada fila)</label>
+                      <input
+                        type="text"
+                        value={grupoNombreHotel}
+                        onChange={e => setGrupoNombreHotel(e.target.value)}
+                        placeholder="Ej: Hotel Las Americas"
+                        className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-teal-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      {grupoFilas.map((fila, idx) => (
+                        <div key={idx} className="bg-gray-800/60 border border-gray-700 rounded-lg p-2.5 space-y-2">
+                          <div className="flex gap-2 items-start">
+                            <input
+                              type="text"
+                              value={fila.tipo}
+                              onChange={e => setGrupoFilas(rows => rows.map((r, i) => i === idx ? { ...r, tipo: e.target.value } : r))}
+                              placeholder="Habitación doble/ 1 cama/ 2 personas"
+                              className="flex-1 px-2.5 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:border-teal-500 focus:outline-none"
+                            />
+                            {grupoFilas.length > 1 && (
+                              <button
+                                onClick={() => setGrupoFilas(rows => rows.filter((_, i) => i !== idx))}
+                                className="p-2 text-gray-500 hover:text-red-400 transition-colors"
+                                title="Quitar fila"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <label className="block text-[10px] text-gray-500 mb-1">Tarifa/noche</label>
+                              <input
+                                type="number"
+                                value={fila.tarifaNoche}
+                                onChange={e => setGrupoFilas(rows => rows.map((r, i) => i === idx ? { ...r, tarifaNoche: e.target.value } : r))}
+                                placeholder="549610"
+                                className="w-full px-2 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:border-teal-500 focus:outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] text-gray-500 mb-1"># Habitaciones</label>
+                              <input
+                                type="number"
+                                value={fila.habitaciones}
+                                onChange={e => setGrupoFilas(rows => rows.map((r, i) => i === idx ? { ...r, habitaciones: e.target.value } : r))}
+                                placeholder="12"
+                                className="w-full px-2 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:border-teal-500 focus:outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] text-gray-500 mb-1"># Noches</label>
+                              <input
+                                type="number"
+                                value={fila.noches}
+                                onChange={e => setGrupoFilas(rows => rows.map((r, i) => i === idx ? { ...r, noches: e.target.value } : r))}
+                                className="w-full px-2 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:border-teal-500 focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                          {parseFloat(fila.tarifaNoche) > 0 && parseInt(fila.habitaciones) > 0 && parseInt(fila.noches) > 0 && (
+                            <p className="text-[10px] text-teal-400 text-right">
+                              = ${(parseFloat(fila.tarifaNoche) * parseInt(fila.habitaciones) * parseInt(fila.noches)).toLocaleString('es-CO')}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => setGrupoFilas(rows => [...rows, { tipo: '', tarifaNoche: '', habitaciones: '', noches: rows[rows.length - 1]?.noches || '1' }])}
+                      className="w-full py-2 border border-dashed border-gray-700 rounded-lg text-xs text-gray-400 hover:border-teal-500 hover:text-teal-400 transition-colors"
+                    >
+                      + Agregar tipo de habitación
+                    </button>
+
+                    {/* Preview del total combinado */}
+                    {(() => {
+                      const totalGrupo = grupoFilas.reduce((sum, f) => {
+                        const v = parseFloat(f.tarifaNoche) || 0, h = parseInt(f.habitaciones) || 0, n = parseInt(f.noches) || 0;
+                        return sum + (v * h * n);
+                      }, 0);
+                      return totalGrupo > 0 ? (
+                        <div className="flex justify-between items-center py-2 px-3 bg-gray-800 rounded-lg text-sm">
+                          <span className="text-gray-400">Total del desglose</span>
+                          <span className="font-bold text-teal-400">${totalGrupo.toLocaleString('es-CO')}</span>
+                        </div>
+                      ) : null;
+                    })()}
+
+                    <button
+                      onClick={handleAddGrupoFilas}
+                      className="w-full py-3 bg-teal-600 hover:bg-teal-700 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Agregar {grupoFilas.filter(f => f.tipo.trim() && parseFloat(f.tarifaNoche) > 0).length || ''} ítems a la cotización
                     </button>
                   </div>
                 )}
