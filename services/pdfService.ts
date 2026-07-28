@@ -233,7 +233,9 @@ export function generateQuoteHTML(
                 <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11.5px;color:#6b7b74;">
                   <span>📅 ${fechaDisplay}${fechaFinDisplay ? ` → ${fechaFinDisplay}` : ''}</span>
                   ${item.horarioInicio && item.horarioFin ? `<span>🕐 ${item.horarioInicio}–${item.horarioFin}</span>` : ''}
-                  <span>👥 ${itemPax} persona${itemPax !== 1 ? 's' : ''}</span>
+                  ${item.servicioTipo === 'hotel'
+                    ? `<span>🛏️ ${itemPax} habitación${itemPax !== 1 ? 'es' : ''}</span>${item.cantidad > 1 ? `<span>🌙 ${item.cantidad} noches</span>` : ''}`
+                    : `<span>👥 ${itemPax} persona${itemPax !== 1 ? 's' : ''}</span>`}
                 </div>
                 ${description ? `<div style="margin-top:8px;font-size:12.5px;color:#6b7b74;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">${description}</div>` : ''}
               </div>
@@ -260,7 +262,9 @@ export function generateQuoteHTML(
               <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:13px;color:#6b7b74;margin-bottom:12px;">
                 <span>📅 ${fechaDisplay}${fechaFinDisplay ? ` → ${fechaFinDisplay}` : ''}</span>
                 ${item.horarioInicio && item.horarioFin ? `<span>🕐 ${item.horarioInicio}–${item.horarioFin}</span>` : ''}
-                <span>👥 ${itemPax} persona${itemPax !== 1 ? 's' : ''}</span>
+                ${item.servicioTipo === 'hotel'
+                  ? `<span>🛏️ ${itemPax} habitación${itemPax !== 1 ? 'es' : ''}</span>${item.cantidad > 1 ? `<span>🌙 ${item.cantidad} noches</span>` : ''}`
+                  : `<span>👥 ${itemPax} persona${itemPax !== 1 ? 's' : ''}</span>`}
               </div>
               ${description ? `<p style="margin:0;font-size:14px;color:#6b7b74;line-height:1.65;">${description}</p>` : ''}
               <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e6ece9;display:flex;justify-content:space-between;align-items:center;">
