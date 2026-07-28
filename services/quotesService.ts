@@ -9,6 +9,18 @@ const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY || '';
 const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
 const AIRTABLE_API_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
 
+const parseImagenesField = (raw: any): string[] => {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map((a: any) => a.url || '').filter(Boolean);
+  if (typeof raw === 'string') {
+    if (raw.trim().startsWith('[')) {
+      try { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) return parsed.filter(Boolean); } catch {}
+    }
+    return raw.split(',').map((u: string) => u.trim()).filter((u: string) => u.startsWith('http'));
+  }
+  return [];
+};
+
 const TABLES = {
   COTIZACIONES: 'CotizacionesGG',
   COTIZACIONES_ITEMS: 'cotizaciones_Items',
@@ -283,6 +295,7 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
           precioUnitario: valorGuardado,
           subtotal,
           esPersonalizado,
+          images: parseImagenesField(f['Imagenes']),
           status: 'disponible',
           conflictos: []
         });
@@ -675,14 +688,7 @@ function mapRecordToCotizacionItem(record: any): CotizacionItem {
     precioEditado: undefined,
     subtotal,
     esPersonalizado: f['Es Personalizado'] === true,
-    images: (() => {
-      const raw = f['Imagenes'];
-      if (!raw) return [];
-      // Airtable Attachment field devuelve array de objetos {id, url, filename, ...}
-      if (Array.isArray(raw)) return raw.map((a: any) => a.url || '').filter(Boolean);
-      // Retrocompat: campo de texto con JSON string (registros viejos)
-      try { const parsed = JSON.parse(raw); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
-    })(),
+    images: parseImagenesField(f['Imagenes']),
     status: 'disponible' as QuoteItemStatus,
     conflictos: []
   };
@@ -703,11 +709,12 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
   // Ítem libre (no vinculado al catálogo)
   if (item.esPersonalizado !== undefined) fields['Es Personalizado'] = item.esPersonalizado;
 
-  // Imágenes adjuntas (Attachment field en Airtable — requiere [{url:"https://..."}])
-  // Solo se envían URLs públicas; las data URIs base64 no son aceptadas por Airtable.
+  // Imágenes adjuntas (campo de texto en Airtable — multilineText, NO Attachment).
+  // Se guardan como URLs separadas por coma, igual que ImagenWP en otras tablas.
+  // Solo se envían URLs públicas; las data URIs base64 no son aceptadas.
   if (item.images && item.images.length > 0) {
     const publicUrls = item.images.filter(u => u.startsWith('http'));
-    if (publicUrls.length > 0) fields['Imagenes'] = publicUrls.map(url => ({ url }));
+    if (publicUrls.length > 0) fields['Imagenes'] = publicUrls.join(', ');
   }
 
   // Links (solo si existen)
