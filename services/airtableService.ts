@@ -1098,8 +1098,7 @@ export async function getAlojamientosSAI(options?: { publishedOnly?: boolean }):
       const allImages: string[] = extractAllImageUrls(f);
       const combined: string[] = [...new Set([...wpUrls, ...allImages])];
 
-      const fallback = 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800';
-      const primaryImage = combined[0] || fallback;
+      const primaryImage = combined[0] || '';
 
       return {
         id: record.id,
@@ -1107,8 +1106,8 @@ export async function getAlojamientosSAI(options?: { publishedOnly?: boolean }):
         name:  f['Servicio'] || f['Nombre alternativo'] || f['Nombre'] || 'Sin nombre',
         category: 'hotel' as const,
         image:   primaryImage,
-        images:  combined.length > 0 ? combined : [fallback],
-        gallery: combined.length > 0 ? combined : [fallback],
+        images:  combined,
+        gallery: combined,
         description: f['Descripcion'] || f['Itinerario'] || '',
         descripcion: f['Descripcion'] || f['Itinerario'] || '',
         active: true,

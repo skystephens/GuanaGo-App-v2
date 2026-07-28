@@ -441,6 +441,8 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   // Modo agregar item: catálogo o ítem libre
   const [addItemMode, setAddItemMode] = useState<'catalog' | 'free' | 'grupo'>('catalog');
   const [grupoNombreHotel, setGrupoNombreHotel] = useState('');
+  const [grupoHotelSel, setGrupoHotelSel] = useState<{ id: string; title: string; images: string[] } | null>(null);
+  const [grupoBuscando, setGrupoBuscando] = useState(false);
   const [grupoFilas, setGrupoFilas] = useState<{ tipo: string; tarifaNoche: string; pasajeros: string; noches: string }[]>([
     { tipo: '', tarifaNoche: '', pasajeros: '', noches: '1' },
   ]);
@@ -828,6 +830,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     if (filasValidas.length === 0) { alert('Completa al menos una fila con tipo, tarifa/noche, #pasajeros y #noches'); return; }
 
     const prefijo = grupoNombreHotel.trim() ? `${grupoNombreHotel.trim()} — ` : '';
+    const fotosHotel = grupoHotelSel?.images?.slice(0, 4);
     let updatedItems = [...items];
 
     for (const fila of filasValidas) {
@@ -848,6 +851,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
         precioUnitario: valorUnitario,
         subtotal,
         esPersonalizado: true,
+        images: fotosHotel && fotosHotel.length > 0 ? fotosHotel : undefined,
         status: 'disponible',
         conflictos: []
       };
@@ -860,6 +864,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
     setSelectedCotizacion(prev => prev ? { ...prev, precioTotal: newTotal } : prev);
     setGrupoNombreHotel('');
+    setGrupoHotelSel(null);
     setGrupoFilas([{ tipo: '', tarifaNoche: '', pasajeros: '', noches: '1' }]);
   };
 
@@ -2959,15 +2964,62 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                      por tipo de habitación. Crea un ítem por fila, igual que
                      la tabla que manda el hotel — no afecta Catálogo ni Ítem Libre. */
                   <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-1.5 font-semibold">Nombre del hotel (opcional, se antepone a cada fila)</label>
+                    <div className="relative">
+                      <label className="block text-xs text-gray-400 mb-1.5 font-semibold">
+                        Hotel del catálogo <span className="text-gray-500 font-normal">(escribe para buscar y trae sus fotos automáticamente)</span>
+                      </label>
                       <input
                         type="text"
                         value={grupoNombreHotel}
-                        onChange={e => setGrupoNombreHotel(e.target.value)}
+                        onChange={e => {
+                          setGrupoNombreHotel(e.target.value);
+                          setGrupoHotelSel(null); // si edita el texto, se rompe el vínculo hasta que seleccione de nuevo
+                          setGrupoBuscando(e.target.value.trim().length > 1);
+                        }}
+                        onBlur={() => setTimeout(() => setGrupoBuscando(false), 150)}
+                        onFocus={() => setGrupoBuscando(grupoNombreHotel.trim().length > 1)}
                         placeholder="Ej: Hotel Las Americas"
-                        className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-teal-500 focus:outline-none"
+                        className={`w-full px-3 py-2.5 bg-gray-800 border rounded-lg text-white text-sm focus:outline-none ${
+                          grupoHotelSel ? 'border-teal-500' : 'border-gray-700 focus:border-teal-500'
+                        }`}
                       />
+                      {grupoHotelSel && (
+                        <p className="text-[10px] text-teal-400 mt-1">
+                          ✓ Vinculado a "{grupoHotelSel.title}" — {grupoHotelSel.images.length} foto{grupoHotelSel.images.length !== 1 ? 's' : ''} se agregarán a cada ítem
+                        </p>
+                      )}
+                      {!grupoHotelSel && grupoNombreHotel.trim() && (
+                        <p className="text-[10px] text-gray-500 mt-1">Sin vincular — este ítem saldrá sin fotos en el PDF</p>
+                      )}
+
+                      {grupoBuscando && (() => {
+                        const q = grupoNombreHotel.trim().toLowerCase();
+                        const matches = alojamientos.filter((a: any) => (a.title || a.name || '').toLowerCase().includes(q)).slice(0, 6);
+                        if (matches.length === 0) return null;
+                        return (
+                          <div className="absolute z-20 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-56 overflow-y-auto">
+                            {matches.map((a: any) => (
+                              <button
+                                key={a.id}
+                                onClick={() => {
+                                  const imgs: string[] = (a.images && a.images.length > 0) ? a.images : (a.image ? [a.image] : []);
+                                  setGrupoNombreHotel(a.title || a.name);
+                                  setGrupoHotelSel({ id: a.id, title: a.title || a.name, images: imgs });
+                                  setGrupoBuscando(false);
+                                }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-700 text-left transition-colors"
+                              >
+                                {a.image ? (
+                                  <img src={a.image} alt="" className="w-9 h-9 rounded-md object-cover shrink-0" />
+                                ) : (
+                                  <div className="w-9 h-9 rounded-md bg-gray-700 shrink-0" />
+                                )}
+                                <span className="text-xs text-white truncate">{a.title || a.name}</span>
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div className="space-y-2">
