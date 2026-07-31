@@ -216,3 +216,85 @@ export async function createAbonoCliente(data: { referencia: string; monto: numb
   if (!response.ok) throw new Error(`Error ${response.status} creando abono de cliente`);
   return response.json();
 }
+
+export async function updateReservaGrupo(id: string, data: Partial<ReservaGrupo>): Promise<any> {
+  const fields: Record<string, any> = {};
+  if (data.cliente !== undefined) fields['Cliente'] = data.cliente;
+  if (data.hotel !== undefined) fields['Hotel'] = data.hotel;
+  if (data.totalPax !== undefined) fields['Total_Pax'] = data.totalPax;
+  if (data.fecha !== undefined) fields['Fecha'] = data.fecha;
+  if (data.totalReservaInicial !== undefined) fields['Total_Reserva_Inicial'] = data.totalReservaInicial;
+  if (data.nochesAdicionales !== undefined) fields['Noches_Adicionales'] = data.nochesAdicionales;
+  if (data.costoNocheAdicional !== undefined) fields['Costo_Noche_Adicional'] = data.costoNocheAdicional;
+  if (data.comisionExtra !== undefined) fields['Comision_Extra'] = data.comisionExtra;
+  if (data.totalReservaFinal !== undefined) fields['Total_Reserva_Final'] = data.totalReservaFinal;
+  if (data.totalOperador !== undefined) fields['Total_Operador'] = data.totalOperador;
+  if (data.comisionGuia !== undefined) fields['Comision_Guia'] = data.comisionGuia;
+  if (data.notas !== undefined) fields['Notas'] = data.notas;
+  if (data.habitaciones !== undefined) fields['Habitaciones'] = data.habitaciones;
+  // Nota: Cliente_Hotel (el campo que usan Pagos.Referencia y Pago_proveedores.Reserva_Grupo
+  // para enlazar) NUNCA se actualiza aquí a propósito — cambiarlo rompería el enlace con
+  // los abonos/pagos ya registrados contra el texto anterior.
+
+  const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.RESERVAS_GRUPO)}/${id}`, {
+    method: 'PATCH',
+    headers: getHeaders(),
+    body: JSON.stringify({ fields, typecast: true }),
+  });
+  if (!response.ok) throw new Error(`Error ${response.status} actualizando reserva`);
+  return response.json();
+}
+
+export async function deleteReservaGrupo(id: string): Promise<void> {
+  const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.RESERVAS_GRUPO)}/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  if (!response.ok) throw new Error(`Error ${response.status} borrando reserva`);
+}
+
+export async function updateAbonoCliente(id: string, data: { monto?: number; metodoPago?: string; fechaPago?: string }): Promise<any> {
+  const fields: Record<string, any> = {};
+  if (data.monto !== undefined) fields['Monto'] = data.monto;
+  if (data.metodoPago !== undefined) fields['Metodo_Pago'] = data.metodoPago;
+  if (data.fechaPago !== undefined) fields['Fecha_Pago'] = data.fechaPago;
+
+  const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PAGOS)}/${id}`, {
+    method: 'PATCH',
+    headers: getHeaders(),
+    body: JSON.stringify({ fields, typecast: true }),
+  });
+  if (!response.ok) throw new Error(`Error ${response.status} actualizando abono`);
+  return response.json();
+}
+
+export async function deleteAbonoCliente(id: string): Promise<void> {
+  const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PAGOS)}/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  if (!response.ok) throw new Error(`Error ${response.status} borrando abono`);
+}
+
+export async function updatePagoProveedor(id: string, data: { montoPagado?: number; fechaPago?: string; notas?: string }): Promise<any> {
+  const fields: Record<string, any> = {};
+  if (data.montoPagado !== undefined) fields['Monto_Pagado'] = data.montoPagado;
+  if (data.fechaPago !== undefined) fields['Fecha_Pago'] = data.fechaPago;
+  if (data.notas !== undefined) fields['Notas'] = data.notas;
+
+  const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PAGO_PROVEEDORES)}/${id}`, {
+    method: 'PATCH',
+    headers: getHeaders(),
+    body: JSON.stringify({ fields, typecast: true }),
+  });
+  if (!response.ok) throw new Error(`Error ${response.status} actualizando pago a proveedor`);
+  return response.json();
+}
+
+export async function deletePagoProveedor(id: string): Promise<void> {
+  const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PAGO_PROVEEDORES)}/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  if (!response.ok) throw new Error(`Error ${response.status} borrando pago a proveedor`);
+}

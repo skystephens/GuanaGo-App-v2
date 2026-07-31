@@ -5,18 +5,23 @@
  * Tablas: Reservas_grupo, Pago_proveedores, Pagos (reusada para abonos de cliente)
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   ArrowLeft, Loader2, Plus, X, ChevronDown, ChevronUp, Wallet, Building2,
-  TrendingUp, TrendingDown, Users, Bed,
+  TrendingUp, TrendingDown, Users, Bed, Pencil, Trash2, ArrowUpDown,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import {
-  getFinanzas, createReservaGrupo, createPagoProveedor, createAbonoCliente,
-  ReservaGrupo,
+  getFinanzas, createReservaGrupo, updateReservaGrupo, deleteReservaGrupo,
+  createPagoProveedor, updatePagoProveedor, deletePagoProveedor,
+  createAbonoCliente, updateAbonoCliente, deleteAbonoCliente,
+  ReservaGrupo, AbonoClienteItem, PagoProveedorItem,
 } from '../../services/financeService';
 
 const fmtCOP = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
+const fmtFecha = (d: string) => d ? new Date(d + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+
+type OrdenTipo = 'fecha' | 'alfabetico' | 'saldoCliente' | 'saldoOperador';
 
 interface Props {
   onBack: () => void;
@@ -26,8 +31,12 @@ interface Props {
 export default function AdminFinanzas({ onBack }: Props) {
   const [loading, setLoading] = useState(true);
   const [reservas, setReservas] = useState<ReservaGrupo[]>([]);
+  const [abonos, setAbonos] = useState<AbonoClienteItem[]>([]);
+  const [pagosProv, setPagosProv] = useState<PagoProveedorItem[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [orden, setOrden] = useState<OrdenTipo>('fecha');
   const [modalNueva, setModalNueva] = useState(false);
+  const [modalEditar, setModalEditar] = useState<ReservaGrupo | null>(null);
   const [modalAbono, setModalAbono] = useState<ReservaGrupo | null>(null);
   const [modalPagoProv, setModalPagoProv] = useState<ReservaGrupo | null>(null);
 
@@ -36,6 +45,8 @@ export default function AdminFinanzas({ onBack }: Props) {
     try {
       const data = await getFinanzas();
       setReservas(data.reservas);
+      setAbonos(data.abonosClientes);
+      setPagosProv(data.pagosProveedores);
     } catch (e) {
       console.error('[AdminFinanzas] Error cargando:', e);
     } finally {
@@ -44,6 +55,48 @@ export default function AdminFinanzas({ onBack }: Props) {
   };
 
   useEffect(() => { cargar(); }, []);
+
+  const reservasOrdenadas = useMemo(() => {
+    const copia = [...reservas];
+    switch (orden) {
+      case 'alfabetico': return copia.sort((a, b) => (a.cliente || '').localeCompare(b.cliente || ''));
+      case 'saldoCliente': return copia.sort((a, b) => b.saldoCliente - a.saldoCliente);
+      case 'saldoOperador': return copia.sort((a, b) => b.saldoOperador - a.saldoOperador);
+      case 'fecha':
+      default: return copia.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+    }
+  }, [reservas, orden]);
+
+  const handleEliminarReserva = async (r: ReservaGrupo) => {
+    if (!confirm(`¿Eliminar la reserva de ${r.cliente} — ${r.hotel}? Esto no borra los abonos/pagos ya registrados, solo la reserva.`)) return;
+    try { await deleteReservaGrupo(r.id); setModalEditar(null); cargar(); } catch (e) { alert('Error: ' + e); }
+  };
+
+  const handleEliminarAbono = async (a: AbonoClienteItem) => {
+    if (!confirm(`¿Eliminar este abono de ${fmtCOP(a.monto)}?`)) return;
+    try { await deleteAbonoCliente(a.id); cargar(); } catch (e) { alert('Error: ' + e); }
+  };
+
+  const handleEliminarPagoProv = async (p: PagoProveedorItem) => {
+    if (!confirm(`¿Eliminar este pago de ${fmtCOP(p.montoPagado)}?`)) return;
+    try { await deletePagoProveedor(p.id); cargar(); } catch (e) { alert('Error: ' + e); }
+  };
+
+  const handleEditarMontoAbono = async (a: AbonoClienteItem) => {
+    const nuevo = prompt('Nuevo monto del abono:', String(a.monto));
+    if (nuevo === null) return;
+    const monto = parseFloat(nuevo);
+    if (!monto || monto <= 0) { alert('Monto inválido'); return; }
+    try { await updateAbonoCliente(a.id, { monto }); cargar(); } catch (e) { alert('Error: ' + e); }
+  };
+
+  const handleEditarMontoPagoProv = async (p: PagoProveedorItem) => {
+    const nuevo = prompt('Nuevo monto del pago:', String(p.montoPagado));
+    if (nuevo === null) return;
+    const monto = parseFloat(nuevo);
+    if (!monto || monto <= 0) { alert('Monto inválido'); return; }
+    try { await updatePagoProveedor(p.id, { montoPagado: monto }); cargar(); } catch (e) { alert('Error: ' + e); }
+  };
 
   const totalPorCobrar = reservas.reduce((s, r) => s + Math.max(0, r.saldoCliente), 0);
   const totalPorPagar = reservas.reduce((s, r) => s + Math.max(0, r.saldoOperador), 0);
@@ -86,26 +139,51 @@ export default function AdminFinanzas({ onBack }: Props) {
         </div>
       </div>
 
+      {/* Orden */}
+      <div className="px-4 pt-4 flex items-center gap-2">
+        <ArrowUpDown size={13} className="text-gray-500" />
+        <span className="text-[11px] text-gray-500">Ordenar:</span>
+        <div className="flex gap-1.5 flex-wrap">
+          {([
+            ['fecha', 'Fecha'], ['alfabetico', 'A-Z'],
+            ['saldoCliente', 'Saldo cliente'], ['saldoOperador', 'Saldo operador'],
+          ] as [OrdenTipo, string][]).map(([val, label]) => (
+            <button
+              key={val}
+              onClick={() => setOrden(val)}
+              className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors ${
+                orden === val ? 'bg-emerald-600 text-white' : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-white'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Lista de reservas */}
-      <div className="px-4 pt-4 space-y-2">
+      <div className="px-4 pt-3 space-y-2">
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="animate-spin text-gray-600" size={28} /></div>
-        ) : reservas.length === 0 ? (
+        ) : reservasOrdenadas.length === 0 ? (
           <div className="text-center py-16 text-gray-600 text-sm">No hay reservas de grupo todavía.</div>
-        ) : reservas.map(r => (
+        ) : reservasOrdenadas.map(r => {
+          const abonosReserva = abonos.filter(a => a.referencia === r.clienteHotel);
+          const pagosReserva = pagosProv.filter(p => p.reservaGrupo === r.clienteHotel);
+          return (
           <div key={r.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-            <button
-              onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}
-              className="w-full text-left px-4 py-3 flex items-center justify-between gap-3"
-            >
-              <div className="min-w-0">
-                <p className="font-bold text-sm truncate">{r.cliente || r.clienteHotel}</p>
-                <p className="text-[11px] text-gray-500 flex items-center gap-2">
-                  <Building2 size={11} /> {r.hotel}
-                  {r.totalPax > 0 && <><Users size={11} /> {r.totalPax} pax</>}
-                </p>
-              </div>
-              <div className="flex items-center gap-4 shrink-0">
+            <div className="w-full text-left px-4 py-3 flex items-center justify-between gap-3">
+              <button onClick={() => setExpandedId(expandedId === r.id ? null : r.id)} className="flex-1 min-w-0 text-left flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-bold text-sm truncate">{r.cliente || r.clienteHotel}</p>
+                  <p className="text-[11px] text-gray-500 flex items-center gap-2">
+                    <Building2 size={11} /> {r.hotel}
+                    {r.totalPax > 0 && <><Users size={11} /> {r.totalPax} pax</>}
+                    {r.fecha && <span className="text-gray-600">· {fmtFecha(r.fecha)}</span>}
+                  </p>
+                </div>
+              </button>
+              <div className="flex items-center gap-3 shrink-0">
                 <div className="text-right">
                   <p className={`text-xs font-bold ${r.saldoCliente > 0 ? 'text-cyan-400' : 'text-gray-600'}`}>{fmtCOP(r.saldoCliente)}</p>
                   <p className="text-[9px] text-gray-600">saldo cliente</p>
@@ -114,9 +192,14 @@ export default function AdminFinanzas({ onBack }: Props) {
                   <p className={`text-xs font-bold ${r.saldoOperador > 0 ? 'text-red-400' : 'text-gray-600'}`}>{fmtCOP(r.saldoOperador)}</p>
                   <p className="text-[9px] text-gray-600">saldo operador</p>
                 </div>
-                {expandedId === r.id ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}
+                <button onClick={() => setModalEditar(r)} className="p-1.5 text-gray-500 hover:text-white" title="Editar reserva">
+                  <Pencil size={14} />
+                </button>
+                <button onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}>
+                  {expandedId === r.id ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}
+                </button>
               </div>
-            </button>
+            </div>
 
             {expandedId === r.id && (
               <div className="px-4 pb-4 border-t border-gray-800 pt-3 space-y-3">
@@ -135,6 +218,21 @@ export default function AdminFinanzas({ onBack }: Props) {
                       )}
                       <div className="flex justify-between font-bold"><span>Saldo</span><span className={r.saldoCliente > 0 ? 'text-cyan-400' : 'text-gray-600'}>{fmtCOP(r.saldoCliente)}</span></div>
                     </div>
+
+                    {abonosReserva.length > 0 && (
+                      <div className="mt-2 space-y-1 border-t border-gray-800 pt-2">
+                        {abonosReserva.map(a => (
+                          <div key={a.id} className="flex items-center justify-between text-[10px] text-gray-400">
+                            <span>{fmtFecha(a.fechaPago)} · {a.metodoPago || 'Sin método'}</span>
+                            <div className="flex items-center gap-1.5">
+                              <button onClick={() => handleEditarMontoAbono(a)} className="hover:text-white font-bold">{fmtCOP(a.monto)}</button>
+                              <button onClick={() => handleEliminarAbono(a)} className="text-red-500/70 hover:text-red-400"><Trash2 size={11} /></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <button
                       onClick={() => setModalAbono(r)}
                       className="w-full mt-2 py-1.5 bg-cyan-900/40 hover:bg-cyan-900/70 border border-cyan-800 rounded-lg text-[10px] font-bold text-cyan-300"
@@ -150,6 +248,21 @@ export default function AdminFinanzas({ onBack }: Props) {
                       <div className="flex justify-between"><span className="text-gray-500">Pagado</span><span className="text-emerald-400">{fmtCOP(r.pagadoOperador)}</span></div>
                       <div className="flex justify-between font-bold"><span>Saldo</span><span className={r.saldoOperador > 0 ? 'text-red-400' : 'text-gray-600'}>{fmtCOP(r.saldoOperador)}</span></div>
                     </div>
+
+                    {pagosReserva.length > 0 && (
+                      <div className="mt-2 space-y-1 border-t border-gray-800 pt-2">
+                        {pagosReserva.map(p => (
+                          <div key={p.id} className="flex items-center justify-between text-[10px] text-gray-400">
+                            <span>{fmtFecha(p.fechaPago)}</span>
+                            <div className="flex items-center gap-1.5">
+                              <button onClick={() => handleEditarMontoPagoProv(p)} className="hover:text-white font-bold">{fmtCOP(p.montoPagado)}</button>
+                              <button onClick={() => handleEliminarPagoProv(p)} className="text-red-500/70 hover:text-red-400"><Trash2 size={11} /></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <button
                       onClick={() => setModalPagoProv(r)}
                       className="w-full mt-2 py-1.5 bg-red-900/30 hover:bg-red-900/60 border border-red-900 rounded-lg text-[10px] font-bold text-red-300"
@@ -166,10 +279,19 @@ export default function AdminFinanzas({ onBack }: Props) {
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {modalNueva && <ModalNuevaReserva onClose={() => setModalNueva(false)} onSaved={() => { setModalNueva(false); cargar(); }} />}
+      {modalEditar && (
+        <ModalNuevaReserva
+          reserva={modalEditar}
+          onClose={() => setModalEditar(null)}
+          onSaved={() => { setModalEditar(null); cargar(); }}
+          onDelete={() => handleEliminarReserva(modalEditar)}
+        />
+      )}
       {modalAbono && <ModalAbono reserva={modalAbono} onClose={() => setModalAbono(null)} onSaved={() => { setModalAbono(null); cargar(); }} />}
       {modalPagoProv && <ModalPagoProveedor reserva={modalPagoProv} onClose={() => setModalPagoProv(null)} onSaved={() => { setModalPagoProv(null); cargar(); }} />}
     </div>
@@ -178,11 +300,21 @@ export default function AdminFinanzas({ onBack }: Props) {
 
 // ─── Modal: Nueva reserva de grupo ─────────────────────────────────────────────
 
-function ModalNuevaReserva({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+function ModalNuevaReserva({ reserva, onClose, onSaved, onDelete }: { reserva?: ReservaGrupo; onClose: () => void; onSaved: () => void; onDelete?: () => void }) {
+  const esEdicion = !!reserva;
   const [form, setForm] = useState({
-    cliente: '', hotel: '', habitaciones: '', totalPax: '', fecha: '',
-    totalReservaInicial: '', nochesAdicionales: '0', costoNocheAdicional: '0',
-    comisionExtra: '0', totalOperador: '', comisionGuia: '', notas: '',
+    cliente: reserva?.cliente || '',
+    hotel: reserva?.hotel || '',
+    habitaciones: reserva?.habitaciones?.join(', ') || '',
+    totalPax: reserva ? String(reserva.totalPax) : '',
+    fecha: reserva?.fecha || '',
+    totalReservaInicial: reserva ? String(reserva.totalReservaInicial) : '',
+    nochesAdicionales: reserva ? String(reserva.nochesAdicionales) : '0',
+    costoNocheAdicional: reserva ? String(reserva.costoNocheAdicional) : '0',
+    comisionExtra: reserva ? String(reserva.comisionExtra) : '0',
+    totalOperador: reserva ? String(reserva.totalOperador) : '',
+    comisionGuia: reserva ? String(reserva.comisionGuia) : '',
+    notas: reserva?.notas || '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -192,7 +324,7 @@ function ModalNuevaReserva({ onClose, onSaved }: { onClose: () => void; onSaved:
     if (!form.cliente.trim() || !form.hotel.trim()) { alert('Cliente y Hotel son obligatorios'); return; }
     setSaving(true);
     try {
-      await createReservaGrupo({
+      const payload = {
         cliente: form.cliente.trim(),
         hotel: form.hotel.trim(),
         habitaciones: form.habitaciones.split(',').map(h => h.trim()).filter(Boolean),
@@ -206,7 +338,12 @@ function ModalNuevaReserva({ onClose, onSaved }: { onClose: () => void; onSaved:
         totalOperador: parseFloat(form.totalOperador) || 0,
         comisionGuia: parseFloat(form.comisionGuia) || 0,
         notas: form.notas,
-      });
+      };
+      if (esEdicion && reserva) {
+        await updateReservaGrupo(reserva.id, payload);
+      } else {
+        await createReservaGrupo(payload);
+      }
       onSaved();
     } catch (e) {
       alert('Error guardando: ' + e);
@@ -219,10 +356,10 @@ function ModalNuevaReserva({ onClose, onSaved }: { onClose: () => void; onSaved:
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70" onClick={onClose}>
       <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm max-h-[90dvh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0 gap-2">
-          <h2 className="font-bold text-white">Nueva Reserva de Grupo</h2>
+          <h2 className="font-bold text-white">{esEdicion ? 'Editar Reserva' : 'Nueva Reserva de Grupo'}</h2>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={handleSave} disabled={saving} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 flex items-center gap-1.5">
-              {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Crear
+              {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} {esEdicion ? 'Guardar' : 'Crear'}
             </button>
             <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700"><X size={13} /></button>
           </div>
@@ -246,6 +383,15 @@ function ModalNuevaReserva({ onClose, onSaved }: { onClose: () => void; onSaved:
           <Campo label="Total Operador (lo que se le debe al hotel)"><input type="number" value={form.totalOperador} onChange={e => setForm({ ...form, totalOperador: e.target.value })} className="input" /></Campo>
           <Campo label="Comisión guía (tu margen)"><input type="number" value={form.comisionGuia} onChange={e => setForm({ ...form, comisionGuia: e.target.value })} className="input" /></Campo>
           <Campo label="Notas"><textarea value={form.notas} onChange={e => setForm({ ...form, notas: e.target.value })} rows={2} className="input" /></Campo>
+
+          {esEdicion && onDelete && (
+            <button
+              onClick={onDelete}
+              className="w-full py-2 mt-2 border border-red-900 text-red-400 hover:bg-red-950/40 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5"
+            >
+              <Trash2 size={13} /> Eliminar esta reserva
+            </button>
+          )}
         </div>
       </div>
     </div>
