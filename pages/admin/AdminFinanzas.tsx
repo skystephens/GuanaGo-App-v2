@@ -130,6 +130,9 @@ export default function AdminFinanzas({ onBack }: Props) {
                     <div className="space-y-1 text-[11px]">
                       <div className="flex justify-between"><span className="text-gray-500">Total reserva</span><span>{fmtCOP(r.totalReservaFinal)}</span></div>
                       <div className="flex justify-between"><span className="text-gray-500">Abonado</span><span className="text-emerald-400">{fmtCOP(r.abonadoCliente)}</span></div>
+                      {r.comisionExtra > 0 && (
+                        <div className="flex justify-between"><span className="text-gray-500">Descuento cliente frecuente</span><span className="text-emerald-400">{fmtCOP(r.comisionExtra)}</span></div>
+                      )}
                       <div className="flex justify-between font-bold"><span>Saldo</span><span className={r.saldoCliente > 0 ? 'text-cyan-400' : 'text-gray-600'}>{fmtCOP(r.saldoCliente)}</span></div>
                     </div>
                     <button
@@ -183,7 +186,7 @@ function ModalNuevaReserva({ onClose, onSaved }: { onClose: () => void; onSaved:
   });
   const [saving, setSaving] = useState(false);
 
-  const totalReservaFinal = (parseFloat(form.totalReservaInicial) || 0) + (parseFloat(form.nochesAdicionales) || 0) * (parseFloat(form.costoNocheAdicional) || 0);
+  const totalReservaFinal = (parseFloat(form.totalReservaInicial) || 0) + (parseFloat(form.costoNocheAdicional) || 0);
 
   const handleSave = async () => {
     if (!form.cliente.trim() || !form.hotel.trim()) { alert('Cliente y Hotel son obligatorios'); return; }
@@ -235,10 +238,10 @@ function ModalNuevaReserva({ onClose, onSaved }: { onClose: () => void; onSaved:
           </div>
           <Campo label="Total Reserva Inicial (lo que paga el cliente)"><input type="number" value={form.totalReservaInicial} onChange={e => setForm({ ...form, totalReservaInicial: e.target.value })} className="input" /></Campo>
           <div className="grid grid-cols-2 gap-2">
-            <Campo label="Noches adicionales"><input type="number" value={form.nochesAdicionales} onChange={e => setForm({ ...form, nochesAdicionales: e.target.value })} className="input" /></Campo>
-            <Campo label="Costo/noche adicional"><input type="number" value={form.costoNocheAdicional} onChange={e => setForm({ ...form, costoNocheAdicional: e.target.value })} className="input" /></Campo>
+            <Campo label="Pax que tomaron noche extra (informativo)"><input type="number" value={form.nochesAdicionales} onChange={e => setForm({ ...form, nochesAdicionales: e.target.value })} className="input" /></Campo>
+            <Campo label="Costo noche extra (monto TOTAL, no por persona)"><input type="number" value={form.costoNocheAdicional} onChange={e => setForm({ ...form, costoNocheAdicional: e.target.value })} className="input" /></Campo>
           </div>
-          <Campo label="Comisión extra"><input type="number" value={form.comisionExtra} onChange={e => setForm({ ...form, comisionExtra: e.target.value })} className="input" /></Campo>
+          <Campo label="Comisión extra (descuento a cliente recurrente)"><input type="number" value={form.comisionExtra} onChange={e => setForm({ ...form, comisionExtra: e.target.value })} className="input" /></Campo>
           {totalReservaFinal > 0 && <p className="text-[11px] text-emerald-400">Total reserva final: {fmtCOP(totalReservaFinal)}</p>}
           <Campo label="Total Operador (lo que se le debe al hotel)"><input type="number" value={form.totalOperador} onChange={e => setForm({ ...form, totalOperador: e.target.value })} className="input" /></Campo>
           <Campo label="Comisión guía (tu margen)"><input type="number" value={form.comisionGuia} onChange={e => setForm({ ...form, comisionGuia: e.target.value })} className="input" /></Campo>

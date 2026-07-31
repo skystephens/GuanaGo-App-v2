@@ -141,7 +141,7 @@ export async function getFinanzas(): Promise<{
       comisionGuia: f['Comision_Guia'] || 0,
       notas: f['Notas'] || '',
       abonadoCliente,
-      saldoCliente: totalReservaFinal - abonadoCliente,
+      saldoCliente: totalReservaFinal - abonadoCliente - (f['Comision_Extra'] || 0),
       pagadoOperador,
       saldoOperador: totalOperador - pagadoOperador,
     };
