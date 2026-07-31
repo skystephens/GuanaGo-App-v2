@@ -801,14 +801,24 @@ function NuevoVoucherModal({ onClose, onSaved }: {
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70" onClick={onClose}>
       <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm max-h-[90dvh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
-          <div className="flex items-center gap-2">
-            <FileText size={16} className="text-orange-400" />
-            <h2 className="font-bold text-white">Nuevo Voucher</h2>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <FileText size={16} className="text-orange-400 shrink-0" />
+            <h2 className="font-bold text-white truncate">Nuevo Voucher</h2>
           </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700">
-            <X size={13} className="text-gray-400" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-600 hover:bg-orange-500 text-white disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
+              {saving ? 'Guardando…' : 'Crear'}
+            </button>
+            <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 shrink-0">
+              <X size={13} className="text-gray-400" />
+            </button>
+          </div>
         </div>
 
         <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1 min-h-0">
@@ -1053,14 +1063,24 @@ function EditarVoucherModal({ voucher, onClose, onSaved }: {
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70" onClick={onClose}>
       <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm max-h-[90dvh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
-          <div className="flex items-center gap-2">
-            <Pencil size={16} className="text-orange-400" />
-            <h2 className="font-bold text-white">Editar Voucher</h2>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Pencil size={16} className="text-orange-400 shrink-0" />
+            <h2 className="font-bold text-white truncate">Editar Voucher</h2>
           </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700">
-            <X size={13} className="text-gray-400" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-600 hover:bg-orange-500 text-white disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {saving ? <Loader2 size={13} className="animate-spin" /> : <Pencil size={13} />}
+              {saving ? 'Guardando…' : 'Guardar'}
+            </button>
+            <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 shrink-0">
+              <X size={13} className="text-gray-400" />
+            </button>
+          </div>
         </div>
 
         <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1 min-h-0">
