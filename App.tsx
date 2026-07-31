@@ -73,6 +73,7 @@ import NegocioLocalPerfil from './pages/partner/NegocioLocalPerfil';
 import AdminTasks from './pages/admin/AdminTasks';
 import AdminQuotes from './pages/admin/AdminQuotes';
 import AdminVouchers from './pages/admin/AdminVouchers';
+import AdminFinanzas from './pages/admin/AdminFinanzas';
 import AdminCivitatis from './pages/admin/AdminCivitatis';
 import AdminReservations from './pages/admin/AdminReservations';
 import AdminStructureMap from './pages/admin/AdminStructureMap';
@@ -367,6 +368,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_TASKS: return <AdminTasks onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_QUOTES: return <AdminQuotes onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_VOUCHERS: return <AdminVouchers onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_FINANZAS: return <AdminFinanzas onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_CIVITATIS: return <AdminCivitatis onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_TORRE_CONTROL: return <AdminTorreControl onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_PROCEDIMIENTOS_RAG: return <AdminProcedimientosRAG onBack={goBack} onNavigate={navigateTo} />;

@@ -158,7 +158,7 @@ const AdminCRM: React.FC<Props> = ({ onBack, onNavigate }) => {
   // ── Departamentos tycoon ──
   const deps = [
     { icon: <TrendingUp size={16} />, nombre: 'Ventas', valor: `${resumen?.ventas.hoy ?? '—'} hoy`, sub: `Pipeline ${fmtCompacto(resumen?.ventas.pipeline || 0)}`, alerta: sinAtender > 0, onClick: undefined },
-    { icon: <Wallet size={16} />, nombre: 'Finanzas', valor: fmtCompacto(resumen?.finanzas.cajaHoy || 0), sub: `Mes: ${fmtCompacto(resumen?.finanzas.cajaMes || 0)}`, alerta: false, onClick: () => onNavigate(AppRoute.ADMIN_QUOTES) },
+    { icon: <Wallet size={16} />, nombre: 'Finanzas', valor: fmtCompacto(resumen?.finanzas.cajaHoy || 0), sub: `Mes: ${fmtCompacto(resumen?.finanzas.cajaMes || 0)}`, alerta: false, onClick: () => onNavigate(AppRoute.ADMIN_FINANZAS) },
     { icon: <Ship size={16} />, nombre: 'Operaciones', valor: `${resumen?.operaciones.toursHoy ?? '—'} tours hoy`, sub: `${resumen?.operaciones.vouchersPendientes || 0} vouchers sin cerrar`, alerta: (resumen?.operaciones.vouchersPendientes || 0) > 0, onClick: () => onNavigate(AppRoute.ADMIN_VOUCHERS) },
     { icon: <MessageCircle size={16} />, nombre: 'Atención', valor: `${resumen?.atencion.chatsPendientes ?? '—'} chats`, sub: 'pendientes por responder', alerta: (resumen?.atencion.chatsPendientes || 0) > 0, onClick: () => onNavigate(AppRoute.ADMIN_CHATS_ATENCION) },
     { icon: <Megaphone size={16} />, nombre: 'Marketing', valor: 'Campañas', sub: 'copies + bandera del día', alerta: false, onClick: () => onNavigate(AppRoute.ADMIN_CAMPANAS) },

@@ -1,0 +1,358 @@
+/**
+ * AdminFinanzas — Cuentas por cobrar (clientes) y por pagar (proveedores)
+ * GuanaGO Super Admin
+ *
+ * Tablas: Reservas_grupo, Pago_proveedores, Pagos (reusada para abonos de cliente)
+ */
+
+import React, { useEffect, useState } from 'react';
+import {
+  ArrowLeft, Loader2, Plus, X, ChevronDown, ChevronUp, Wallet, Building2,
+  TrendingUp, TrendingDown, Users, Bed,
+} from 'lucide-react';
+import { AppRoute } from '../../types';
+import {
+  getFinanzas, createReservaGrupo, createPagoProveedor, createAbonoCliente,
+  ReservaGrupo,
+} from '../../services/financeService';
+
+const fmtCOP = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
+
+interface Props {
+  onBack: () => void;
+  onNavigate: (route: AppRoute) => void;
+}
+
+export default function AdminFinanzas({ onBack }: Props) {
+  const [loading, setLoading] = useState(true);
+  const [reservas, setReservas] = useState<ReservaGrupo[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [modalNueva, setModalNueva] = useState(false);
+  const [modalAbono, setModalAbono] = useState<ReservaGrupo | null>(null);
+  const [modalPagoProv, setModalPagoProv] = useState<ReservaGrupo | null>(null);
+
+  const cargar = async () => {
+    setLoading(true);
+    try {
+      const data = await getFinanzas();
+      setReservas(data.reservas);
+    } catch (e) {
+      console.error('[AdminFinanzas] Error cargando:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { cargar(); }, []);
+
+  const totalPorCobrar = reservas.reduce((s, r) => s + Math.max(0, r.saldoCliente), 0);
+  const totalPorPagar = reservas.reduce((s, r) => s + Math.max(0, r.saldoOperador), 0);
+  const totalMargen = reservas.reduce((s, r) => s + (r.comisionGuia || (r.totalReservaFinal - r.totalOperador)), 0);
+
+  return (
+    <div className="min-h-screen bg-gray-950 text-white pb-10">
+      {/* Header */}
+      <div className="sticky top-0 z-20 bg-gray-950/95 backdrop-blur border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700">
+            <ArrowLeft size={16} />
+          </button>
+          <div>
+            <h1 className="font-bold text-lg flex items-center gap-2"><Wallet size={18} className="text-emerald-400" /> Finanzas</h1>
+            <p className="text-[11px] text-gray-500">Cuentas por cobrar y por pagar</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setModalNueva(true)}
+          className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded-xl text-xs font-bold"
+        >
+          <Plus size={14} /> Reserva
+        </button>
+      </div>
+
+      {/* Resumen */}
+      <div className="grid grid-cols-3 gap-2 px-4 pt-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
+          <div className="flex items-center gap-1.5 text-[10px] text-gray-500 mb-1"><TrendingUp size={12} className="text-cyan-400" /> Por cobrar</div>
+          <p className="text-sm font-bold text-cyan-400">{fmtCOP(totalPorCobrar)}</p>
+        </div>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
+          <div className="flex items-center gap-1.5 text-[10px] text-gray-500 mb-1"><TrendingDown size={12} className="text-red-400" /> Por pagar</div>
+          <p className="text-sm font-bold text-red-400">{fmtCOP(totalPorPagar)}</p>
+        </div>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
+          <div className="flex items-center gap-1.5 text-[10px] text-gray-500 mb-1"><Wallet size={12} className="text-emerald-400" /> Margen total</div>
+          <p className="text-sm font-bold text-emerald-400">{fmtCOP(totalMargen)}</p>
+        </div>
+      </div>
+
+      {/* Lista de reservas */}
+      <div className="px-4 pt-4 space-y-2">
+        {loading ? (
+          <div className="flex justify-center py-16"><Loader2 className="animate-spin text-gray-600" size={28} /></div>
+        ) : reservas.length === 0 ? (
+          <div className="text-center py-16 text-gray-600 text-sm">No hay reservas de grupo todavía.</div>
+        ) : reservas.map(r => (
+          <div key={r.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}
+              className="w-full text-left px-4 py-3 flex items-center justify-between gap-3"
+            >
+              <div className="min-w-0">
+                <p className="font-bold text-sm truncate">{r.cliente || r.clienteHotel}</p>
+                <p className="text-[11px] text-gray-500 flex items-center gap-2">
+                  <Building2 size={11} /> {r.hotel}
+                  {r.totalPax > 0 && <><Users size={11} /> {r.totalPax} pax</>}
+                </p>
+              </div>
+              <div className="flex items-center gap-4 shrink-0">
+                <div className="text-right">
+                  <p className={`text-xs font-bold ${r.saldoCliente > 0 ? 'text-cyan-400' : 'text-gray-600'}`}>{fmtCOP(r.saldoCliente)}</p>
+                  <p className="text-[9px] text-gray-600">saldo cliente</p>
+                </div>
+                <div className="text-right">
+                  <p className={`text-xs font-bold ${r.saldoOperador > 0 ? 'text-red-400' : 'text-gray-600'}`}>{fmtCOP(r.saldoOperador)}</p>
+                  <p className="text-[9px] text-gray-600">saldo operador</p>
+                </div>
+                {expandedId === r.id ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}
+              </div>
+            </button>
+
+            {expandedId === r.id && (
+              <div className="px-4 pb-4 border-t border-gray-800 pt-3 space-y-3">
+                {r.habitaciones && r.habitaciones.length > 0 && (
+                  <p className="text-[11px] text-gray-400 flex items-start gap-1.5"><Bed size={12} className="mt-0.5 shrink-0" /> {r.habitaciones.join(', ')}</p>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gray-950/60 rounded-lg p-2.5">
+                    <p className="text-[10px] text-gray-500 mb-1.5 font-bold uppercase">Cliente</p>
+                    <div className="space-y-1 text-[11px]">
+                      <div className="flex justify-between"><span className="text-gray-500">Total reserva</span><span>{fmtCOP(r.totalReservaFinal)}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-500">Abonado</span><span className="text-emerald-400">{fmtCOP(r.abonadoCliente)}</span></div>
+                      <div className="flex justify-between font-bold"><span>Saldo</span><span className={r.saldoCliente > 0 ? 'text-cyan-400' : 'text-gray-600'}>{fmtCOP(r.saldoCliente)}</span></div>
+                    </div>
+                    <button
+                      onClick={() => setModalAbono(r)}
+                      className="w-full mt-2 py-1.5 bg-cyan-900/40 hover:bg-cyan-900/70 border border-cyan-800 rounded-lg text-[10px] font-bold text-cyan-300"
+                    >
+                      + Registrar abono
+                    </button>
+                  </div>
+
+                  <div className="bg-gray-950/60 rounded-lg p-2.5">
+                    <p className="text-[10px] text-gray-500 mb-1.5 font-bold uppercase">Operador ({r.hotel})</p>
+                    <div className="space-y-1 text-[11px]">
+                      <div className="flex justify-between"><span className="text-gray-500">Total operador</span><span>{fmtCOP(r.totalOperador)}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-500">Pagado</span><span className="text-emerald-400">{fmtCOP(r.pagadoOperador)}</span></div>
+                      <div className="flex justify-between font-bold"><span>Saldo</span><span className={r.saldoOperador > 0 ? 'text-red-400' : 'text-gray-600'}>{fmtCOP(r.saldoOperador)}</span></div>
+                    </div>
+                    <button
+                      onClick={() => setModalPagoProv(r)}
+                      className="w-full mt-2 py-1.5 bg-red-900/30 hover:bg-red-900/60 border border-red-900 rounded-lg text-[10px] font-bold text-red-300"
+                    >
+                      + Registrar pago
+                    </button>
+                  </div>
+                </div>
+
+                {r.comisionGuia > 0 && (
+                  <p className="text-[11px] text-gray-500">Comisión guía: <span className="text-emerald-400 font-bold">{fmtCOP(r.comisionGuia)}</span></p>
+                )}
+                {r.notas && <p className="text-[11px] text-gray-500 italic">{r.notas}</p>}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {modalNueva && <ModalNuevaReserva onClose={() => setModalNueva(false)} onSaved={() => { setModalNueva(false); cargar(); }} />}
+      {modalAbono && <ModalAbono reserva={modalAbono} onClose={() => setModalAbono(null)} onSaved={() => { setModalAbono(null); cargar(); }} />}
+      {modalPagoProv && <ModalPagoProveedor reserva={modalPagoProv} onClose={() => setModalPagoProv(null)} onSaved={() => { setModalPagoProv(null); cargar(); }} />}
+    </div>
+  );
+}
+
+// ─── Modal: Nueva reserva de grupo ─────────────────────────────────────────────
+
+function ModalNuevaReserva({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+  const [form, setForm] = useState({
+    cliente: '', hotel: '', habitaciones: '', totalPax: '', fecha: '',
+    totalReservaInicial: '', nochesAdicionales: '0', costoNocheAdicional: '0',
+    comisionExtra: '0', totalOperador: '', comisionGuia: '', notas: '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  const totalReservaFinal = (parseFloat(form.totalReservaInicial) || 0) + (parseFloat(form.nochesAdicionales) || 0) * (parseFloat(form.costoNocheAdicional) || 0);
+
+  const handleSave = async () => {
+    if (!form.cliente.trim() || !form.hotel.trim()) { alert('Cliente y Hotel son obligatorios'); return; }
+    setSaving(true);
+    try {
+      await createReservaGrupo({
+        cliente: form.cliente.trim(),
+        hotel: form.hotel.trim(),
+        habitaciones: form.habitaciones.split(',').map(h => h.trim()).filter(Boolean),
+        totalPax: parseInt(form.totalPax) || 0,
+        fecha: form.fecha,
+        totalReservaInicial: parseFloat(form.totalReservaInicial) || 0,
+        nochesAdicionales: parseFloat(form.nochesAdicionales) || 0,
+        costoNocheAdicional: parseFloat(form.costoNocheAdicional) || 0,
+        comisionExtra: parseFloat(form.comisionExtra) || 0,
+        totalReservaFinal,
+        totalOperador: parseFloat(form.totalOperador) || 0,
+        comisionGuia: parseFloat(form.comisionGuia) || 0,
+        notas: form.notas,
+      });
+      onSaved();
+    } catch (e) {
+      alert('Error guardando: ' + e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70" onClick={onClose}>
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm max-h-[90dvh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0 gap-2">
+          <h2 className="font-bold text-white">Nueva Reserva de Grupo</h2>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={handleSave} disabled={saving} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 flex items-center gap-1.5">
+              {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Crear
+            </button>
+            <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700"><X size={13} /></button>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1 min-h-0">
+          <Campo label="Cliente *"><input value={form.cliente} onChange={e => setForm({ ...form, cliente: e.target.value })} placeholder="FERNANDO ESPINOSA" className="input" /></Campo>
+          <Campo label="Hotel *"><input value={form.hotel} onChange={e => setForm({ ...form, hotel: e.target.value })} placeholder="LIMSOR B" className="input" /></Campo>
+          <Campo label="Habitaciones (separadas por coma)"><input value={form.habitaciones} onChange={e => setForm({ ...form, habitaciones: e.target.value })} placeholder="APT209 x9, APT214 x6" className="input" /></Campo>
+          <div className="grid grid-cols-2 gap-2">
+            <Campo label="Total Pax"><input type="number" value={form.totalPax} onChange={e => setForm({ ...form, totalPax: e.target.value })} className="input" /></Campo>
+            <Campo label="Fecha"><input type="date" value={form.fecha} onChange={e => setForm({ ...form, fecha: e.target.value })} className="input" /></Campo>
+          </div>
+          <Campo label="Total Reserva Inicial (lo que paga el cliente)"><input type="number" value={form.totalReservaInicial} onChange={e => setForm({ ...form, totalReservaInicial: e.target.value })} className="input" /></Campo>
+          <div className="grid grid-cols-2 gap-2">
+            <Campo label="Noches adicionales"><input type="number" value={form.nochesAdicionales} onChange={e => setForm({ ...form, nochesAdicionales: e.target.value })} className="input" /></Campo>
+            <Campo label="Costo/noche adicional"><input type="number" value={form.costoNocheAdicional} onChange={e => setForm({ ...form, costoNocheAdicional: e.target.value })} className="input" /></Campo>
+          </div>
+          <Campo label="Comisión extra"><input type="number" value={form.comisionExtra} onChange={e => setForm({ ...form, comisionExtra: e.target.value })} className="input" /></Campo>
+          {totalReservaFinal > 0 && <p className="text-[11px] text-emerald-400">Total reserva final: {fmtCOP(totalReservaFinal)}</p>}
+          <Campo label="Total Operador (lo que se le debe al hotel)"><input type="number" value={form.totalOperador} onChange={e => setForm({ ...form, totalOperador: e.target.value })} className="input" /></Campo>
+          <Campo label="Comisión guía (tu margen)"><input type="number" value={form.comisionGuia} onChange={e => setForm({ ...form, comisionGuia: e.target.value })} className="input" /></Campo>
+          <Campo label="Notas"><textarea value={form.notas} onChange={e => setForm({ ...form, notas: e.target.value })} rows={2} className="input" /></Campo>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal: Registrar abono de cliente ─────────────────────────────────────────
+
+function ModalAbono({ reserva, onClose, onSaved }: { reserva: ReservaGrupo; onClose: () => void; onSaved: () => void }) {
+  const [monto, setMonto] = useState('');
+  const [metodo, setMetodo] = useState('Bre-B');
+  const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!parseFloat(monto)) { alert('Ingresa un monto'); return; }
+    setSaving(true);
+    try {
+      await createAbonoCliente({ referencia: reserva.clienteHotel, monto: parseFloat(monto), metodoPago: metodo, fechaPago: fecha });
+      onSaved();
+    } catch (e) {
+      alert('Error: ' + e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70" onClick={onClose}>
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm max-h-[90dvh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0 gap-2">
+          <div className="min-w-0">
+            <h2 className="font-bold text-white truncate">Abono — {reserva.cliente}</h2>
+            <p className="text-[11px] text-gray-500">Saldo actual: {fmtCOP(reserva.saldoCliente)}</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={handleSave} disabled={saving} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 flex items-center gap-1.5">
+              {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Guardar
+            </button>
+            <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700"><X size={13} /></button>
+          </div>
+        </div>
+        <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1 min-h-0">
+          <Campo label="Monto"><input type="number" value={monto} onChange={e => setMonto(e.target.value)} autoFocus className="input" /></Campo>
+          <Campo label="Método de pago">
+            <select value={metodo} onChange={e => setMetodo(e.target.value)} className="input">
+              <option>Bre-B</option><option>Wompi</option><option>Efectivo</option><option>Transferencia</option><option>Otro</option>
+            </select>
+          </Campo>
+          <Campo label="Fecha"><input type="date" value={fecha} onChange={e => setFecha(e.target.value)} className="input" /></Campo>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal: Registrar pago a proveedor ─────────────────────────────────────────
+
+function ModalPagoProveedor({ reserva, onClose, onSaved }: { reserva: ReservaGrupo; onClose: () => void; onSaved: () => void }) {
+  const [monto, setMonto] = useState('');
+  const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
+  const [notas, setNotas] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!parseFloat(monto)) { alert('Ingresa un monto'); return; }
+    setSaving(true);
+    try {
+      await createPagoProveedor({ proveedor: reserva.hotel, reservaGrupo: reserva.clienteHotel, fechaPago: fecha, montoPagado: parseFloat(monto), notas });
+      onSaved();
+    } catch (e) {
+      alert('Error: ' + e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70" onClick={onClose}>
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm max-h-[90dvh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0 gap-2">
+          <div className="min-w-0">
+            <h2 className="font-bold text-white truncate">Pago a {reserva.hotel}</h2>
+            <p className="text-[11px] text-gray-500">Saldo actual: {fmtCOP(reserva.saldoOperador)}</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={handleSave} disabled={saving} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-500 disabled:opacity-50 flex items-center gap-1.5">
+              {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Guardar
+            </button>
+            <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700"><X size={13} /></button>
+          </div>
+        </div>
+        <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1 min-h-0">
+          <Campo label="Monto"><input type="number" value={monto} onChange={e => setMonto(e.target.value)} autoFocus className="input" /></Campo>
+          <Campo label="Fecha"><input type="date" value={fecha} onChange={e => setFecha(e.target.value)} className="input" /></Campo>
+          <Campo label="Notas"><textarea value={notas} onChange={e => setNotas(e.target.value)} rows={2} className="input" /></Campo>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Helper de formulario ───────────────────────────────────────────────────────
+
+function Campo({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-[10px] text-gray-500 mb-1 font-semibold uppercase">{label}</label>
+      {children}
+      <style>{`.input { width: 100%; padding: 0.55rem 0.75rem; background: #111827; border: 1px solid #374151; border-radius: 0.5rem; color: white; font-size: 0.8rem; } .input:focus { outline: none; border-color: #10b981; }`}</style>
+    </div>
+  );
+}
