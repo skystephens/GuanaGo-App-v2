@@ -627,7 +627,7 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/75" onClick={onClose}>
       <div
-        className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl"
+        className="bg-white rounded-3xl w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* ── Header naranja ── */}
@@ -799,9 +799,9 @@ function NuevoVoucherModal({ onClose, onSaved }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70" onClick={onClose}>
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
           <div className="flex items-center gap-2">
             <FileText size={16} className="text-orange-400" />
             <h2 className="font-bold text-white">Nuevo Voucher</h2>
@@ -811,7 +811,7 @@ function NuevoVoucherModal({ onClose, onSaved }: {
           </button>
         </div>
 
-        <div className="px-5 py-4 space-y-3 max-h-[70vh] overflow-y-auto">
+        <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1 min-h-0">
 
           {/* Titular */}
           <div>
@@ -966,7 +966,7 @@ function NuevoVoucherModal({ onClose, onSaved }: {
           {error && <p className="text-xs text-red-400 font-bold">{error}</p>}
         </div>
 
-        <div className="px-5 py-4 border-t border-gray-800 flex gap-3">
+        <div className="px-5 py-4 border-t border-gray-800 flex gap-3 shrink-0">
           <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-500 border border-gray-700 hover:border-gray-600">
             Cancelar
           </button>
@@ -1051,9 +1051,9 @@ function EditarVoucherModal({ voucher, onClose, onSaved }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70" onClick={onClose}>
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
           <div className="flex items-center gap-2">
             <Pencil size={16} className="text-orange-400" />
             <h2 className="font-bold text-white">Editar Voucher</h2>
@@ -1063,7 +1063,7 @@ function EditarVoucherModal({ voucher, onClose, onSaved }: {
           </button>
         </div>
 
-        <div className="px-5 py-4 space-y-3 max-h-[70vh] overflow-y-auto">
+        <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1 min-h-0">
 
           {/* Titular */}
           <div>
@@ -1222,7 +1222,7 @@ function EditarVoucherModal({ voucher, onClose, onSaved }: {
           {error && <p className="text-xs text-red-400 font-bold">{error}</p>}
         </div>
 
-        <div className="px-5 py-4 border-t border-gray-800 flex gap-3">
+        <div className="px-5 py-4 border-t border-gray-800 flex gap-3 shrink-0">
           <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-500 border border-gray-700 hover:border-gray-600">
             Cancelar
           </button>
