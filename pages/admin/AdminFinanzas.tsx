@@ -8,20 +8,22 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   ArrowLeft, Loader2, Plus, X, ChevronDown, ChevronUp, Wallet, Building2,
-  TrendingUp, TrendingDown, Users, Bed, Pencil, Trash2, ArrowUpDown,
+  TrendingUp, TrendingDown, Users, Bed, Pencil, Trash2, ArrowUpDown, UserCheck,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import {
   getFinanzas, createReservaGrupo, updateReservaGrupo, deleteReservaGrupo,
   createPagoProveedor, updatePagoProveedor, deletePagoProveedor,
   createAbonoCliente, updateAbonoCliente, deleteAbonoCliente,
-  ReservaGrupo, AbonoClienteItem, PagoProveedorItem,
+  getComisionesReferidos, createComisionReferido, updateComisionReferido, deleteComisionReferido,
+  ReservaGrupo, AbonoClienteItem, PagoProveedorItem, ComisionReferido,
 } from '../../services/financeService';
 
 const fmtCOP = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
 const fmtFecha = (d: string) => d ? new Date(d + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
 type OrdenTipo = 'fecha' | 'alfabetico' | 'saldoCliente' | 'saldoOperador';
+type TabTipo = 'reservas' | 'comisiones';
 
 interface Props {
   onBack: () => void;
@@ -40,13 +42,19 @@ export default function AdminFinanzas({ onBack }: Props) {
   const [modalAbono, setModalAbono] = useState<ReservaGrupo | null>(null);
   const [modalPagoProv, setModalPagoProv] = useState<ReservaGrupo | null>(null);
 
+  const [tab, setTab] = useState<TabTipo>('reservas');
+  const [comisiones, setComisiones] = useState<ComisionReferido[]>([]);
+  const [filtroOrganizador, setFiltroOrganizador] = useState<string>('todos');
+  const [modalComision, setModalComision] = useState<ComisionReferido | 'nueva' | null>(null);
+
   const cargar = async () => {
     setLoading(true);
     try {
-      const data = await getFinanzas();
+      const [data, comisionesData] = await Promise.all([getFinanzas(), getComisionesReferidos()]);
       setReservas(data.reservas);
       setAbonos(data.abonosClientes);
       setPagosProv(data.pagosProveedores);
+      setComisiones(comisionesData);
     } catch (e) {
       console.error('[AdminFinanzas] Error cargando:', e);
     } finally {
@@ -102,6 +110,22 @@ export default function AdminFinanzas({ onBack }: Props) {
   const totalPorPagar = reservas.reduce((s, r) => s + Math.max(0, r.saldoOperador), 0);
   const totalMargen = reservas.reduce((s, r) => s + (r.comisionGuia || (r.totalReservaFinal - r.totalOperador)), 0);
 
+  const organizadores = useMemo(() => {
+    const set = new Set(comisiones.map(c => c.organizador).filter(Boolean));
+    return Array.from(set);
+  }, [comisiones]);
+
+  const comisionesFiltradas = useMemo(() => {
+    return filtroOrganizador === 'todos' ? comisiones : comisiones.filter(c => c.organizador === filtroOrganizador);
+  }, [comisiones, filtroOrganizador]);
+
+  const totalComisionesReferidos = comisionesFiltradas.reduce((s, c) => s + c.montoComision, 0);
+
+  const handleEliminarComision = async (c: ComisionReferido) => {
+    if (!confirm(`¿Eliminar la comisión de ${c.clienteReferido}?`)) return;
+    try { await deleteComisionReferido(c.id); setModalComision(null); cargar(); } catch (e) { alert('Error: ' + e); }
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 text-white pb-10">
       {/* Header */}
@@ -116,13 +140,31 @@ export default function AdminFinanzas({ onBack }: Props) {
           </div>
         </div>
         <button
-          onClick={() => setModalNueva(true)}
+          onClick={() => tab === 'reservas' ? setModalNueva(true) : setModalComision('nueva')}
           className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded-xl text-xs font-bold"
         >
-          <Plus size={14} /> Reserva
+          <Plus size={14} /> {tab === 'reservas' ? 'Reserva' : 'Comisión'}
         </button>
       </div>
 
+      {/* Pestañas */}
+      <div className="flex gap-1 mx-4 mt-3 bg-gray-900 p-1 rounded-xl border border-gray-800">
+        <button
+          onClick={() => setTab('reservas')}
+          className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${tab === 'reservas' ? 'bg-emerald-600 text-white' : 'text-gray-400'}`}
+        >
+          Reservas
+        </button>
+        <button
+          onClick={() => setTab('comisiones')}
+          className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 ${tab === 'comisiones' ? 'bg-emerald-600 text-white' : 'text-gray-400'}`}
+        >
+          <UserCheck size={13} /> Comisiones de Referidos
+        </button>
+      </div>
+
+      {tab === 'reservas' ? (
+      <>
       {/* Resumen */}
       <div className="grid grid-cols-3 gap-2 px-4 pt-4">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
@@ -282,8 +324,78 @@ export default function AdminFinanzas({ onBack }: Props) {
           );
         })}
       </div>
+      </>
+      ) : (
+      <>
+      {/* Resumen comisiones */}
+      <div className="px-4 pt-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 mb-3">
+          <div className="flex items-center gap-1.5 text-[10px] text-gray-500 mb-1"><UserCheck size={12} className="text-amber-400" /> Total comisiones {filtroOrganizador !== 'todos' ? `— ${filtroOrganizador}` : ''}</div>
+          <p className="text-lg font-bold text-amber-400">{fmtCOP(totalComisionesReferidos)}</p>
+        </div>
 
+        {organizadores.length > 1 && (
+          <div className="flex gap-1.5 flex-wrap mb-3">
+            <button
+              onClick={() => setFiltroOrganizador('todos')}
+              className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${filtroOrganizador === 'todos' ? 'bg-amber-600 text-white' : 'bg-gray-900 border border-gray-800 text-gray-400'}`}
+            >
+              Todos
+            </button>
+            {organizadores.map(org => (
+              <button
+                key={org}
+                onClick={() => setFiltroOrganizador(org)}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${filtroOrganizador === org ? 'bg-amber-600 text-white' : 'bg-gray-900 border border-gray-800 text-gray-400'}`}
+              >
+                {org}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="px-4 space-y-2">
+        {loading ? (
+          <div className="flex justify-center py-16"><Loader2 className="animate-spin text-gray-600" size={28} /></div>
+        ) : comisionesFiltradas.length === 0 ? (
+          <div className="text-center py-16 text-gray-600 text-sm">Sin comisiones registradas todavía.</div>
+        ) : comisionesFiltradas.map(c => (
+          <button
+            key={c.id}
+            onClick={() => setModalComision(c)}
+            className="w-full text-left bg-gray-900 border border-gray-800 rounded-xl p-3 flex items-center justify-between gap-3"
+          >
+            <div className="min-w-0">
+              <p className="font-bold text-sm truncate">{c.clienteReferido}</p>
+              <p className="text-[11px] text-gray-500 truncate">
+                {c.organizador} {c.cotizacionNombre && `· ${c.cotizacionNombre}`}
+              </p>
+              <p className={`text-[10px] mt-0.5 inline-block px-1.5 py-0.5 rounded-full ${
+                c.estado === 'Pagado' ? 'bg-emerald-900/40 text-emerald-400' :
+                c.estado === 'Confirmado' ? 'bg-cyan-900/40 text-cyan-400' :
+                'bg-gray-800 text-gray-400'
+              }`}>{c.estado || 'Sin estado'}</p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-sm font-bold text-amber-400">{fmtCOP(c.montoComision)}</p>
+              <p className="text-[9px] text-gray-600">{c.porcentaje}% de {fmtCOP(c.valorReserva)}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+      </>
+      )}
       {modalNueva && <ModalNuevaReserva onClose={() => setModalNueva(false)} onSaved={() => { setModalNueva(false); cargar(); }} />}
+      {modalComision && (
+        <ModalComision
+          comision={modalComision === 'nueva' ? undefined : modalComision}
+          organizadorSugerido={filtroOrganizador !== 'todos' ? filtroOrganizador : (organizadores[0] || '')}
+          onClose={() => setModalComision(null)}
+          onSaved={() => { setModalComision(null); cargar(); }}
+          onDelete={modalComision !== 'nueva' ? () => handleEliminarComision(modalComision) : undefined}
+        />
+      )}
       {modalEditar && (
         <ModalNuevaReserva
           reserva={modalEditar}
@@ -495,6 +607,96 @@ function ModalPagoProveedor({ reserva, onClose, onSaved }: { reserva: ReservaGru
 }
 
 // ─── Helper de formulario ───────────────────────────────────────────────────────
+
+// ─── Modal: Comisión de referido ───────────────────────────────────────────────
+
+function ModalComision({ comision, organizadorSugerido, onClose, onSaved, onDelete }: {
+  comision?: ComisionReferido; organizadorSugerido?: string; onClose: () => void; onSaved: () => void; onDelete?: () => void;
+}) {
+  const esEdicion = !!comision;
+  const [form, setForm] = useState({
+    organizador: comision?.organizador || organizadorSugerido || '',
+    clienteReferido: comision?.clienteReferido || '',
+    cotizacionNombre: comision?.cotizacionNombre || '',
+    valorReserva: comision ? String(comision.valorReserva) : '',
+    porcentaje: comision ? String(comision.porcentaje) : '5',
+    estado: comision?.estado || 'Pendiente confirmar opcion',
+    notas: comision?.notas || '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  const montoComision = (parseFloat(form.valorReserva) || 0) * (parseFloat(form.porcentaje) || 0) / 100;
+
+  const handleSave = async () => {
+    if (!form.organizador.trim() || !form.clienteReferido.trim()) { alert('Organizador y Cliente referido son obligatorios'); return; }
+    setSaving(true);
+    try {
+      const payload = {
+        organizador: form.organizador.trim(),
+        clienteReferido: form.clienteReferido.trim(),
+        cotizacionNombre: form.cotizacionNombre.trim(),
+        valorReserva: parseFloat(form.valorReserva) || 0,
+        porcentaje: parseFloat(form.porcentaje) || 0,
+        estado: form.estado,
+        notas: form.notas,
+      };
+      if (esEdicion && comision) {
+        await updateComisionReferido(comision.id, payload);
+      } else {
+        await createComisionReferido(payload);
+      }
+      onSaved();
+    } catch (e) {
+      alert('Error guardando: ' + e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70" onClick={onClose}>
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm max-h-[90dvh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0 gap-2">
+          <h2 className="font-bold text-white">{esEdicion ? 'Editar Comisión' : 'Nueva Comisión de Referido'}</h2>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={handleSave} disabled={saving} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-500 disabled:opacity-50 flex items-center gap-1.5">
+              {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} {esEdicion ? 'Guardar' : 'Crear'}
+            </button>
+            <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700"><X size={13} /></button>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1 min-h-0">
+          <Campo label="Organizador (quién refiere) *"><input value={form.organizador} onChange={e => setForm({ ...form, organizador: e.target.value })} placeholder="FERNANDO ESPINOSA" className="input" /></Campo>
+          <Campo label="Cliente referido *"><input value={form.clienteReferido} onChange={e => setForm({ ...form, clienteReferido: e.target.value })} placeholder="Golden Voley" className="input" /></Campo>
+          <Campo label="Nombre exacto de la cotización (CotizacionesGG)"><input value={form.cotizacionNombre} onChange={e => setForm({ ...form, cotizacionNombre: e.target.value })} placeholder="Golden Voley C.D Opcion 3" className="input" /></Campo>
+          <div className="grid grid-cols-2 gap-2">
+            <Campo label="Valor de la reserva"><input type="number" value={form.valorReserva} onChange={e => setForm({ ...form, valorReserva: e.target.value })} className="input" /></Campo>
+            <Campo label="% comisión"><input type="number" value={form.porcentaje} onChange={e => setForm({ ...form, porcentaje: e.target.value })} className="input" /></Campo>
+          </div>
+          {montoComision > 0 && <p className="text-[11px] text-amber-400">Comisión: {fmtCOP(montoComision)}</p>}
+          <Campo label="Estado">
+            <select value={form.estado} onChange={e => setForm({ ...form, estado: e.target.value })} className="input">
+              <option value="Pendiente confirmar opcion">Pendiente confirmar opción</option>
+              <option value="Confirmado">Confirmado</option>
+              <option value="Pagado">Pagado</option>
+            </select>
+          </Campo>
+          <Campo label="Notas"><textarea value={form.notas} onChange={e => setForm({ ...form, notas: e.target.value })} rows={2} className="input" /></Campo>
+
+          {esEdicion && onDelete && (
+            <button
+              onClick={onDelete}
+              className="w-full py-2 mt-2 border border-red-900 text-red-400 hover:bg-red-950/40 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5"
+            >
+              <Trash2 size={13} /> Eliminar esta comisión
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Campo({ label, children }: { label: string; children: React.ReactNode }) {
   return (

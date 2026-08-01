@@ -11,6 +11,7 @@ const TABLES = {
   RESERVAS_GRUPO: 'Reservas_grupo',
   PAGO_PROVEEDORES: 'Pago_proveedores',
   PAGOS: 'Pagos',
+  COMISIONES_REFERIDOS: 'Comisiones_Referidos',
 };
 
 const getHeaders = () => ({
@@ -215,6 +216,86 @@ export async function createAbonoCliente(data: { referencia: string; monto: numb
   });
   if (!response.ok) throw new Error(`Error ${response.status} creando abono de cliente`);
   return response.json();
+}
+
+export interface ComisionReferido {
+  id: string;
+  organizador: string;
+  clienteReferido: string;
+  cotizacionNombre: string;
+  valorReserva: number;
+  porcentaje: number;
+  montoComision: number;
+  estado: string;
+  notas: string;
+}
+
+export async function getComisionesReferidos(): Promise<ComisionReferido[]> {
+  const raw = await fetchAllRecords(TABLES.COMISIONES_REFERIDOS);
+  return raw.map(r => {
+    const f = r.fields;
+    const valorReserva = parseFloat(f['Valor_Reserva']) || 0;
+    const porcentaje = parseFloat(f['Porcentaje']) || 0;
+    return {
+      id: r.id,
+      organizador: f['Organizador'] || '',
+      clienteReferido: f['Cliente_Referido'] || '',
+      cotizacionNombre: f['Cotizacion_Nombre'] || '',
+      valorReserva,
+      porcentaje,
+      montoComision: valorReserva * (porcentaje / 100),
+      estado: f['Estado'] || '',
+      notas: f['Notas'] || '',
+    };
+  });
+}
+
+export async function createComisionReferido(data: Omit<ComisionReferido, 'id' | 'montoComision'>): Promise<any> {
+  const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COMISIONES_REFERIDOS)}`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({
+      fields: {
+        'Organizador': data.organizador,
+        'Cliente_Referido': data.clienteReferido,
+        'Cotizacion_Nombre': data.cotizacionNombre,
+        'Valor_Reserva': String(data.valorReserva || ''),
+        'Porcentaje': String(data.porcentaje || ''),
+        'Estado': data.estado,
+        'Notas': data.notas || '',
+      },
+      typecast: true,
+    }),
+  });
+  if (!response.ok) throw new Error(`Error ${response.status} creando comisión`);
+  return response.json();
+}
+
+export async function updateComisionReferido(id: string, data: Partial<Omit<ComisionReferido, 'id' | 'montoComision'>>): Promise<any> {
+  const fields: Record<string, any> = {};
+  if (data.organizador !== undefined) fields['Organizador'] = data.organizador;
+  if (data.clienteReferido !== undefined) fields['Cliente_Referido'] = data.clienteReferido;
+  if (data.cotizacionNombre !== undefined) fields['Cotizacion_Nombre'] = data.cotizacionNombre;
+  if (data.valorReserva !== undefined) fields['Valor_Reserva'] = String(data.valorReserva);
+  if (data.porcentaje !== undefined) fields['Porcentaje'] = String(data.porcentaje);
+  if (data.estado !== undefined) fields['Estado'] = data.estado;
+  if (data.notas !== undefined) fields['Notas'] = data.notas;
+
+  const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COMISIONES_REFERIDOS)}/${id}`, {
+    method: 'PATCH',
+    headers: getHeaders(),
+    body: JSON.stringify({ fields, typecast: true }),
+  });
+  if (!response.ok) throw new Error(`Error ${response.status} actualizando comisión`);
+  return response.json();
+}
+
+export async function deleteComisionReferido(id: string): Promise<void> {
+  const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COMISIONES_REFERIDOS)}/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  if (!response.ok) throw new Error(`Error ${response.status} borrando comisión`);
 }
 
 export async function updateReservaGrupo(id: string, data: Partial<ReservaGrupo>): Promise<any> {
