@@ -14,11 +14,18 @@ const CACHE_MS = 5 * 60_000;
 
 router.get('/', async (_req, res) => {
   try {
-    if (cache.data && Date.now() - cache.ts < CACHE_MS) return res.json(cache.data);
+    if (cache.data && Date.now() - cache.ts < CACHE_MS) {
+      console.log(`✅ paquetes-internacionales: ${cache.data.length} desde caché`);
+      return res.json(cache.data);
+    }
 
     const key  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
     const base = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
-    if (!key) return res.json([]);
+    console.log(`🔎 paquetes-internacionales: base=${base} key=${key ? 'presente (' + key.slice(0, 6) + '...)' : 'AUSENTE'}`);
+    if (!key) {
+      console.warn('⚠️ paquetes-internacionales: AIRTABLE_API_KEY no está configurada en este servicio de Render');
+      return res.json([]);
+    }
 
     const formula = encodeURIComponent(`{Estado}="Activo"`);
     const r = await fetch(
@@ -26,10 +33,12 @@ router.get('/', async (_req, res) => {
       { headers: { Authorization: `Bearer ${key}` } },
     );
     if (!r.ok) {
-      console.warn(`⚠️ ${TABLE} no disponible (${r.status}) — sección internacional oculta`);
+      const errBody = await r.text().catch(() => '(sin body)');
+      console.warn(`⚠️ ${TABLE} no disponible (${r.status}) — sección internacional oculta — respuesta: ${errBody.slice(0, 300)}`);
       return res.json([]);
     }
     const data = await r.json();
+    console.log(`📦 paquetes-internacionales: Airtable devolvió ${data.records?.length ?? 0} registros con Estado="Activo" (base ${base})`);
     const paquetes = (data.records || []).map(rec => ({
       id: rec.id,
       nombre: rec.fields['Nombre'] || '',
@@ -44,7 +53,7 @@ router.get('/', async (_req, res) => {
     })).filter(p => p.nombre);
 
     paquetes.sort((a, b) => (a.categoria + String(a.precioDesde).padStart(6, '0')).localeCompare(b.categoria + String(b.precioDesde).padStart(6, '0')));
-    cache = { data: paquetes, ts: Date.now() };
+    if (paquetes.length > 0) cache = { data: paquetes, ts: Date.now() };
     res.json(paquetes);
   } catch (err) {
     console.error('❌ paquetes-internacionales:', err.message);
