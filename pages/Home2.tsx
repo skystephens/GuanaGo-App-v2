@@ -206,12 +206,22 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
           </button>
           <button
             onClick={() => onNavigate(AppRoute.CULTURA_EVENTOS)}
-            className="col-span-2 md:col-span-1 bg-gradient-to-br from-purple-600 to-fuchsia-700 text-white p-4 md:p-5 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
+            className="bg-gradient-to-br from-purple-600 to-fuchsia-700 text-white p-4 md:p-5 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
           >
             <span className="text-2xl mb-2 block">🥥</span>
             <h4 className="font-bold text-sm">Cultura & Eventos</h4>
             <p className="text-[11px] opacity-80">Caribbean Night · Coco Art · Ruta Raizal</p>
           </button>
+          {paquetes.length > 0 && (
+            <button
+              onClick={() => document.getElementById('internacional')?.scrollIntoView({ behavior: 'smooth' })}
+              className="bg-gradient-to-br from-indigo-600 to-blue-500 text-white p-4 md:p-5 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
+            >
+              <span className="text-2xl mb-2 block">🌍</span>
+              <h4 className="font-bold text-sm">Otros Destinos</h4>
+              <p className="text-[11px] opacity-80">Paquetes internacionales</p>
+            </button>
+          )}
         </div>
       </div>
 
