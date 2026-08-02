@@ -129,6 +129,23 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
          )}
       </header>
 
+      {/* Botón: Otros Destinos — paquetes internacionales de aliados */}
+      <div className="px-6 md:px-8 lg:px-12 pt-3">
+        <button
+          onClick={() => onNavigate(AppRoute.OTROS_DESTINOS)}
+          className="w-full flex items-center justify-between gap-3 bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-2xl px-5 py-3.5 shadow-sm hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🌍</span>
+            <div className="text-left">
+              <p className="text-white font-bold text-sm leading-tight">Otros Destinos</p>
+              <p className="text-indigo-100 text-[11px] leading-tight">Paquetes internacionales con nuestros aliados</p>
+            </div>
+          </div>
+          <span className="text-white text-lg">›</span>
+        </button>
+      </div>
+
       <div className="px-6 md:px-8 lg:px-12">
         {/* Sección Planifica tu Viaje - Accesos directos a categorías */}
         <div className="mb-8 mt-4">

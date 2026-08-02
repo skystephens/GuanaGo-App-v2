@@ -19,6 +19,7 @@ import TourList from './pages/TourList';
 import HotelList from './pages/HotelList';
 import TaxiList from './pages/TaxiList';
 import PackageList from './pages/PackageList';
+import OtrosDestinos from './pages/OtrosDestinos';
 
 // RIMM Caribbean Night Pages
 import RimmCluster from './pages/RimmCluster';
@@ -303,6 +304,7 @@ const App: React.FC = () => {
       case AppRoute.HOTEL_LIST: return <HotelList onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.TAXI_LIST: return <TaxiList onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.PACKAGE_LIST: return <PackageList onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.OTROS_DESTINOS: return <OtrosDestinos onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.MARKETPLACE: return <Marketplace />;
       case AppRoute.TOUR_DETAIL: return <Detail type="tour" data={detailData} onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.HOTEL_DETAIL: return <Detail type="hotel" data={detailData} onBack={goBack} onNavigate={navigateTo} />;
