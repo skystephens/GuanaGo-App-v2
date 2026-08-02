@@ -13,6 +13,12 @@ let cache = { data: null, ts: 0 };
 const CACHE_MS = 5 * 60_000;
 
 router.get('/', async (_req, res) => {
+  // Esta es una API de datos, no un archivo estático — nunca debe responder
+  // 304 (sin cuerpo). El bug real: Express generaba un ETag automático y el
+  // navegador recibía "no modificado" con body vacío aunque Airtable sí
+  // tuviera los 13 paquetes — el fetch del frontend fallaba en silencio.
+  res.set('Cache-Control', 'no-store');
+
   try {
     if (cache.data && Date.now() - cache.ts < CACHE_MS) {
       console.log(`✅ paquetes-internacionales: ${cache.data.length} desde caché`);
