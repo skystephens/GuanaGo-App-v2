@@ -65,10 +65,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 
-// Static files
+// Static files — los archivos con hash (JS/CSS de Vite) se cachean agresivo
+// porque su nombre cambia con cada build. index.html NUNCA debe cachearse:
+// es el que le dice al navegador cuál es el hash actual del bundle.
 app.use(express.static(distPath, { 
   maxAge: '1h',
-  etag: false 
+  etag: false,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('index.html')) {
+      res.setHeader('Cache-Control', 'no-store');
+    }
+  },
 }));
 
 // ==================== API ROUTES ====================
@@ -214,7 +221,8 @@ app.use('/agencias', (req, res) => {
   const indexPath = path.join(agenciasDistPath, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.sendFile(indexPath);
+    res.setHeader('Cache-Control', 'no-store');
+    res.sendFile(indexPath, { etag: false, lastModified: false });
   } else {
     res.status(404).send('GuiaSAI B2B not built. Run: cd guiasai-b2b && npm run build');
   }
@@ -304,7 +312,8 @@ app.use((req, res, next) => {
 
   if (fs.existsSync(indexPath)) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.sendFile(indexPath);
+    res.setHeader('Cache-Control', 'no-store');
+    res.sendFile(indexPath, { etag: false, lastModified: false });
   } else {
     console.error(`❌ index.html no encontrado en ${indexPath}`);
     res.status(200).send(`
