@@ -790,53 +790,6 @@ export async function getDirectoryPoints() {
  * Obtener todos los servicios turísticos (Tours, Hoteles, etc.)
  * Ajustado para la estructura real de ServiciosTuristicos_SAI
  */
-export interface PaqueteInternacional {
-  id: string;
-  nombre: string;
-  categoria: string;
-  duracion: string;
-  origen: string;
-  salidas: string[];
-  precioDobleUSD: number;
-  precioSencillaUSD: number;
-  precioNinoUSD: number | null;
-  flyerUrl: string;
-  imagenUrl: string;
-  notasTarifa: string;
-  operador: string;
-  estado: string;
-}
-
-export async function getPaquetesInternacionales(): Promise<PaqueteInternacional[]> {
-  const url = `${AIRTABLE_API_URL}/Paquetes_Internacionales`;
-  const response = await fetch(url, { headers: getHeaders() });
-  if (!response.ok) throw new Error(`Error ${response.status} cargando Paquetes_Internacionales`);
-  const data = await response.json();
-
-  return (data.records || [])
-    .map((r: any): PaqueteInternacional => {
-      const f = r.fields;
-      const pick = (v: any) => (v && typeof v === 'object' && 'name' in v) ? v.name : (v || '');
-      return {
-        id: r.id,
-        nombre: f['Nombre'] || '',
-        categoria: pick(f['Categoria']),
-        duracion: pick(f['Duracion']),
-        origen: pick(f['Origen']),
-        salidas: (f['Salidas_2027'] || '').split('|').map((s: string) => s.trim()).filter(Boolean),
-        precioDobleUSD: f['Precio_Desde_Doble_USD'] || 0,
-        precioSencillaUSD: f['Precio_Sencilla_USD'] || 0,
-        precioNinoUSD: f['Precio_Nino_USD'] || null,
-        flyerUrl: f['Flyer_Drive'] || '',
-        imagenUrl: f['Imagen_URL'] || '',
-        notasTarifa: pick(f['Notas_Tarifa']),
-        operador: pick(f['Operador']),
-        estado: pick(f['Estado']),
-      };
-    })
-    .filter((p: PaqueteInternacional) => p.estado === 'Activo');
-}
-
 export async function getServices(category?: string) {
   let filterFormula = '';
   

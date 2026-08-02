@@ -82,9 +82,20 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
             <a href="#experiencias" className="hover:text-teal-600">Experiencias</a>
             <a href="#raizal" className="hover:text-teal-600">Ruta Raizal</a>
             <a href="#grupos" className="hover:text-teal-600">Grupos</a>
+            {paquetes.length > 0 && (
+              <a href="#internacional" className="hover:text-teal-600">🌍 Destinos</a>
+            )}
             <button onClick={() => onNavigate(AppRoute.MIS_COTIZACIONES)} className="hover:text-teal-600">Mis cotizaciones</button>
           </div>
           <div className="flex items-center gap-2">
+            {paquetes.length > 0 && (
+              <a
+                href="#internacional"
+                className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-xs hover:bg-indigo-100 transition-colors"
+              >
+                🌍 Otros Destinos
+              </a>
+            )}
             <button
               onClick={() => onNavigate(AppRoute.AUTH_GATE)}
               className="px-4 py-2 rounded-xl border-2 border-[#003D5C] text-[#003D5C] font-bold text-sm hover:bg-[#003D5C] hover:text-white transition-colors"
