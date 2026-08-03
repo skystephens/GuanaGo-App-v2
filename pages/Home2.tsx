@@ -82,9 +82,6 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
             <a href="#experiencias" className="hover:text-teal-600">Experiencias</a>
             <a href="#raizal" className="hover:text-teal-600">Ruta Raizal</a>
             <a href="#grupos" className="hover:text-teal-600">Grupos</a>
-            {paquetes.length > 0 && (
-              <button onClick={() => onNavigate(AppRoute.DESTINOS_INTERNACIONALES)} className="hover:text-teal-600">🌍 Destinos</button>
-            )}
             <button onClick={() => onNavigate(AppRoute.MIS_COTIZACIONES)} className="hover:text-teal-600">Mis cotizaciones</button>
           </div>
           <div className="flex items-center gap-2">
