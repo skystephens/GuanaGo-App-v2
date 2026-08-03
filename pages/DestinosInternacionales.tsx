@@ -98,8 +98,11 @@ const DestinosInternacionales: React.FC<Props> = ({ onBack }) => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtrados.map(p => {
-              const emoji = p.categoria === 'Europa' ? '🇪🇺' : p.categoria === 'Asia' ? '🌏' : '🕌';
+              const emoji = p.categoria === 'Colombia' ? '🇨🇴' : p.categoria === 'Europa' ? '🇪🇺' : p.categoria === 'Asia' ? '🌏' : '🕌';
               const primeraSalida = (p.salidas || '').split('|')[0].trim();
+              const precioFmt = p.categoria === 'Colombia'
+                ? `$${Math.round(p.precioDesde).toLocaleString('es-CO')} COP`
+                : `USD $${Math.round(p.precioDesde).toLocaleString('en-US')}`;
               return (
                 <a
                   key={p.id}
@@ -119,7 +122,7 @@ const DestinosInternacionales: React.FC<Props> = ({ onBack }) => {
                     <div className="flex items-center justify-between mt-3">
                       <div>
                         <p className="text-[9px] uppercase tracking-wide text-slate-400 font-semibold">Desde · por persona</p>
-                        <p className="font-black text-[#003D5C]">USD ${Math.round(p.precioDesde).toLocaleString('en-US')}</p>
+                        <p className="font-black text-[#003D5C]">{precioFmt}</p>
                       </div>
                       <span className="text-xs font-bold text-orange-500">Más info →</span>
                     </div>

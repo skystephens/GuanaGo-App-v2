@@ -21,6 +21,8 @@ interface Paquete {
 interface Props { onBack: () => void; onNavigate: (route: AppRoute) => void; }
 
 const fmtUSD = (n: number | null) => n ? `US$${n.toLocaleString('en-US')}` : '—';
+const fmtCOP = (n: number | null) => n ? `$${n.toLocaleString('es-CO')}` : '—';
+const fmtPrecio = (categoria: string, n: number | null) => categoria === 'Colombia' ? fmtCOP(n) : fmtUSD(n);
 
 export default function AdminPaquetesInternacionales({ onBack }: Props) {
   const [paquetes, setPaquetes] = useState<Paquete[]>([]);
@@ -87,7 +89,7 @@ export default function AdminPaquetesInternacionales({ onBack }: Props) {
               <p className="text-[11px] text-gray-500">{p.duracion} · {p.origen}</p>
             </div>
             <div className="text-right shrink-0">
-              <p className="text-sm font-bold text-emerald-400">{fmtUSD(p.precioDesde)}</p>
+              <p className="text-sm font-bold text-emerald-400">{fmtPrecio(p.categoria, p.precioDesde)}</p>
               <Pencil size={12} className="text-gray-600 ml-auto mt-1" />
             </div>
           </button>
@@ -170,7 +172,7 @@ function ModalPaquete({ paquete, onClose, onSaved, onDelete }: {
           <div className="grid grid-cols-2 gap-2">
             <Campo label="Categoría">
               <select value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} className="input">
-                <option>Europa</option><option>Asia</option><option>Medio Oriente</option><option>América</option><option>Otro</option>
+                <option>Colombia</option><option>Europa</option><option>Asia</option><option>Medio Oriente</option><option>América</option><option>Otro</option>
               </select>
             </Campo>
             <Campo label="Duración"><input value={form.duracion} onChange={e => setForm({ ...form, duracion: e.target.value })} placeholder="16 días / 14 noches" className="input" /></Campo>
