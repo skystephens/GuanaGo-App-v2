@@ -83,18 +83,18 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
             <a href="#raizal" className="hover:text-teal-600">Ruta Raizal</a>
             <a href="#grupos" className="hover:text-teal-600">Grupos</a>
             {paquetes.length > 0 && (
-              <a href="#internacional" className="hover:text-teal-600">🌍 Destinos</a>
+              <button onClick={() => onNavigate(AppRoute.DESTINOS_INTERNACIONALES)} className="hover:text-teal-600">🌍 Destinos</button>
             )}
             <button onClick={() => onNavigate(AppRoute.MIS_COTIZACIONES)} className="hover:text-teal-600">Mis cotizaciones</button>
           </div>
           <div className="flex items-center gap-2">
             {paquetes.length > 0 && (
-              <a
-                href="#internacional"
+              <button
+                onClick={() => onNavigate(AppRoute.DESTINOS_INTERNACIONALES)}
                 className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-xs hover:bg-indigo-100 transition-colors"
               >
                 🌍 Otros Destinos
-              </a>
+              </button>
             )}
             <button
               onClick={() => onNavigate(AppRoute.AUTH_GATE)}
@@ -214,7 +214,7 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
           </button>
           {paquetes.length > 0 && (
             <button
-              onClick={() => document.getElementById('internacional')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => onNavigate(AppRoute.DESTINOS_INTERNACIONALES)}
               className="bg-gradient-to-br from-indigo-600 to-blue-500 text-white p-4 md:p-5 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
             >
               <span className="text-2xl mb-2 block">🌍</span>
@@ -301,57 +301,6 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
         </div>
       </section>
 
-
-      {/* ══ DESTINOS INTERNACIONALES ══ */}
-      {paquetes.length > 0 && (
-        <section id="internacional" className="py-16 bg-white">
-          <div className="max-w-6xl mx-auto px-5">
-            <div className="flex items-end justify-between flex-wrap gap-3 mb-8">
-              <div>
-                <p className="text-[11px] font-bold tracking-[.14em] uppercase text-teal-600">Desde Bogotá y Medellín · Con asesoría GuiaSAI</p>
-                <h2 className="text-3xl font-black text-[#003D5C] mt-1">Destinos internacionales</h2>
-              </div>
-              <a href={`${wa}?text=${encodeURIComponent('Hola GuiaSAI 🌍 quiero información sobre los paquetes internacionales')}`} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-orange-500 hover:text-orange-600">
-                Habla con un asesor →
-              </a>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {paquetes.map(p => {
-                const emoji = p.categoria === 'Europa' ? '🇪🇺' : p.categoria === 'Asia' ? '🌏' : '🕌';
-                const primeraSalida = (p.salidas || '').split('|')[0].trim();
-                return (
-                  <a
-                    key={p.id}
-                    href={`${wa}?text=${encodeURIComponent(`Hola GuiaSAI 🌍 quiero información del paquete: ${p.nombre}`)}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all"
-                  >
-                    {p.imagen ? (
-                      <div className="h-40 bg-cover bg-center" style={{ backgroundImage: `url('${p.imagen}')` }} />
-                    ) : (
-                      <div className="h-40 flex items-center justify-center text-5xl" style={{ background: 'linear-gradient(115deg,#003D5C,#2AABBB)' }}>{emoji}</div>
-                    )}
-                    <div className="p-4">
-                      <p className="text-[9px] font-bold tracking-wider uppercase text-teal-600">{p.categoria} · {p.duracion}</p>
-                      <h3 className="font-bold text-[15px] text-gray-800 mt-1 leading-snug">{p.nombre}</h3>
-                      <p className="text-[11px] text-slate-400 mt-1">Salida desde {p.origen}{primeraSalida ? ` · ${primeraSalida}` : ''}</p>
-                      <div className="flex items-center justify-between mt-3">
-                        <div>
-                          <p className="text-[9px] uppercase tracking-wide text-slate-400 font-semibold">Desde · por persona</p>
-                          <p className="font-black text-[#003D5C]">USD ${Math.round(p.precioDesde).toLocaleString('en-US')}</p>
-                        </div>
-                        <span className="text-xs font-bold text-orange-500">Más info →</span>
-                      </div>
-                    </div>
-                  </a>
-                );
-              })}
-            </div>
-            <p className="text-[10px] text-slate-400 mt-4">Precios en USD por persona en acomodación doble; el pago se realiza en pesos colombianos según la TRM vigente. Programas operados con mayoristas aliados.</p>
-          </div>
-        </section>
-      )}
 
       {/* ══ POR QUÉ GUIASAI ══ */}
       <section className="py-16">

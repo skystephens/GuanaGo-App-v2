@@ -60,6 +60,7 @@ import Home2 from './pages/Home2';
 import AdminEditorHome from './pages/admin/AdminEditorHome';
 import AdminCRM from './pages/admin/AdminCRM';
 import CulturaEventos from './pages/CulturaEventos';
+import DestinosInternacionales from './pages/DestinosInternacionales';
 import AdminCopaDelegacion from './pages/admin/AdminCopaDelegacion';
 import AdminTorreCopa from './pages/admin/AdminTorreCopa';
 import CopaPortal from './pages/CopaPortal';
@@ -355,6 +356,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_EDITOR_HOME: return <AdminEditorHome onBack={goBack} />;
       case AppRoute.ADMIN_CRM: return <AdminCRM onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.CULTURA_EVENTOS: return <CulturaEventos onNavigate={navigateTo} onBack={goBack} />;
+      case AppRoute.DESTINOS_INTERNACIONALES: return <DestinosInternacionales onNavigate={navigateTo} onBack={goBack} />;
       case AppRoute.ADMIN_COPA_DELEGACION: return <AdminCopaDelegacion onBack={goBack} />;
       case AppRoute.ADMIN_TORRE_COPA: return <AdminTorreCopa onBack={goBack} />;
       case AppRoute.COPA_PORTAL: return <CopaPortal />;
