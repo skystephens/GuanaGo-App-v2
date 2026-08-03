@@ -209,18 +209,28 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
             <h4 className="font-bold text-sm">Cultura & Eventos</h4>
             <p className="text-[11px] opacity-80">Caribbean Night · Coco Art · Ruta Raizal</p>
           </button>
-          {paquetes.length > 0 && (
-            <button
-              onClick={() => onNavigate(AppRoute.DESTINOS_INTERNACIONALES)}
-              className="bg-gradient-to-br from-indigo-600 to-blue-500 text-white p-4 md:p-5 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
-            >
-              <span className="text-2xl mb-2 block">🌍</span>
-              <h4 className="font-bold text-sm">Otros Destinos</h4>
-              <p className="text-[11px] opacity-80">Paquetes internacionales</p>
-            </button>
-          )}
         </div>
       </div>
+
+      {/* ══ OTROS DESTINOS — banner aparte, no es contenido de San Andrés ══ */}
+      {paquetes.length > 0 && (
+        <div className="max-w-6xl mx-auto px-5 pt-6">
+          <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Descubre otros destinos de Colombia y el mundo</p>
+          <button
+            onClick={() => onNavigate(AppRoute.DESTINOS_INTERNACIONALES)}
+            className="w-full flex items-center justify-between gap-4 bg-gradient-to-r from-indigo-600 to-blue-500 text-white p-5 md:p-6 rounded-2xl shadow-md hover:shadow-lg hover:scale-[1.01] transition-all active:scale-[0.99] text-left"
+          >
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">🌍</span>
+              <div>
+                <h4 className="font-bold text-base md:text-lg">Otros Destinos</h4>
+                <p className="text-[12px] md:text-sm opacity-85">Paquetes internacionales con nuestros aliados — Europa, Asia y Medio Oriente</p>
+              </div>
+            </div>
+            <span className="text-2xl shrink-0">→</span>
+          </button>
+        </div>
+      )}
 
       {/* ══ EXPERIENCIAS ══ */}
       <section id="experiencias" className="py-16">
