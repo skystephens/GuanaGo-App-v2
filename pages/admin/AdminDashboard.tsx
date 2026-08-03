@@ -8,6 +8,7 @@ import {
   CheckCircle2, AlertCircle, Receipt, Briefcase, ListChecks,
   Menu, Wifi, WifiOff, Home, Settings, Globe, Layers, Trophy,
   CalendarDays, Crown, Gift, BarChart3, Store, MessageSquare,
+  Globe2,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { setInitialSection } from './AdminAliados';
@@ -737,7 +738,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
               pulse="bg-orange-400"
               onClick={() => onNavigate(AppRoute.ADMIN_CAMPANAS)}
             />
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <MiniButton icon={<PackageIcon size={18} className="text-orange-400" />} label="Servicios" onClick={() => onNavigate(AppRoute.ADMIN_SERVICES)} />
               <MiniButton icon={<Music size={18} className="text-orange-400" />} label="Caribbean"
                 onClick={() => onNavigate(AppRoute.ADMIN_CARIBBEAN)}
@@ -745,6 +746,9 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
               <MiniButton icon={<Palette size={18} className="text-pink-400" />} label="Artistas"
                 onClick={() => onNavigate(AppRoute.ADMIN_ARTISTAS)}
                 pulse="bg-pink-500" gradient="from-purple-900/60 to-pink-900/60" border="border-purple-700 hover:border-purple-500" />
+              <MiniButton icon={<Globe2 size={18} className="text-indigo-400" />} label="Paquetes Intl."
+                onClick={() => onNavigate(AppRoute.ADMIN_PAQUETES_INTERNACIONALES)}
+                pulse="bg-indigo-500" gradient="from-indigo-900/60 to-blue-900/60" border="border-indigo-700 hover:border-indigo-500" />
             </div>
           </Section>
 
