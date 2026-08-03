@@ -643,7 +643,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
                 gradient="from-rose-900/60 to-pink-900/60" border="border-rose-800 hover:border-rose-500"
               />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <MiniButton
                 icon={<Receipt size={18} className="text-orange-400" />} label="Vouchers"
                 onClick={() => onNavigate(AppRoute.ADMIN_VOUCHERS)}
@@ -651,6 +651,9 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
                 gradient="from-orange-900/60 to-red-900/60" border="border-orange-700 hover:border-orange-500"
               />
               <MiniButton icon={<TrendingUp size={18} className="text-purple-400" />} label="Finanzas" onClick={() => onNavigate(AppRoute.ADMIN_FINANCE)} />
+              <MiniButton icon={<Globe2 size={18} className="text-indigo-400" />} label="Paquetes Intl."
+                onClick={() => onNavigate(AppRoute.ADMIN_PAQUETES_INTERNACIONALES)}
+                pulse="bg-indigo-500" gradient="from-indigo-900/60 to-blue-900/60" border="border-indigo-700 hover:border-indigo-500" />
             </div>
           </Section>
 
@@ -738,7 +741,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
               pulse="bg-orange-400"
               onClick={() => onNavigate(AppRoute.ADMIN_CAMPANAS)}
             />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <MiniButton icon={<PackageIcon size={18} className="text-orange-400" />} label="Servicios" onClick={() => onNavigate(AppRoute.ADMIN_SERVICES)} />
               <MiniButton icon={<Music size={18} className="text-orange-400" />} label="Caribbean"
                 onClick={() => onNavigate(AppRoute.ADMIN_CARIBBEAN)}
@@ -746,9 +749,6 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
               <MiniButton icon={<Palette size={18} className="text-pink-400" />} label="Artistas"
                 onClick={() => onNavigate(AppRoute.ADMIN_ARTISTAS)}
                 pulse="bg-pink-500" gradient="from-purple-900/60 to-pink-900/60" border="border-purple-700 hover:border-purple-500" />
-              <MiniButton icon={<Globe2 size={18} className="text-indigo-400" />} label="Paquetes Intl."
-                onClick={() => onNavigate(AppRoute.ADMIN_PAQUETES_INTERNACIONALES)}
-                pulse="bg-indigo-500" gradient="from-indigo-900/60 to-blue-900/60" border="border-indigo-700 hover:border-indigo-500" />
             </div>
           </Section>
 
