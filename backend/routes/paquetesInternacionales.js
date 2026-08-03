@@ -47,7 +47,7 @@ router.get('/', async (_req, res) => {
     console.log(`📦 paquetes-internacionales: Airtable devolvió ${data.records?.length ?? 0} registros con Estado="Activo" (base ${base})`);
     const paquetes = (data.records || []).map(rec => ({
       id: rec.id,
-      nombre: rec.fields['Nombre'] || '',
+      nombre: rec.fields['Nombre'] || rec.fields['\uFEFFNombre'] || '',
       categoria: rec.fields['Categoria'] || 'Internacional',
       duracion: rec.fields['Duracion'] || '',
       origen: rec.fields['Origen'] || '',
@@ -57,6 +57,7 @@ router.get('/', async (_req, res) => {
       imagen: rec.fields['Imagen_URL'] || '',
       notas: rec.fields['Notas_Tarifa'] || '',
     })).filter(p => p.nombre);
+    console.log(`✅ paquetes-internacionales: ${paquetes.length} con nombre válido (de ${data.records?.length ?? 0} totales)`);
 
     paquetes.sort((a, b) => (a.categoria + String(a.precioDesde).padStart(6, '0')).localeCompare(b.categoria + String(b.precioDesde).padStart(6, '0')));
     if (paquetes.length > 0) cache = { data: paquetes, ts: Date.now() };
