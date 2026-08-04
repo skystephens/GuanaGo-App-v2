@@ -223,7 +223,7 @@ function DetallePaquete({ paquete: p, onClose }: { paquete: PaqueteIntl; onClose
               <a
                 href={p.flyerDrive}
                 target="_blank" rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl border border-gray-200 text-gray-700 text-sm font-bold hover:bg-gray-50"
+                className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600"
               >
                 <FileText size={16} /> Ver más
               </a>
