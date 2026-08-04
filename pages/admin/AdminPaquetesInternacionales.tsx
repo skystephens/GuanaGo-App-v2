@@ -172,7 +172,7 @@ function ModalPaquete({ paquete, onClose, onSaved, onDelete }: {
           <div className="grid grid-cols-2 gap-2">
             <Campo label="Categoría">
               <select value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} className="input">
-                <option>Colombia</option><option>Europa</option><option>Asia</option><option>Medio Oriente</option><option>América</option><option>Otro</option>
+                <option>Colombia</option><option>América</option><option>Europa</option><option>África</option><option>Asia</option><option>Medio Oriente</option><option>Otro</option>
               </select>
             </Campo>
             <Campo label="Duración"><input value={form.duracion} onChange={e => setForm({ ...form, duracion: e.target.value })} placeholder="16 días / 14 noches" className="input" /></Campo>

@@ -25,7 +25,8 @@ interface Props {
 }
 
 const emojiPara = (categoria: string) =>
-  categoria === 'Colombia' ? '🇨🇴' : categoria === 'Europa' ? '🇪🇺' : categoria === 'Asia' ? '🌏' : '🕌';
+  categoria === 'Colombia' ? '🇨🇴' : categoria === 'América' ? '🌎' : categoria === 'Europa' ? '🇪🇺' :
+  categoria === 'África' ? '🦁' : categoria === 'Asia' ? '🌏' : '🕌';
 
 const fmtPrecio = (categoria: string, n: number | null) => {
   if (!n) return null;
