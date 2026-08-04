@@ -54,6 +54,8 @@ router.get('/', async (_req, res) => {
       salidas: rec.fields['Salidas_2027'] || '',
       precioDesde: rec.fields['Precio_Desde_Doble_USD'] || 0,
       precioSencilla: rec.fields['Precio_Sencilla_USD'] || null,
+      precioNino: rec.fields['Precio_Nino_USD'] || null,
+      flyerDrive: rec.fields['Flyer_Drive'] || '',
       imagen: rec.fields['Imagen_URL'] || '',
       notas: rec.fields['Notas_Tarifa'] || '',
     })).filter(p => p.nombre);

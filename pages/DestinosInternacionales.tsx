@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Globe2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Globe2, Loader2, X, Calendar, MapPin, FileText, MessageCircle } from 'lucide-react';
 import { AppRoute } from '../types';
 
 const API = typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -14,7 +14,9 @@ const API = typeof window !== 'undefined' && window.location.hostname === 'local
 
 interface PaqueteIntl {
   id: string; nombre: string; categoria: string; duracion: string;
-  origen: string; salidas: string; precioDesde: number; imagen: string;
+  origen: string; salidas: string; precioDesde: number;
+  precioSencilla: number | null; precioNino: number | null;
+  flyerDrive: string; imagen: string; notas: string;
 }
 
 interface Props {
@@ -22,11 +24,23 @@ interface Props {
   onNavigate: (route: AppRoute) => void;
 }
 
+const emojiPara = (categoria: string) =>
+  categoria === 'Colombia' ? '🇨🇴' : categoria === 'Europa' ? '🇪🇺' : categoria === 'Asia' ? '🌏' : '🕌';
+
+const fmtPrecio = (categoria: string, n: number | null) => {
+  if (!n) return null;
+  return categoria === 'Colombia'
+    ? `$${Math.round(n).toLocaleString('es-CO')} COP`
+    : `USD $${Math.round(n).toLocaleString('en-US')}`;
+};
+
+const wa = 'https://wa.me/573153836043';
+
 const DestinosInternacionales: React.FC<Props> = ({ onBack }) => {
   const [paquetes, setPaquetes] = useState<PaqueteIntl[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoria, setCategoria] = useState('Todos');
-  const wa = 'https://wa.me/573153836043';
+  const [seleccionado, setSeleccionado] = useState<PaqueteIntl | null>(null);
 
   useEffect(() => {
     fetch(`${API}/api/paquetes-internacionales`)
@@ -98,17 +112,13 @@ const DestinosInternacionales: React.FC<Props> = ({ onBack }) => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtrados.map(p => {
-              const emoji = p.categoria === 'Colombia' ? '🇨🇴' : p.categoria === 'Europa' ? '🇪🇺' : p.categoria === 'Asia' ? '🌏' : '🕌';
+              const emoji = emojiPara(p.categoria);
               const primeraSalida = (p.salidas || '').split('|')[0].trim();
-              const precioFmt = p.categoria === 'Colombia'
-                ? `$${Math.round(p.precioDesde).toLocaleString('es-CO')} COP`
-                : `USD $${Math.round(p.precioDesde).toLocaleString('en-US')}`;
               return (
-                <a
+                <button
                   key={p.id}
-                  href={`${wa}?text=${encodeURIComponent(`Hola GuiaSAI 🌍 quiero información del paquete: ${p.nombre}`)}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all"
+                  onClick={() => setSeleccionado(p)}
+                  className="text-left bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all"
                 >
                   {p.imagen ? (
                     <div className="h-40 bg-cover bg-center" style={{ backgroundImage: `url('${p.imagen}')` }} />
@@ -122,19 +132,113 @@ const DestinosInternacionales: React.FC<Props> = ({ onBack }) => {
                     <div className="flex items-center justify-between mt-3">
                       <div>
                         <p className="text-[9px] uppercase tracking-wide text-slate-400 font-semibold">Desde · por persona</p>
-                        <p className="font-black text-[#003D5C]">{precioFmt}</p>
+                        <p className="font-black text-[#003D5C]">{fmtPrecio(p.categoria, p.precioDesde)}</p>
                       </div>
                       <span className="text-xs font-bold text-orange-500">Más info →</span>
                     </div>
                   </div>
-                </a>
+                </button>
               );
             })}
           </div>
         )}
       </div>
+
+      {seleccionado && <DetallePaquete paquete={seleccionado} onClose={() => setSeleccionado(null)} />}
     </div>
   );
 };
+
+function DetallePaquete({ paquete: p, onClose }: { paquete: PaqueteIntl; onClose: () => void }) {
+  const emoji = emojiPara(p.categoria);
+  const salidas = (p.salidas || '').split('|').map(s => s.trim()).filter(Boolean);
+  const waLink = `${wa}?text=${encodeURIComponent(`Hola GuiaSAI 🌍 quiero información del paquete: ${p.nombre}`)}`;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60" onClick={onClose}>
+      <div
+        className="bg-white w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl max-h-[92dvh] flex flex-col overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Imagen / cabecera */}
+        <div className="relative shrink-0">
+          {p.imagen ? (
+            <div className="h-48 bg-cover bg-center" style={{ backgroundImage: `url('${p.imagen}')` }} />
+          ) : (
+            <div className="h-48 flex items-center justify-center text-6xl" style={{ background: 'linear-gradient(115deg,#003D5C,#2AABBB)' }}>{emoji}</div>
+          )}
+          <button onClick={onClose} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow">
+            <X size={16} className="text-gray-700" />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 min-h-0 px-5 py-5">
+          <p className="text-[10px] font-bold tracking-wider uppercase text-teal-600">{p.categoria} · {p.duracion}</p>
+          <h2 className="text-xl font-black text-[#003D5C] mt-1 leading-snug">{p.nombre}</h2>
+
+          {p.origen && (
+            <p className="text-sm text-gray-600 flex items-center gap-1.5 mt-3">
+              <MapPin size={14} className="text-gray-400 shrink-0" /> Sale desde <b>{p.origen}</b>
+            </p>
+          )}
+
+          {salidas.length > 0 && (
+            <div className="text-sm text-gray-600 flex items-start gap-1.5 mt-2">
+              <Calendar size={14} className="text-gray-400 shrink-0 mt-0.5" />
+              <div>
+                <b>Próximas salidas</b>
+                <ul className="mt-1 space-y-0.5 text-[13px]">
+                  {salidas.map((s, i) => <li key={i}>• {s}</li>)}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Precios */}
+          <div className="grid grid-cols-3 gap-2 mt-4">
+            <div className="bg-gray-50 rounded-xl p-3 text-center">
+              <p className="text-[9px] uppercase text-gray-400 font-bold">Doble</p>
+              <p className="font-black text-[#003D5C] text-sm mt-0.5">{fmtPrecio(p.categoria, p.precioDesde) || '—'}</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-3 text-center">
+              <p className="text-[9px] uppercase text-gray-400 font-bold">Sencilla</p>
+              <p className="font-black text-[#003D5C] text-sm mt-0.5">{fmtPrecio(p.categoria, p.precioSencilla) || '—'}</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-3 text-center">
+              <p className="text-[9px] uppercase text-gray-400 font-bold">Niño</p>
+              <p className="font-black text-[#003D5C] text-sm mt-0.5">{fmtPrecio(p.categoria, p.precioNino) || '—'}</p>
+            </div>
+          </div>
+          <p className="text-[10px] text-gray-400 text-center mt-1.5">Precios por persona</p>
+
+          {p.notas && (
+            <div className="mt-4 bg-amber-50 border border-amber-100 rounded-xl p-3">
+              <p className="text-[12px] text-amber-900 leading-relaxed">{p.notas}</p>
+            </div>
+          )}
+
+          <div className="flex gap-2 mt-5">
+            {p.flyerDrive && (
+              <a
+                href={p.flyerDrive}
+                target="_blank" rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl border border-gray-200 text-gray-700 text-sm font-bold hover:bg-gray-50"
+              >
+                <FileText size={16} /> Ver flyer
+              </a>
+            )}
+            <a
+              href={waLink}
+              target="_blank" rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600"
+            >
+              <MessageCircle size={16} /> Consultar por WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default DestinosInternacionales;
