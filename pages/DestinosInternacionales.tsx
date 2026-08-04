@@ -225,7 +225,7 @@ function DetallePaquete({ paquete: p, onClose }: { paquete: PaqueteIntl; onClose
                 target="_blank" rel="noopener noreferrer"
                 className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl border border-gray-200 text-gray-700 text-sm font-bold hover:bg-gray-50"
               >
-                <FileText size={16} /> Ver flyer
+                <FileText size={16} /> Ver más
               </a>
             )}
             <a
