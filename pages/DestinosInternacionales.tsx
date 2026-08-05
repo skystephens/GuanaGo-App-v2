@@ -212,11 +212,7 @@ function DetallePaquete({ paquete: p, onClose }: { paquete: PaqueteIntl; onClose
           </div>
           <p className="text-[10px] text-gray-400 text-center mt-1.5">Precios por persona</p>
 
-          {p.notas && (
-            <div className="mt-4 bg-amber-50 border border-amber-100 rounded-xl p-3">
-              <p className="text-[12px] text-amber-900 leading-relaxed">{p.notas}</p>
-            </div>
-          )}
+          {p.notas && <NotasFormateadas texto={p.notas} />}
 
           <div className="flex gap-2 mt-5">
             {p.flyerDrive && (
@@ -238,6 +234,44 @@ function DetallePaquete({ paquete: p, onClose }: { paquete: PaqueteIntl; onClose
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function NotasFormateadas({ texto }: { texto: string }) {
+  const lineas = texto.split('\n').map(l => l.trim()).filter(l => l !== '');
+  const bloques: { tipo: 'titulo' | 'item' | 'texto'; contenido: string }[] = lineas.map(l => {
+    if (l.startsWith('## ')) return { tipo: 'titulo' as const, contenido: l.slice(3) };
+    if (l.startsWith('- ')) return { tipo: 'item' as const, contenido: l.slice(2) };
+    return { tipo: 'texto' as const, contenido: l };
+  });
+
+  // Si no tiene ningún título (notas viejas, texto plano suelto), se muestra igual que antes.
+  const tieneTitulos = bloques.some(b => b.tipo === 'titulo');
+  if (!tieneTitulos) {
+    return (
+      <div className="mt-4 bg-amber-50 border border-amber-100 rounded-xl p-3">
+        <p className="text-[12px] text-amber-900 leading-relaxed">{texto}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 bg-gray-50 border border-gray-100 rounded-xl p-4 space-y-2.5">
+      {bloques.map((b, i) => {
+        if (b.tipo === 'titulo') {
+          return <p key={i} className="text-[11px] font-black uppercase tracking-wide text-[#003D5C] pt-1 first:pt-0">{b.contenido}</p>;
+        }
+        if (b.tipo === 'item') {
+          return (
+            <div key={i} className="flex items-start gap-2 -mt-1">
+              <span className="text-teal-500 text-xs mt-0.5">•</span>
+              <p className="text-[12.5px] text-gray-700 leading-snug flex-1">{b.contenido}</p>
+            </div>
+          );
+        }
+        return <p key={i} className="text-[12.5px] text-gray-700 leading-snug">{b.contenido}</p>;
+      })}
     </div>
   );
 }
