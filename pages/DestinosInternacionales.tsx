@@ -1,11 +1,11 @@
 /**
  * DestinosInternacionales — Pantalla dedicada de paquetes internacionales de aliados
- * Muestra SOLO paquetes internacionales, sin ningún contenido de San Andrés.
- * Lee /api/paquetes-internacionales (misma fuente que usaba la sección en Home2).
+ * Diseño inspirado en la página de producto de WordPress/Divi de GuiaSAI:
+ * galería de fotos, descripción organizada, tabla de precios, relacionados.
  */
 
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Globe2, Loader2, X, Calendar, MapPin, FileText, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Globe2, Loader2, Calendar, MapPin, FileText, MessageCircle } from 'lucide-react';
 import { AppRoute } from '../types';
 
 const API = typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -41,7 +41,7 @@ const DestinosInternacionales: React.FC<Props> = ({ onBack }) => {
   const [paquetes, setPaquetes] = useState<PaqueteIntl[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoria, setCategoria] = useState('Todos');
-  const [seleccionado, setSeleccionado] = useState<PaqueteIntl | null>(null);
+  const [detalleId, setDetalleId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${API}/api/paquetes-internacionales`)
@@ -51,12 +51,25 @@ const DestinosInternacionales: React.FC<Props> = ({ onBack }) => {
       .finally(() => setLoading(false));
   }, []);
 
+  const detalle = paquetes.find(p => p.id === detalleId) || null;
+
+  if (detalle) {
+    return (
+      <DetallePaquete
+        paquete={detalle}
+        relacionados={paquetes.filter(p => p.categoria === detalle.categoria && p.id !== detalle.id).slice(0, 4)}
+        onBack={() => setDetalleId(null)}
+        onVerOtro={(id) => setDetalleId(id)}
+        onSalir={onBack}
+      />
+    );
+  }
+
   const categorias = ['Todos', ...Array.from(new Set(paquetes.map(p => p.categoria).filter(Boolean)))];
   const filtrados = categoria === 'Todos' ? paquetes : paquetes.filter(p => p.categoria === categoria);
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header — solo esto, nada de hero de San Andrés */}
       <div className="sticky top-0 bg-white/95 backdrop-blur-md z-40 border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-5 py-4 flex items-center gap-3">
           <button onClick={onBack} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 shrink-0">
@@ -86,7 +99,6 @@ const DestinosInternacionales: React.FC<Props> = ({ onBack }) => {
           </a>
         </div>
 
-        {/* Filtro por categoría */}
         {categorias.length > 1 && (
           <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6">
             {categorias.map(c => (
@@ -112,127 +124,188 @@ const DestinosInternacionales: React.FC<Props> = ({ onBack }) => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtrados.map(p => {
-              const emoji = emojiPara(p.categoria);
-              const primeraSalida = (p.salidas || '').split('|')[0].trim();
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => setSeleccionado(p)}
-                  className="text-left bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all"
-                >
-                  {p.imagen ? (
-                    <div className="h-40 bg-cover bg-center" style={{ backgroundImage: `url('${p.imagen}')` }} />
-                  ) : (
-                    <div className="h-40 flex items-center justify-center text-5xl" style={{ background: 'linear-gradient(115deg,#003D5C,#2AABBB)' }}>{emoji}</div>
-                  )}
-                  <div className="p-4">
-                    <p className="text-[9px] font-bold tracking-wider uppercase text-teal-600">{p.categoria} · {p.duracion}</p>
-                    <h3 className="font-bold text-[15px] text-gray-800 mt-1 leading-snug">{p.nombre}</h3>
-                    <p className="text-[11px] text-slate-400 mt-1">Salida desde {p.origen}{primeraSalida ? ` · ${primeraSalida}` : ''}</p>
-                    <div className="flex items-center justify-between mt-3">
-                      <div>
-                        <p className="text-[9px] uppercase tracking-wide text-slate-400 font-semibold">Desde · por persona</p>
-                        <p className="font-black text-[#003D5C]">{fmtPrecio(p.categoria, p.precioDesde)}</p>
-                      </div>
-                      <span className="text-xs font-bold text-orange-500">Más info →</span>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
+            {filtrados.map(p => (
+              <TarjetaPaquete key={p.id} p={p} onClick={() => setDetalleId(p.id)} />
+            ))}
           </div>
         )}
       </div>
-
-      {seleccionado && <DetallePaquete paquete={seleccionado} onClose={() => setSeleccionado(null)} />}
     </div>
   );
 };
 
-function DetallePaquete({ paquete: p, onClose }: { paquete: PaqueteIntl; onClose: () => void }) {
+function TarjetaPaquete({ p, onClick }: { p: PaqueteIntl; onClick: () => void }) {
   const emoji = emojiPara(p.categoria);
+  const primeraImagen = (p.imagen || '').split(',')[0].trim();
+  const primeraSalida = (p.salidas || '').split('|')[0].trim();
+  return (
+    <button
+      onClick={onClick}
+      className="text-left bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all"
+    >
+      {primeraImagen ? (
+        <div className="h-40 bg-cover bg-center" style={{ backgroundImage: `url('${primeraImagen}')` }} />
+      ) : (
+        <div className="h-40 flex items-center justify-center text-5xl" style={{ background: 'linear-gradient(115deg,#003D5C,#2AABBB)' }}>{emoji}</div>
+      )}
+      <div className="p-4">
+        <p className="text-[9px] font-bold tracking-wider uppercase text-teal-600">{p.categoria} · {p.duracion}</p>
+        <h3 className="font-bold text-[15px] text-gray-800 mt-1 leading-snug">{p.nombre}</h3>
+        <p className="text-[11px] text-slate-400 mt-1">Salida desde {p.origen || 'Colombia'}{primeraSalida ? ` · ${primeraSalida}` : ''}</p>
+        <div className="flex items-center justify-between mt-3">
+          <div>
+            <p className="text-[9px] uppercase tracking-wide text-slate-400 font-semibold">Desde · por persona</p>
+            <p className="font-black text-[#003D5C]">{fmtPrecio(p.categoria, p.precioDesde)}</p>
+          </div>
+          <span className="text-xs font-bold text-orange-500">Más info →</span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// ═══════════════════════════ PÁGINA DE DETALLE ═══════════════════════════
+
+function DetallePaquete({ paquete: p, relacionados, onBack, onVerOtro, onSalir }: {
+  paquete: PaqueteIntl; relacionados: PaqueteIntl[];
+  onBack: () => void; onVerOtro: (id: string) => void; onSalir: () => void;
+}) {
+  const emoji = emojiPara(p.categoria);
+  const imagenes = (p.imagen || '').split(',').map(u => u.trim()).filter(Boolean);
+  const [fotoActiva, setFotoActiva] = useState(0);
   const salidas = (p.salidas || '').split('|').map(s => s.trim()).filter(Boolean);
   const waLink = `${wa}?text=${encodeURIComponent(`Hola GuiaSAI 🌍 quiero información del paquete: ${p.nombre}`)}`;
 
+  useEffect(() => { setFotoActiva(0); window.scrollTo({ top: 0 }); }, [p.id]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60" onClick={onClose}>
-      <div
-        className="bg-white w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl max-h-[92dvh] flex flex-col overflow-hidden"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Imagen / cabecera */}
-        <div className="relative shrink-0">
-          {p.imagen ? (
-            <div className="h-48 bg-cover bg-center" style={{ backgroundImage: `url('${p.imagen}')` }} />
-          ) : (
-            <div className="h-48 flex items-center justify-center text-6xl" style={{ background: 'linear-gradient(115deg,#003D5C,#2AABBB)' }}>{emoji}</div>
-          )}
-          <button onClick={onClose} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow">
-            <X size={16} className="text-gray-700" />
+    <div className="min-h-screen bg-white">
+      <div className="sticky top-0 bg-white/95 backdrop-blur-md z-40 border-b border-gray-100">
+        <div className="max-w-5xl mx-auto px-5 py-4 flex items-center gap-3">
+          <button onClick={onBack} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 shrink-0">
+            <ArrowLeft size={20} className="text-gray-800" />
           </button>
+          <p className="text-xs text-gray-400">
+            <button onClick={onSalir} className="hover:text-teal-600">Otros Destinos</button> / {p.categoria}
+          </p>
         </div>
+      </div>
 
-        <div className="overflow-y-auto flex-1 min-h-0 px-5 py-5">
-          <p className="text-[10px] font-bold tracking-wider uppercase text-teal-600">{p.categoria} · {p.duracion}</p>
-          <h2 className="text-xl font-black text-[#003D5C] mt-1 leading-snug">{p.nombre}</h2>
-
-          {p.origen && (
-            <p className="text-sm text-gray-600 flex items-center gap-1.5 mt-3">
-              <MapPin size={14} className="text-gray-400 shrink-0" /> Sale desde <b>{p.origen}</b>
-            </p>
-          )}
-
-          {salidas.length > 0 && (
-            <div className="text-sm text-gray-600 flex items-start gap-1.5 mt-2">
-              <Calendar size={14} className="text-gray-400 shrink-0 mt-0.5" />
-              <div>
-                <b>Próximas salidas</b>
-                <ul className="mt-1 space-y-0.5 text-[13px]">
-                  {salidas.map((s, i) => <li key={i}>• {s}</li>)}
-                </ul>
+      <div className="max-w-5xl mx-auto px-5 py-6">
+        {imagenes.length > 0 ? (
+          <div>
+            <div className="h-56 md:h-80 rounded-2xl overflow-hidden bg-cover bg-center" style={{ backgroundImage: `url('${imagenes[fotoActiva]}')` }} />
+            {imagenes.length > 1 && (
+              <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar">
+                {imagenes.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setFotoActiva(i)}
+                    className={`shrink-0 w-16 h-16 rounded-lg bg-cover bg-center border-2 ${i === fotoActiva ? 'border-orange-500' : 'border-transparent opacity-70'}`}
+                    style={{ backgroundImage: `url('${img}')` }}
+                  />
+                ))}
               </div>
-            </div>
-          )}
-
-          {/* Precios */}
-          <div className="grid grid-cols-3 gap-2 mt-4">
-            <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <p className="text-[9px] uppercase text-gray-400 font-bold">Doble</p>
-              <p className="font-black text-[#003D5C] text-sm mt-0.5">{fmtPrecio(p.categoria, p.precioDesde) || '—'}</p>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <p className="text-[9px] uppercase text-gray-400 font-bold">Sencilla</p>
-              <p className="font-black text-[#003D5C] text-sm mt-0.5">{fmtPrecio(p.categoria, p.precioSencilla) || '—'}</p>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <p className="text-[9px] uppercase text-gray-400 font-bold">Niño</p>
-              <p className="font-black text-[#003D5C] text-sm mt-0.5">{fmtPrecio(p.categoria, p.precioNino) || '—'}</p>
-            </div>
-          </div>
-          <p className="text-[10px] text-gray-400 text-center mt-1.5">Precios por persona</p>
-
-          {p.notas && <NotasFormateadas texto={p.notas} />}
-
-          <div className="flex gap-2 mt-5">
-            {p.flyerDrive && (
-              <a
-                href={p.flyerDrive}
-                target="_blank" rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600"
-              >
-                <FileText size={16} /> Ver más
-              </a>
             )}
-            <a
-              href={waLink}
-              target="_blank" rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600"
-            >
-              <MessageCircle size={16} /> Consultar por WhatsApp
-            </a>
+          </div>
+        ) : (
+          <div className="h-56 md:h-80 rounded-2xl flex items-center justify-center text-7xl" style={{ background: 'linear-gradient(115deg,#003D5C,#2AABBB)' }}>{emoji}</div>
+        )}
+
+        <div className="mt-5">
+          <p className="text-[11px] font-bold tracking-wider uppercase text-teal-600">{p.categoria} · {p.duracion}</p>
+          <h1 className="text-2xl md:text-3xl font-black text-[#003D5C] mt-1 leading-snug">{p.nombre}</h1>
+
+          <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-3 text-sm text-gray-600">
+            {p.origen && (
+              <span className="flex items-center gap-1.5"><MapPin size={14} className="text-gray-400" /> Sale desde <b>{p.origen}</b></span>
+            )}
+            {salidas.length > 0 && (
+              <span className="flex items-center gap-1.5"><Calendar size={14} className="text-gray-400" /> {salidas[0]}</span>
+            )}
           </div>
         </div>
+
+        <div className="grid md:grid-cols-3 gap-6 mt-6">
+          <div className="md:col-span-2 space-y-5">
+            <div>
+              <h2 className="text-base font-black text-[#003D5C] mb-2">Descripción</h2>
+              {p.notas ? <NotasFormateadas texto={p.notas} /> : (
+                <p className="text-sm text-gray-500">Consulta con tu asesor para más detalles de este plan.</p>
+              )}
+            </div>
+
+            {salidas.length > 1 && (
+              <div>
+                <h2 className="text-base font-black text-[#003D5C] mb-2 flex items-center gap-1.5"><Calendar size={16} /> Próximas salidas</h2>
+                <div className="flex flex-wrap gap-2">
+                  {salidas.map((s, i) => (
+                    <span key={i} className="text-[12px] bg-teal-50 text-teal-700 font-semibold px-3 py-1.5 rounded-full">{s}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="md:sticky md:top-24 md:self-start">
+            <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-[#003D5C] px-4 py-3">
+                <p className="text-white font-black text-sm">Información adicional</p>
+              </div>
+              <table className="w-full text-sm">
+                <tbody>
+                  <tr className="border-b border-gray-100">
+                    <td className="px-4 py-2.5 text-gray-500">Doble</td>
+                    <td className="px-4 py-2.5 text-right font-black text-[#003D5C]">{fmtPrecio(p.categoria, p.precioDesde) || '—'}</td>
+                  </tr>
+                  {p.precioSencilla ? (
+                    <tr className="border-b border-gray-100">
+                      <td className="px-4 py-2.5 text-gray-500">Sencilla</td>
+                      <td className="px-4 py-2.5 text-right font-black text-[#003D5C]">{fmtPrecio(p.categoria, p.precioSencilla)}</td>
+                    </tr>
+                  ) : null}
+                  {p.precioNino ? (
+                    <tr>
+                      <td className="px-4 py-2.5 text-gray-500">Niño</td>
+                      <td className="px-4 py-2.5 text-right font-black text-[#003D5C]">{fmtPrecio(p.categoria, p.precioNino)}</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+              <p className="text-[10px] text-gray-400 text-center py-2 border-t border-gray-100">Precios por persona</p>
+            </div>
+
+            <div className="flex flex-col gap-2 mt-3">
+              {p.flyerDrive && (
+                <a
+                  href={p.flyerDrive}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-1.5 py-3 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600"
+                >
+                  <FileText size={16} /> Ver más
+                </a>
+              )}
+              <a
+                href={waLink}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 py-3 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600"
+              >
+                <MessageCircle size={16} /> Consultar por WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {relacionados.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-lg font-black text-[#003D5C] mb-4">Otros destinos de {p.categoria}</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {relacionados.map(r => (
+                <TarjetaPaquete key={r.id} p={r} onClick={() => onVerOtro(r.id)} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -246,31 +319,30 @@ function NotasFormateadas({ texto }: { texto: string }) {
     return { tipo: 'texto' as const, contenido: l };
   });
 
-  // Si no tiene ningún título (notas viejas, texto plano suelto), se muestra igual que antes.
   const tieneTitulos = bloques.some(b => b.tipo === 'titulo');
   if (!tieneTitulos) {
     return (
-      <div className="mt-4 bg-amber-50 border border-amber-100 rounded-xl p-3">
-        <p className="text-[12px] text-amber-900 leading-relaxed">{texto}</p>
+      <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
+        <p className="text-[12.5px] text-amber-900 leading-relaxed">{texto}</p>
       </div>
     );
   }
 
   return (
-    <div className="mt-4 bg-gray-50 border border-gray-100 rounded-xl p-4 space-y-2.5">
+    <div className="space-y-3">
       {bloques.map((b, i) => {
         if (b.tipo === 'titulo') {
-          return <p key={i} className="text-[11px] font-black uppercase tracking-wide text-[#003D5C] pt-1 first:pt-0">{b.contenido}</p>;
+          return <p key={i} className="text-[12px] font-black uppercase tracking-wide text-teal-600 pt-2 first:pt-0">{b.contenido}</p>;
         }
         if (b.tipo === 'item') {
           return (
-            <div key={i} className="flex items-start gap-2 -mt-1">
-              <span className="text-teal-500 text-xs mt-0.5">•</span>
-              <p className="text-[12.5px] text-gray-700 leading-snug flex-1">{b.contenido}</p>
+            <div key={i} className="flex items-start gap-2 -mt-2">
+              <span className="text-teal-500 text-sm mt-0.5">•</span>
+              <p className="text-[13.5px] text-gray-700 leading-snug flex-1">{b.contenido}</p>
             </div>
           );
         }
-        return <p key={i} className="text-[12.5px] text-gray-700 leading-snug">{b.contenido}</p>;
+        return <p key={i} className="text-[13.5px] text-gray-700 leading-snug">{b.contenido}</p>;
       })}
     </div>
   );
