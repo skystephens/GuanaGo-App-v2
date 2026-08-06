@@ -28,6 +28,50 @@ const JARVIS_QUICK: string[] = [
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
+// ─── Airtable — Notas_Internas / Oportunidades / Eventos_Trazabilidad ──────────
+// Reemplaza el localStorage anterior: ahora todo se guarda de verdad, accesible
+// desde cualquier dispositivo con sesión de Super Admin.
+
+const AT_KEY  = import.meta.env.VITE_AIRTABLE_API_KEY || '';
+const AT_BASE = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
+const AT_URL  = `https://api.airtable.com/v0/${AT_BASE}`;
+const AT_HEADERS = { Authorization: `Bearer ${AT_KEY}`, 'Content-Type': 'application/json' };
+
+async function atList(tabla: string) {
+  let all: any[] = [];
+  let offset: string | undefined;
+  do {
+    const url = `${AT_URL}/${encodeURIComponent(tabla)}${offset ? `?offset=${offset}` : ''}`;
+    const r = await fetch(url, { headers: AT_HEADERS });
+    if (!r.ok) throw new Error(`Airtable ${r.status} en ${tabla}`);
+    const data = await r.json();
+    all = all.concat(data.records || []);
+    offset = data.offset;
+  } while (offset);
+  return all;
+}
+
+async function atCreate(tabla: string, fields: Record<string, any>) {
+  const r = await fetch(`${AT_URL}/${encodeURIComponent(tabla)}`, {
+    method: 'POST', headers: AT_HEADERS, body: JSON.stringify({ fields, typecast: true }),
+  });
+  if (!r.ok) throw new Error(`Airtable ${r.status} creando en ${tabla}`);
+  return r.json();
+}
+
+async function atUpdate(tabla: string, id: string, fields: Record<string, any>) {
+  const r = await fetch(`${AT_URL}/${encodeURIComponent(tabla)}/${id}`, {
+    method: 'PATCH', headers: AT_HEADERS, body: JSON.stringify({ fields, typecast: true }),
+  });
+  if (!r.ok) throw new Error(`Airtable ${r.status} editando en ${tabla}`);
+  return r.json();
+}
+
+async function atDelete(tabla: string, id: string) {
+  const r = await fetch(`${AT_URL}/${encodeURIComponent(tabla)}/${id}`, { method: 'DELETE', headers: AT_HEADERS });
+  if (!r.ok) throw new Error(`Airtable ${r.status} borrando en ${tabla}`);
+}
+
 type NotaCategoria = 'reunión' | 'idea' | 'dev' | 'oportunidad' | 'contexto' | 'general';
 type OportunidadEstado = 'identificada' | 'contactada' | 'negociación' | 'cerrada' | 'descartada';
 type Proyecto = 'GuanaGO' | 'GuiaSAI' | 'Taxi App' | 'Web3/Token' | 'Otro';
@@ -201,10 +245,8 @@ export default function AdminCerebro({ onBack }: Props) {
   const [tab, setTab] = useState<Tab>('jarvis');
 
   // Notas
-  const [notas, setNotas] = useState<Nota[]>(() => {
-    try { const s = localStorage.getItem(STORAGE_NOTAS); return s ? JSON.parse(s) : SEED_NOTAS; }
-    catch { return SEED_NOTAS; }
-  });
+  const [notas, setNotas] = useState<Nota[]>([]);
+  const [cargandoCerebro, setCargandoCerebro] = useState(true);
   const [busqueda, setBusqueda]     = useState('');
   const [filtroCat, setFiltroCat]   = useState<NotaCategoria | 'todas'>('todas');
   const [filtroProy, setFiltroProy] = useState<Proyecto | 'todos'>('todos');
@@ -212,21 +254,67 @@ export default function AdminCerebro({ onBack }: Props) {
   const [nuevaNota, setNuevaNota]   = useState(false);
 
   // Oportunidades
-  const [opors, setOpors] = useState<Oportunidad[]>(() => {
-    try { const s = localStorage.getItem(STORAGE_OPORS); return s ? JSON.parse(s) : SEED_OPORTUNIDADES; }
-    catch { return SEED_OPORTUNIDADES; }
-  });
+  const [opors, setOpors] = useState<Oportunidad[]>([]);
   const [editandoOpor, setEditandoOpor] = useState<Oportunidad | null>(null);
   const [nuevaOpor, setNuevaOpor]   = useState(false);
 
   // Trazabilidad
-  const [eventos, setEventos] = useState<EventoTrazabilidad[]>(() => {
-    try { const s = localStorage.getItem(STORAGE_TRAZ); return s ? JSON.parse(s) : SEED_TRAZ; }
-    catch { return SEED_TRAZ; }
-  });
+  const [eventos, setEventos] = useState<EventoTrazabilidad[]>([]);
   const [editandoEvento, setEditandoEvento] = useState<EventoTrazabilidad | null>(null);
   const [nuevoEvento, setNuevoEvento] = useState(false);
   const [filtroTipo, setFiltroTipo]   = useState<EventoTipo | 'todos'>('todos');
+
+  // Carga inicial desde Airtable (reemplaza el localStorage.getItem anterior)
+  useEffect(() => {
+    (async () => {
+      try {
+        const [notasR, oporsR, eventosR] = await Promise.all([
+          atList('Notas_Internas'),
+          atList('Oportunidades'),
+          atList('Eventos_Trazabilidad'),
+        ]);
+        setNotas(notasR.map((r: any): Nota => ({
+          id: r.id,
+          titulo: r.fields['Titulo'] || '',
+          contenido: r.fields['Contenido'] || '',
+          categoria: (r.fields['Categoria'] || 'general') as NotaCategoria,
+          proyecto: (r.fields['Proyecto'] || 'GuanaGO') as Proyecto,
+          fijada: !!r.fields['Fijada'],
+          creadaEn: r.fields['Fecha'] || r.createdTime,
+          editadaEn: r.fields['Fecha'] || r.createdTime,
+        })));
+        setOpors(oporsR.map((r: any): Oportunidad => ({
+          id: r.id,
+          titulo: r.fields['Titulo'] || '',
+          descripcion: r.fields['Descripcion'] || '',
+          proyecto: (r.fields['Proyecto'] || 'GuanaGO') as Proyecto,
+          estado: (r.fields['Estado'] || 'identificada') as OportunidadEstado,
+          fuente: r.fields['Fuente'] || '',
+          valorEstimado: r.fields['Valor_Estimado'] || '',
+          siguientePaso: r.fields['Siguiente_Paso'] || '',
+          fechaLimite: r.fields['Fecha_Limite'] || '',
+          creadaEn: r.createdTime,
+        })));
+        setEventos(eventosR.map((r: any): EventoTrazabilidad => ({
+          id: r.id,
+          tipo: (r.fields['Tipo'] || 'sistema') as EventoTipo,
+          titulo: r.fields['Titulo'] || '',
+          descripcion: r.fields['Descripcion'] || '',
+          proyecto: (r.fields['Proyecto'] || 'GuanaGO') as Proyecto,
+          fecha: r.fields['Fecha'] || r.createdTime,
+          participantes: r.fields['Participantes'] || '',
+          resultado: r.fields['Resultado'] || '',
+          siguientePaso: r.fields['Siguiente_Paso'] || '',
+          referenciaId: r.fields['Referencia_Id'] || '',
+          creadaEn: r.createdTime,
+        })));
+      } catch (err) {
+        console.error('[AdminCerebro] Error cargando desde Airtable:', err);
+      } finally {
+        setCargandoCerebro(false);
+      }
+    })();
+  }, []);
 
   // Jarvis
   const [jMsgs, setJMsgs]       = useState<JarvisMsg[]>([]);
@@ -266,10 +354,6 @@ export default function AdminCerebro({ onBack }: Props) {
   // Export
   const [copiado, setCopiado] = useState(false);
 
-  useEffect(() => { localStorage.setItem(STORAGE_NOTAS, JSON.stringify(notas)); }, [notas]);
-  useEffect(() => { localStorage.setItem(STORAGE_OPORS, JSON.stringify(opors)); }, [opors]);
-  useEffect(() => { localStorage.setItem(STORAGE_TRAZ, JSON.stringify(eventos)); }, [eventos]);
-
   // ── Notas helpers ──────────────────────────────────────────────────────────
 
   const notasFiltradas = notas
@@ -281,38 +365,70 @@ export default function AdminCerebro({ onBack }: Props) {
       return new Date(b.editadaEn).getTime() - new Date(a.editadaEn).getTime();
     });
 
-  const guardarNota = (nota: Nota) => {
-    setNotas(prev => {
-      const exists = prev.find(n => n.id === nota.id);
-      if (exists) return prev.map(n => n.id === nota.id ? nota : n);
-      return [nota, ...prev];
-    });
+  const guardarNota = async (nota: Nota) => {
+    const existe = notas.find(n => n.id === nota.id);
+    const fields = {
+      Titulo: nota.titulo, Contenido: nota.contenido, Categoria: nota.categoria,
+      Proyecto: nota.proyecto, Fijada: nota.fijada, Fecha: new Date().toISOString().slice(0, 10),
+    };
+    try {
+      if (existe) {
+        await atUpdate('Notas_Internas', nota.id, fields);
+        setNotas(prev => prev.map(n => n.id === nota.id ? nota : n));
+      } else {
+        const creado = await atCreate('Notas_Internas', fields);
+        setNotas(prev => [{ ...nota, id: creado.id }, ...prev]);
+      }
+    } catch (err) {
+      alert('Error guardando la nota: ' + err);
+    }
     setEditandoNota(null);
     setNuevaNota(false);
   };
 
-  const eliminarNota = (id: string) => {
-    if (confirm('¿Eliminar esta nota?')) setNotas(prev => prev.filter(n => n.id !== id));
+  const eliminarNota = async (id: string) => {
+    if (!confirm('¿Eliminar esta nota?')) return;
+    try { await atDelete('Notas_Internas', id); setNotas(prev => prev.filter(n => n.id !== id)); }
+    catch (err) { alert('Error borrando: ' + err); }
   };
 
-  const toggleFijada = (id: string) => {
-    setNotas(prev => prev.map(n => n.id === id ? { ...n, fijada: !n.fijada } : n));
+  const toggleFijada = async (id: string) => {
+    const nota = notas.find(n => n.id === id);
+    if (!nota) return;
+    const nuevoValor = !nota.fijada;
+    setNotas(prev => prev.map(n => n.id === id ? { ...n, fijada: nuevoValor } : n));
+    try { await atUpdate('Notas_Internas', id, { Fijada: nuevoValor }); }
+    catch (err) { console.error('Error actualizando Fijada:', err); }
   };
 
   // ── Oportunidades helpers ──────────────────────────────────────────────────
 
-  const guardarOpor = (opor: Oportunidad) => {
-    setOpors(prev => {
-      const exists = prev.find(o => o.id === opor.id);
-      if (exists) return prev.map(o => o.id === opor.id ? opor : o);
-      return [opor, ...prev];
-    });
+  const guardarOpor = async (opor: Oportunidad) => {
+    const existe = opors.find(o => o.id === opor.id);
+    const fields = {
+      Titulo: opor.titulo, Descripcion: opor.descripcion, Proyecto: opor.proyecto,
+      Estado: opor.estado, Fuente: opor.fuente, Valor_Estimado: opor.valorEstimado || '',
+      Siguiente_Paso: opor.siguientePaso, Fecha_Limite: opor.fechaLimite || null,
+    };
+    try {
+      if (existe) {
+        await atUpdate('Oportunidades', opor.id, fields);
+        setOpors(prev => prev.map(o => o.id === opor.id ? opor : o));
+      } else {
+        const creado = await atCreate('Oportunidades', fields);
+        setOpors(prev => [{ ...opor, id: creado.id }, ...prev]);
+      }
+    } catch (err) {
+      alert('Error guardando la oportunidad: ' + err);
+    }
     setEditandoOpor(null);
     setNuevaOpor(false);
   };
 
-  const eliminarOpor = (id: string) => {
-    if (confirm('¿Eliminar esta oportunidad?')) setOpors(prev => prev.filter(o => o.id !== id));
+  const eliminarOpor = async (id: string) => {
+    if (!confirm('¿Eliminar esta oportunidad?')) return;
+    try { await atDelete('Oportunidades', id); setOpors(prev => prev.filter(o => o.id !== id)); }
+    catch (err) { alert('Error borrando: ' + err); }
   };
 
   // ── Trazabilidad helpers ───────────────────────────────────────────────────
@@ -321,18 +437,33 @@ export default function AdminCerebro({ onBack }: Props) {
     .filter(e => filtroTipo === 'todos' || e.tipo === filtroTipo)
     .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
 
-  const guardarEvento = (ev: EventoTrazabilidad) => {
-    setEventos(prev => {
-      const exists = prev.find(e => e.id === ev.id);
-      if (exists) return prev.map(e => e.id === ev.id ? ev : e);
-      return [ev, ...prev];
-    });
+  const guardarEvento = async (ev: EventoTrazabilidad) => {
+    const existe = eventos.find(e => e.id === ev.id);
+    const fields = {
+      Titulo: ev.titulo, Tipo: ev.tipo, Descripcion: ev.descripcion, Proyecto: ev.proyecto,
+      Fecha: ev.fecha ? ev.fecha.slice(0, 10) : new Date().toISOString().slice(0, 10),
+      Participantes: ev.participantes, Resultado: ev.resultado,
+      Siguiente_Paso: ev.siguientePaso, Referencia_Id: ev.referenciaId || '',
+    };
+    try {
+      if (existe) {
+        await atUpdate('Eventos_Trazabilidad', ev.id, fields);
+        setEventos(prev => prev.map(e => e.id === ev.id ? ev : e));
+      } else {
+        const creado = await atCreate('Eventos_Trazabilidad', fields);
+        setEventos(prev => [{ ...ev, id: creado.id }, ...prev]);
+      }
+    } catch (err) {
+      alert('Error guardando el evento: ' + err);
+    }
     setEditandoEvento(null);
     setNuevoEvento(false);
   };
 
-  const eliminarEvento = (id: string) => {
-    if (confirm('¿Eliminar este registro de trazabilidad?')) setEventos(prev => prev.filter(e => e.id !== id));
+  const eliminarEvento = async (id: string) => {
+    if (!confirm('¿Eliminar este registro de trazabilidad?')) return;
+    try { await atDelete('Eventos_Trazabilidad', id); setEventos(prev => prev.filter(e => e.id !== id)); }
+    catch (err) { alert('Error borrando: ' + err); }
   };
 
   const descargarEventoMD = (ev: EventoTrazabilidad) => {
@@ -496,6 +627,12 @@ _Fin del contexto. Cargar este archivo en Claude Code para continuar con context
           ))}
         </div>
       </header>
+
+      {cargandoCerebro && (
+        <div className="px-4 py-2 bg-indigo-950/60 border-b border-indigo-800 flex items-center gap-2 text-[11px] text-indigo-300">
+          <Loader2 size={12} className="animate-spin" /> Cargando notas, oportunidades y trazabilidad desde Airtable…
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto">
 
@@ -724,7 +861,10 @@ _Fin del contexto. Cargar este archivo en Claude Code para continuar con context
                         opor={opor}
                         onEdit={() => { setEditandoOpor(opor); setNuevaOpor(false); }}
                         onDelete={() => eliminarOpor(opor.id)}
-                        onEstado={(estado) => setOpors(prev => prev.map(o => o.id === opor.id ? { ...o, estado } : o))}
+                        onEstado={(estado) => {
+                          setOpors(prev => prev.map(o => o.id === opor.id ? { ...o, estado } : o));
+                          atUpdate('Oportunidades', opor.id, { Estado: estado }).catch(err => console.error('Error actualizando estado:', err));
+                        }}
                       />
                     ))}
                   </div>
