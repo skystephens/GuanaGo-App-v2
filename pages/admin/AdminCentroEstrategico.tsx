@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { ArrowLeft, ListChecks, Building2, Trophy, LayoutGrid, Brain, Network, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ListChecks, Building2, Trophy, LayoutGrid, Brain, Network, FileText, ChevronRight } from 'lucide-react';
 import { AppRoute } from '../../types';
 
 interface Props {
@@ -42,6 +42,11 @@ const ITEMS = [
     route: AppRoute.ADMIN_MAPA_MENTAL, icon: Network, label: 'Mapa Mental (Proyectos)', color: 'from-sky-900/60 to-blue-900/60',
     border: 'border-sky-800 hover:border-sky-500', iconColor: 'text-sky-400',
     sub: 'Vista técnica — proyectos, tareas y arquitectura del sistema',
+  },
+  {
+    route: AppRoute.ADMIN_DOCS, icon: FileText, label: 'Documentación', color: 'from-teal-900/60 to-cyan-900/60',
+    border: 'border-teal-800 hover:border-teal-500', iconColor: 'text-teal-400',
+    sub: 'Todos los .md del repo, leídos directo desde la app',
   },
 ];
 

@@ -74,6 +74,7 @@ import NegocioLocalPerfil from './pages/partner/NegocioLocalPerfil';
 import AdminTasks from './pages/admin/AdminTasks';
 import AdminCentroEstrategico from './pages/admin/AdminCentroEstrategico';
 import AdminCanvasNegocio from './pages/admin/AdminCanvasNegocio';
+import AdminDocsViewer from './pages/admin/AdminDocsViewer';
 import AdminQuotes from './pages/admin/AdminQuotes';
 import AdminVouchers from './pages/admin/AdminVouchers';
 import AdminFinanzas from './pages/admin/AdminFinanzas';
@@ -373,6 +374,7 @@ const App: React.FC = () => {
       case AppRoute.ADMIN_TASKS: return <AdminTasks onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_CENTRO_ESTRATEGICO: return <AdminCentroEstrategico onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_CANVAS_NEGOCIO: return <AdminCanvasNegocio onBack={goBack} onNavigate={navigateTo} />;
+      case AppRoute.ADMIN_DOCS: return <AdminDocsViewer onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_QUOTES: return <AdminQuotes onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_VOUCHERS: return <AdminVouchers onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.ADMIN_FINANZAS: return <AdminFinanzas onBack={goBack} onNavigate={navigateTo} />;
