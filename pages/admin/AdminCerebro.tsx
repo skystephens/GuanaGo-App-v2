@@ -239,7 +239,7 @@ interface Props {
   onNavigate: (route: AppRoute) => void;
 }
 
-type Tab = 'notas' | 'oportunidades' | 'trazabilidad' | 'exportar' | 'jarvis';
+type Tab = 'notas' | 'oportunidades' | 'trazabilidad' | 'calendario' | 'exportar' | 'jarvis';
 
 export default function AdminCerebro({ onBack }: Props) {
   const [tab, setTab] = useState<Tab>('jarvis');
@@ -315,6 +315,58 @@ export default function AdminCerebro({ onBack }: Props) {
       }
     })();
   }, []);
+
+  // Calendario (Google Calendar)
+  interface EventoCal {
+    id: string; titulo: string; descripcion: string; inicio: string; fin: string;
+    todoElDia: boolean; ubicacion: string; link: string; invitados: string[];
+  }
+  const [eventosCal, setEventosCal] = useState<EventoCal[]>([]);
+  const [cargandoCal, setCargandoCal] = useState(false);
+  const [errorCal, setErrorCal] = useState('');
+  const [nuevoEventoCal, setNuevoEventoCal] = useState(false);
+
+  const cargarCalendario = async () => {
+    setCargandoCal(true);
+    setErrorCal('');
+    try {
+      const r = await fetch(`${API_BASE}/api/calendar/events?dias=21`);
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Error cargando el calendario');
+      setEventosCal(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      setErrorCal(err.message || 'Error cargando el calendario');
+    } finally {
+      setCargandoCal(false);
+    }
+  };
+
+  useEffect(() => { if (tab === 'calendario' && eventosCal.length === 0 && !cargandoCal) cargarCalendario(); }, [tab]);
+
+  const crearEventoCal = async (ev: { titulo: string; descripcion: string; inicio: string; fin: string; todoElDia: boolean; ubicacion: string }) => {
+    try {
+      const r = await fetch(`${API_BASE}/api/calendar/events`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ev),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Error creando el evento');
+      setNuevoEventoCal(false);
+      cargarCalendario();
+    } catch (err: any) {
+      alert('Error creando el evento: ' + err.message);
+    }
+  };
+
+  const borrarEventoCal = async (id: string) => {
+    if (!confirm('¿Eliminar este evento del calendario?')) return;
+    try {
+      const r = await fetch(`${API_BASE}/api/calendar/events/${id}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error('Error borrando el evento');
+      setEventosCal(prev => prev.filter(e => e.id !== id));
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
 
   // Jarvis
   const [jMsgs, setJMsgs]       = useState<JarvisMsg[]>([]);
@@ -614,6 +666,7 @@ _Fin del contexto. Cargar este archivo en Claude Code para continuar con context
             { key: 'notas',          label: 'Notas',    icon: StickyNote },
             { key: 'oportunidades',  label: 'Pipeline', icon: TrendingUp },
             { key: 'trazabilidad',   label: 'Traza',    icon: Activity },
+            { key: 'calendario',     label: 'Calendario', icon: Calendar },
             { key: 'exportar',       label: 'Exportar', icon: FileCode },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button
@@ -950,6 +1003,72 @@ _Fin del contexto. Cargar este archivo en Claude Code para continuar con context
           </div>
         )}
 
+        {/* ── TAB: CALENDARIO (Google Calendar) ── */}
+        {tab === 'calendario' && (
+          <div className="px-4 py-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-500">Próximos 21 días — Google Calendar</p>
+              <div className="flex items-center gap-2">
+                <button onClick={cargarCalendario} className="text-gray-500 hover:text-white p-1.5 rounded-lg hover:bg-gray-800">
+                  <Loader2 size={14} className={cargandoCal ? 'animate-spin' : ''} />
+                </button>
+                <button
+                  onClick={() => setNuevoEventoCal(true)}
+                  className="flex items-center gap-1 bg-indigo-700 hover:bg-indigo-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg"
+                >
+                  <Plus size={13} /> Evento
+                </button>
+              </div>
+            </div>
+
+            {nuevoEventoCal && (
+              <EventoCalForm onSave={crearEventoCal} onCancel={() => setNuevoEventoCal(false)} />
+            )}
+
+            {errorCal && (
+              <div className="bg-red-950/40 border border-red-800 rounded-xl p-3 text-xs text-red-300">
+                ⚠️ {errorCal}
+                {errorCal.includes('no configurado') && (
+                  <p className="mt-1 text-red-400/80">Falta configurar GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON y GOOGLE_CALENDAR_ID en Render.</p>
+                )}
+              </div>
+            )}
+
+            {cargandoCal ? (
+              <div className="flex justify-center py-10"><Loader2 className="animate-spin text-gray-600" size={24} /></div>
+            ) : eventosCal.length === 0 && !errorCal ? (
+              <p className="text-center text-gray-600 text-sm py-10">Sin eventos en los próximos 21 días.</p>
+            ) : (
+              eventosCal.map(ev => (
+                <div key={ev.id} className="bg-gray-900 border border-gray-800 rounded-xl p-3.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm text-white truncate">{ev.titulo}</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        {ev.todoElDia
+                          ? new Date(ev.inicio).toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })
+                          : new Date(ev.inicio).toLocaleString('es-CO', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                      {ev.ubicacion && <p className="text-[11px] text-gray-600 mt-0.5">📍 {ev.ubicacion}</p>}
+                      {ev.descripcion && <p className="text-xs text-gray-400 mt-1.5 whitespace-pre-line">{ev.descripcion}</p>}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {ev.link && (
+                        <a href={ev.link} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white p-1.5 rounded-lg hover:bg-gray-800">
+                          <Globe size={13} />
+                        </a>
+                      )}
+                      <button onClick={() => borrarEventoCal(ev.id)} className="text-gray-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-gray-800">
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
         {/* ── TAB: EXPORTAR ── */}
         {tab === 'exportar' && (
           <div className="px-4 py-4 space-y-4">
@@ -1081,6 +1200,69 @@ function NotaCard({ nota, onEdit, onDelete, onToggleFijada }: {
 }
 
 // ─── NotaForm ─────────────────────────────────────────────────────────────────
+
+function EventoCalForm({ onSave, onCancel }: {
+  onSave: (ev: { titulo: string; descripcion: string; inicio: string; fin: string; todoElDia: boolean; ubicacion: string }) => void;
+  onCancel: () => void;
+}) {
+  const [titulo, setTitulo] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [ubicacion, setUbicacion] = useState('');
+  const [todoElDia, setTodoElDia] = useState(false);
+  const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
+  const [horaInicio, setHoraInicio] = useState('09:00');
+  const [horaFin, setHoraFin] = useState('10:00');
+  const [saving, setSaving] = useState(false);
+
+  const guardar = async () => {
+    if (!titulo.trim()) return;
+    setSaving(true);
+    const inicio = todoElDia ? fecha : `${fecha}T${horaInicio}:00`;
+    const fin = todoElDia ? fecha : `${fecha}T${horaFin}:00`;
+    await onSave({ titulo: titulo.trim(), descripcion, ubicacion, todoElDia, inicio, fin });
+    setSaving(false);
+  };
+
+  return (
+    <div className="bg-gray-900 border border-indigo-700 rounded-2xl p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-bold text-white">Nuevo evento</p>
+        <button onClick={onCancel} className="text-gray-500 hover:text-white"><X size={16} /></button>
+      </div>
+      <input
+        value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Título del evento" autoFocus
+        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+      />
+      <textarea
+        value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Descripción (opcional)" rows={2}
+        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-none"
+      />
+      <input
+        value={ubicacion} onChange={e => setUbicacion(e.target.value)} placeholder="Ubicación (opcional)"
+        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+      />
+      <label className="flex items-center gap-2 text-xs text-gray-400">
+        <input type="checkbox" checked={todoElDia} onChange={e => setTodoElDia(e.target.checked)} className="accent-indigo-600" />
+        Todo el día
+      </label>
+      <div className="grid grid-cols-3 gap-2">
+        <input type="date" value={fecha} onChange={e => setFecha(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-2 text-xs text-white" />
+        {!todoElDia && (
+          <>
+            <input type="time" value={horaInicio} onChange={e => setHoraInicio(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-2 text-xs text-white" />
+            <input type="time" value={horaFin} onChange={e => setHoraFin(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-2 text-xs text-white" />
+          </>
+        )}
+      </div>
+      <button
+        onClick={guardar} disabled={saving || !titulo.trim()}
+        className="w-full bg-indigo-700 hover:bg-indigo-600 disabled:opacity-50 text-white text-sm font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5"
+      >
+        {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Crear en Google Calendar
+      </button>
+    </div>
+  );
+}
 
 function NotaForm({ nota, onSave, onCancel }: {
   nota?: Nota;
