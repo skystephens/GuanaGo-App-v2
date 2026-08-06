@@ -10,6 +10,7 @@ import {
   CalendarDays, Crown, Gift, BarChart3, Store, MessageSquare,
   Globe2,
   ListChecks,
+  Brain,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { setInitialSection } from './AdminAliados';
@@ -655,9 +656,9 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
               <MiniButton icon={<Globe2 size={18} className="text-indigo-400" />} label="Paquetes Intl."
                 onClick={() => onNavigate(AppRoute.ADMIN_PAQUETES_INTERNACIONALES)}
                 pulse="bg-indigo-500" gradient="from-indigo-900/60 to-blue-900/60" border="border-indigo-700 hover:border-indigo-500" />
-              <MiniButton icon={<ListChecks size={18} className="text-lime-400" />} label="Tareas"
-                onClick={() => onNavigate(AppRoute.ADMIN_TASKS)}
-                pulse="bg-lime-500" gradient="from-lime-900/60 to-green-900/60" border="border-lime-700 hover:border-lime-500" />
+              <MiniButton icon={<Brain size={18} className="text-purple-400" />} label="Centro Estratégico"
+                onClick={() => onNavigate(AppRoute.ADMIN_CENTRO_ESTRATEGICO)}
+                pulse="bg-purple-500" gradient="from-purple-900/60 to-fuchsia-900/60" border="border-purple-700 hover:border-purple-500" />
             </div>
           </Section>
 
