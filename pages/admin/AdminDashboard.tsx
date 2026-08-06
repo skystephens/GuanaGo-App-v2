@@ -9,6 +9,7 @@ import {
   Menu, Wifi, WifiOff, Home, Settings, Globe, Layers, Trophy,
   CalendarDays, Crown, Gift, BarChart3, Store, MessageSquare,
   Globe2,
+  ListChecks,
 } from 'lucide-react';
 import { AppRoute } from '../../types';
 import { setInitialSection } from './AdminAliados';
@@ -643,7 +644,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
                 gradient="from-rose-900/60 to-pink-900/60" border="border-rose-800 hover:border-rose-500"
               />
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               <MiniButton
                 icon={<Receipt size={18} className="text-orange-400" />} label="Vouchers"
                 onClick={() => onNavigate(AppRoute.ADMIN_VOUCHERS)}
@@ -654,6 +655,9 @@ const AdminDashboard: React.FC<DashboardProps> = ({ onNavigate, onPreview }) => 
               <MiniButton icon={<Globe2 size={18} className="text-indigo-400" />} label="Paquetes Intl."
                 onClick={() => onNavigate(AppRoute.ADMIN_PAQUETES_INTERNACIONALES)}
                 pulse="bg-indigo-500" gradient="from-indigo-900/60 to-blue-900/60" border="border-indigo-700 hover:border-indigo-500" />
+              <MiniButton icon={<ListChecks size={18} className="text-lime-400" />} label="Tareas"
+                onClick={() => onNavigate(AppRoute.ADMIN_TASKS)}
+                pulse="bg-lime-500" gradient="from-lime-900/60 to-green-900/60" border="border-lime-700 hover:border-lime-500" />
             </div>
           </Section>
 
