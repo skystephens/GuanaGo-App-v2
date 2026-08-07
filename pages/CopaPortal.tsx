@@ -9,8 +9,11 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Loader2, MessageCircle, RefreshCw, ChevronLeft, ChevronRight, Check, ArrowLeft, Utensils, Bus, HelpCircle, Users, Sparkles } from 'lucide-react';
+import { Loader2, MessageCircle, RefreshCw, ChevronLeft, ChevronRight, Check, Utensils, Bus, HelpCircle, Users, Sparkles, Menu, X, LogOut, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { GUANA_LOGO } from '../constants';
+import { useAuth } from '../context/AuthContext';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 const API = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 const cop = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
@@ -31,18 +34,77 @@ interface HotelDisp { id: string; nombre: string; tipo: string; precioNoche: num
 const PASOS = ['Bienvenida', 'Quiénes somos', 'Cotización', 'Alimentos', 'Traslados', 'Pago', 'Consultas', 'Tu grupo'];
 
 const CopaPortal: React.FC = () => {
+  const { userProfile, isAuthenticated, logout } = useAuth();
+  const esClubAutenticado = isAuthenticated && userProfile?.role === 'ClubDeportivo' && !!userProfile?.telefono;
+
   const [codigo, setCodigo] = useState('');
   const [data, setData] = useState<Snapshot | null>(null);
   const [hoteles, setHoteles] = useState<HotelDisp[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [paso, setPaso] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Login inline (sin salir de esta pantalla)
+  const [mostrarLogin, setMostrarLogin] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [verPassword, setVerPassword] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const c = params.get('copa');
     if (c) { setCodigo(c); buscar(c); }
   }, []);
+
+  // Si ya hay sesión de Club Deportivo (de una visita anterior o de Mis
+  // Cotizaciones), busca su delegación automáticamente por WhatsApp —
+  // sin pedir el código de 6 letras.
+  useEffect(() => {
+    if (esClubAutenticado && !data) {
+      buscarPorTelefono(userProfile!.telefono as string);
+    }
+  }, [esClubAutenticado]);
+
+  const buscarPorTelefono = async (tel: string) => {
+    setLoading(true); setError('');
+    try {
+      const r = await fetch(`${API}/api/copa/portal-por-telefono/${encodeURIComponent(tel)}`);
+      const d = await r.json();
+      if (!r.ok) { setError(d.error || 'No se pudo cargar'); setData(null); return; }
+      setData(d);
+      setPaso(0);
+      if (d.pax > 0) {
+        fetch(`${API}/api/copa/disponibilidad?pax=${d.pax}`)
+          .then(r2 => r2.json())
+          .then(d2 => Array.isArray(d2?.hoteles) && setHoteles(d2.hoteles))
+          .catch(() => {});
+      }
+    } catch { setError('No se pudo conectar'); }
+    finally { setLoading(false); }
+  };
+
+  const handleLoginInline = async () => {
+    if (!loginEmail.trim() || !loginPassword) return;
+    setLoginLoading(true); setLoginError('');
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail.trim(), loginPassword);
+      // El useEffect de arriba se encarga de buscar la delegación apenas
+      // AuthContext detecte la sesión nueva.
+    } catch (err: any) {
+      setLoginError(err.code === 'auth/invalid-credential' ? 'Email o contraseña incorrectos' : 'Error al iniciar sesión');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setData(null);
+    setSidebarOpen(false);
+  };
 
   const buscar = async (c?: string) => {
     const cod = (c || codigo).trim().toUpperCase();
@@ -68,6 +130,14 @@ const CopaPortal: React.FC = () => {
 
   // ── Pantalla de ingreso de código ────────────────────────────────────────
   if (!data) {
+    if (esClubAutenticado && loading) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-3 p-5">
+          <Loader2 className="animate-spin text-teal-600" size={28} />
+          <p className="text-sm text-gray-500">Buscando tu delegación…</p>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-5">
         <div className="bg-white rounded-2xl shadow-sm max-w-sm w-full overflow-hidden">
@@ -79,22 +149,54 @@ const CopaPortal: React.FC = () => {
             <p className="text-emerald-100 text-xs">Copa de la Isla · GuíaSAI</p>
           </div>
           <div className="p-5">
-            <p className="text-sm text-gray-600 mb-3">Ingresa el código de 6 letras que te envió GuíaSAI para ver el avance de tu delegación.</p>
-            <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 mb-4 text-xs text-teal-800 leading-relaxed">
-              <b>¿Qué puedes hacer aquí?</b>
-              <ul className="mt-1.5 space-y-1 list-disc list-inside">
-                <li>Ver quiénes están inscritos y con datos completos</li>
-                <li>Ver la cotización, alimentación y traslados de tu delegación</li>
-                <li>Consultar el total, el abono y el saldo restante</li>
-                <li>Escribir directo a GuíaSAI por WhatsApp si algo no cuadra</li>
-              </ul>
-            </div>
-            <input value={codigo} onChange={e => setCodigo(e.target.value.toUpperCase())} placeholder="EJEMPLO"
-              maxLength={6} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-center font-mono text-lg font-bold tracking-widest mb-3 focus:outline-none focus:border-teal-500" />
-            {error && <p className="text-red-500 text-xs font-semibold mb-3">{error}</p>}
-            <button onClick={() => buscar()} disabled={loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm py-3 rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
-              {loading ? <Loader2 size={14} className="animate-spin" /> : null} Ver mi delegación
-            </button>
+            {!mostrarLogin ? (
+              <>
+                <p className="text-sm text-gray-600 mb-3">Ingresa el código de 6 letras que te envió GuíaSAI para ver el avance de tu delegación.</p>
+                <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 mb-4 text-xs text-teal-800 leading-relaxed">
+                  <b>¿Qué puedes hacer aquí?</b>
+                  <ul className="mt-1.5 space-y-1 list-disc list-inside">
+                    <li>Ver quiénes están inscritos y con datos completos</li>
+                    <li>Ver la cotización, alimentación y traslados de tu delegación</li>
+                    <li>Consultar el total, el abono y el saldo restante</li>
+                    <li>Escribir directo a GuíaSAI por WhatsApp si algo no cuadra</li>
+                  </ul>
+                </div>
+                <input value={codigo} onChange={e => setCodigo(e.target.value.toUpperCase())} placeholder="EJEMPLO"
+                  maxLength={6} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-center font-mono text-lg font-bold tracking-widest mb-3 focus:outline-none focus:border-teal-500" />
+                {error && <p className="text-red-500 text-xs font-semibold mb-3">{error}</p>}
+                <button onClick={() => buscar()} disabled={loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm py-3 rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
+                  {loading ? <Loader2 size={14} className="animate-spin" /> : null} Ver mi delegación
+                </button>
+                <button onClick={() => { setMostrarLogin(true); setError(''); }} className="w-full text-center text-xs text-teal-600 font-semibold mt-3 hover:underline">
+                  ¿Ya tienes cuenta de Club Deportivo? Iniciar sesión
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-gray-600 mb-3">Inicia sesión con la cuenta de tu club — vas a ver tu delegación directo, sin necesitar el código.</p>
+                <div className="space-y-2.5 mb-3">
+                  <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2.5">
+                    <Mail size={15} className="text-gray-400" />
+                    <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="tu@email.com"
+                      className="flex-1 text-sm outline-none" />
+                  </div>
+                  <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2.5">
+                    <Lock size={15} className="text-gray-400" />
+                    <input type={verPassword ? 'text' : 'password'} value={loginPassword} onChange={e => setLoginPassword(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleLoginInline(); }} placeholder="Contraseña"
+                      className="flex-1 text-sm outline-none" />
+                    <button onClick={() => setVerPassword(v => !v)} className="text-gray-400">{verPassword ? <EyeOff size={15} /> : <Eye size={15} />}</button>
+                  </div>
+                </div>
+                {loginError && <p className="text-red-500 text-xs font-semibold mb-3">{loginError}</p>}
+                <button onClick={handleLoginInline} disabled={loginLoading || !loginEmail.trim() || !loginPassword} className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm py-3 rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
+                  {loginLoading ? <Loader2 size={14} className="animate-spin" /> : null} Iniciar sesión
+                </button>
+                <button onClick={() => { setMostrarLogin(false); setLoginError(''); }} className="w-full text-center text-xs text-gray-500 font-semibold mt-3 hover:underline">
+                  ← Volver a ingresar con código
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -112,12 +214,10 @@ const CopaPortal: React.FC = () => {
 
   const waLink = (msg: string) => `${wa}?text=${encodeURIComponent(msg)}`;
 
-  return (
-    <div className="min-h-screen bg-gray-50 pb-10 md:flex">
-
-      {/* Sidebar izquierda — solo escritorio (md+) */}
-      <div className="hidden md:flex md:flex-col md:w-64 md:shrink-0 bg-white border-r border-gray-100 md:sticky md:top-0 md:h-screen">
-        <div className="p-5 border-b border-gray-100">
+  const Sidebar = (
+    <>
+      <div className="p-5 border-b border-gray-100 flex items-start justify-between">
+        <div>
           <div className="flex items-center gap-2.5">
             <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl w-10 h-10 p-1.5 flex items-center justify-center shrink-0">
               <img src={GUANA_LOGO} alt="GuiaSAI" className="w-full h-full object-contain" />
@@ -130,40 +230,72 @@ const CopaPortal: React.FC = () => {
           <p className="text-xs font-bold text-gray-700 mt-3 truncate">{d.club}</p>
           <p className="text-[11px] text-gray-400">{d.ciudad}</p>
         </div>
-        <nav className="flex-1 py-3">
-          {PASOS.map((label, i) => (
-            <button
-              key={label}
-              onClick={() => irA(i)}
-              className={`w-full text-left px-5 py-2.5 text-sm font-semibold flex items-center gap-2.5 transition-colors ${
-                i === paso ? 'bg-teal-50 text-teal-700 border-r-2 border-teal-600' : 'text-gray-500 hover:bg-gray-50'
-              }`}
-            >
-              <span className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center shrink-0 ${i === paso ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-400'}`}>{i + 1}</span>
-              {label}
-            </button>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-gray-100">
-          <a href={waLink(`Hola GuíaSAI, soy ${d.lider} de ${d.club}.`)} target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs py-2.5 rounded-xl transition-colors">
-            <MessageCircle size={13} /> WhatsApp GuíaSAI
-          </a>
-        </div>
+        <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-400 hover:text-gray-600 p-1">
+          <X size={20} />
+        </button>
       </div>
+      <nav className="flex-1 py-3 overflow-y-auto">
+        {PASOS.map((label, i) => (
+          <button
+            key={label}
+            onClick={() => { irA(i); setSidebarOpen(false); }}
+            className={`w-full text-left px-5 py-2.5 text-sm font-semibold flex items-center gap-2.5 transition-colors ${
+              i === paso ? 'bg-teal-50 text-teal-700 border-r-2 border-teal-600' : 'text-gray-500 hover:bg-gray-50'
+            }`}
+          >
+            <span className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center shrink-0 ${i === paso ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-400'}`}>{i + 1}</span>
+            {label}
+          </button>
+        ))}
+      </nav>
+      <div className="p-4 border-t border-gray-100 space-y-2">
+        <a href={waLink(`Hola GuíaSAI, soy ${d.lider} de ${d.club}.`)} target="_blank" rel="noopener noreferrer"
+          className="flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs py-2.5 rounded-xl transition-colors">
+          <MessageCircle size={13} /> WhatsApp GuíaSAI
+        </a>
+        {esClubAutenticado && (
+          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-1.5 border border-gray-200 text-gray-500 hover:bg-gray-50 font-bold text-xs py-2.5 rounded-xl transition-colors">
+            <LogOut size={13} /> Cerrar sesión
+          </button>
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-10 md:flex">
+
+      {/* Sidebar — cajón deslizante en móvil, fija en escritorio (md+) */}
+      <div className="hidden md:flex md:flex-col md:w-64 md:shrink-0 bg-white border-r border-gray-100 md:sticky md:top-0 md:h-screen">
+        {Sidebar}
+      </div>
+
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          <div className="w-72 bg-white h-full flex flex-col shadow-xl animate-in slide-in-from-left">
+            {Sidebar}
+          </div>
+          <div className="flex-1 bg-black/50" onClick={() => setSidebarOpen(false)} />
+        </div>
+      )}
 
       <div className="flex-1 min-w-0">
       {/* Header brand — igual a la cotización pública */}
       <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-5 pb-8">
         <div className="max-w-2xl lg:max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="bg-white rounded-2xl w-14 h-14 p-1.5 flex items-center justify-center shadow-md shrink-0">
-              <img src={GUANA_LOGO} alt="GuiaSAI" className="w-full h-full object-contain" />
+          <div className="flex items-center gap-3 mb-1 justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-white rounded-2xl w-14 h-14 p-1.5 flex items-center justify-center shadow-md shrink-0">
+                <img src={GUANA_LOGO} alt="GuiaSAI" className="w-full h-full object-contain" />
+              </div>
+              <div>
+                <span className="text-2xl font-black tracking-tight">Guía<span className="text-orange-300">SAI</span></span>
+                <p className="text-emerald-100 text-xs font-semibold">RNT 48674 · Aliado oficial · {data.evento}</p>
+              </div>
             </div>
-            <div>
-              <span className="text-2xl font-black tracking-tight">Guía<span className="text-orange-300">SAI</span></span>
-              <p className="text-emerald-100 text-xs font-semibold">RNT 48674 · Aliado oficial · {data.evento}</p>
-            </div>
+            <button onClick={() => setSidebarOpen(true)} className="md:hidden bg-white/15 hover:bg-white/25 rounded-xl p-2.5 transition-colors">
+              <Menu size={18} />
+            </button>
           </div>
           <h1 className="text-xl font-bold mt-2">{d.club}</h1>
           <p className="text-emerald-100 text-sm mt-0.5">{d.ciudad} · {data.pax} viajeros · {d.inn} al {d.out}</p>

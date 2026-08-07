@@ -633,43 +633,36 @@ router.delete('/viajeros/:id', async (req, res) => {
 
 // ─── Portal público del coordinador (solo lectura, por código) ─────────────
 
-router.get('/portal/:codigo', async (req, res) => {
-  try {
-    const { headers } = AT();
-    const codigo = String(req.params.codigo || '').trim().toUpperCase();
-    if (!codigo) return res.status(400).json({ error: 'Código requerido' });
+// Construye el snapshot completo del portal a partir del registro de Airtable
+// de una delegación — usado tanto por acceso vía código como por login.
+async function construirSnapshotPortal(rec) {
+  const { headers } = AT();
+  const del = mapDelegacion(rec);
+  if (!del.publicado) return { error: 'Esta delegación aún no ha sido publicada por GuíaSAI', status: 403 };
 
-    const rd = await fetch(`${atUrl(TABLES.DELEGACIONES)}?filterByFormula=${encodeURIComponent(`{Codigo_Acceso}='${codigo}'`)}&maxRecords=1`, { headers });
-    const dd = await rd.json();
-    const rec = (dd.records || [])[0];
-    if (!rec) return res.status(404).json({ error: 'Código no encontrado' });
+  const rv = await fetch(`${atUrl(TABLES.VIAJEROS)}?filterByFormula=${encodeURIComponent(`{Delegacion_Id}='${rec.id}'`)}&pageSize=100`, { headers });
+  const dv = rv.ok ? await rv.json() : { records: [] };
+  const viajerosRaw = (dv.records || []).map(mapViajero);
 
-    const del = mapDelegacion(rec);
-    if (!del.publicado) return res.status(403).json({ error: 'Esta delegación aún no ha sido publicada por GuíaSAI' });
+  const calc = await calcularDelegacion(rec.fields, viajerosRaw.length);
 
-    const rv = await fetch(`${atUrl(TABLES.VIAJEROS)}?filterByFormula=${encodeURIComponent(`{Delegacion_Id}='${rec.id}'`)}&pageSize=100`, { headers });
-    const dv = rv.ok ? await rv.json() : { records: [] };
-    const viajerosRaw = (dv.records || []).map(mapViajero);
+  const viajeros = viajerosRaw.map(v => ({
+    nombre: v.nombre,
+    doc: v.documento ? '••••' + v.documento.slice(-4) : '',
+    rol: v.rol,
+    sub: v.subgrupo,
+    datos: !!(v.nombre && v.documento && v.telefono),
+    pago: v.estadoPago === 'Pago total' ? 'pago' : v.estadoPago === 'Abono' ? 'abono' : 'pend',
+  }));
 
-    const calc = await calcularDelegacion(rec.fields, viajerosRaw.length);
+  const inscritos = viajeros.length;
+  const completos = viajeros.filter(v => v.datos).length;
+  const abonados = viajeros.filter(v => v.pago !== 'pend').length;
 
-    // Enmascarar documentos para el portal público
-    const viajeros = viajerosRaw.map(v => ({
-      nombre: v.nombre,
-      doc: v.documento ? '••••' + v.documento.slice(-4) : '',
-      rol: v.rol,
-      sub: v.subgrupo,
-      datos: !!(v.nombre && v.documento && v.telefono),
-      pago: v.estadoPago === 'Pago total' ? 'pago' : v.estadoPago === 'Abono' ? 'abono' : 'pend',
-    }));
+  const cotizacionesRelacionadas = await buscarCotizacionesPorTelefono(del.whatsapp);
 
-    const inscritos = viajeros.length;
-    const completos = viajeros.filter(v => v.datos).length;
-    const abonados = viajeros.filter(v => v.pago !== 'pend').length;
-
-    const cotizacionesRelacionadas = await buscarCotizacionesPorTelefono(del.whatsapp);
-
-    res.json({
+  return {
+    snapshot: {
       actualizado: new Date().toISOString(),
       evento: del.evento,
       delegacion: {
@@ -682,9 +675,52 @@ router.get('/portal/:codigo', async (req, res) => {
       servicios: calc.lineas.map(l => ({ id: l.servicioId, titulo: l.titulo, detalle: l.detalle, valor: l.valorVenta, origen: l.origen })),
       personas: viajeros,
       cotizacionesRelacionadas,
-    });
+    },
+  };
+}
+
+router.get('/portal/:codigo', async (req, res) => {
+  try {
+    const { headers } = AT();
+    const codigo = String(req.params.codigo || '').trim().toUpperCase();
+    if (!codigo) return res.status(400).json({ error: 'Código requerido' });
+
+    const rd = await fetch(`${atUrl(TABLES.DELEGACIONES)}?filterByFormula=${encodeURIComponent(`{Codigo_Acceso}='${codigo}'`)}&maxRecords=1`, { headers });
+    const dd = await rd.json();
+    const rec = (dd.records || [])[0];
+    if (!rec) return res.status(404).json({ error: 'Código no encontrado' });
+
+    const { snapshot, error, status } = await construirSnapshotPortal(rec);
+    if (error) return res.status(status).json({ error });
+    res.json(snapshot);
   } catch (err) {
     console.error('❌ copa/portal:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/copa/portal-por-telefono/:telefono — acceso sin código, para
+// coordinadores que ya iniciaron sesión como Club/Liga Deportiva.
+router.get('/portal-por-telefono/:telefono', async (req, res) => {
+  try {
+    const { headers } = AT();
+    const telefono = String(req.params.telefono || '').trim();
+    const soloDigitos = telefono.replace(/\D/g, '');
+    const ultimos10 = soloDigitos.slice(-10);
+    if (ultimos10.length < 10) return res.status(400).json({ error: 'Teléfono inválido' });
+
+    const formulaTelLimpio = `SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE({WhatsApp},' ',''),'-',''),'+',''),'(',''),')','')`;
+    const formula = `RIGHT(${formulaTelLimpio}, 10) = '${ultimos10}'`;
+    const rd = await fetch(`${atUrl(TABLES.DELEGACIONES)}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=1`, { headers });
+    const dd = await rd.json();
+    const rec = (dd.records || [])[0];
+    if (!rec) return res.status(404).json({ error: 'No encontramos una delegación registrada con este número de WhatsApp. Si ya coordinaste tu grupo, escríbenos para vincular tu cuenta.' });
+
+    const { snapshot, error, status } = await construirSnapshotPortal(rec);
+    if (error) return res.status(status).json({ error });
+    res.json(snapshot);
+  } catch (err) {
+    console.error('❌ copa/portal-por-telefono:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
