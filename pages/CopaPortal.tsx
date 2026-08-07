@@ -2,15 +2,19 @@
  * CopaPortal — Portal público del Coordinador de delegación.
  * Acceso solo por código (?copa=CODIGO). Solo lectura — sin login.
  *
- * Estructura en pasos (a pedido de Sky, en vez de scroll largo):
- * 1. Bienvenida  2. Alojamiento  3. Pago  4. Tu grupo  5. Próximos pasos
+ * Estilo visual calcado de PublicQuotePage.tsx (misma marca que las
+ * cotizaciones) a pedido de Sky. 8 pasos en este orden:
+ * Bienvenida → Quiénes somos → Cotización → Alimentos → Traslados →
+ * Pago → Atención de consultas → Tu grupo
  */
 
 import React, { useEffect, useState } from 'react';
-import { Loader2, MessageCircle, RefreshCw, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { Loader2, MessageCircle, RefreshCw, ChevronLeft, ChevronRight, Check, ArrowLeft, Utensils, Bus, HelpCircle, Users, Sparkles } from 'lucide-react';
+import { GUANA_LOGO } from '../constants';
 
 const API = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 const cop = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
+const wa = 'https://wa.me/573153836043';
 
 interface Snapshot {
   actualizado: string;
@@ -23,7 +27,7 @@ interface Snapshot {
 }
 interface HotelDisp { id: string; nombre: string; tipo: string; precioNoche: number; imagen: string; descripcion: string; habitacionesDisponibles: number; capacidadEstimada: number }
 
-const PASOS = ['Bienvenida', 'Alojamiento', 'Pago', 'Tu grupo', 'Próximos pasos'];
+const PASOS = ['Bienvenida', 'Quiénes somos', 'Cotización', 'Alimentos', 'Traslados', 'Pago', 'Consultas', 'Tu grupo'];
 
 const CopaPortal: React.FC = () => {
   const [codigo, setCodigo] = useState('');
@@ -61,29 +65,33 @@ const CopaPortal: React.FC = () => {
 
   const set = (v: number, m: number) => ({ pct: m ? Math.min(100, v / m * 100) : 0, ok: m > 0 && v >= m });
 
-  // ── Pantalla de ingreso de código (sin cambios) ──────────────────────────
+  // ── Pantalla de ingreso de código ────────────────────────────────────────
   if (!data) {
     return (
-      <div className="min-h-screen bg-[#F5EFE3] flex items-center justify-center p-5" style={{ fontFamily: "'Archivo', sans-serif" }}>
-        <div className="bg-white border border-[#E7DFCE] rounded-lg shadow-sm max-w-sm w-full overflow-hidden">
-          <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">Portal del Coordinador</h2>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-5">
+        <div className="bg-white rounded-2xl shadow-sm max-w-sm w-full overflow-hidden">
+          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-6 text-center">
+            <div className="bg-white rounded-2xl w-14 h-14 p-1.5 flex items-center justify-center shadow-md mx-auto mb-2">
+              <img src={GUANA_LOGO} alt="GuiaSAI" className="w-full h-full object-contain" />
+            </div>
+            <p className="text-white font-black text-lg">Portal del Coordinador</p>
+            <p className="text-emerald-100 text-xs">Copa de la Isla · GuíaSAI</p>
+          </div>
           <div className="p-5">
-            <p className="text-sm text-[#6B7785] mb-3">Ingresa el código de 6 letras que te envió GuíaSAI para ver el avance de tu delegación.</p>
-            <div className="bg-[#E8F1F2] border border-[#B9D8DB] rounded p-3 mb-4 text-xs text-[#0A5C64] leading-relaxed">
+            <p className="text-sm text-gray-600 mb-3">Ingresa el código de 6 letras que te envió GuíaSAI para ver el avance de tu delegación.</p>
+            <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 mb-4 text-xs text-teal-800 leading-relaxed">
               <b>¿Qué puedes hacer aquí?</b>
               <ul className="mt-1.5 space-y-1 list-disc list-inside">
-                <li>Ver cuántos viajeros están inscritos y con datos completos</li>
-                <li>Ver los servicios contratados (alojamiento, traslados, tours) y su valor</li>
-                <li>Consultar el total, el abono del 30% y el saldo restante</li>
-                <li>Ver tus vouchers cuando el pago quede completo</li>
+                <li>Ver quiénes están inscritos y con datos completos</li>
+                <li>Ver la cotización, alimentación y traslados de tu delegación</li>
+                <li>Consultar el total, el abono y el saldo restante</li>
                 <li>Escribir directo a GuíaSAI por WhatsApp si algo no cuadra</li>
               </ul>
-              <p className="mt-2 text-[11px] text-[#5E7E92]">Este portal es de solo lectura — los cambios los hace GuíaSAI desde su panel interno.</p>
             </div>
             <input value={codigo} onChange={e => setCodigo(e.target.value.toUpperCase())} placeholder="EJEMPLO"
-              maxLength={6} className="w-full border border-[#E7DFCE] rounded px-3 py-2.5 text-center font-mono text-lg font-bold tracking-widest mb-3" />
-            {error && <p className="text-[#C4452F] text-xs font-semibold mb-3">{error}</p>}
-            <button onClick={() => buscar()} disabled={loading} className="w-full bg-[#05263B] text-white font-bold text-sm py-3 rounded disabled:opacity-50 flex items-center justify-center gap-2">
+              maxLength={6} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-center font-mono text-lg font-bold tracking-widest mb-3 focus:outline-none focus:border-teal-500" />
+            {error && <p className="text-red-500 text-xs font-semibold mb-3">{error}</p>}
+            <button onClick={() => buscar()} disabled={loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm py-3 rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
               {loading ? <Loader2 size={14} className="animate-spin" /> : null} Ver mi delegación
             </button>
           </div>
@@ -96,114 +104,130 @@ const CopaPortal: React.FC = () => {
   const s1 = set(data.inscritos, d.meta), s2 = set(data.completos, data.inscritos), s3 = set(data.abonados, data.inscritos);
   const pctPago = data.inscritos ? data.abonados / data.inscritos : 0;
   const estadoServ = pctPago >= 1 ? { c: 'bg-emerald-50 text-emerald-700', t: 'Confirmado' } : pctPago > 0 ? { c: 'bg-teal-50 text-teal-700', t: 'En trámite' } : { c: 'bg-orange-50 text-orange-700', t: 'Pendiente de abono' };
-
-  // Heurística simple: ¿algún servicio menciona alimentación/desayuno/almuerzo/cena?
   const incluyeAlimentacion = data.servicios.some(s => /alimentaci|desayuno|almuerzo|cena/i.test(`${s.titulo} ${s.detalle}`));
   const tieneServicios = data.servicios.length > 0;
 
   const irA = (n: number) => setPaso(Math.max(0, Math.min(PASOS.length - 1, n)));
 
+  const waLink = (msg: string) => `${wa}?text=${encodeURIComponent(msg)}`;
+
   return (
-    <div className="min-h-screen bg-[#F5EFE3] text-[#111820] pb-10 flex flex-col" style={{ fontFamily: "'Archivo', sans-serif" }}>
-      {/* Header con marca + indicador de pasos */}
-      <div className="bg-[#05263B] text-[#F5EFE3] px-4 pt-6 pb-4 border-b-4 border-[#FF6600]">
-        <div className="max-w-2xl mx-auto">
-          <p className="text-[10px] font-mono tracking-widest uppercase text-[#FF6600] mb-1">GuíaSAI · Aliado oficial · {data.evento}</p>
-          <h1 className="text-xl font-black uppercase mb-3">{d.club}</h1>
+    <div className="min-h-screen bg-gray-50 pb-10">
+      {/* Header brand — igual a la cotización pública */}
+      <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-5 pb-8">
+        <div className="max-w-2xl lg:max-w-4xl mx-auto">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="bg-white rounded-2xl w-14 h-14 p-1.5 flex items-center justify-center shadow-md shrink-0">
+              <img src={GUANA_LOGO} alt="GuiaSAI" className="w-full h-full object-contain" />
+            </div>
+            <div>
+              <span className="text-2xl font-black tracking-tight">Guía<span className="text-orange-300">SAI</span></span>
+              <p className="text-emerald-100 text-xs font-semibold">RNT 48674 · Aliado oficial · {data.evento}</p>
+            </div>
+          </div>
+          <h1 className="text-xl font-bold mt-2">{d.club}</h1>
+          <p className="text-emerald-100 text-sm mt-0.5">{d.ciudad} · {data.pax} viajeros · {d.inn} al {d.out}</p>
 
           {/* Indicador de pasos */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 mt-4">
             {PASOS.map((label, i) => (
-              <button key={label} onClick={() => irA(i)} className="flex-1 flex flex-col items-center gap-1 group">
-                <div className={`w-full h-1.5 rounded-full transition-colors ${i <= paso ? 'bg-[#FF6600]' : 'bg-[#0A3A55]'}`} />
-                <span className={`text-[8px] font-mono uppercase tracking-wide hidden sm:block ${i === paso ? 'text-[#FF6600] font-bold' : 'text-[#5E7E92]'}`}>{label}</span>
+              <button key={label} onClick={() => irA(i)} className="flex-1 flex flex-col items-center gap-1">
+                <div className={`w-full h-1.5 rounded-full transition-colors ${i <= paso ? 'bg-orange-400' : 'bg-white/25'}`} />
               </button>
             ))}
           </div>
+          <p className="text-[11px] text-emerald-100 mt-1 font-semibold">{paso + 1}. {PASOS[paso]}</p>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pt-5 space-y-4 flex-1 w-full">
+      <div className="max-w-2xl lg:max-w-4xl mx-auto px-4 -mt-4 pb-8 space-y-4">
 
-        {/* ══ PASO 1 — BIENVENIDA ══ */}
+        {/* ══ 1. BIENVENIDA ══ */}
         {paso === 0 && (
           <>
-            <div className="bg-[#1E6B4F] text-[#EAF5EF] rounded p-4 border-l-4 border-[#FF6600]">
-              <p className="font-black uppercase text-sm mb-1">Wi da piipl fram di sii</p>
-              <p className="text-[13.5px]">Tu grupo no se hospeda en la isla: entra a la isla. Cada peso que pagan queda en familias, cocineras, conductores y artesanos raizales.</p>
+            <div className="bg-white rounded-2xl shadow-sm p-5">
+              <h2 className="text-lg font-bold text-[#003D5C] mb-2">¡Bienvenidos, {d.club}! 🏐</h2>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Gracias por confiar en GuíaSAI para su experiencia en la Copa de la Isla. Aquí van a encontrar toda la información de su delegación — desde el estado de su cotización hasta el día a día del torneo.
+              </p>
             </div>
-            <div className="bg-white border border-[#E7DFCE] rounded overflow-hidden">
-              <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">Tu delegación</h2>
-              <div className="p-4 space-y-3">
-                <p className="text-sm text-[#3A4650]">
-                  <b>{d.club}</b> — {d.ciudad}<br />
-                  {data.pax} viajeros · {d.inn} al {d.out} · {data.noches} noches
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {[['Inscritos', data.inscritos, d.meta, s1], ['Datos completos', data.completos, data.inscritos, s2], ['Con abono', data.abonados, data.inscritos, s3]].map(([label, v, m, s]: any) => (
-                    <div key={label} className="bg-[#FBF8F2] border border-[#E7DFCE] rounded p-2.5">
-                      <p className="text-[8.5px] font-mono uppercase tracking-wider text-[#6B7785] mb-1">{label}</p>
-                      <p className="text-lg font-black tabular-nums" style={{ color: s.ok ? '#1E6B4F' : '#05263B' }}>{v}<span className="text-[10px] text-[#6B7785] font-mono"> /{m}</span></p>
-                      <div className="h-1 bg-[#E7DFCE] mt-1.5 rounded overflow-hidden"><div className="h-full transition-all" style={{ width: `${s.pct}%`, background: s.ok ? '#1E6B4F' : '#FF6600' }} /></div>
-                    </div>
-                  ))}
-                </div>
+            <div className="bg-white rounded-2xl shadow-sm p-5">
+              <h3 className="text-xs font-bold text-teal-600 uppercase tracking-wide mb-3">Resumen de tu delegación</h3>
+              <div className="grid grid-cols-3 gap-2">
+                {[['Inscritos', data.inscritos, d.meta, s1], ['Datos completos', data.completos, data.inscritos, s2], ['Con abono', data.abonados, data.inscritos, s3]].map(([label, v, m, s]: any) => (
+                  <div key={label} className="bg-gray-50 rounded-xl p-2.5">
+                    <p className="text-[8.5px] uppercase tracking-wide text-gray-400 font-semibold mb-1">{label}</p>
+                    <p className="text-lg font-black" style={{ color: s.ok ? '#059669' : '#003D5C' }}>{v}<span className="text-[10px] text-gray-400 font-semibold"> /{m}</span></p>
+                    <div className="h-1 bg-gray-200 mt-1.5 rounded-full overflow-hidden"><div className="h-full transition-all" style={{ width: `${s.pct}%`, background: s.ok ? '#059669' : '#F97316' }} /></div>
+                  </div>
+                ))}
               </div>
             </div>
-            <p className="text-[12.5px] text-[#6B7785] px-1">
-              GuíaSAI S.A.S. (RNT 48674) es el operador logístico oficial de la Copa de la Isla — coordinamos hospedaje, traslados y experiencias culturales para tu delegación durante el torneo.
-            </p>
           </>
         )}
 
-        {/* ══ PASO 2 — ALOJAMIENTO ══ */}
+        {/* ══ 2. QUIÉNES SOMOS ══ */}
         {paso === 1 && (
+          <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
+            <h2 className="text-lg font-bold text-[#003D5C]">Quiénes somos</h2>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              <b>GuíaSAI S.A.S.</b> (RNT 48674) es una agencia de turismo Raizal de San Andrés Islas, operador logístico oficial de la Copa de la Isla. Coordinamos hospedaje, alimentación, traslados y experiencias culturales auténticas para las delegaciones que nos visitan.
+            </p>
+            <div className="bg-teal-50 border-l-4 border-teal-400 rounded-r-xl p-4">
+              <p className="font-bold text-teal-800 text-sm mb-1">Wi da piipl fram di sii</p>
+              <p className="text-[13px] text-teal-700">Tu grupo no se hospeda en la isla: entra a la isla. Cada peso que pagan queda en familias, cocineras, conductores y artesanos raizales.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-center">
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-2xl font-black text-[#003D5C]">100%</p>
+                <p className="text-[11px] text-gray-500">Operado por raizales</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-2xl font-black text-[#003D5C]">RNT</p>
+                <p className="text-[11px] text-gray-500">48674 — Registro oficial</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══ 3. COTIZACIÓN ══ */}
+        {paso === 2 && (
           <>
-            <div className="bg-white border border-[#E7DFCE] rounded overflow-hidden">
-              <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">Servicios contratados</h2>
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="px-5 pt-5 pb-1"><h2 className="text-lg font-bold text-[#003D5C]">Tu cotización</h2></div>
               {tieneServicios ? (
-                <table className="w-full text-xs">
-                  <thead><tr className="text-[9.5px] uppercase text-[#6B7785] border-b border-[#E7DFCE]"><th className="text-left px-4 py-2">Servicio</th><th className="text-left px-2 py-2">Detalle</th><th className="text-left px-2 py-2">Estado</th><th className="text-right px-4 py-2">Valor</th></tr></thead>
+                <table className="w-full text-xs mt-3">
+                  <thead><tr className="text-[9.5px] uppercase text-gray-400 border-b border-gray-100"><th className="text-left px-5 py-2">Servicio</th><th className="text-left px-2 py-2">Detalle</th><th className="text-left px-2 py-2">Estado</th><th className="text-right px-5 py-2">Valor</th></tr></thead>
                   <tbody>{data.servicios.map(s => (
-                    <tr key={s.id} className="border-b border-[#F2EEE5] last:border-0">
-                      <td className="px-4 py-2.5 font-bold">{s.titulo}{s.origen === 'catalogo' && <span className="block text-[9px] font-mono text-[#0E7C86] font-normal">Actividad GuiaSAI</span>}</td>
-                      <td className="px-2 py-2.5 text-[#6B7785] font-mono text-[11px]">{s.detalle}</td>
-                      <td className="px-2 py-2.5"><span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${estadoServ.c}`}>{estadoServ.t}</span></td>
-                      <td className="px-4 py-2.5 text-right font-mono font-bold">{cop(s.valor)}</td>
+                    <tr key={s.id} className="border-b border-gray-50 last:border-0">
+                      <td className="px-5 py-2.5 font-bold text-gray-700">{s.titulo}{s.origen === 'catalogo' && <span className="block text-[9px] text-teal-600 font-normal">Actividad GuiaSAI</span>}</td>
+                      <td className="px-2 py-2.5 text-gray-500 text-[11px]">{s.detalle}</td>
+                      <td className="px-2 py-2.5"><span className={`text-[10px] px-2 py-0.5 rounded-full ${estadoServ.c}`}>{estadoServ.t}</span></td>
+                      <td className="px-5 py-2.5 text-right font-bold text-gray-700">{cop(s.valor)}</td>
                     </tr>
                   ))}</tbody>
                 </table>
-              ) : <p className="text-center text-sm text-[#6B7785] py-6">Sin servicios contratados todavía.</p>}
+              ) : <p className="text-center text-sm text-gray-400 py-8">Sin servicios contratados todavía.</p>}
             </div>
 
-            {tieneServicios && !incluyeAlimentacion && (
-              <div className="bg-[#FFF4E5] border border-[#FFD9A0] border-l-4 border-l-[#FF6600] rounded p-3.5 text-[13px]">
-                <b className="text-[#8A4B00]">🍽️ Tu alojamiento no incluye alimentación.</b>
-                <p className="mt-1 text-[#6B5030]">Te ayudamos a organizar dónde va a comer tu delegación durante el torneo — escríbenos por WhatsApp y armamos las opciones según su presupuesto.</p>
-              </div>
-            )}
-
             {hoteles.length > 0 && (
-              <div className="bg-white border border-[#E7DFCE] rounded overflow-hidden">
-                <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">Alojamiento disponible para {data.pax} pax</h2>
-                <p className="text-[11px] text-[#6B7785] px-4 pt-3">Hoteles verificados por GuíaSAI con espacio suficiente para tu delegación en las fechas del torneo. Capacidad estimada — se confirma al solicitar.</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden p-5">
+                <h3 className="text-sm font-bold text-[#003D5C] mb-1">Alojamiento disponible para {data.pax} pax</h3>
+                <p className="text-[11px] text-gray-500 mb-3">Hoteles verificados por GuíaSAI con espacio suficiente para las fechas del torneo.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {hoteles.map(h => (
-                    <div key={h.id} className="border border-[#E7DFCE] rounded-lg overflow-hidden">
-                      {h.imagen ? <div className="h-28 bg-cover bg-center" style={{ backgroundImage: `url('${h.imagen}')` }} /> : <div className="h-28 bg-[#F5EFE3] flex items-center justify-center text-2xl">🏨</div>}
+                    <div key={h.id} className="border border-gray-100 rounded-xl overflow-hidden">
+                      {h.imagen ? <div className="h-28 bg-cover bg-center" style={{ backgroundImage: `url('${h.imagen}')` }} /> : <div className="h-28 bg-gray-50 flex items-center justify-center text-2xl">🏨</div>}
                       <div className="p-3">
-                        <p className="font-bold text-sm">{h.nombre}</p>
-                        <p className="text-[10px] text-[#6B7785] mb-1.5">{h.tipo} · capacidad estimada {h.capacidadEstimada} pax</p>
+                        <p className="font-bold text-sm text-gray-800">{h.nombre}</p>
+                        <p className="text-[10px] text-gray-400 mb-1.5">{h.tipo} · capacidad estimada {h.capacidadEstimada} pax</p>
                         <div className="flex items-center justify-between">
-                          <span className="font-mono font-bold text-[#05263B] text-sm">
-                            {h.precioNoche > 0 ? <>{cop(h.precioNoche)}<span className="text-[10px] font-normal text-[#6B7785]">/noche</span></> : <span className="text-[11px] text-[#8A4B00] font-bold">Precio bajo pedido</span>}
+                          <span className="font-bold text-[#003D5C] text-sm">
+                            {h.precioNoche > 0 ? <>{cop(h.precioNoche)}<span className="text-[10px] font-normal text-gray-400">/noche</span></> : <span className="text-[11px] text-orange-600 font-bold">Precio bajo pedido</span>}
                           </span>
-                          <a
-                            href={`https://wa.me/573153836043?text=${encodeURIComponent(`Hola GuíaSAI, soy ${data.delegacion.lider} de ${data.delegacion.club}. Quiero cotizar ${h.nombre} para ${data.pax} pax del ${data.delegacion.inn} al ${data.delegacion.out}.`)}`}
-                            target="_blank" rel="noopener noreferrer"
-                            className="text-[10px] font-bold bg-[#FF6600] text-white px-2.5 py-1.5 rounded"
-                          >
-                            Solicitar cotización
+                          <a href={waLink(`Hola GuíaSAI, soy ${d.lider} de ${d.club}. Quiero cotizar ${h.nombre} para ${data.pax} pax del ${d.inn} al ${d.out}.`)} target="_blank" rel="noopener noreferrer"
+                            className="text-[10px] font-bold bg-orange-500 hover:bg-orange-600 text-white px-2.5 py-1.5 rounded-lg transition-colors">
+                            Solicitar
                           </a>
                         </div>
                       </div>
@@ -215,81 +239,129 @@ const CopaPortal: React.FC = () => {
           </>
         )}
 
-        {/* ══ PASO 3 — PAGO ══ */}
-        {paso === 2 && (
-          <div className="bg-white border border-[#E7DFCE] rounded overflow-hidden">
-            <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">Estado de pago</h2>
-            <div className="p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="border border-[#E7DFCE] rounded p-3"><p className="text-[9.5px] font-mono uppercase text-[#6B7785] mb-1">Total del grupo</p><p className="text-xl font-black text-[#05263B]">{cop(data.total)}</p></div>
-                <div className="border border-[#FFD9BF] bg-[#FFF8F3] rounded p-3"><p className="text-[9.5px] font-mono uppercase text-[#6B7785] mb-1">Abono 30%</p><p className="text-xl font-black text-[#FF6600]">{cop(data.abono)}</p></div>
-                <div className="border border-[#CFE6D8] bg-[#F3F8F5] rounded p-3"><p className="text-[9.5px] font-mono uppercase text-[#6B7785] mb-1">Saldo restante</p><p className="text-xl font-black text-[#1E6B4F]">{cop(data.saldo)}</p></div>
-              </div>
-              <div className="bg-[#FFF4E5] border border-[#FFD9A0] border-l-4 border-l-[#FF6600] rounded p-3 mt-3 text-[13px]"><b className="text-[#8A4B00]">Diciembre se llena de verdad.</b> El cupo se bloquea con abono, no con intención.</div>
-            </div>
-          </div>
-        )}
-
-        {/* ══ PASO 4 — TU GRUPO ══ */}
+        {/* ══ 4. ALIMENTOS ══ */}
         {paso === 3 && (
-          <div className="bg-white border border-[#E7DFCE] rounded overflow-hidden">
-            <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">Tu grupo · {data.personas.length} personas</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead><tr className="text-[9.5px] uppercase text-[#6B7785] border-b border-[#E7DFCE]"><th className="text-left px-4 py-2">Nombre</th><th className="text-left px-2 py-2">Rol</th><th className="text-left px-2 py-2">Datos</th><th className="text-left px-2 py-2">Pago</th></tr></thead>
-                <tbody>{data.personas.map((p, i) => (
-                  <tr key={i} className="border-b border-[#F2EEE5] last:border-0">
-                    <td className="px-4 py-2"><b>{p.nombre}</b><br /><span className="text-[#6B7785] font-mono text-[11px]">{p.doc}</span></td>
-                    <td className="px-2 py-2">{p.rol}<br /><span className="text-[11px] text-[#6B7785]">{p.sub}</span></td>
-                    <td className="px-2 py-2">{p.datos ? <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">completo</span> : <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-red-50 text-red-700">falta dato</span>}</td>
-                    <td className="px-2 py-2">{p.pago === 'pago' ? <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">pagado</span> : p.pago === 'abono' ? <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-teal-50 text-teal-700">abonó</span> : <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-orange-50 text-orange-700">sin abono</span>}</td>
-                  </tr>
-                ))}</tbody>
-              </table>
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Utensils size={18} className="text-orange-500" />
+              <h2 className="text-lg font-bold text-[#003D5C]">Alimentos</h2>
             </div>
+            {incluyeAlimentacion ? (
+              <p className="text-sm text-gray-600">Tu alojamiento incluye alimentación según el plan contratado — revisa el detalle en el paso "Cotización".</p>
+            ) : (
+              <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
+                <p className="font-bold text-orange-700 text-sm mb-1">Aún estamos organizando las opciones de alimentación</p>
+                <p className="text-[13px] text-orange-600">Tu alojamiento actual no trae comidas incluidas. Estamos armando recomendaciones de restaurantes cerca de donde se van a hospedar y de las canchas — escríbenos y coordinamos según el presupuesto de tu delegación.</p>
+              </div>
+            )}
+            <a href={waLink(`Hola GuíaSAI, somos ${d.club}. Queremos coordinar la alimentación de nuestra delegación durante la Copa de la Isla.`)} target="_blank" rel="noopener noreferrer"
+              className="mt-3 flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm py-3 rounded-xl transition-colors">
+              <MessageCircle size={14} /> Coordinar alimentación
+            </a>
           </div>
         )}
 
-        {/* ══ PASO 5 — PRÓXIMOS PASOS ══ */}
+        {/* ══ 5. TRASLADOS ══ */}
         {paso === 4 && (
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Bus size={18} className="text-teal-600" />
+              <h2 className="text-lg font-bold text-[#003D5C]">Traslados</h2>
+            </div>
+            <div className="bg-teal-50 border border-teal-100 rounded-xl p-4">
+              <p className="font-bold text-teal-700 text-sm mb-1">Estamos confirmando horarios exactos</p>
+              <p className="text-[13px] text-teal-700">
+                Tu delegación tendrá traslado ida y vuelta durante los días del torneo ({d.inn} al {d.out}): aeropuerto ↔ hotel, y hotel ↔ canchas de juego. Los horarios exactos se confirman según su vuelo y el cronograma del torneo.
+              </p>
+            </div>
+            <a href={waLink(`Hola GuíaSAI, somos ${d.club}. Necesitamos confirmar los horarios de traslado para nuestra delegación.`)} target="_blank" rel="noopener noreferrer"
+              className="mt-3 flex items-center justify-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm py-3 rounded-xl transition-colors">
+              <MessageCircle size={14} /> Confirmar horarios de traslado
+            </a>
+          </div>
+        )}
+
+        {/* ══ 6. PAGO ══ */}
+        {paso === 5 && (
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <h2 className="text-lg font-bold text-[#003D5C] mb-3">Estado de pago</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="bg-gray-50 rounded-xl p-3"><p className="text-[9.5px] uppercase text-gray-400 font-semibold mb-1">Total del grupo</p><p className="text-xl font-black text-[#003D5C]">{cop(data.total)}</p></div>
+              <div className="bg-orange-50 rounded-xl p-3"><p className="text-[9.5px] uppercase text-gray-400 font-semibold mb-1">Abono 30%</p><p className="text-xl font-black text-orange-600">{cop(data.abono)}</p></div>
+              <div className="bg-emerald-50 rounded-xl p-3"><p className="text-[9.5px] uppercase text-gray-400 font-semibold mb-1">Saldo restante</p><p className="text-xl font-black text-emerald-600">{cop(data.saldo)}</p></div>
+            </div>
+            <div className="bg-orange-50 border-l-4 border-orange-400 rounded-r-xl p-3 mt-3 text-[13px]"><b className="text-orange-700">Diciembre se llena de verdad.</b> <span className="text-orange-600">El cupo se bloquea con abono, no con intención.</span></div>
+          </div>
+        )}
+
+        {/* ══ 7. ATENCIÓN DE CONSULTAS ══ */}
+        {paso === 6 && (
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <HelpCircle size={18} className="text-teal-600" />
+              <h2 className="text-lg font-bold text-[#003D5C]">Atención de consultas</h2>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">¿Tienes alguna pregunta sobre tu reserva, el torneo, o algo que no cuadra? Escríbenos directo — te responde el equipo de GuíaSAI.</p>
+            <a href={waLink(`Hola GuíaSAI, soy ${d.lider} de ${d.club}. Tengo una consulta sobre nuestra delegación en la Copa de la Isla.`)} target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm py-3 rounded-xl transition-colors">
+              <MessageCircle size={14} /> Escribir a GuíaSAI por WhatsApp
+            </a>
+          </div>
+        )}
+
+        {/* ══ 8. TU GRUPO ══ */}
+        {paso === 7 && (
           <>
-            <div className="bg-white border border-[#E7DFCE] rounded overflow-hidden p-4">
-              <h2 className="text-sm font-black text-[#05263B] mb-3">¿Qué falta?</h2>
-              <ul className="space-y-2 text-[13.5px] text-[#3A4650]">
-                {s1.ok ? null : <li className="flex items-start gap-2"><span className="text-[#FF6600]">•</span> Inscribir a los {d.meta - data.inscritos} viajeros que faltan para llegar a la meta de {d.meta}</li>}
-                {s2.ok ? null : <li className="flex items-start gap-2"><span className="text-[#FF6600]">•</span> Completar los datos de {data.inscritos - data.completos} personas que aún les falta información</li>}
-                {s3.ok ? null : <li className="flex items-start gap-2"><span className="text-[#FF6600]">•</span> Confirmar el abono de {data.inscritos - data.abonados} personas pendientes</li>}
-                {s1.ok && s2.ok && s3.ok && <li className="flex items-start gap-2"><Check size={16} className="text-[#1E6B4F] shrink-0 mt-0.5" /> ¡Tu delegación está al día! Nos vemos en diciembre.</li>}
-              </ul>
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="px-5 pt-5 pb-1 flex items-center gap-2">
+                <Users size={18} className="text-teal-600" />
+                <h2 className="text-lg font-bold text-[#003D5C]">Tu grupo · {data.personas.length} personas</h2>
+              </div>
+              <div className="overflow-x-auto mt-3">
+                <table className="w-full text-xs">
+                  <thead><tr className="text-[9.5px] uppercase text-gray-400 border-b border-gray-100"><th className="text-left px-5 py-2">Nombre</th><th className="text-left px-2 py-2">Rol</th><th className="text-left px-2 py-2">Datos</th><th className="text-left px-2 py-2">Pago</th></tr></thead>
+                  <tbody>{data.personas.map((p, i) => (
+                    <tr key={i} className="border-b border-gray-50 last:border-0">
+                      <td className="px-5 py-2"><b className="text-gray-700">{p.nombre}</b><br /><span className="text-gray-400 text-[11px]">{p.doc}</span></td>
+                      <td className="px-2 py-2 text-gray-600">{p.rol}<br /><span className="text-[11px] text-gray-400">{p.sub}</span></td>
+                      <td className="px-2 py-2">{p.datos ? <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">completo</span> : <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-50 text-red-600">falta dato</span>}</td>
+                      <td className="px-2 py-2">{p.pago === 'pago' ? <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">pagado</span> : p.pago === 'abono' ? <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-700">abonó</span> : <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-50 text-orange-600">sin abono</span>}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+              <div className="p-5 pt-4">
+                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex items-start gap-2.5">
+                  <Sparkles size={16} className="text-indigo-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-indigo-700 text-sm">Próximamente: agrega tu listado de jugadores aquí mismo</p>
+                    <p className="text-[12.5px] text-indigo-600 mt-0.5">Estamos construyendo la opción para que subas los datos de tus deportistas (nombre, documento, fecha de nacimiento) directo desde este portal. Por ahora, envíalo por WhatsApp.</p>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="flex gap-2">
-              <a href={`https://wa.me/573153836043?text=${encodeURIComponent(`Hola GuíaSAI, soy ${d.lider} de ${d.club}. Quiero revisar el estado de nuestra reserva para la Copa de la Isla.`)}`} target="_blank" rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-1.5 bg-[#FF6600] text-white font-bold text-sm py-3 rounded"><MessageCircle size={14} /> Escribir a GuíaSAI</a>
-              <button onClick={() => buscar(codigo)} className="flex items-center justify-center gap-1.5 bg-white border border-[#E7DFCE] text-[#05263B] font-bold text-sm px-4 rounded"><RefreshCw size={13} /> Actualizar</button>
+              <a href={waLink(`Hola GuíaSAI, soy ${d.lider} de ${d.club}. Te comparto el listado de jugadores de nuestra delegación.`)} target="_blank" rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm py-3 rounded-xl transition-colors"><MessageCircle size={14} /> Enviar listado por WhatsApp</a>
+              <button onClick={() => buscar(codigo)} className="flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-600 font-bold text-sm px-4 rounded-xl hover:bg-gray-50"><RefreshCw size={13} /></button>
             </div>
           </>
         )}
 
         {/* Navegación Atrás / Siguiente */}
-        <div className="flex items-center justify-between pt-3 pb-2">
-          <button
-            onClick={() => irA(paso - 1)}
-            disabled={paso === 0}
-            className="flex items-center gap-1 text-sm font-bold text-[#05263B] disabled:opacity-30 disabled:cursor-not-allowed px-3 py-2"
-          >
+        <div className="flex items-center justify-between pt-3">
+          <button onClick={() => irA(paso - 1)} disabled={paso === 0}
+            className="flex items-center gap-1 text-sm font-bold text-[#003D5C] disabled:opacity-30 disabled:cursor-not-allowed px-3 py-2">
             <ChevronLeft size={16} /> Atrás
           </button>
-          <span className="text-[11px] font-mono text-[#6B7785]">{paso + 1} / {PASOS.length}</span>
-          <button
-            onClick={() => irA(paso + 1)}
-            disabled={paso === PASOS.length - 1}
-            className="flex items-center gap-1 text-sm font-bold text-[#05263B] disabled:opacity-30 disabled:cursor-not-allowed px-3 py-2"
-          >
+          <span className="text-[11px] text-gray-400 font-semibold">{paso + 1} / {PASOS.length}</span>
+          <button onClick={() => irA(paso + 1)} disabled={paso === PASOS.length - 1}
+            className="flex items-center gap-1 text-sm font-bold text-[#003D5C] disabled:opacity-30 disabled:cursor-not-allowed px-3 py-2">
             Siguiente <ChevronRight size={16} />
           </button>
         </div>
       </div>
-      <p className="text-center text-[10px] font-mono text-[#6B7785] pt-4">GuíaSAI S.A.S. · RNT 48674 · #LaivStieg · Operador logístico de la Copa de la Isla</p>
+      <p className="text-center text-[10px] text-gray-400 pt-4">GuíaSAI S.A.S. · RNT 48674 · #LaivStieg · Operador logístico de la Copa de la Isla</p>
     </div>
   );
 };
