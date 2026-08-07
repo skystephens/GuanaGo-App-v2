@@ -494,6 +494,7 @@ export interface Cotizacion {
   incluye?: string;                    // Qué incluye — un ítem por línea
   noIncluye?: string;                  // Qué no incluye — un ítem por línea
   mostrarIncluyeNoIncluye?: boolean;   // Toggle: mostrar/ocultar esta sección al cliente
+  displayConfig?: QuoteDisplayConfig;  // Qué ve el cliente: total, subtotales por opción, mapa
 }
 
 export interface ItinerarioDia {

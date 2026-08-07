@@ -3,7 +3,7 @@
  * Maneja CRUD de cotizaciones y validación de horarios/disponibilidad
  */
 
-import { Cotizacion, CotizacionItem, QuoteStatus, QuoteItemStatus, Tour } from '../types';
+import { Cotizacion, CotizacionItem, QuoteStatus, QuoteItemStatus, Tour, ItinerarioDia, QuoteDisplayConfig, DEFAULT_QUOTE_DISPLAY_CONFIG } from '../types';
 
 const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY || '';
 const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
@@ -633,6 +633,12 @@ function mapRecordToCotizacion(record: any): Cotizacion {
     catch { itinerarioDias = []; }
   }
 
+  let displayConfig: QuoteDisplayConfig | undefined;
+  if (f['Config_Display']) {
+    try { displayConfig = { ...DEFAULT_QUOTE_DISPLAY_CONFIG, ...JSON.parse(f['Config_Display']) }; }
+    catch { displayConfig = undefined; }
+  }
+
   return {
     id: record.id,
     nombre: f.Nombre || f.nombre || '',
@@ -654,6 +660,7 @@ function mapRecordToCotizacion(record: any): Cotizacion {
     incluye: f['Incluye'] || '',
     noIncluye: f['No Incluye'] || '',
     mostrarIncluyeNoIncluye: f['Mostrar_Incluye_NoIncluye'] === true,
+    displayConfig,
   };
 }
 
@@ -680,6 +687,7 @@ function mapCotizacionToFields(cotizacion: Partial<Cotizacion>): Record<string, 
   if (cotizacion.incluye !== undefined) fields['Incluye'] = cotizacion.incluye;
   if (cotizacion.noIncluye !== undefined) fields['No Incluye'] = cotizacion.noIncluye;
   if (cotizacion.mostrarIncluyeNoIncluye !== undefined) fields['Mostrar_Incluye_NoIncluye'] = cotizacion.mostrarIncluyeNoIncluye;
+  if (cotizacion.displayConfig !== undefined) fields['Config_Display'] = JSON.stringify(cotizacion.displayConfig);
 
   return fields;
 }

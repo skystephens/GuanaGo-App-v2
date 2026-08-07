@@ -293,8 +293,26 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [filterSource, setFilterSource] = useState<'all' | 'b2c' | 'b2b'>('all');
   // Búsqueda por nombre o teléfono
   const [searchQuery, setSearchQuery] = useState('');
-  // Configuración de visualización del link público
+  // Configuración de visualización del link público — se carga desde la
+  // cotización (Config_Display) y cada cambio se guarda de inmediato en
+  // Airtable, para que no se resetee al reabrir la cotización.
   const [displayConfig, setDisplayConfig] = useState<QuoteDisplayConfig>(DEFAULT_QUOTE_DISPLAY_CONFIG);
+
+  useEffect(() => {
+    setDisplayConfig(selectedCotizacion?.displayConfig || DEFAULT_QUOTE_DISPLAY_CONFIG);
+  }, [selectedCotizacion?.id]);
+
+  const toggleDisplayConfig = async (campo: keyof QuoteDisplayConfig) => {
+    if (!selectedCotizacion) return;
+    const nuevo = { ...displayConfig, [campo]: !displayConfig[campo] };
+    setDisplayConfig(nuevo);
+    setSelectedCotizacion(prev => prev ? { ...prev, displayConfig: nuevo } : prev);
+    try {
+      await updateCotizacion(selectedCotizacion.id, { displayConfig: nuevo });
+    } catch (e) {
+      console.error('Error guardando configuración de visualización:', e);
+    }
+  };
   // Estado de guardado de opción por ítem
   const [savingOpcionId, setSavingOpcionId] = useState<string | null>(null);
   // Cambio de estado inline en lista
@@ -2170,7 +2188,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
             <span className="text-xs font-bold text-gray-500 uppercase tracking-wide shrink-0">Config del Link</span>
             <label className="flex items-center gap-2 cursor-pointer">
               <div
-                onClick={() => setDisplayConfig(c => ({ ...c, showTotal: !c.showTotal }))}
+                onClick={() => toggleDisplayConfig('showTotal')}
                 className={`w-9 h-5 rounded-full transition-colors relative ${displayConfig.showTotal ? 'bg-emerald-500' : 'bg-gray-700'}`}
               >
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${displayConfig.showTotal ? 'translate-x-4' : 'translate-x-0.5'}`} />
@@ -2179,7 +2197,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <div
-                onClick={() => setDisplayConfig(c => ({ ...c, showOptionTotals: !c.showOptionTotals }))}
+                onClick={() => toggleDisplayConfig('showOptionTotals')}
                 className={`w-9 h-5 rounded-full transition-colors relative ${displayConfig.showOptionTotals ? 'bg-emerald-500' : 'bg-gray-700'}`}
               >
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${displayConfig.showOptionTotals ? 'translate-x-4' : 'translate-x-0.5'}`} />
@@ -2188,7 +2206,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <div
-                onClick={() => setDisplayConfig(c => ({ ...c, showMap: !c.showMap }))}
+                onClick={() => toggleDisplayConfig('showMap')}
                 className={`w-9 h-5 rounded-full transition-colors relative ${displayConfig.showMap ? 'bg-emerald-500' : 'bg-gray-700'}`}
               >
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${displayConfig.showMap ? 'translate-x-4' : 'translate-x-0.5'}`} />
@@ -2580,7 +2598,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                       </span>
                       <div className="w-16 flex items-center justify-end">
                         <button
-                          onClick={() => setDisplayConfig(c => ({ ...c, showTotal: !c.showTotal }))}
+                          onClick={() => toggleDisplayConfig('showTotal')}
                           title={displayConfig.showTotal ? 'Cliente VE el total — clic para ocultar' : 'Cliente NO ve el total — clic para mostrar'}
                           className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded border transition-colors ${
                             displayConfig.showTotal
