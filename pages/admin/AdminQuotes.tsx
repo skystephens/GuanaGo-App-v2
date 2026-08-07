@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   ArrowLeft, Plus, Send, Trash2, Calendar, Users, DollarSign, Clock,
   CheckCircle2, AlertCircle, FileText, Search, Filter, User, Mail, Phone,
   Download, Eye, Loader2, Bot, ChevronDown, ChevronUp, Sparkles, Link2,
   CreditCard, X, Pencil, Check, CalendarDays, MapPin, MessageSquare, Info,
+  ListChecks,
 } from 'lucide-react';
 import QuotationMapView, { MapAccommodation } from '../../components/quotation/QuotationMapView';
 import DynamicItineraryBuilder from './DynamicItineraryBuilder';
-import { AppRoute, Cotizacion, CotizacionItem, Tour, QuoteStatus, QUOTE_STATUS_CONFIG, QuoteDisplayConfig, DEFAULT_QUOTE_DISPLAY_CONFIG } from '../../types';
+import { AppRoute, Cotizacion, CotizacionItem, Tour, QuoteStatus, QUOTE_STATUS_CONFIG, QuoteDisplayConfig, DEFAULT_QUOTE_DISPLAY_CONFIG, ItinerarioDia } from '../../types';
 import {
   getCotizaciones,
   getCotizacionById,
@@ -375,6 +376,113 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     } finally {
       setNotasClienteSaving(false);
     }
+  };
+
+  // ── Incluye / No Incluye — con toggle para mostrar/ocultar al cliente ──────
+  const [editingIncluye, setEditingIncluye] = useState(false);
+  const [incluyeValue, setIncluyeValue]     = useState('');
+  const [incluyeSaving, setIncluyeSaving]   = useState(false);
+
+  const handleSaveIncluye = async () => {
+    if (!selectedCotizacion) return;
+    setIncluyeSaving(true);
+    try {
+      await updateCotizacion(selectedCotizacion.id, { incluye: incluyeValue });
+      setSelectedCotizacion(prev => prev ? { ...prev, incluye: incluyeValue } : prev);
+      setEditingIncluye(false);
+    } catch {
+      alert('Error guardando "Incluye"');
+    } finally {
+      setIncluyeSaving(false);
+    }
+  };
+
+  const [editingNoIncluye, setEditingNoIncluye] = useState(false);
+  const [noIncluyeValue, setNoIncluyeValue]     = useState('');
+  const [noIncluyeSaving, setNoIncluyeSaving]   = useState(false);
+
+  const handleSaveNoIncluye = async () => {
+    if (!selectedCotizacion) return;
+    setNoIncluyeSaving(true);
+    try {
+      await updateCotizacion(selectedCotizacion.id, { noIncluye: noIncluyeValue });
+      setSelectedCotizacion(prev => prev ? { ...prev, noIncluye: noIncluyeValue } : prev);
+      setEditingNoIncluye(false);
+    } catch {
+      alert('Error guardando "No incluye"');
+    } finally {
+      setNoIncluyeSaving(false);
+    }
+  };
+
+  const handleToggleIncluyeNoIncluye = async () => {
+    if (!selectedCotizacion) return;
+    const nuevoValor = !selectedCotizacion.mostrarIncluyeNoIncluye;
+    setSelectedCotizacion(prev => prev ? { ...prev, mostrarIncluyeNoIncluye: nuevoValor } : prev);
+    try {
+      await updateCotizacion(selectedCotizacion.id, { mostrarIncluyeNoIncluye: nuevoValor });
+    } catch {
+      setSelectedCotizacion(prev => prev ? { ...prev, mostrarIncluyeNoIncluye: !nuevoValor } : prev);
+      alert('Error actualizando el interruptor');
+    }
+  };
+
+  // ── Itinerario día a día — calculado según fechaInicio/fechaFin de la cotización ──
+  const itinerarioDiasCalculados = useMemo(() => {
+    if (!selectedCotizacion?.fechaInicio || !selectedCotizacion?.fechaFin) return [];
+    const inicio = new Date(selectedCotizacion.fechaInicio + 'T12:00:00');
+    const fin = new Date(selectedCotizacion.fechaFin + 'T12:00:00');
+    const dias: { dia: number; fecha: string }[] = [];
+    let cursor = new Date(inicio);
+    let n = 1;
+    while (cursor <= fin && n <= 30) {
+      dias.push({ dia: n, fecha: cursor.toISOString().slice(0, 10) });
+      cursor.setDate(cursor.getDate() + 1);
+      n++;
+    }
+    return dias;
+  }, [selectedCotizacion?.fechaInicio, selectedCotizacion?.fechaFin]);
+
+  const [itinerarioLocal, setItinerarioLocal] = useState<ItinerarioDia[]>([]);
+  const [itinerarioSaving, setItinerarioSaving] = useState(false);
+  const [nuevaActividad, setNuevaActividad] = useState<Record<number, string>>({});
+
+  useEffect(() => {
+    if (!showItinerario || !selectedCotizacion) return;
+    // Combina lo guardado con los días calculados por fecha (si cambió el rango de fechas, se ajusta)
+    const guardado = selectedCotizacion.itinerarioDias || [];
+    const combinado = itinerarioDiasCalculados.map(({ dia, fecha }) => {
+      const existente = guardado.find(d => d.dia === dia);
+      return { dia, fecha, actividades: existente?.actividades || [] };
+    });
+    setItinerarioLocal(combinado);
+  }, [showItinerario, selectedCotizacion?.id]);
+
+  const guardarItinerario = async (nuevo: ItinerarioDia[]) => {
+    if (!selectedCotizacion) return;
+    setItinerarioLocal(nuevo);
+    setItinerarioSaving(true);
+    try {
+      await updateCotizacion(selectedCotizacion.id, { itinerarioDias: nuevo });
+      setSelectedCotizacion(prev => prev ? { ...prev, itinerarioDias: nuevo } : prev);
+    } catch {
+      alert('Error guardando el itinerario');
+    } finally {
+      setItinerarioSaving(false);
+    }
+  };
+
+  const agregarActividad = (dia: number) => {
+    const texto = (nuevaActividad[dia] || '').trim();
+    if (!texto) return;
+    const nuevo = itinerarioLocal.map(d => d.dia === dia ? { ...d, actividades: [...d.actividades, texto] } : d);
+    guardarItinerario(nuevo);
+    setNuevaActividad(prev => ({ ...prev, [dia]: '' }));
+  };
+
+  const quitarActividad = (dia: number, idx: number) => {
+    const nuevo = itinerarioLocal.map(d => d.dia === dia ? { ...d, actividades: d.actividades.filter((_, i) => i !== idx) } : d);
+    guardarItinerario(nuevo);
   };
 
   // ── Próximo Seguimiento (CRM) — alimenta la alerta diaria del Dashboard ─────
@@ -2508,6 +2616,97 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 )}
               </div>
 
+              {/* Qué incluye / Qué no incluye — con interruptor para mostrar al cliente */}
+              <div className="bg-gray-900 p-5 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-base font-semibold text-white flex items-center gap-2">
+                    <ListChecks className="w-4 h-4 text-teal-400" /> Qué incluye / No incluye
+                  </h3>
+                  <button
+                    onClick={handleToggleIncluyeNoIncluye}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${selectedCotizacion.mostrarIncluyeNoIncluye ? 'bg-teal-600' : 'bg-gray-600'}`}
+                    title={selectedCotizacion.mostrarIncluyeNoIncluye ? 'Visible en la cotización del cliente' : 'Oculto en la cotización del cliente'}
+                  >
+                    <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${selectedCotizacion.mostrarIncluyeNoIncluye ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-500 mb-3">
+                  {selectedCotizacion.mostrarIncluyeNoIncluye ? '✅ Visible para el cliente (Preview y PDF)' : '⚪ Oculto — actívalo con el interruptor cuando esté listo'}
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Incluye */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Incluye</p>
+                      {!editingIncluye ? (
+                        <button onClick={() => { setIncluyeValue(selectedCotizacion.incluye || ''); setEditingIncluye(true); }} className="text-gray-500 hover:text-white p-1 rounded hover:bg-gray-700">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                      ) : (
+                        <div className="flex gap-1">
+                          <button onClick={handleSaveIncluye} disabled={incluyeSaving} className="text-emerald-400 hover:text-emerald-300 p-1">
+                            {incluyeSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                          </button>
+                          <button onClick={() => setEditingIncluye(false)} className="text-gray-500 hover:text-white p-1"><X className="w-3.5 h-3.5" /></button>
+                        </div>
+                      )}
+                    </div>
+                    {editingIncluye ? (
+                      <textarea
+                        value={incluyeValue}
+                        onChange={e => setIncluyeValue(e.target.value)}
+                        rows={5}
+                        autoFocus
+                        placeholder={'Un ítem por línea, ej:\nAlojamiento y desayuno\nTraslados aeropuerto-hotel-aeropuerto\nGuía en español'}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-gray-200 text-sm focus:border-emerald-500 focus:outline-none resize-none"
+                      />
+                    ) : (
+                      <ul onClick={() => { setIncluyeValue(selectedCotizacion.incluye || ''); setEditingIncluye(true); }} className="text-sm text-gray-300 space-y-1 cursor-text rounded-lg px-1 py-1 hover:bg-gray-800 min-h-[40px]">
+                        {selectedCotizacion.incluye ? selectedCotizacion.incluye.split('\n').filter(Boolean).map((l, i) => (
+                          <li key={i} className="flex items-start gap-1.5"><span className="text-emerald-400">✓</span> {l}</li>
+                        )) : <span className="text-gray-600 italic">Clic para agregar...</span>}
+                      </ul>
+                    )}
+                  </div>
+
+                  {/* No incluye */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-xs font-bold text-red-400 uppercase tracking-wide">No incluye</p>
+                      {!editingNoIncluye ? (
+                        <button onClick={() => { setNoIncluyeValue(selectedCotizacion.noIncluye || ''); setEditingNoIncluye(true); }} className="text-gray-500 hover:text-white p-1 rounded hover:bg-gray-700">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                      ) : (
+                        <div className="flex gap-1">
+                          <button onClick={handleSaveNoIncluye} disabled={noIncluyeSaving} className="text-emerald-400 hover:text-emerald-300 p-1">
+                            {noIncluyeSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                          </button>
+                          <button onClick={() => setEditingNoIncluye(false)} className="text-gray-500 hover:text-white p-1"><X className="w-3.5 h-3.5" /></button>
+                        </div>
+                      )}
+                    </div>
+                    {editingNoIncluye ? (
+                      <textarea
+                        value={noIncluyeValue}
+                        onChange={e => setNoIncluyeValue(e.target.value)}
+                        rows={5}
+                        autoFocus
+                        placeholder={'Un ítem por línea, ej:\nTiquetes aéreos\nEntradas a parques\nGastos personales'}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-gray-200 text-sm focus:border-red-500 focus:outline-none resize-none"
+                      />
+                    ) : (
+                      <ul onClick={() => { setNoIncluyeValue(selectedCotizacion.noIncluye || ''); setEditingNoIncluye(true); }} className="text-sm text-gray-300 space-y-1 cursor-text rounded-lg px-1 py-1 hover:bg-gray-800 min-h-[40px]">
+                        {selectedCotizacion.noIncluye ? selectedCotizacion.noIncluye.split('\n').filter(Boolean).map((l, i) => (
+                          <li key={i} className="flex items-start gap-1.5"><span className="text-red-400">✕</span> {l}</li>
+                        )) : <span className="text-gray-600 italic">Clic para agregar...</span>}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Panel CRM — Seguimiento */}
               <div className="bg-gray-900 p-5 rounded-xl">
                 <div className="flex items-center gap-2 mb-4">
@@ -3128,29 +3327,73 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
         />
       )}
 
-      {/* ── Panel Itinerario ── */}
+      {/* ── Panel Itinerario — día a día, conectado y guardado en la cotización ── */}
       {showItinerario && (
         <div className="fixed inset-0 z-50 flex">
           {/* Overlay */}
           <div className="flex-1 bg-black/60" onClick={() => setShowItinerario(false)} />
           {/* Panel */}
-          <div className="w-full max-w-4xl bg-gray-950 overflow-y-auto flex flex-col">
+          <div className="w-full max-w-2xl bg-gray-950 overflow-y-auto flex flex-col ml-auto">
             <div className="sticky top-0 z-10 bg-gray-900 px-6 py-3 flex items-center justify-between border-b border-gray-700">
               <div>
-                <h3 className="font-bold text-white">📅 Itinerario</h3>
+                <h3 className="font-bold text-white flex items-center gap-2">
+                  📅 Itinerario
+                  {itinerarioSaving && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />}
+                </h3>
                 <p className="text-xs text-gray-400">{selectedCotizacion.nombre} · {selectedCotizacion.fechaInicio} → {selectedCotizacion.fechaFin}</p>
               </div>
               <button onClick={() => setShowItinerario(false)} className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-gray-700">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <DynamicItineraryBuilder
-              initialStartDate={selectedCotizacion.fechaInicio || undefined}
-              initialEndDate={selectedCotizacion.fechaFin || undefined}
-              initialAdults={selectedCotizacion.adultos || 2}
-              initialChildren={selectedCotizacion.ninos || 0}
-              initialInfants={selectedCotizacion.bebes || 0}
-            />
+
+            <div className="p-5 space-y-4">
+              {itinerarioLocal.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-10">
+                  Esta cotización no tiene fecha de inicio y fin definidas todavía — agrégalas primero para poder armar el itinerario por día.
+                </p>
+              ) : itinerarioLocal.map(d => (
+                <div key={d.dia} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                  <div className="flex items-baseline gap-2 mb-2.5">
+                    <span className="text-sm font-bold text-teal-400">Día {d.dia}</span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(d.fecha + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    </span>
+                  </div>
+
+                  {d.actividades.length > 0 && (
+                    <ul className="space-y-1.5 mb-3">
+                      {d.actividades.map((act, idx) => (
+                        <li key={idx} className="flex items-start justify-between gap-2 text-sm text-gray-300 bg-gray-800/60 rounded-lg px-3 py-2">
+                          <span className="flex-1">{act}</span>
+                          <button onClick={() => quitarActividad(d.dia, idx)} className="text-gray-500 hover:text-red-400 shrink-0">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={nuevaActividad[d.dia] || ''}
+                      onChange={e => setNuevaActividad(prev => ({ ...prev, [d.dia]: e.target.value }))}
+                      onKeyDown={e => { if (e.key === 'Enter') agregarActividad(d.dia); }}
+                      placeholder="Ej: Tour Johnny Cay y Acuario"
+                      className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:border-teal-500 focus:outline-none"
+                    />
+                    <button
+                      onClick={() => agregarActividad(d.dia)}
+                      disabled={!(nuevaActividad[d.dia] || '').trim()}
+                      className="px-3 py-2 bg-teal-700 hover:bg-teal-600 disabled:opacity-40 rounded-lg text-white"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

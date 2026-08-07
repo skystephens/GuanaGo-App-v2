@@ -490,6 +490,16 @@ export interface Cotizacion {
   notasCliente?: string;               // Notas visibles al cliente en la cotización final/PDF
   proximoSeguimiento?: string;         // Fecha (YYYY-MM-DD) para la alerta de seguimiento del CRM
   items?: CotizacionItem[];           // Items de la cotización
+  itinerarioDias?: ItinerarioDia[];    // Itinerario día a día
+  incluye?: string;                    // Qué incluye — un ítem por línea
+  noIncluye?: string;                  // Qué no incluye — un ítem por línea
+  mostrarIncluyeNoIncluye?: boolean;   // Toggle: mostrar/ocultar esta sección al cliente
+}
+
+export interface ItinerarioDia {
+  dia: number;          // 1, 2, 3...
+  fecha: string;         // ISO date de ese día
+  actividades: string[]; // líneas de actividad, en orden
 }
 
 /** Configuración de visualización de la cotización pública */

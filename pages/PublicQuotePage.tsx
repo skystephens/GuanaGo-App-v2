@@ -639,6 +639,56 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
           </div>
         )}
 
+        {/* Itinerario día a día */}
+        {cotizacion?.itinerarioDias && cotizacion.itinerarioDias.some(d => d.actividades?.length > 0) && (
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <h3 className="text-sm md:text-base font-bold text-gray-800 mb-3">📅 Itinerario</h3>
+            <div className="space-y-3">
+              {cotizacion.itinerarioDias.filter(d => d.actividades?.length > 0).map(d => (
+                <div key={d.dia} className="border-l-2 border-teal-400 pl-3">
+                  <p className="text-xs font-bold text-teal-600">
+                    Día {d.dia} · {new Date(d.fecha + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </p>
+                  <ul className="mt-1 space-y-1">
+                    {d.actividades.map((act, i) => (
+                      <li key={i} className="text-xs md:text-sm text-gray-600">• {act}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Qué incluye / No incluye */}
+        {cotizacion?.mostrarIncluyeNoIncluye && (cotizacion.incluye || cotizacion.noIncluye) && (
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <h3 className="text-sm md:text-base font-bold text-gray-800 mb-3">Qué incluye</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {cotizacion.incluye && (
+                <div>
+                  <p className="text-xs font-bold text-emerald-600 uppercase tracking-wide mb-1.5">Incluye</p>
+                  <ul className="space-y-1">
+                    {cotizacion.incluye.split('\n').filter(Boolean).map((l, i) => (
+                      <li key={i} className="text-xs md:text-sm text-gray-600 flex items-start gap-1.5"><span className="text-emerald-500">✓</span> {l}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {cotizacion.noIncluye && (
+                <div>
+                  <p className="text-xs font-bold text-red-500 uppercase tracking-wide mb-1.5">No incluye</p>
+                  <ul className="space-y-1">
+                    {cotizacion.noIncluye.split('\n').filter(Boolean).map((l, i) => (
+                      <li key={i} className="text-xs md:text-sm text-gray-600 flex items-start gap-1.5"><span className="text-red-400">✕</span> {l}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Notas / comentarios de GuiaSAI para el cliente */}
         {cotizacion?.notasCliente && (
           <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5">

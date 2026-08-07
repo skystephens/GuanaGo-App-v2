@@ -626,7 +626,13 @@ export async function updateCotizacionItem(id: string, updates: Partial<Cotizaci
 
 function mapRecordToCotizacion(record: any): Cotizacion {
   const f = record.fields;
-  
+
+  let itinerarioDias: ItinerarioDia[] = [];
+  if (f['Itinerario_Dias']) {
+    try { itinerarioDias = JSON.parse(f['Itinerario_Dias']); }
+    catch { itinerarioDias = []; }
+  }
+
   return {
     id: record.id,
     nombre: f.Nombre || f.nombre || '',
@@ -643,7 +649,11 @@ function mapRecordToCotizacion(record: any): Cotizacion {
     descuento: parseFloat(f.Descuento || '0') || 0,
     notasInternas: f['Notas internas'] || f.notasInternas || '',
     notasCliente: f['Notas_Cliente'] || f.notasCliente || '',
-    proximoSeguimiento: f['Proximo_Seguimiento'] || f.proximoSeguimiento || ''
+    proximoSeguimiento: f['Proximo_Seguimiento'] || f.proximoSeguimiento || '',
+    itinerarioDias,
+    incluye: f['Incluye'] || '',
+    noIncluye: f['No Incluye'] || '',
+    mostrarIncluyeNoIncluye: f['Mostrar_Incluye_NoIncluye'] === true,
   };
 }
 
@@ -666,7 +676,11 @@ function mapCotizacionToFields(cotizacion: Partial<Cotizacion>): Record<string, 
   if (cotizacion.notasInternas !== undefined && cotizacion.notasInternas) fields['Notas internas'] = cotizacion.notasInternas;
   if (cotizacion.notasCliente !== undefined) fields['Notas_Cliente'] = cotizacion.notasCliente;
   if (cotizacion.proximoSeguimiento !== undefined) fields['Proximo_Seguimiento'] = cotizacion.proximoSeguimiento || null;
-  
+  if (cotizacion.itinerarioDias !== undefined) fields['Itinerario_Dias'] = JSON.stringify(cotizacion.itinerarioDias);
+  if (cotizacion.incluye !== undefined) fields['Incluye'] = cotizacion.incluye;
+  if (cotizacion.noIncluye !== undefined) fields['No Incluye'] = cotizacion.noIncluye;
+  if (cotizacion.mostrarIncluyeNoIncluye !== undefined) fields['Mostrar_Incluye_NoIncluye'] = cotizacion.mostrarIncluyeNoIncluye;
+
   return fields;
 }
 
