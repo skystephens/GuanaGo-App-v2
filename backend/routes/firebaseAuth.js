@@ -26,7 +26,7 @@ function normalizeTokenRole(r) {
 router.post('/verify', verifyFirebaseToken, async (req, res) => {
   try {
     const { uid, email, name, picture } = req.firebaseUser;
-    const { userType } = req.body;
+    const { userType, telefono } = req.body;
 
     console.log(`🔥 Firebase verify: ${email} (${uid}) tipo: ${userType || 'turista'}`);
 
@@ -53,6 +53,7 @@ router.post('/verify', verifyFirebaseToken, async (req, res) => {
       nombre: name || email.split('@')[0],
       photoUrl: picture,
       userType: userType || 'turista',
+      telefono,
     });
 
     if (!result.success) {

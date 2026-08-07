@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { AppRoute, Cotizacion, QuoteStatus, QUOTE_STATUS_CONFIG, DEFAULT_QUOTE_DISPLAY_CONFIG } from '../types';
 import { getCotizacionesByTelefono } from '../services/quotesService';
+import { useAuth } from '../context/AuthContext';
 
 interface Props {
   onBack: () => void;
@@ -44,7 +45,10 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
 };
 
 const MisCotizaciones: React.FC<Props> = ({ onBack, onNavigate, initialTelefono = '' }) => {
-  const [telefono, setTelefono] = useState(initialTelefono);
+  const { userProfile, isAuthenticated } = useAuth();
+  const esClubAutenticado = isAuthenticated && userProfile?.role === 'ClubDeportivo' && !!userProfile?.telefono;
+
+  const [telefono, setTelefono] = useState(esClubAutenticado ? (userProfile!.telefono as string) : initialTelefono);
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -67,9 +71,13 @@ const MisCotizaciones: React.FC<Props> = ({ onBack, onNavigate, initialTelefono 
     }
   };
 
-  // Auto-buscar si llegamos con teléfono pre-cargado (desde cotizador o URL ?miscot=tel)
+  // Auto-buscar: (1) si es un Club Deportivo con sesión activa, usa SU teléfono
+  // guardado (no uno cualquiera que alguien escriba); (2) si llegamos con
+  // teléfono pre-cargado desde el cotizador o la URL (?miscot=tel).
   useEffect(() => {
-    if (initialTelefono && initialTelefono.length >= 7) {
+    if (esClubAutenticado) {
+      buscar(userProfile!.telefono as string);
+    } else if (initialTelefono && initialTelefono.length >= 7) {
       buscar(initialTelefono);
     }
   }, []);
@@ -104,30 +112,41 @@ const MisCotizaciones: React.FC<Props> = ({ onBack, onNavigate, initialTelefono 
 
         {/* Search bar */}
         <div className="px-4 pb-6">
-          <p className="text-sm text-emerald-100 mb-3">
-            Ingresa tu número de WhatsApp para ver tus cotizaciones
-          </p>
-          <div className="flex gap-2">
-            <div className="flex-1 flex items-center gap-2 bg-white rounded-xl px-3 py-3 shadow-sm">
-              <Phone size={15} className="text-gray-400 flex-shrink-0" />
-              <input
-                type="tel"
-                value={telefono}
-                onChange={e => setTelefono(e.target.value)}
-                onKeyDown={handleKey}
-                placeholder="+57 300 123 4567"
-                className="flex-1 text-sm text-gray-800 outline-none placeholder-gray-400 bg-transparent"
-                autoFocus={!initialTelefono}
-              />
+          {esClubAutenticado ? (
+            <div className="flex items-center gap-2 bg-white/15 rounded-xl px-3 py-3">
+              <CheckCircle2 size={15} className="text-white flex-shrink-0" />
+              <p className="text-sm text-white">
+                Conectado como <strong>{userProfile?.nombre || 'Club'}</strong> · {userProfile?.telefono}
+              </p>
             </div>
-            <button
-              onClick={() => buscar()}
-              disabled={loading || telefono.trim().length < 7}
-              className="bg-white text-emerald-600 font-bold px-4 py-3 rounded-xl shadow-sm hover:bg-emerald-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-            </button>
-          </div>
+          ) : (
+            <>
+              <p className="text-sm text-emerald-100 mb-3">
+                Ingresa tu número de WhatsApp para ver tus cotizaciones
+              </p>
+              <div className="flex gap-2">
+                <div className="flex-1 flex items-center gap-2 bg-white rounded-xl px-3 py-3 shadow-sm">
+                  <Phone size={15} className="text-gray-400 flex-shrink-0" />
+                  <input
+                    type="tel"
+                    value={telefono}
+                    onChange={e => setTelefono(e.target.value)}
+                    onKeyDown={handleKey}
+                    placeholder="+57 300 123 4567"
+                    className="flex-1 text-sm text-gray-800 outline-none placeholder-gray-400 bg-transparent"
+                    autoFocus={!initialTelefono}
+                  />
+                </div>
+                <button
+                  onClick={() => buscar()}
+                  disabled={loading || telefono.trim().length < 7}
+                  className="bg-white text-emerald-600 font-bold px-4 py-3 rounded-xl shadow-sm hover:bg-emerald-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

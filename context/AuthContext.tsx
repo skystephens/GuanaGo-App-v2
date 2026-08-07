@@ -16,6 +16,7 @@ export interface AirtableProfile {
   tipoCliente?: string | null;
   accesos?: string[];    // módulos admin autorizados
   firebaseUid?: string;
+  telefono?: string;     // usado por clubes/ligas deportivas para ver Mis Cotizaciones
 }
 
 interface AuthContextType {
@@ -34,6 +35,7 @@ interface AuthContextType {
 // El backend usa 'Super_Admin' pero el frontend histórico usa 'SuperAdmin'
 function normalizeRole(role: string): UserRole {
   if (role === 'Super_Admin' || role === 'superadmin' || role === 'super_admin') return 'SuperAdmin' as UserRole;
+  if (role === 'Club_Deportivo') return 'ClubDeportivo' as UserRole;
   return role as UserRole;
 }
 

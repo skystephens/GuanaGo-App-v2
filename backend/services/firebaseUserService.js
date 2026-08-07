@@ -20,10 +20,10 @@ const tableUrl = (suffix = '') =>
  * Busca usuario en Usuarios_Admins por Firebase UID o email.
  * Si no existe, lo crea. Retorna perfil normalizado.
  */
-export async function findOrCreateLeadUser({ firebaseUid, email, nombre, photoUrl, userType = 'turista' }) {
+export async function findOrCreateLeadUser({ firebaseUid, email, nombre, photoUrl, userType = 'turista', telefono }) {
   if (!process.env.AIRTABLE_API_KEY || !process.env.AIRTABLE_BASE_ID) {
     console.warn('⚠️ Airtable no configurado, retornando perfil básico');
-    return { success: true, user: buildFallbackProfile({ firebaseUid, email, nombre, userType }) };
+    return { success: true, user: buildFallbackProfile({ firebaseUid, email, nombre, userType, telefono }) };
   }
 
   try {
@@ -57,10 +57,12 @@ export async function findOrCreateLeadUser({ firebaseUid, email, nombre, photoUr
       }
     }
 
-    // 3. Encontrado → actualizar última actividad y retornar
+    // 3. Encontrado → actualizar última actividad (y teléfono si llegó uno nuevo) y retornar
     if (record) {
-      await patchRecord(record.id, { 'Ultimo acceso': new Date().toISOString() }).catch(() => {});
-      return { success: true, user: buildProfile(record, firebaseUid) };
+      const patchFields = { 'Ultimo acceso': new Date().toISOString() };
+      if (telefono && !record.fields.Telefono) patchFields.Telefono = telefono;
+      await patchRecord(record.id, patchFields).catch(() => {});
+      return { success: true, user: buildProfile(record, firebaseUid, telefono) };
     }
 
     // 4. No existe → crear nuevo registro
@@ -82,8 +84,10 @@ export async function findOrCreateLeadUser({ firebaseUid, email, nombre, photoUr
             Fecha_de_Creacion: new Date().toISOString(),
             'Ultimo acceso': new Date().toISOString(),
             Origen: 'Firebase',
+            ...(telefono ? { Telefono: telefono } : {}),
           },
         }],
+        typecast: true,
       }),
     });
 
@@ -124,7 +128,7 @@ async function patchRecord(id, fields) {
   }
 }
 
-function buildProfile(record, firebaseUid) {
+function buildProfile(record, firebaseUid, telefonoFallback) {
   const f = record.fields;
   const role = normalizeRole(f.Rol || f.Role || 'Turista');
   const accesos = Array.isArray(f.Accesos_Modulos)
@@ -143,10 +147,11 @@ function buildProfile(record, firebaseUid) {
     accesos,
     firebaseUid: f.Firebase_UID || firebaseUid,
     nivel: f.Nivel || null,
+    telefono: f.Telefono || telefonoFallback || '',
   };
 }
 
-function buildFallbackProfile({ firebaseUid, email, nombre, userType }) {
+function buildFallbackProfile({ firebaseUid, email, nombre, userType, telefono }) {
   return {
     id: firebaseUid || 'fallback',
     email: email || '',
@@ -157,6 +162,7 @@ function buildFallbackProfile({ firebaseUid, email, nombre, userType }) {
     estado: 'Activo',
     accesos: [],
     firebaseUid,
+    telefono: telefono || '',
   };
 }
 
@@ -170,6 +176,7 @@ function mapUserTypeToRole(userType) {
     operador: 'Operador',
     agencia: 'Aliado',
     admin: 'Super_Admin',
+    club_deportivo: 'Club_Deportivo',
   };
   return map[userType] || 'Turista';
 }

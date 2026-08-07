@@ -17,7 +17,7 @@ interface AuthGateProps {
 
 type Step = 'login' | 'select-type';
 
-async function verifyWithBackend(firebaseUser: any, userType = 'turista') {
+async function verifyWithBackend(firebaseUser: any, userType = 'turista', telefono?: string) {
   // Refrescar token ANTES de enviar al backend para incluir claims de migrate-login
   let idToken: string;
   try { idToken = await firebaseUser.getIdToken(true); } catch { idToken = await firebaseUser.getIdToken(); }
@@ -27,7 +27,7 @@ async function verifyWithBackend(firebaseUser: any, userType = 'turista') {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${idToken}`,
     },
-    body: JSON.stringify({ userType }),
+    body: JSON.stringify({ userType, ...(telefono ? { telefono } : {}) }),
   });
   const data = await res.json();
   if (!data.success) throw new Error(data.error || 'Error verificando perfil');
@@ -127,12 +127,19 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
   };
 
   // ── Selección de tipo (solo usuarios nuevos) ──────────────────────────────
-  const handleSelectType = async (userType: 'turista' | 'local' | 'socio') => {
+  const [showClubPhone, setShowClubPhone] = useState(false);
+  const [clubPhone, setClubPhone] = useState('');
+
+  const handleSelectType = async (userType: 'turista' | 'local' | 'socio' | 'club_deportivo', telefono?: string) => {
     if (!pendingFirebaseUser) return;
+    if (userType === 'club_deportivo' && !telefono) {
+      setShowClubPhone(true);
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      const data = await verifyWithBackend(pendingFirebaseUser, userType);
+      const data = await verifyWithBackend(pendingFirebaseUser, userType, telefono);
       finishAuth(data);
     } catch (err: any) {
       setError(err.message || 'Error al crear perfil');
@@ -199,6 +206,44 @@ const AuthGate: React.FC<AuthGateProps> = ({ onAuthenticated, onNavigate }) => {
                 </div>
               </div>
             </button>
+
+            {!showClubPhone ? (
+              <button
+                onClick={() => setShowClubPhone(true)}
+                disabled={loading}
+                className="w-full p-5 rounded-3xl border-2 border-teal-200 hover:border-teal-500 hover:bg-teal-50 transition-all text-left active:scale-95 disabled:opacity-50"
+              >
+                <div className="flex gap-4 items-center">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-600 flex items-center justify-center flex-shrink-0">
+                    🏐
+                  </div>
+                  <div>
+                    <h3 className="font-black text-gray-900 text-sm">Club / Liga Deportiva</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">Ve tus cotizaciones de grupo — Copa de la Isla y torneos</p>
+                  </div>
+                </div>
+              </button>
+            ) : (
+              <div className="w-full p-5 rounded-3xl border-2 border-teal-400 bg-teal-50">
+                <h3 className="font-black text-gray-900 text-sm mb-1">Club / Liga Deportiva</h3>
+                <p className="text-xs text-gray-500 mb-3">Tu número de WhatsApp conecta esta cuenta con las cotizaciones que ya te hemos enviado.</p>
+                <input
+                  type="tel"
+                  value={clubPhone}
+                  onChange={e => setClubPhone(e.target.value)}
+                  placeholder="+57 300 123 4567"
+                  autoFocus
+                  className="w-full px-4 py-3 rounded-xl border border-teal-300 text-sm focus:outline-none focus:border-teal-500 mb-2"
+                />
+                <button
+                  onClick={() => handleSelectType('club_deportivo', clubPhone)}
+                  disabled={loading || clubPhone.replace(/\D/g, '').length < 10}
+                  className="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm disabled:opacity-40 transition-colors"
+                >
+                  Continuar
+                </button>
+              </div>
+            )}
           </div>
 
           {loading && (

@@ -370,7 +370,7 @@ export enum AppRoute {
   PUBLIC_QUOTE = 'PUBLIC_QUOTE',
 }
 
-export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Residente' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista';
+export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Residente' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista' | 'ClubDeportivo';
 
 export type TaskStatus = 'pendiente' | 'en_progreso' | 'urgente_pendiente' | 'terminado' | 'bloqueado';
 export type TaskPriority = 'baja' | 'media' | 'alta' | 'critica';
