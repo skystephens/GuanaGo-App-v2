@@ -195,4 +195,68 @@ router.post('/migrate-login', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/firebase-auth/crear-cuenta-club
+ *
+ * Uso interno del Super Admin: crea (o reutiliza) una cuenta de tipo
+ * 'Club/Liga Deportiva' para un cliente que YA tiene cotización, sin que
+ * él mismo tenga que pasar por el registro. Devuelve un link para que
+ * el cliente ponga su propia contraseña — nunca se genera ni se envía
+ * una contraseña en texto plano.
+ *
+ * Body: { email, telefono, nombre }
+ */
+router.post('/crear-cuenta-club', async (req, res) => {
+  try {
+    const { email, telefono, nombre } = req.body;
+    if (!email || !telefono || !nombre) {
+      return res.status(400).json({ success: false, error: 'Falta email, teléfono o nombre' });
+    }
+    if (!firebaseInitialized) {
+      return res.status(503).json({ success: false, error: 'Firebase Admin no está configurado en el servidor' });
+    }
+
+    // 1. Buscar o crear el usuario en Firebase Auth
+    let firebaseUser;
+    let yaExistia = true;
+    try {
+      firebaseUser = await admin.auth().getUserByEmail(email);
+    } catch {
+      yaExistia = false;
+      const tempPassword = 'Temp' + Math.random().toString(36).slice(2, 12) + '!9';
+      firebaseUser = await admin.auth().createUser({ email, password: tempPassword, displayName: nombre });
+    }
+
+    // 2. Crear/actualizar en Usuarios_Admins (rol Club_Deportivo + teléfono)
+    const airtableResult = await findOrCreateLeadUser({
+      firebaseUid: firebaseUser.uid,
+      email,
+      nombre,
+      userType: 'club_deportivo',
+      telefono,
+    });
+
+    // 3. Asignar el rol como custom claim
+    try {
+      await admin.auth().setCustomUserClaims(firebaseUser.uid, { role: 'Club_Deportivo' });
+    } catch (e) {
+      console.warn('⚠️ No se pudo asignar custom claim:', e.message);
+    }
+
+    // 4. Link para que el cliente elija su propia contraseña (nunca se genera una para enviar)
+    const resetLink = await admin.auth().generatePasswordResetLink(email);
+
+    res.json({
+      success: true,
+      yaExistia,
+      email,
+      resetLink,
+      user: airtableResult.user,
+    });
+  } catch (error) {
+    console.error('❌ Error en /firebase-auth/crear-cuenta-club:', error.message);
+    res.status(500).json({ success: false, error: error.message || 'Error creando la cuenta' });
+  }
+});
+
 export default router;

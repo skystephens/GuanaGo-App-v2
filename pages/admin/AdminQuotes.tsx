@@ -6,6 +6,7 @@ import {
   CreditCard, X, Pencil, Check, CalendarDays, MapPin, MessageSquare, Info,
   ListChecks,
   Copy,
+  UserPlus,
 } from 'lucide-react';
 import QuotationMapView, { MapAccommodation } from '../../components/quotation/QuotationMapView';
 import DynamicItineraryBuilder from './DynamicItineraryBuilder';
@@ -1262,6 +1263,37 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
    */
   const [duplicandoId, setDuplicandoId] = useState<string | null>(null);
 
+  // ── Crear acceso al portal (cuenta Club Deportivo) para el cliente de esta cotización ──
+  const [creandoAcceso, setCreandoAcceso] = useState(false);
+  const [linkAccesoCreado, setLinkAccesoCreado] = useState<string | null>(null);
+
+  const handleCrearAccesoPortal = async () => {
+    if (!selectedCotizacion?.email || !selectedCotizacion?.telefono) {
+      alert('Esta cotización necesita email Y teléfono del cliente antes de crear el acceso.');
+      return;
+    }
+    setCreandoAcceso(true);
+    setLinkAccesoCreado(null);
+    try {
+      const r = await fetch('/api/firebase-auth/crear-cuenta-club', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: selectedCotizacion.email,
+          telefono: selectedCotizacion.telefono,
+          nombre: selectedCotizacion.nombre,
+        }),
+      });
+      const data = await r.json();
+      if (!data.success) throw new Error(data.error || 'Error creando la cuenta');
+      setLinkAccesoCreado(data.resetLink);
+    } catch (e: any) {
+      alert('Error creando el acceso: ' + (e.message || e));
+    } finally {
+      setCreandoAcceso(false);
+    }
+  };
+
   const handleDuplicarCotizacion = async (cot: Cotizacion) => {
     if (!confirm(`¿Duplicar "${cot.nombre}"? Se copiarán las fechas, pasajeros y todos los servicios (${cot.items?.length ?? '...'} ítems) a una cotización nueva.`)) return;
     setDuplicandoId(cot.id);
@@ -2247,6 +2279,40 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                       {selectedCotizacion.adultos} adultos, {selectedCotizacion.ninos} niños, {selectedCotizacion.bebes} bebés
                     </span>
                   </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-800">
+                  <button
+                    onClick={handleCrearAccesoPortal}
+                    disabled={creandoAcceso || !selectedCotizacion.email || !selectedCotizacion.telefono}
+                    className="flex items-center gap-1.5 text-xs font-bold text-teal-400 hover:text-teal-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                    title={!selectedCotizacion.email || !selectedCotizacion.telefono ? 'Necesita email y teléfono' : 'Crear cuenta Club Deportivo para este cliente'}
+                  >
+                    {creandoAcceso ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
+                    Crear acceso al portal (Mis Cotizaciones)
+                  </button>
+
+                  {linkAccesoCreado && (
+                    <div className="mt-3 bg-teal-950/40 border border-teal-800 rounded-xl p-3">
+                      <p className="text-xs text-teal-300 font-bold mb-1.5">✅ Cuenta lista. Envíale este link para que ponga su propia contraseña:</p>
+                      <div className="flex items-center gap-2">
+                        <input readOnly value={linkAccesoCreado} className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-[11px] text-gray-300 truncate" />
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(linkAccesoCreado); }}
+                          className="text-[11px] font-bold bg-teal-700 hover:bg-teal-600 text-white px-2.5 py-1.5 rounded-lg shrink-0"
+                        >
+                          Copiar
+                        </button>
+                        <a
+                          href={`https://wa.me/?text=${encodeURIComponent(`Hola ${selectedCotizacion.nombre}, ya tienes acceso a nuestro portal de cotizaciones. Entra a este link para elegir tu contraseña: ${linkAccesoCreado}`)}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="text-[11px] font-bold bg-emerald-700 hover:bg-emerald-600 text-white px-2.5 py-1.5 rounded-lg shrink-0"
+                        >
+                          WhatsApp
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
