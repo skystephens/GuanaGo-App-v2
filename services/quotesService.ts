@@ -181,8 +181,19 @@ export async function getCotizaciones(): Promise<Cotizacion[]> {
 export async function getCotizacionesByTelefono(telefono: string): Promise<Cotizacion[]> {
   if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID || !telefono) return [];
   try {
-    const sanitized = telefono.replace(/['"]/g, '');
-    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES)}?filterByFormula=${encodeURIComponent(`{Telefono}='${sanitized}'`)}&sort[0][field]=Fecha%20Creacion&sort[0][direction]=desc`;
+    // Los números quedan guardados en formatos distintos ('+573108304572',
+    // '+57 315 4759681', '315 383 6043'...) — comparamos solo los últimos
+    // 10 dígitos (el celular colombiano real, sin importar +57/espacios/guiones)
+    // en vez de exigir coincidencia exacta de texto.
+    const soloDigitos = telefono.replace(/\D/g, '');
+    const ultimos10 = soloDigitos.slice(-10);
+    if (ultimos10.length < 10) return [];
+
+    const formulaTelefonoLimpio =
+      `SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE({Telefono},' ',''),'-',''),'+',''),'(',''),')','')`;
+    const formula = `RIGHT(${formulaTelefonoLimpio}, 10) = '${ultimos10}'`;
+
+    const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES)}?filterByFormula=${encodeURIComponent(formula)}&sort[0][field]=Fecha%20Creacion&sort[0][direction]=desc`;
     const response = await fetch(url, { headers: getHeaders() });
     if (!response.ok) throw new Error(`${response.status}`);
     const data = await response.json();

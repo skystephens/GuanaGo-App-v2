@@ -94,6 +94,13 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
               </button>
             )}
             <button
+              onClick={() => onNavigate(AppRoute.MIS_COTIZACIONES)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-gray-600 font-bold text-xs hover:border-teal-400 hover:text-teal-600 transition-colors"
+              title="Ver mis cotizaciones"
+            >
+              📄 <span className="hidden sm:inline">Mis cotizaciones</span>
+            </button>
+            <button
               onClick={() => onNavigate(AppRoute.AUTH_GATE)}
               className="px-4 py-2 rounded-xl border-2 border-[#003D5C] text-[#003D5C] font-bold text-sm hover:bg-[#003D5C] hover:text-white transition-colors"
             >
