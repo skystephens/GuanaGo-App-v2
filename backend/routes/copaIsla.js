@@ -42,6 +42,29 @@ const AT = () => {
 };
 const atUrl = (tableId) => { const { base } = AT(); return `https://api.airtable.com/v0/${base}/${tableId}`; };
 
+// Trae cotizaciones por ID exacto — usado cuando Sky las vinculó a mano
+// desde Copa_Delegaciones.Cotizaciones_Vinculadas, evitando que el
+// teléfono compartido de un organizador (que coordina varios equipos)
+// mezcle cotizaciones de delegaciones distintas.
+async function traerCotizacionesPorId(ids) {
+  if (!ids || ids.length === 0) return [];
+  try {
+    const { headers } = AT();
+    const results = await Promise.all(ids.map(async id => {
+      const r = await fetch(`${atUrl(TABLES.COTIZACIONES)}/${id}`, { headers });
+      if (!r.ok) return null;
+      const rec = await r.json();
+      return {
+        id: rec.id,
+        nombre: rec.fields['Nombre'] || '',
+        estado: rec.fields['Estado'] || 'Draft',
+        total: rec.fields['Precio total'] || 0,
+      };
+    }));
+    return results.filter(Boolean);
+  } catch { return []; }
+}
+
 // Busca cotizaciones reales (CotizacionesGG) por teléfono — misma normalización
 // (últimos 10 dígitos) que usa Mis Cotizaciones, para conectar el portal de la
 // Copa con las cotizaciones que ya existen para ese mismo coordinador.
@@ -342,6 +365,7 @@ function mapDelegacion(rec) {
     publicado: String(rec.fields['Publicado'] || '').toLowerCase() === 'true',
     estado: rec.fields['Estado'] || 'Cotizando',
     evento: rec.fields['Evento'] || 'Copa de la Isla',
+    cotizacionesVinculadas: rec.fields['Cotizaciones_Vinculadas'] || [],
   };
 }
 
@@ -659,7 +683,9 @@ async function construirSnapshotPortal(rec) {
   const completos = viajeros.filter(v => v.datos).length;
   const abonados = viajeros.filter(v => v.pago !== 'pend').length;
 
-  const cotizacionesRelacionadas = await buscarCotizacionesPorTelefono(del.whatsapp);
+  const cotizacionesRelacionadas = del.cotizacionesVinculadas.length > 0
+    ? await traerCotizacionesPorId(del.cotizacionesVinculadas)
+    : await buscarCotizacionesPorTelefono(del.whatsapp);
 
   return {
     snapshot: {
