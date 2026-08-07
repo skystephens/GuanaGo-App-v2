@@ -5,6 +5,7 @@ import {
   Download, Eye, Loader2, Bot, ChevronDown, ChevronUp, Sparkles, Link2,
   CreditCard, X, Pencil, Check, CalendarDays, MapPin, MessageSquare, Info,
   ListChecks,
+  Copy,
 } from 'lucide-react';
 import QuotationMapView, { MapAccommodation } from '../../components/quotation/QuotationMapView';
 import DynamicItineraryBuilder from './DynamicItineraryBuilder';
@@ -1235,6 +1236,78 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     finally { setUpdatingStatusId(null); }
   };
 
+  /**
+   * Duplica una cotización completa: fechas, pax, incluye/no incluye, y TODOS
+   * los ítems (con sus opciones A/B/C/D) — como base para una cotización nueva.
+   * No copia teléfono/email/notas del cliente original, para no confundir
+   * a quién se le va a enviar esta cotización nueva.
+   */
+  const [duplicandoId, setDuplicandoId] = useState<string | null>(null);
+
+  const handleDuplicarCotizacion = async (cot: Cotizacion) => {
+    if (!confirm(`¿Duplicar "${cot.nombre}"? Se copiarán las fechas, pasajeros y todos los servicios (${cot.items?.length ?? '...'} ítems) a una cotización nueva.`)) return;
+    setDuplicandoId(cot.id);
+    try {
+      const original = await getCotizacionById(cot.id);
+      if (!original) throw new Error('No se pudo cargar la cotización original');
+
+      const nueva = await createCotizacion({
+        nombre: `Copia de ${original.nombre}`,
+        telefono: '',
+        email: '',
+        fechaInicio: original.fechaInicio,
+        fechaFin: original.fechaFin,
+        adultos: original.adultos,
+        ninos: original.ninos,
+        bebes: original.bebes,
+        estado: 'Draft' as any,
+        precioTotal: original.precioTotal,
+        notasInternas: `Duplicada desde cotización #${original.id.slice(-6)} (${original.nombre})`,
+        notasCliente: '',
+        incluye: original.incluye || '',
+        noIncluye: original.noIncluye || '',
+        mostrarIncluyeNoIncluye: original.mostrarIncluyeNoIncluye || false,
+      });
+      if (!nueva) throw new Error('No se pudo crear la cotización nueva');
+
+      const itemsOriginales = original.items || [];
+      for (const item of itemsOriginales) {
+        await addCotizacionItem({
+          cotizacionId: nueva.id,
+          servicioId: item.servicioId,
+          servicioNombre: item.servicioNombre,
+          servicioTipo: item.servicioTipo,
+          opcion: item.opcion,
+          fecha: item.fecha,
+          fechaFin: item.fechaFin,
+          horarioInicio: item.horarioInicio,
+          horarioFin: item.horarioFin,
+          adultos: item.adultos,
+          ninos: item.ninos,
+          bebes: item.bebes,
+          valorUnitario: item.valorUnitario,
+          personas: item.personas,
+          cantidad: item.cantidad,
+          precioUnitario: item.precioUnitario,
+          subtotal: item.subtotal,
+          esPersonalizado: item.esPersonalizado,
+          images: item.images,
+          status: item.status,
+          incluyeHuespedes: item.incluyeHuespedes,
+        } as any);
+      }
+
+      const cargada = await getCotizacionById(nueva.id);
+      setCotizaciones(prev => [cargada || nueva, ...prev]);
+      if (cargada) { setSelectedCotizacion(cargada); setItems(cargada.items || []); setView('detail'); }
+    } catch (e) {
+      console.error('Error duplicando cotización:', e);
+      alert('Error al duplicar la cotización. Intenta de nuevo.');
+    } finally {
+      setDuplicandoId(null);
+    }
+  };
+
   /** Agrega una nota de seguimiento CRM (se prepende al campo Notas internas con timestamp) */
   const handleAddCrmNote = async () => {
     if (!selectedCotizacion || !crmNote.trim()) return;
@@ -1687,6 +1760,16 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                         className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-800"
                       >
                         <Plus className="w-3.5 h-3.5" /> Nueva cotización para este cliente
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); handleDuplicarCotizacion(cot); }}
+                        disabled={duplicandoId === cot.id}
+                        className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                      >
+                        {duplicandoId === cot.id
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <Copy className="w-3.5 h-3.5" />}
+                        {duplicandoId === cot.id ? 'Duplicando…' : 'Duplicar'}
                       </button>
                       {cot.telefono && (
                         <a
