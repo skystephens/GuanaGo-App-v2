@@ -24,6 +24,7 @@ interface Snapshot {
   total: number; abono: number; saldo: number;
   servicios: { id: string; titulo: string; detalle: string; valor: number; origen?: string }[];
   personas: { nombre: string; doc: string; rol: string; sub: string; datos: boolean; pago: string }[];
+  cotizacionesRelacionadas?: { id: string; nombre: string; estado: string; total: number }[];
 }
 interface HotelDisp { id: string; nombre: string; tipo: string; precioNoche: number; imagen: string; descripcion: string; habitacionesDisponibles: number; capacidadEstimada: number }
 
@@ -112,7 +113,46 @@ const CopaPortal: React.FC = () => {
   const waLink = (msg: string) => `${wa}?text=${encodeURIComponent(msg)}`;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-10">
+    <div className="min-h-screen bg-gray-50 pb-10 md:flex">
+
+      {/* Sidebar izquierda — solo escritorio (md+) */}
+      <div className="hidden md:flex md:flex-col md:w-64 md:shrink-0 bg-white border-r border-gray-100 md:sticky md:top-0 md:h-screen">
+        <div className="p-5 border-b border-gray-100">
+          <div className="flex items-center gap-2.5">
+            <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl w-10 h-10 p-1.5 flex items-center justify-center shrink-0">
+              <img src={GUANA_LOGO} alt="GuiaSAI" className="w-full h-full object-contain" />
+            </div>
+            <div>
+              <p className="font-black text-sm text-[#003D5C]">Guía<span className="text-orange-500">SAI</span></p>
+              <p className="text-[10px] text-gray-400">Copa de la Isla</p>
+            </div>
+          </div>
+          <p className="text-xs font-bold text-gray-700 mt-3 truncate">{d.club}</p>
+          <p className="text-[11px] text-gray-400">{d.ciudad}</p>
+        </div>
+        <nav className="flex-1 py-3">
+          {PASOS.map((label, i) => (
+            <button
+              key={label}
+              onClick={() => irA(i)}
+              className={`w-full text-left px-5 py-2.5 text-sm font-semibold flex items-center gap-2.5 transition-colors ${
+                i === paso ? 'bg-teal-50 text-teal-700 border-r-2 border-teal-600' : 'text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center shrink-0 ${i === paso ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-400'}`}>{i + 1}</span>
+              {label}
+            </button>
+          ))}
+        </nav>
+        <div className="p-4 border-t border-gray-100">
+          <a href={waLink(`Hola GuíaSAI, soy ${d.lider} de ${d.club}.`)} target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs py-2.5 rounded-xl transition-colors">
+            <MessageCircle size={13} /> WhatsApp GuíaSAI
+          </a>
+        </div>
+      </div>
+
+      <div className="flex-1 min-w-0">
       {/* Header brand — igual a la cotización pública */}
       <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-5 pb-8">
         <div className="max-w-2xl lg:max-w-4xl mx-auto">
@@ -179,20 +219,45 @@ const CopaPortal: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-3 text-center">
               <div className="bg-gray-50 rounded-xl p-3">
-                <p className="text-2xl font-black text-[#003D5C]">100%</p>
-                <p className="text-[11px] text-gray-500">Operado por raizales</p>
+                <p className="text-xl font-black text-[#003D5C]">Kriol</p>
+                <p className="text-[11px] text-gray-500">Cultura auténtica raizal</p>
               </div>
               <div className="bg-gray-50 rounded-xl p-3">
-                <p className="text-2xl font-black text-[#003D5C]">RNT</p>
+                <p className="text-xl font-black text-[#003D5C]">RNT</p>
                 <p className="text-[11px] text-gray-500">48674 — Registro oficial</p>
               </div>
             </div>
+            <p className="text-[12px] text-gray-500 leading-relaxed">
+              Apoyamos directamente a la comunidad local — familias, cocineras, conductores y artesanos raizales — mientras ofrecemos experiencias auténticas de la cultura Kriol de San Andrés.
+            </p>
           </div>
         )}
 
         {/* ══ 3. COTIZACIÓN ══ */}
         {paso === 2 && (
           <>
+            {data.cotizacionesRelacionadas && data.cotizacionesRelacionadas.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-sm p-5">
+                <h3 className="text-sm font-bold text-[#003D5C] mb-3">Cotizaciones de tu delegación</h3>
+                <div className="space-y-2">
+                  {data.cotizacionesRelacionadas.map(c => (
+                    <a
+                      key={c.id}
+                      href={`${window.location.origin}${window.location.pathname}?cot=${c.id}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-between gap-2 bg-gray-50 hover:bg-gray-100 rounded-xl p-3 transition-colors"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-bold text-sm text-gray-800 truncate">{c.nombre}</p>
+                        <p className="text-[11px] text-gray-500">{c.estado} · {cop(c.total)}</p>
+                      </div>
+                      <span className="text-xs font-bold text-orange-500 shrink-0">Ver completa →</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-1"><h2 className="text-lg font-bold text-[#003D5C]">Tu cotización</h2></div>
               {tieneServicios ? (
@@ -362,6 +427,7 @@ const CopaPortal: React.FC = () => {
         </div>
       </div>
       <p className="text-center text-[10px] text-gray-400 pt-4">GuíaSAI S.A.S. · RNT 48674 · #LaivStieg · Operador logístico de la Copa de la Isla</p>
+      </div>
     </div>
   );
 };

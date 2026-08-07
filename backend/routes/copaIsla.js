@@ -32,6 +32,7 @@ const TABLES = {
   TARIFAS: 'tblz1uekwVb41U27q',      // Copa_Tarifas
   DELEGACIONES: 'tblQTPoSr4ggTX3nc', // Copa_Delegaciones
   VIAJEROS: 'tblpxiCyegu9qVUsN',     // Copa_Viajeros
+  COTIZACIONES: 'CotizacionesGG',
 };
 
 const AT = () => {
@@ -40,6 +41,31 @@ const AT = () => {
   return { key, base, headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' } };
 };
 const atUrl = (tableId) => { const { base } = AT(); return `https://api.airtable.com/v0/${base}/${tableId}`; };
+
+// Busca cotizaciones reales (CotizacionesGG) por teléfono — misma normalización
+// (últimos 10 dígitos) que usa Mis Cotizaciones, para conectar el portal de la
+// Copa con las cotizaciones que ya existen para ese mismo coordinador.
+async function buscarCotizacionesPorTelefono(telefono) {
+  if (!telefono) return [];
+  const soloDigitos = String(telefono).replace(/\D/g, '');
+  const ultimos10 = soloDigitos.slice(-10);
+  if (ultimos10.length < 10) return [];
+  try {
+    const { headers } = AT();
+    const formulaTelefonoLimpio = `SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE({Telefono},' ',''),'-',''),'+',''),'(',''),')','')`;
+    const formula = `RIGHT(${formulaTelefonoLimpio}, 10) = '${ultimos10}'`;
+    const url = `${atUrl(TABLES.COTIZACIONES)}?filterByFormula=${encodeURIComponent(formula)}&pageSize=10`;
+    const r = await fetch(url, { headers });
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (data.records || []).map(rec => ({
+      id: rec.id,
+      nombre: rec.fields['Nombre'] || '',
+      estado: rec.fields['Estado'] || 'Draft',
+      total: rec.fields['Precio total'] || 0,
+    }));
+  } catch { return []; }
+}
 
 function generarCodigo() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin 0/O/1/I para evitar confusión
@@ -641,6 +667,8 @@ router.get('/portal/:codigo', async (req, res) => {
     const completos = viajeros.filter(v => v.datos).length;
     const abonados = viajeros.filter(v => v.pago !== 'pend').length;
 
+    const cotizacionesRelacionadas = await buscarCotizacionesPorTelefono(del.whatsapp);
+
     res.json({
       actualizado: new Date().toISOString(),
       evento: del.evento,
@@ -653,6 +681,7 @@ router.get('/portal/:codigo', async (req, res) => {
       total: calc.total, abono: calc.abono, saldo: calc.saldo,
       servicios: calc.lineas.map(l => ({ id: l.servicioId, titulo: l.titulo, detalle: l.detalle, valor: l.valorVenta, origen: l.origen })),
       personas: viajeros,
+      cotizacionesRelacionadas,
     });
   } catch (err) {
     console.error('❌ copa/portal:', err.message);
