@@ -58,12 +58,20 @@ const OPCION_COLORS: Record<string, string> = {
   B: 'bg-purple-50 border-purple-200 text-purple-700',
   C: 'bg-orange-50 border-orange-200 text-orange-700',
   D: 'bg-pink-50 border-pink-200 text-pink-700',
+  E: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+  F: 'bg-cyan-50 border-cyan-200 text-cyan-700',
+  G: 'bg-amber-50 border-amber-200 text-amber-700',
+  H: 'bg-rose-50 border-rose-200 text-rose-700',
 };
 const OPCION_HEADER: Record<string, string> = {
   A: 'bg-blue-500',
   B: 'bg-purple-500',
   C: 'bg-orange-500',
   D: 'bg-pink-500',
+  E: 'bg-emerald-500',
+  F: 'bg-cyan-500',
+  G: 'bg-amber-500',
+  H: 'bg-rose-500',
 };
 
 // ─── Lightbox ────────────────────────────────────────────────────────────────
@@ -415,7 +423,7 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
 
   // Separar ítems: incluidos (sin opcion o opcion='Incluido') vs alternativas (A/B/C/D)
   const itemsIncluidos   = items.filter(i => !i.opcion || i.opcion === 'Incluido');
-  const opciones         = ['A', 'B', 'C', 'D'].filter(op => items.some(i => i.opcion === op));
+  const opciones         = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].filter(op => items.some(i => i.opcion === op));
   const totalIncluidos   = itemsIncluidos.reduce((s, i) => s + (i.subtotal || 0), 0);
   const descuento        = cotizacion.descuento || 0;
   const totalFinal       = Math.max(0, totalIncluidos - descuento);

@@ -2265,7 +2265,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
               >
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${displayConfig.showOptionTotals ? 'translate-x-4' : 'translate-x-0.5'}`} />
               </div>
-              <span className="text-xs text-gray-300">Mostrar total por opción (A/B/C/D)</span>
+              <span className="text-xs text-gray-300">Mostrar total por opción (A-H)</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <div
@@ -2645,7 +2645,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                 {savingOpcionId === item.id ? (
                                   <Loader2 className="w-3.5 h-3.5 text-gray-500 animate-spin" />
                                 ) : (
-                                  ['Incl.', 'A', 'B', 'C', 'D'].map(op => {
+                                  ['Incl.', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(op => {
                                     const val    = op === 'Incl.' ? undefined : op;
                                     const active = (item.opcion ?? undefined) === val;
                                     const colors: Record<string, string> = {

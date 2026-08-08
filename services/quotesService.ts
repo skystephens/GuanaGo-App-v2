@@ -474,7 +474,8 @@ export async function addCotizacionItem(
     const requestBody = {
       records: [{
         fields: mappedFields
-      }]
+      }],
+      typecast: true
     };
     
     console.log('📤 Enviando a Airtable:', JSON.stringify(requestBody, null, 2));
@@ -624,7 +625,7 @@ export async function updateCotizacionItem(id: string, updates: Partial<Cotizaci
     const response = await fetch(url, {
       method: 'PATCH',
       headers: getHeaders(),
-      body: JSON.stringify({ fields: mappedFields })
+      body: JSON.stringify({ fields: mappedFields, typecast: true })
     });
 
     if (!response.ok) {
