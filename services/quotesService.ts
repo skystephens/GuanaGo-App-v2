@@ -508,6 +508,28 @@ export async function addCotizacionItem(
 /**
  * Actualizar cotización
  */
+/**
+ * Elimina una cotización por completo: primero sus ítems (Cotizaciones_Items),
+ * luego el registro de CotizacionesGG. Sin esto, los ítems quedan huérfanos
+ * en Airtable aunque se borre la cotización.
+ */
+export async function deleteCotizacion(id: string): Promise<boolean> {
+  try {
+    const items = await getCotizacionItems(id);
+    for (const item of items) {
+      await deleteCotizacionItem(item.id);
+    }
+    const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.COTIZACIONES)}/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('❌ Error eliminando cotización:', error);
+    return false;
+  }
+}
+
 export async function updateCotizacion(
   id: string,
   updates: Partial<Cotizacion>

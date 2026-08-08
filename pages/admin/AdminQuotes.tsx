@@ -17,6 +17,7 @@ import {
   createCotizacion,
   addCotizacionItem,
   updateCotizacion,
+  deleteCotizacion,
   deleteCotizacionItem,
   updateCotizacionItem,
   validateScheduleConflicts,
@@ -1358,6 +1359,26 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     }
   };
 
+  // ── Eliminar cotización (con sus ítems) ─────────────────────────────────────
+  const [eliminandoId, setEliminandoId] = useState<string | null>(null);
+
+  const handleEliminarCotizacion = async (cot: Cotizacion) => {
+    const cantidadItems = cot.items?.length ?? 0;
+    if (!confirm(`¿Eliminar "${cot.nombre}" de forma permanente? Se borrará junto con sus ${cantidadItems} ítem(s). Esta acción no se puede deshacer.`)) return;
+    setEliminandoId(cot.id);
+    try {
+      const ok = await deleteCotizacion(cot.id);
+      if (!ok) throw new Error('No se pudo eliminar');
+      setCotizaciones(prev => prev.filter(c => c.id !== cot.id));
+      if (selectedCotizacion?.id === cot.id) { setSelectedCotizacion(null); setView('list'); }
+    } catch (e) {
+      console.error('Error eliminando cotización:', e);
+      alert('Error al eliminar la cotización. Intenta de nuevo.');
+    } finally {
+      setEliminandoId(null);
+    }
+  };
+
   /** Agrega una nota de seguimiento CRM (se prepende al campo Notas internas con timestamp) */
   const handleAddCrmNote = async () => {
     if (!selectedCotizacion || !crmNote.trim()) return;
@@ -1820,6 +1841,16 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           : <Copy className="w-3.5 h-3.5" />}
                         {duplicandoId === cot.id ? 'Duplicando…' : 'Duplicar'}
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); handleEliminarCotizacion(cot); }}
+                        disabled={eliminandoId === cot.id}
+                        className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                      >
+                        {eliminandoId === cot.id
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <Trash2 className="w-3.5 h-3.5" />}
+                        {eliminandoId === cot.id ? 'Eliminando…' : 'Eliminar'}
                       </button>
                       {cot.telefono && (
                         <a
