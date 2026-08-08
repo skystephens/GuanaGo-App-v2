@@ -22,6 +22,7 @@ interface Del {
   metaPax: number; checkin: string; checkout: string; codigoAcceso: string;
   serviciosActivos: string[]; actividadesCatalogo: string[]; publicado: boolean; estado: string; evento: string;
   viajerosCount: number; pax: number; noches: number; total: number; abono: number;
+  cotizacionesVinculadas: string[];
 }
 interface Tarifa { id: string; servicioId: string; nombre: string; unidad: string; multiplicador: string; descripcion: string; precioVenta: number; proveedor: string }
 interface Viajero { id: string; nombre: string; documento: string; telefono: string; subgrupo: string; rol: string; estadoPago: string }
@@ -43,6 +44,10 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
   const [pagoLink, setPagoLink] = useState<{ checkoutUrl: string; whatsappTexto: string } | null>(null);
   const [catReal, setCatReal] = useState<CatReal[]>([]);
   const [hotelesDisp, setHotelesDisp] = useState<any[]>([]);
+  const [cotVinculadas, setCotVinculadas] = useState<{ id: string; nombre: string; estado: string; total: number }[]>([]);
+  const [busquedaCot, setBusquedaCot] = useState('');
+  const [resultadosCot, setResultadosCot] = useState<{ id: string; nombre: string; estado: string; total: number }[]>([]);
+  const [buscandoCot, setBuscandoCot] = useState(false);
   const [buscarAct, setBuscarAct] = useState('');
 
   const sel = dels.find(d => d.id === selId) || null;
@@ -75,6 +80,39 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
 
   useEffect(() => { cargarTodo(); }, []);
   useEffect(() => { if (selId) { cargarViajeros(selId); setPagoLink(null); } }, [selId]);
+
+  useEffect(() => {
+    if (sel && sel.cotizacionesVinculadas?.length > 0) {
+      fetch(`${API}/api/copa/cotizaciones-por-id?ids=${sel.cotizacionesVinculadas.join(',')}`)
+        .then(r => r.json()).then(d => Array.isArray(d) && setCotVinculadas(d));
+    } else {
+      setCotVinculadas([]);
+    }
+  }, [sel?.id, sel?.cotizacionesVinculadas?.length]);
+
+  useEffect(() => {
+    if (busquedaCot.trim().length < 2) { setResultadosCot([]); return; }
+    setBuscandoCot(true);
+    const t = setTimeout(() => {
+      fetch(`${API}/api/copa/cotizaciones-buscar?q=${encodeURIComponent(busquedaCot)}`)
+        .then(r => r.json()).then(d => Array.isArray(d) && setResultadosCot(d)).finally(() => setBuscandoCot(false));
+    }, 350);
+    return () => clearTimeout(t);
+  }, [busquedaCot]);
+
+  const vincularCotizacion = (cot: { id: string; nombre: string; estado: string; total: number }) => {
+    if (!sel || sel.cotizacionesVinculadas.includes(cot.id)) return;
+    const nuevos = [...sel.cotizacionesVinculadas, cot.id];
+    setBusquedaCot(''); setResultadosCot([]);
+    patchDel(sel.id, { cotizacionesVinculadas: nuevos });
+  };
+
+  const desvincularCotizacion = (cotId: string) => {
+    if (!sel) return;
+    const nuevos = sel.cotizacionesVinculadas.filter(id => id !== cotId);
+    patchDel(sel.id, { cotizacionesVinculadas: nuevos });
+  };
+
   useEffect(() => {
     const pax = sel?.viajerosCount || sel?.metaPax || 0;
     if (!pax) { setHotelesDisp([]); return; }
@@ -286,6 +324,51 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
                 <button onClick={copiarCodigo} className="flex items-center gap-1.5 bg-[#F5EFE3] border border-[#E7DFCE] px-3 py-2 rounded font-mono text-xs font-bold">
                   {copiado ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />} {sel.codigoAcceso}
                 </button>
+              </div>
+            </div>
+
+            {/* Cotizaciones vinculadas al portal de esta delegación */}
+            <div className="bg-white border-2 border-[#0A5C64] rounded-lg overflow-hidden">
+              <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#0A5C64] bg-[#E8F1F2] px-4 py-3">Cotizaciones vinculadas al portal</h2>
+              <p className="text-xs text-[#6B7785] px-4 pt-3">
+                Solo estas se muestran en el portal público de este equipo — necesario cuando un organizador coordina varios equipos con el mismo WhatsApp, para que no se mezclen entre delegaciones.
+              </p>
+              <div className="p-4">
+                {cotVinculadas.length === 0 ? (
+                  <p className="text-sm text-[#6B7785] mb-3">Ninguna vinculada todavía — sin esto, el portal busca automático por WhatsApp (puede mezclar equipos si el coordinador es el mismo).</p>
+                ) : (
+                  <div className="space-y-2 mb-3">
+                    {cotVinculadas.map(c => (
+                      <div key={c.id} className="flex items-center justify-between gap-2 bg-[#F5EFE3] border border-[#E7DFCE] rounded p-2.5">
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold truncate">{c.nombre}</p>
+                          <p className="text-[10px] text-[#6B7785]">{c.estado} · {cop(c.total)}</p>
+                        </div>
+                        <button onClick={() => desvincularCotizacion(c.id)} className="text-[#6B7785] hover:text-red-500 shrink-0 p-1"><Trash2 size={14} /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <input
+                  value={busquedaCot} onChange={e => setBusquedaCot(e.target.value)}
+                  placeholder="Buscar cotización por nombre del cliente..."
+                  className="w-full border border-[#E7DFCE] rounded px-3 py-2.5 text-sm focus:outline-none focus:border-[#0E7C86]"
+                />
+                {buscandoCot && <p className="text-[11px] text-[#6B7785] mt-1">Buscando...</p>}
+                {resultadosCot.length > 0 && (
+                  <div className="mt-2 space-y-1.5 max-h-56 overflow-y-auto">
+                    {resultadosCot.map(c => (
+                      <button key={c.id} onClick={() => vincularCotizacion(c)} disabled={sel.cotizacionesVinculadas.includes(c.id)}
+                        className="w-full flex items-center justify-between gap-2 border border-[#E7DFCE] hover:border-[#0E7C86] disabled:opacity-40 disabled:cursor-not-allowed rounded p-2.5 text-left">
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold truncate">{c.nombre}</p>
+                          <p className="text-[10px] text-[#6B7785]">{c.estado} · {cop(c.total)}</p>
+                        </div>
+                        <Plus size={14} className="text-[#0E7C86] shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

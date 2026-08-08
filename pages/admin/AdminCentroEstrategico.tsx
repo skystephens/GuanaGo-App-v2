@@ -29,9 +29,9 @@ const ITEMS = [
     sub: 'P&L y cuentas por pagar del torneo',
   },
   {
-    route: AppRoute.ADMIN_COPA_DELEGACIONES, icon: Users, label: 'Delegaciones Copa de la Isla', color: 'from-teal-900/60 to-emerald-900/60',
+    route: AppRoute.ADMIN_COPA_DELEGACION, icon: Users, label: 'Delegaciones Copa de la Isla', color: 'from-teal-900/60 to-emerald-900/60',
     border: 'border-teal-800 hover:border-teal-500', iconColor: 'text-teal-400',
-    sub: 'Editar equipos y vincular sus cotizaciones al portal',
+    sub: 'Equipos, viajeros, y vincular sus cotizaciones al portal',
   },
   {
     route: AppRoute.ADMIN_TORRE_CONTROL, icon: LayoutGrid, label: 'Torre de Control', color: 'from-blue-900/60 to-indigo-900/60',
