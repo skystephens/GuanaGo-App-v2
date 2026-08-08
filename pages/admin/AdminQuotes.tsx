@@ -2654,6 +2654,10 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                       B: active ? 'bg-purple-600 text-white border-purple-500' : 'text-gray-600 border-gray-700',
                                       C: active ? 'bg-orange-600 text-white border-orange-500' : 'text-gray-600 border-gray-700',
                                       D: active ? 'bg-pink-600 text-white border-pink-500' : 'text-gray-600 border-gray-700',
+                                      E: active ? 'bg-emerald-600 text-white border-emerald-500' : 'text-gray-600 border-gray-700',
+                                      F: active ? 'bg-cyan-600 text-white border-cyan-500' : 'text-gray-600 border-gray-700',
+                                      G: active ? 'bg-amber-600 text-white border-amber-500' : 'text-gray-600 border-gray-700',
+                                      H: active ? 'bg-rose-600 text-white border-rose-500' : 'text-gray-600 border-gray-700',
                                     };
                                     return (
                                       <button
