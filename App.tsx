@@ -63,6 +63,7 @@ import CulturaEventos from './pages/CulturaEventos';
 import DestinosInternacionales from './pages/DestinosInternacionales';
 import AdminCopaDelegacion from './pages/admin/AdminCopaDelegacion';
 import AdminTorreCopa from './pages/admin/AdminTorreCopa';
+import AdminCopaDelegaciones from './pages/admin/AdminCopaDelegaciones';
 import CopaPortal from './pages/CopaPortal';
 import AdminTrasladosCalc from './pages/admin/AdminTrasladosCalc';
 import CopaDisponibilidadPublica from './pages/CopaDisponibilidadPublica';
@@ -363,6 +364,7 @@ const App: React.FC = () => {
       case AppRoute.DESTINOS_INTERNACIONALES: return <DestinosInternacionales onNavigate={navigateTo} onBack={goBack} />;
       case AppRoute.ADMIN_COPA_DELEGACION: return <AdminCopaDelegacion onBack={goBack} />;
       case AppRoute.ADMIN_TORRE_COPA: return <AdminTorreCopa onBack={goBack} />;
+      case AppRoute.ADMIN_COPA_DELEGACIONES: return <AdminCopaDelegaciones onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.COPA_PORTAL: return <CopaPortal />;
       case AppRoute.ADMIN_TRASLADOS_CALC: return <AdminTrasladosCalc onBack={goBack} />;
       case AppRoute.COPA_DISPONIBILIDAD_PUBLICA: return <CopaDisponibilidadPublica />;

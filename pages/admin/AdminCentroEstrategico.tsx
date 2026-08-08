@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { ArrowLeft, ListChecks, Building2, Trophy, LayoutGrid, Brain, Network, FileText, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ListChecks, Building2, Trophy, LayoutGrid, Brain, Network, FileText, Users, ChevronRight } from 'lucide-react';
 import { AppRoute } from '../../types';
 
 interface Props {
@@ -27,6 +27,11 @@ const ITEMS = [
     route: AppRoute.ADMIN_TORRE_COPA, icon: Trophy, label: 'Torre Copa de la Isla', color: 'from-orange-900/60 to-amber-900/60',
     border: 'border-orange-800 hover:border-orange-500', iconColor: 'text-orange-400',
     sub: 'P&L y cuentas por pagar del torneo',
+  },
+  {
+    route: AppRoute.ADMIN_COPA_DELEGACIONES, icon: Users, label: 'Delegaciones Copa de la Isla', color: 'from-teal-900/60 to-emerald-900/60',
+    border: 'border-teal-800 hover:border-teal-500', iconColor: 'text-teal-400',
+    sub: 'Editar equipos y vincular sus cotizaciones al portal',
   },
   {
     route: AppRoute.ADMIN_TORRE_CONTROL, icon: LayoutGrid, label: 'Torre de Control', color: 'from-blue-900/60 to-indigo-900/60',

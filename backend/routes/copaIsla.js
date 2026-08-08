@@ -497,6 +497,7 @@ router.patch('/delegaciones/:id', async (req, res) => {
     if (b.publicado !== undefined) fields.Publicado = b.publicado ? 'true' : 'false';
     if (b.estado !== undefined) fields.Estado = b.estado;
     if (b.evento !== undefined) fields.Evento = b.evento;
+    if (b.cotizacionesVinculadas !== undefined) fields.Cotizaciones_Vinculadas = b.cotizacionesVinculadas;
 
     const intentar = async (f) => {
       const r = await fetch(`${atUrl(TABLES.DELEGACIONES)}/${req.params.id}`, {
@@ -704,6 +705,39 @@ async function construirSnapshotPortal(rec) {
     },
   };
 }
+
+// GET /api/copa/cotizaciones-por-id?ids=recA,recB — para mostrar el nombre real
+// de las cotizaciones ya vinculadas a una delegación
+router.get('/cotizaciones-por-id', async (req, res) => {
+  try {
+    const ids = String(req.query.ids || '').split(',').map(s => s.trim()).filter(Boolean);
+    res.json(await traerCotizacionesPorId(ids));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/copa/cotizaciones-buscar?q=texto — para el buscador del admin al vincular
+router.get('/cotizaciones-buscar', async (req, res) => {
+  try {
+    const { headers } = AT();
+    const q = String(req.query.q || '').trim();
+    if (q.length < 2) return res.json([]);
+    const formula = `FIND(LOWER('${q.replace(/'/g, "\\'")}'), LOWER({Nombre})) > 0`;
+    const url = `${atUrl(TABLES.COTIZACIONES)}?filterByFormula=${encodeURIComponent(formula)}&pageSize=15`;
+    const r = await fetch(url, { headers });
+    if (!r.ok) return res.json([]);
+    const data = await r.json();
+    res.json((data.records || []).map(rec => ({
+      id: rec.id,
+      nombre: rec.fields['Nombre'] || '',
+      estado: rec.fields['Estado'] || 'Draft',
+      total: rec.fields['Precio total'] || 0,
+    })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 router.get('/portal/:codigo', async (req, res) => {
   try {
