@@ -372,31 +372,6 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
               </div>
             </div>
 
-            {/* Tarifas y servicios activos */}
-            <div className="bg-white border-2 border-[#FF6600] rounded-lg overflow-hidden">
-              <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#8A4B00] bg-[#FFF3E9] px-4 py-3">Paquete grupal · tarifas negociadas por evento</h2>
-              <p className="text-xs text-[#6B7785] px-4 pt-3">Alojamiento en bloque, traslados y alimentación con tarifa especial de grupo. Se edita en la Torre → Estructura de costos.</p>
-              <div className="p-4 space-y-2">
-                {catalogo.map(t => {
-                  const on = sel.serviciosActivos.includes(t.servicioId);
-                  return (
-                    <label key={t.id} className={`flex gap-3 items-start p-3 border rounded cursor-pointer transition-colors ${on ? 'border-[#FF6600] bg-[#FFF8F3]' : 'border-[#E7DFCE] hover:border-[#0E7C86]'}`}>
-                      <input type="checkbox" checked={on} onChange={() => toggleServicio(t.servicioId)} className="mt-1 w-4 h-4 accent-[#FF6600]" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm">{t.nombre}</p>
-                        <p className="text-xs text-[#6B7785]">{t.descripcion}</p>
-                      </div>
-                      <div className="text-right shrink-0 font-mono">
-                        <p className="font-bold text-sm">{cop(t.precioVenta)}</p>
-                        <p className="text-[10px] text-[#6B7785]">{t.unidad}</p>
-                      </div>
-                    </label>
-                  );
-                })}
-                {catalogo.length === 0 && <p className="text-sm text-[#6B7785] text-center py-4">Cargando catálogo de tarifas...</p>}
-              </div>
-            </div>
-
             {/* Disponibilidad de hoteles verificados para este grupo */}
             {hotelesDisp.length > 0 && (
               <div className="bg-white border-2 border-[#1E6B4F] rounded-lg overflow-hidden">
