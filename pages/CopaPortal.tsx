@@ -139,7 +139,10 @@ const CopaPortal: React.FC = () => {
       );
     }
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-5">
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-5">
+        <a href={`${window.location.origin}${window.location.pathname}`} className="self-center sm:self-start sm:max-w-sm sm:w-full flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-gray-700 mb-3 px-1">
+          <ChevronLeft size={16} /> Volver a GuiaSAI
+        </a>
         <div className="bg-white rounded-2xl shadow-sm max-w-sm w-full overflow-hidden">
           <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-6 text-center">
             <div className="bg-white rounded-2xl w-14 h-14 p-1.5 flex items-center justify-center shadow-md mx-auto mb-2">
@@ -162,7 +165,7 @@ const CopaPortal: React.FC = () => {
                   </ul>
                 </div>
                 <input value={codigo} onChange={e => setCodigo(e.target.value.toUpperCase())} placeholder="EJEMPLO"
-                  maxLength={6} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-center font-mono text-lg font-bold tracking-widest mb-3 focus:outline-none focus:border-teal-500" />
+                  maxLength={6} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-center font-mono text-lg font-bold tracking-widest mb-3 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500" />
                 {error && <p className="text-red-500 text-xs font-semibold mb-3">{error}</p>}
                 <button onClick={() => buscar()} disabled={loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm py-3 rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
                   {loading ? <Loader2 size={14} className="animate-spin" /> : null} Ver mi delegación
@@ -178,13 +181,13 @@ const CopaPortal: React.FC = () => {
                   <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2.5">
                     <Mail size={15} className="text-gray-400" />
                     <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="tu@email.com"
-                      className="flex-1 text-sm outline-none" />
+                      className="flex-1 text-sm text-gray-800 placeholder-gray-400 outline-none" />
                   </div>
                   <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2.5">
                     <Lock size={15} className="text-gray-400" />
                     <input type={verPassword ? 'text' : 'password'} value={loginPassword} onChange={e => setLoginPassword(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleLoginInline(); }} placeholder="Contraseña"
-                      className="flex-1 text-sm outline-none" />
+                      className="flex-1 text-sm text-gray-800 placeholder-gray-400 outline-none" />
                     <button onClick={() => setVerPassword(v => !v)} className="text-gray-400">{verPassword ? <EyeOff size={15} /> : <Eye size={15} />}</button>
                   </div>
                 </div>
@@ -258,6 +261,9 @@ const CopaPortal: React.FC = () => {
             <LogOut size={13} /> Cerrar sesión
           </button>
         )}
+        <a href={`${window.location.origin}${window.location.pathname}`} className="w-full flex items-center justify-center gap-1.5 text-gray-400 hover:text-gray-600 font-semibold text-xs py-2">
+          <ChevronLeft size={13} /> Volver a GuiaSAI
+        </a>
       </div>
     </>
   );
