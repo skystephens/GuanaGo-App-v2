@@ -49,16 +49,19 @@ const ESCENARIOS = [
 ];
 
 interface HotelDisp { id: string; nombre: string; tipo: string; precioNoche: number; imagen: string; capacidadEstimada: number }
+interface ServicioDestacado { id: string; nombre: string; tipo: string; precio: number; descripcion: string; imagen: string }
 
 const CopaLanding: React.FC = () => {
   const [equipos, setEquipos] = useState<{ club: string; ciudad: string }[]>([]);
   const [hoteles, setHoteles] = useState<HotelDisp[]>([]);
+  const [servicios, setServicios] = useState<{ tours: ServicioDestacado[]; traslados: ServicioDestacado[]; cultura: ServicioDestacado[] }>({ tours: [], traslados: [], cultura: [] });
   const [codigoInput, setCodigoInput] = useState('');
 
   useEffect(() => {
     fetch(`${API}/api/copa/equipos-publico`).then(r => r.json()).then(d => Array.isArray(d) && setEquipos(d)).catch(() => {});
     fetch(`${API}/api/copa/disponibilidad?pax=20`).then(r => r.json())
       .then(d => Array.isArray(d?.hoteles) && setHoteles(d.hoteles.slice(0, 4))).catch(() => {});
+    fetch(`${API}/api/copa/servicios-destacados`).then(r => r.json()).then(d => d && setServicios(d)).catch(() => {});
   }, []);
 
   const irAlPortal = () => {
@@ -168,6 +171,23 @@ const CopaLanding: React.FC = () => {
           </div>
         )}
 
+        {/* Tours, Traslados y Cultura Raizal */}
+        {(servicios.tours.length > 0 || servicios.traslados.length > 0 || servicios.cultura.length > 0) && (
+          <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
+            <h2 className="text-lg font-bold text-[#003D5C]">Otros servicios para tu delegación</h2>
+
+            {servicios.traslados.length > 0 && (
+              <FilaServicios titulo="Traslados" items={servicios.traslados} emoji="🚐" />
+            )}
+            {servicios.tours.length > 0 && (
+              <FilaServicios titulo="Tours" items={servicios.tours} emoji="🏝️" />
+            )}
+            {servicios.cultura.length > 0 && (
+              <FilaServicios titulo="Cultura Raizal" items={servicios.cultura} emoji="🎭" />
+            )}
+          </div>
+        )}
+
         {/* Marcador / posiciones — próximamente */}
         <div className="bg-white rounded-2xl shadow-sm p-5">
           <h2 className="text-lg font-bold text-[#003D5C] mb-2 flex items-center gap-2"><Trophy size={18} className="text-orange-500" /> Marcador y tabla de posiciones</h2>
@@ -223,5 +243,33 @@ const CopaLanding: React.FC = () => {
     </div>
   );
 };
+
+function FilaServicios({ titulo, items, emoji }: { titulo: string; items: ServicioDestacado[]; emoji: string }) {
+  return (
+    <div>
+      <p className="text-xs font-bold text-teal-600 uppercase tracking-wide mb-2">{emoji} {titulo}</p>
+      <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+        {items.map(s => (
+          <a
+            key={s.id}
+            href={waLink(`Hola GuíaSAI 🏐 quiero información sobre "${s.nombre}" para mi delegación en la Copa de la Isla`)}
+            target="_blank" rel="noopener noreferrer"
+            className="shrink-0 w-36 text-left border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+          >
+            {s.imagen ? (
+              <div className="h-20 bg-cover bg-center" style={{ backgroundImage: `url('${s.imagen}')` }} />
+            ) : (
+              <div className="h-20 bg-gray-50 flex items-center justify-center text-xl">{emoji}</div>
+            )}
+            <div className="p-2">
+              <p className="font-bold text-[11px] text-gray-800 leading-snug line-clamp-2">{s.nombre}</p>
+              {s.precio > 0 && <p className="text-[11px] font-bold text-[#003D5C] mt-0.5">{cop(s.precio)}</p>}
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default CopaLanding;

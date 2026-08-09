@@ -33,6 +33,7 @@ const TABLES = {
   DELEGACIONES: 'tblQTPoSr4ggTX3nc', // Copa_Delegaciones
   VIAJEROS: 'tblpxiCyegu9qVUsN',     // Copa_Viajeros
   COTIZACIONES: 'CotizacionesGG',
+  SERVICIOS: 'ServiciosTuristicos_SAI',
 };
 
 const AT = () => {
@@ -389,6 +390,50 @@ router.get('/equipos-publico', async (req, res) => {
     })).filter(e => e.club).sort((a, b) => a.club.localeCompare(b.club));
     res.json(equipos);
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/copa/servicios-destacados — Tours, Traslados y Cultura Raizal
+// para la landing pública, curados desde ServiciosTuristicos_SAI
+router.get('/servicios-destacados', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const { headers } = AT();
+    const url = `${atUrl(TABLES.SERVICIOS)}?filterByFormula=${encodeURIComponent('{Publicado}=1')}&pageSize=100`;
+    const r = await fetch(url, { headers });
+    if (!r.ok) return res.json({ tours: [], traslados: [], cultura: [] });
+    const data = await r.json();
+
+    const todos = (data.records || []).map(rec => {
+      const f = rec.fields;
+      const foto = Array.isArray(f['Imagenurl']) && f['Imagenurl'][0] ? f['Imagenurl'][0].url : '';
+      return {
+        id: rec.id,
+        nombre: f['Servicio'] || '',
+        tipo: f['Tipo de Servicio'] || '',
+        precio: f['Precio_GuanaGO'] || 0,
+        descripcion: (f['Descripcion'] || '').slice(0, 100),
+        imagen: foto,
+        destacado: f['Destacado'] === true,
+      };
+    }).filter(s => s.nombre);
+
+    const esRaizal = (s) => /raizal|kriol|caribbean|coco art|ruta raizal/i.test(`${s.nombre} ${s.descripcion}`);
+
+    const cultura = todos.filter(esRaizal).sort((a, b) => (b.destacado ? 1 : 0) - (a.destacado ? 1 : 0)).slice(0, 4);
+    const culturaIds = new Set(cultura.map(c => c.id));
+
+    const traslados = todos.filter(s => s.tipo === 'Taxi').slice(0, 4);
+
+    const tours = todos
+      .filter(s => s.tipo === 'Tour' && !culturaIds.has(s.id))
+      .sort((a, b) => (b.destacado ? 1 : 0) - (a.destacado ? 1 : 0))
+      .slice(0, 4);
+
+    res.json({ tours, traslados, cultura });
+  } catch (err) {
+    console.error('❌ copa/servicios-destacados:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
