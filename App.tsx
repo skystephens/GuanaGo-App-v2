@@ -62,6 +62,7 @@ import AdminCRM from './pages/admin/AdminCRM';
 import CulturaEventos from './pages/CulturaEventos';
 import DestinosInternacionales from './pages/DestinosInternacionales';
 import AdminCopaDelegacion from './pages/admin/AdminCopaDelegacion';
+import CopaLanding from './pages/CopaLanding';
 import AdminTorreCopa from './pages/admin/AdminTorreCopa';
 import CopaPortal from './pages/CopaPortal';
 import AdminTrasladosCalc from './pages/admin/AdminTrasladosCalc';
@@ -210,6 +211,9 @@ const App: React.FC = () => {
     }
     if (params.get('p') === 'home2') {
       setCurrentRoute(AppRoute.HOME2);
+    }
+    if (params.get('p') === 'copa-torneo') {
+      setCurrentRoute(AppRoute.COPA_LANDING);
     }
     if (params.get('p') === 'copa' || params.get('copa')) {
       setCurrentRoute(AppRoute.COPA_PORTAL);
@@ -362,6 +366,7 @@ const App: React.FC = () => {
       case AppRoute.CULTURA_EVENTOS: return <CulturaEventos onNavigate={navigateTo} onBack={goBack} />;
       case AppRoute.DESTINOS_INTERNACIONALES: return <DestinosInternacionales onNavigate={navigateTo} onBack={goBack} />;
       case AppRoute.ADMIN_COPA_DELEGACION: return <AdminCopaDelegacion onBack={goBack} />;
+      case AppRoute.COPA_LANDING: return <CopaLanding />;
       case AppRoute.ADMIN_TORRE_COPA: return <AdminTorreCopa onBack={goBack} />;
       case AppRoute.COPA_PORTAL: return <CopaPortal />;
       case AppRoute.ADMIN_TRASLADOS_CALC: return <AdminTrasladosCalc onBack={goBack} />;

@@ -371,6 +371,28 @@ function mapDelegacion(rec) {
 
 // ─── Delegaciones ───────────────────────────────────────────────────────────
 
+// GET /api/copa/equipos-publico — para la landing pública, solo club + ciudad,
+// sin nada financiero ni de contacto. Solo delegaciones publicadas.
+router.get('/equipos-publico', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const { headers } = AT();
+    const evento = req.query.evento;
+    let formula = `{Publicado}='true'`;
+    if (evento) formula = `AND(${formula}, {Evento}='${String(evento).replace(/'/g, "\\'")}')`;
+    const r = await fetch(`${atUrl(TABLES.DELEGACIONES)}?filterByFormula=${encodeURIComponent(formula)}&pageSize=100`, { headers });
+    if (!r.ok) return res.json([]);
+    const data = await r.json();
+    const equipos = (data.records || []).map(rec => ({
+      club: rec.fields['Club'] || '',
+      ciudad: rec.fields['Ciudad'] || '',
+    })).filter(e => e.club).sort((a, b) => a.club.localeCompare(b.club));
+    res.json(equipos);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/delegaciones', async (_req, res) => {
   try {
     const { headers } = AT();
