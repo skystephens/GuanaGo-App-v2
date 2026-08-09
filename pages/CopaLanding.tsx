@@ -1,18 +1,22 @@
 /**
  * CopaLanding — Página pública de la Copa de la Isla, sin código ni login.
- * Punto de llegada informativo del torneo: qué es, quién organiza, equipos
- * confirmados, y accesos a "Ya tengo código" (delegados) y "Quiero inscribir
- * mi equipo" (WhatsApp).
+ * Punto de llegada informativo del torneo: qué es, categorías, escenarios,
+ * equipos confirmados, vista previa de alojamiento, y accesos a "Ya tengo
+ * código" (delegados) y "Quiero inscribir mi equipo" (WhatsApp).
+ *
+ * Datos oficiales tomados del flyer "I Copa Nacional de Voleibol en San
+ * Andrés Islas" (Club Villa Real de Cali & Club Deportivo Los Pulpitos).
  *
  * Capa 1 de 4 del modelo de acceso (Pública / Delegado / Participante / Staff)
  * — ver documento "Copa de la Isla — Plan estratégico" sección 5.
  */
 
 import React, { useEffect, useState } from 'react';
-import { MessageCircle, Trophy, Users, MapPin, Calendar, ArrowRight, KeyRound } from 'lucide-react';
+import { MessageCircle, Trophy, Users, MapPin, Calendar, ArrowRight, KeyRound, Hotel, ExternalLink } from 'lucide-react';
 import { GUANA_LOGO } from '../constants';
 
 const API = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+const cop = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
 const wa = 'https://wa.me/573153836043';
 const waLink = (msg: string) => `${wa}?text=${encodeURIComponent(msg)}`;
 
@@ -24,12 +28,37 @@ const COMITE = [
   { nombre: 'Sky Stephens', rol: 'Anfitriona · Hospedaje, transporte y alimentación' },
 ];
 
+const CATEGORIAS = [
+  { nombre: 'Mini', rango: '2014 – 2015', genero: 'Femenino' },
+  { nombre: 'Infantil', rango: '2011 – 2013', genero: 'Femenino' },
+  { nombre: 'Menores', rango: '2009 – 2010', genero: 'Femenino' },
+  { nombre: 'Sub 25', rango: '2001', genero: 'Femenino' },
+  { nombre: 'Sub 21', rango: '2005', genero: 'Masculino' },
+];
+
+const ESCENARIOS = [
+  'Coliseo Cove Hill (cubierto) + cancha externa',
+  'Colegio Bilingüe (cubierto) + cancha de colores externa',
+  'Colegio El Rancho (cubierto)',
+  'Cancha Brooks Hill (cubierta)',
+  'Cancha Cajasai',
+  'Parque Aeropuerto',
+  'Parque Sariebay',
+  '3 canchas externas — Estadio de Béisbol',
+  '4 canchas externas — Telecom',
+];
+
+interface HotelDisp { id: string; nombre: string; tipo: string; precioNoche: number; imagen: string; capacidadEstimada: number }
+
 const CopaLanding: React.FC = () => {
   const [equipos, setEquipos] = useState<{ club: string; ciudad: string }[]>([]);
+  const [hoteles, setHoteles] = useState<HotelDisp[]>([]);
   const [codigoInput, setCodigoInput] = useState('');
 
   useEffect(() => {
     fetch(`${API}/api/copa/equipos-publico`).then(r => r.json()).then(d => Array.isArray(d) && setEquipos(d)).catch(() => {});
+    fetch(`${API}/api/copa/disponibilidad?pax=20`).then(r => r.json())
+      .then(d => Array.isArray(d?.hoteles) && setHoteles(d.hoteles.slice(0, 4))).catch(() => {});
   }, []);
 
   const irAlPortal = () => {
@@ -37,6 +66,8 @@ const CopaLanding: React.FC = () => {
     if (!cod) return;
     window.location.href = `${window.location.origin}${window.location.pathname}?copa=${cod}`;
   };
+
+  const irAHoteles = () => { window.location.href = `${window.location.origin}${window.location.pathname}?p=copa-hoteles`; };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -52,9 +83,10 @@ const CopaLanding: React.FC = () => {
               <p className="text-emerald-100 text-[11px] font-semibold">RNT 48674 · Aliado oficial logístico</p>
             </div>
           </div>
-          <p className="text-[11px] font-bold tracking-[.16em] uppercase text-orange-200 mb-1">Torneo interclubes de voleibol</p>
-          <h1 className="text-3xl md:text-4xl font-black mb-2">Copa de la Isla</h1>
-          <p className="text-emerald-50 text-sm flex items-center gap-1.5"><Calendar size={14} /> 16 – 22 de diciembre, 2026 · San Andrés Islas</p>
+          <p className="text-[11px] font-bold tracking-[.16em] uppercase text-orange-200 mb-1">I Copa Nacional de Voleibol en San Andrés Islas</p>
+          <h1 className="text-3xl md:text-4xl font-black mb-1">La Copa de la Isla</h1>
+          <p className="text-emerald-50 text-sm italic mb-3">"Juguemos en el mar de los 7 colores"</p>
+          <p className="text-emerald-50 text-sm flex items-center gap-1.5"><Calendar size={14} /> 18 – 21 de diciembre, 2026 · San Andrés Islas</p>
         </div>
       </div>
 
@@ -64,8 +96,25 @@ const CopaLanding: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm p-5">
           <h2 className="text-lg font-bold text-[#003D5C] mb-2">Sobre el torneo</h2>
           <p className="text-sm text-gray-600 leading-relaxed">
-            La Copa de la Isla reúne a clubes y ligas de voleibol de toda Colombia en San Andrés, en varias categorías. GuíaSAI S.A.S. — empresa local con más de 10 años de trayectoria — es el aliado oficial encargado de la logística de hospedaje, alimentación y traslados de las delegaciones participantes.
+            La Copa de la Isla reúne a clubes y ligas de voleibol de toda Colombia en San Andrés, organizada por Club Villa Real de Cali y Club Deportivo Los Pulpitos. GuíaSAI S.A.S. — empresa local con más de 10 años de trayectoria — es el aliado oficial encargado de la logística de hospedaje, alimentación y traslados de las delegaciones participantes.
           </p>
+        </div>
+
+        {/* Categorías + Inscripción */}
+        <div className="bg-white rounded-2xl shadow-sm p-5">
+          <h2 className="text-lg font-bold text-[#003D5C] mb-3">Categorías</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+            {CATEGORIAS.map(c => (
+              <div key={c.nombre} className="bg-gray-50 rounded-xl p-3 text-center">
+                <p className="font-bold text-sm text-gray-800">{c.nombre}</p>
+                <p className="text-[11px] text-gray-500">{c.rango}</p>
+                <p className="text-[10px] text-teal-600 font-semibold mt-0.5">{c.genero}</p>
+              </div>
+            ))}
+          </div>
+          <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 text-[12.5px] text-teal-800">
+            <b>Inscripción:</b> $500.000 por equipo (julio a octubre) — consulta disponibilidad de cupo con la organización.
+          </div>
         </div>
 
         {/* Comité organizador */}
@@ -81,12 +130,50 @@ const CopaLanding: React.FC = () => {
           </div>
         </div>
 
+        {/* Escenarios deportivos */}
+        <div className="bg-white rounded-2xl shadow-sm p-5">
+          <h2 className="text-lg font-bold text-[#003D5C] mb-3 flex items-center gap-2"><MapPin size={18} className="text-orange-500" /> Escenarios deportivos</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {ESCENARIOS.map(e => (
+              <p key={e} className="text-[12.5px] text-gray-600 flex items-start gap-1.5"><span className="text-orange-400 mt-0.5">•</span> {e}</p>
+            ))}
+          </div>
+        </div>
+
+        {/* Vista previa de alojamiento — mezcla con copa-hoteles */}
+        {hoteles.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-bold text-[#003D5C] flex items-center gap-2"><Hotel size={18} className="text-teal-600" /> Alojamiento verificado</h2>
+              <button onClick={irAHoteles} className="text-xs font-bold text-orange-500 hover:text-orange-600 flex items-center gap-1 shrink-0">
+                Ver todos <ExternalLink size={12} />
+              </button>
+            </div>
+            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+              {hoteles.map(h => (
+                <button key={h.id} onClick={irAHoteles} className="shrink-0 w-40 text-left border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+                  {h.imagen ? (
+                    <div className="h-24 bg-cover bg-center" style={{ backgroundImage: `url('${h.imagen}')` }} />
+                  ) : (
+                    <div className="h-24 bg-gray-50 flex items-center justify-center text-2xl">🏨</div>
+                  )}
+                  <div className="p-2.5">
+                    <p className="font-bold text-[12px] text-gray-800 truncate">{h.nombre}</p>
+                    <p className="text-[10px] text-gray-400">{h.tipo}</p>
+                    {h.precioNoche > 0 && <p className="text-[12px] font-bold text-[#003D5C] mt-0.5">{cop(h.precioNoche)}<span className="text-[9px] font-normal text-gray-400">/noche</span></p>}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Marcador / posiciones — próximamente */}
         <div className="bg-white rounded-2xl shadow-sm p-5">
           <h2 className="text-lg font-bold text-[#003D5C] mb-2 flex items-center gap-2"><Trophy size={18} className="text-orange-500" /> Marcador y tabla de posiciones</h2>
           <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 text-center">
             <p className="text-orange-700 font-bold text-sm">Se activa durante los días del torneo</p>
-            <p className="text-[12px] text-orange-600 mt-1">El equipo de GuíaSAI irá actualizando resultados y fotos en tiempo real del 16 al 22 de diciembre.</p>
+            <p className="text-[12px] text-orange-600 mt-1">El equipo de GuíaSAI irá actualizando resultados y fotos en tiempo real del 18 al 21 de diciembre.</p>
           </div>
         </div>
 
