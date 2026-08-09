@@ -349,8 +349,15 @@ const CopaPortal: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
             <h2 className="text-lg font-bold text-[#003D5C]">Quiénes somos</h2>
             <p className="text-sm text-gray-600 leading-relaxed">
-              <b>GuíaSAI S.A.S.</b> (RNT 48674) es una agencia de turismo Raizal de San Andrés Islas, operador logístico oficial de la Copa de la Isla. Coordinamos hospedaje, alimentación, traslados y experiencias culturales auténticas para las delegaciones que nos visitan.
+              <b>GuíaSAI S.A.S.</b> (RNT 48674) es una agencia de turismo <b>local</b>, con más de 10 años en San Andrés Islas, operador logístico oficial de la Copa de la Isla. Trabajamos de la mano con empresarios, clústeres y emprendedores locales del sector turístico — no somos intermediarios externos, somos de aquí.
             </p>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Nuestro catálogo atiende tanto a familias de paseo como a <b>equipos deportivos en torneos</b> — sabemos que competir en varias categorías a la vez hace difícil coordinar todo, así que nos encargamos de la <b>porción terrestre</b> completa: traslados desde la llegada (taxistas oficiales del aeropuerto, mini-vans, buses para ida y regreso de cada partido), alojamiento, alimentación, tours, vouchers y elementos de identificación para jugadores y cuerpo técnico.
+            </p>
+            <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
+              <p className="font-bold text-orange-700 text-sm mb-1">Tú enfócate en el torneo</p>
+              <p className="text-[13px] text-orange-600">La mayoría de tours no incluyen transporte terrestre — coordinar eso equipo por equipo, categoría por categoría, es justo lo que te resolvemos, para que tu energía quede en la cancha, no en la logística.</p>
+            </div>
             <div className="bg-teal-50 border-l-4 border-teal-400 rounded-r-xl p-4">
               <p className="font-bold text-teal-800 text-sm mb-1">Wi da piipl fram di sii</p>
               <p className="text-[13px] text-teal-700">Tu grupo no se hospeda en la isla: entra a la isla. Cada peso que pagan queda en familias, cocineras, conductores y artesanos raizales.</p>
