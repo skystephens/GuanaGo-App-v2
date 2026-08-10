@@ -67,7 +67,16 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
         fetch(`${API}/api/copa/catalogo`).then(r => r.json()),
         fetch(`${API}/api/copa/catalogo-real`).then(r => r.json()),
       ]);
-      if (Array.isArray(d1)) { setDels(d1); if (!selId && d1[0]) setSelId(d1[0].id); }
+      if (Array.isArray(d1)) {
+        setDels(d1);
+        const objetivo = sessionStorage.getItem('copa_delegacion_target');
+        if (objetivo && d1.some(d => d.id === objetivo)) {
+          setSelId(objetivo);
+          sessionStorage.removeItem('copa_delegacion_target');
+        } else if (!selId && d1[0]) {
+          setSelId(d1[0].id);
+        }
+      }
       if (Array.isArray(d2)) setCatalogo(d2);
       if (Array.isArray(d3)) setCatReal(d3);
     } catch (e) { console.error(e); }

@@ -5,16 +5,17 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Loader2, RefreshCw, ExternalLink } from 'lucide-react';
+import { AppRoute } from '../../types';
 
 const API = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 const cop = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
 
-interface Props { onBack: () => void }
+interface Props { onBack: () => void; onNavigate: (route: AppRoute) => void }
 interface Del { id: string; club: string; viajerosCount: number; noches: number; total: number; costoNeto: number; margen: number; margenPct: number; abono: number; estado: string; publicado: boolean; serviciosActivos: string[]; evento: string }
 interface Tarifa { id: string; servicioId: string; nombre: string; unidad: string; precioVenta: number; precioNeto: number; proveedor: string }
 
-const AdminTorreCopa: React.FC<Props> = ({ onBack }) => {
+const AdminTorreCopa: React.FC<Props> = ({ onBack, onNavigate }) => {
   const [tab, setTab] = useState<'resumen' | 'delegaciones' | 'pagar' | 'costos'>('resumen');
   const [dels, setDels] = useState<Del[]>([]);
   const [catalogo, setCatalogo] = useState<Tarifa[]>([]);
@@ -143,12 +144,25 @@ const AdminTorreCopa: React.FC<Props> = ({ onBack }) => {
 
         {tab === 'delegaciones' && (
           <div className="bg-white border border-[#E7DFCE] rounded overflow-hidden">
-            <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B] bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">Rentabilidad por delegación</h2>
+            <div className="flex items-center justify-between bg-[#FBF8F2] border-b border-[#E7DFCE] px-4 py-3">
+              <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#05263B]">Rentabilidad por delegación</h2>
+              <button
+                onClick={() => { sessionStorage.removeItem('copa_delegacion_target'); onNavigate(AppRoute.ADMIN_COPA_DELEGACION); }}
+                className="flex items-center gap-1 text-[10px] font-bold text-[#0E7C86] hover:text-[#0A5C64]"
+              >
+                Administrar delegaciones (códigos, solicitudes, cotizaciones) <ExternalLink size={11} />
+              </button>
+            </div>
+            <p className="text-[10px] text-[#6B7785] px-4 pt-2">Toca cualquier fila para administrar esa delegación — código de acceso, solicitudes del delegado, cotizaciones vinculadas.</p>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead><tr className="text-[9.5px] uppercase text-[#6B7785] border-b-2 border-[#05263B]"><th className="text-left px-4 py-2">Delegación</th><th className="text-right px-2 py-2">Pax</th><th className="text-right px-2 py-2">Venta</th><th className="text-right px-2 py-2">Costo</th><th className="text-right px-2 py-2">Margen</th><th className="text-right px-4 py-2">%</th></tr></thead>
                 <tbody>{dels.map(d => (
-                  <tr key={d.id} className="border-b border-[#F2EEE5]">
+                  <tr
+                    key={d.id}
+                    onClick={() => { sessionStorage.setItem('copa_delegacion_target', d.id); onNavigate(AppRoute.ADMIN_COPA_DELEGACION); }}
+                    className="border-b border-[#F2EEE5] cursor-pointer hover:bg-[#FBF8F2] transition-colors"
+                  >
                     <td className="px-4 py-2.5"><b>{d.club}</b><br /><span className="text-[#6B7785] font-mono text-[10.5px]">{d.viajerosCount} pax · {d.noches} noches</span></td>
                     <td className="px-2 py-2.5 text-right font-mono">{d.viajerosCount}</td>
                     <td className="px-2 py-2.5 text-right font-mono font-bold">{cop(d.total)}</td>
