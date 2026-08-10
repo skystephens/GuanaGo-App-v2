@@ -56,9 +56,9 @@ export interface AccommodationItem {
   quantity: number // Cantidad de habitaciones
   
   // Pasajeros (nuevo - compatibilidad con Cotizaciones_Items)
-  adultos: number   // 18-99 años
-  ninos: number     // 4-17 años
-  bebes: number     // 0-3 años
+  adultos: number   // 8-99 años
+  ninos: number     // 3-7 años
+  bebes: number     // 0-2 años
   
   pricePerNight: number
   total: number
@@ -78,9 +78,9 @@ export interface TourItem {
   quantity: number // Cantidad de personas
   
   // Pasajeros (nuevo - compatibilidad con Cotizaciones_Items)
-  adultos: number   // 18-99 años
-  ninos: number     // 4-17 años
-  bebes: number     // 0-3 años
+  adultos: number   // 8-99 años
+  ninos: number     // 3-7 años
+  bebes: number     // 0-2 años
   
   // Horarios (nuevo - desde Dias_Operacion)
   horario?: string  // HH:MM formato 24h (ej: "09:00", "14:00")

@@ -293,7 +293,7 @@ export function generateQuoteHTML(
         <ul style="margin:0;padding-left:18px;color:#0b6b50;font-size:12px;line-height:1.7;">
           <li>Cotización válida por <strong>7 días</strong> desde su emisión</li>
           <li>Precios sujetos a disponibilidad al momento de confirmar</li>
-          <li>Adultos (18+) y Niños (4-17) pagan tarifa completa · Bebés (0-3) gratis</li>
+          <li>Adultos (8+) y Niños (3-7) pagan tarifa completa · Bebés (0-2) gratis</li>
           <li>El nombre del alojamiento se confirma tras el pago</li>
         </ul>
       </div>

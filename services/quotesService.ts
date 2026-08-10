@@ -377,8 +377,8 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
       let adultos = 0, ninos = 0;
       if (cotRes.ok) {
         const cot = (await cotRes.json()).fields;
-        adultos = parseInt(cot['Adultos 18 - 99 años'] || '0') || 0;
-        ninos   = parseInt(cot['Niños 4 - 17 años'] || '0') || 0;
+        adultos = parseInt(cot['Adultos 8 - 99 años'] || '0') || 0;
+        ninos   = parseInt(cot['Niños 3 - 7 años'] || '0') || 0;
       }
       const personas = Math.max(1, adultos + ninos);
       const subtotal = precioServicio * personas;
@@ -669,9 +669,9 @@ function mapRecordToCotizacion(record: any): Cotizacion {
     telefono: f.Telefono || f.telefono || '',
     fechaInicio: f['Fecha Inicio'] || f.fechaInicio || '',
     fechaFin: f['Fecha Fin'] || f.fechaFin || '',
-    adultos: parseInt(f['Adultos 18 - 99 años'] || f.Adultos || '0') || 0,
-    ninos: parseInt(f['Niños 4 - 17 años'] || f.Ninos || '0') || 0,
-    bebes: parseInt(f['Bebes 0 - 3 años'] || f.Bebes || '0') || 0,
+    adultos: parseInt(f['Adultos 8 - 99 años'] || f.Adultos || '0') || 0,
+    ninos: parseInt(f['Niños 3 - 7 años'] || f.Ninos || '0') || 0,
+    bebes: parseInt(f['Bebes 0 - 2 años'] || f.Bebes || '0') || 0,
     fechaCreacion: f['Fecha Creacion'] || f.fechaCreacion || record.createdTime,
     estado: (f.Estado || 'Draft') as QuoteStatus,
     precioTotal: parseFloat(f['Precio total'] || f.precioTotal || '0') || 0,
@@ -697,9 +697,9 @@ function mapCotizacionToFields(cotizacion: Partial<Cotizacion>): Record<string, 
   if (cotizacion.telefono !== undefined && cotizacion.telefono) fields.Telefono = cotizacion.telefono;
   if (cotizacion.fechaInicio !== undefined) fields['Fecha Inicio'] = cotizacion.fechaInicio;
   if (cotizacion.fechaFin !== undefined) fields['Fecha Fin'] = cotizacion.fechaFin;
-  if (cotizacion.adultos !== undefined) fields['Adultos 18 - 99 años'] = cotizacion.adultos;
-  if (cotizacion.ninos !== undefined) fields['Niños 4 - 17 años'] = cotizacion.ninos;
-  if (cotizacion.bebes !== undefined) fields['Bebes 0 - 3 años'] = cotizacion.bebes;
+  if (cotizacion.adultos !== undefined) fields['Adultos 8 - 99 años'] = cotizacion.adultos;
+  if (cotizacion.ninos !== undefined) fields['Niños 3 - 7 años'] = cotizacion.ninos;
+  if (cotizacion.bebes !== undefined) fields['Bebes 0 - 2 años'] = cotizacion.bebes;
   if (cotizacion.estado !== undefined) fields.Estado = cotizacion.estado;
   if (cotizacion.precioTotal !== undefined && !isNaN(cotizacion.precioTotal as number)) fields['Precio total'] = cotizacion.precioTotal;
   // Nota: no existe campo "Descuento" en Airtable — el descuento se aplica en el cálculo del precioTotal
@@ -734,9 +734,9 @@ function mapRecordToCotizacionItem(record: any): CotizacionItem {
     fechaFin: f['Fecha Fin'] || '',
     horarioInicio: servicioData['Horario Inicio'] || '',
     horarioFin: servicioData['Horario Fin'] || '',
-    adultos: parseInt(f['Adultos 18 - 99 años'] || '0') || 0,
-    ninos: parseInt(f['Niños 4 - 17 años'] || '0') || 0,
-    bebes: parseInt(f['Bebes 0 - 3 años'] || '0') || 0,
+    adultos: parseInt(f['Adultos 8 - 99 años'] || '0') || 0,
+    ninos: parseInt(f['Niños 3 - 7 años'] || '0') || 0,
+    bebes: parseInt(f['Bebes 0 - 2 años'] || '0') || 0,
     valorUnitario,
     personas,
     cantidad,

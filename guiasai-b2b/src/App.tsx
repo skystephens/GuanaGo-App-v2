@@ -891,7 +891,7 @@ function App() {
                   />
                 </div>
                 <div className="filter-group">
-                  <label className="filter-label">👥 Adultos (18-99 años)</label>
+                  <label className="filter-label">👥 Adultos (8-99 años)</label>
                   <input 
                     type="number" 
                     className="filter-input" 
@@ -901,7 +901,7 @@ function App() {
                   />
                 </div>
                 <div className="filter-group">
-                  <label className="filter-label">👶 Niños (4-17 años)</label>
+                  <label className="filter-label">👶 Niños (3-7 años)</label>
                   <input 
                     type="number" 
                     className="filter-input" 
@@ -911,7 +911,7 @@ function App() {
                   />
                 </div>
                 <div className="filter-group">
-                  <label className="filter-label">🍼 Bebés (0-3 años)</label>
+                  <label className="filter-label">🍼 Bebés (0-2 años)</label>
                   <input 
                     type="number" 
                     className="filter-input" 
@@ -1026,15 +1026,15 @@ function App() {
                     <input type="date" value={filterCheckOut} onChange={(e) => setFilterCheckOut(e.target.value)} style={styles.input} />
                   </div>
                   <div style={styles.formGroup}>
-                    <label style={{ fontSize: '0.85rem', color: '#555' }}>Adultos (18-99 años):</label>
+                    <label style={{ fontSize: '0.85rem', color: '#555' }}>Adultos (8-99 años):</label>
                     <input type="number" min={0} value={filterAdults} onChange={(e) => setFilterAdults(parseInt(e.target.value) || 0)} style={styles.input} />
                   </div>
                   <div style={styles.formGroup}>
-                    <label style={{ fontSize: '0.85rem', color: '#555' }}>Niños (4-17 años):</label>
+                    <label style={{ fontSize: '0.85rem', color: '#555' }}>Niños (3-7 años):</label>
                     <input type="number" min={0} value={filterChildren} onChange={(e) => setFilterChildren(parseInt(e.target.value) || 0)} style={styles.input} />
                   </div>
                   <div style={styles.formGroup}>
-                    <label style={{ fontSize: '0.85rem', color: '#555' }}>Bebés (0-3 años):</label>
+                    <label style={{ fontSize: '0.85rem', color: '#555' }}>Bebés (0-2 años):</label>
                     <input type="number" min={0} value={filterBabies} onChange={(e) => setFilterBabies(parseInt(e.target.value) || 0)} style={styles.input} />
                   </div>
                 </div>

@@ -480,9 +480,9 @@ export interface Cotizacion {
   telefono?: string;                  // Teléfono del cliente
   fechaInicio: string;                // ISO date
   fechaFin: string;                   // ISO date
-  adultos: number;                    // 18-99 años
-  ninos: number;                      // 4-18 años
-  bebes: number;                      // 0-3 años
+  adultos: number;                    // 8-99 años
+  ninos: number;                      // 3-7 años
+  bebes: number;                      // 0-2 años
   fechaCreacion: string;              // ISO timestamp
   estado: QuoteStatus;
   precioTotal: number;

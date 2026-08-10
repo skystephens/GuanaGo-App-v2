@@ -669,9 +669,9 @@ const CotizadorB2C = forwardRef<CotizadorB2CHandle, CotizadorB2CProps>(({ onNavi
                       <Users size={16} className="text-teal-500" />
                       <h4 className="text-sm font-bold text-gray-700">Pasajeros</h4>
                     </div>
-                    <Counter label="Adultos" sublabel="18+ años"  value={adultos} min={1} onChange={setAdultos} />
-                    <Counter label="Niños"   sublabel="4-17 años" value={ninos}   min={0} onChange={setNinos} />
-                    <Counter label="Bebés"   sublabel="0-3 años"  value={bebes}   min={0} onChange={setBebes} />
+                    <Counter label="Adultos" sublabel="8+ años"  value={adultos} min={1} onChange={setAdultos} />
+                    <Counter label="Niños"   sublabel="3-7 años" value={ninos}   min={0} onChange={setNinos} />
+                    <Counter label="Bebés"   sublabel="0-2 años"  value={bebes}   min={0} onChange={setBebes} />
                   </div>
                 </div>
               )}

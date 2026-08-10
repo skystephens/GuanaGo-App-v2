@@ -485,20 +485,20 @@ const TourPrivado: React.FC<TourPrivadoProps> = ({ onBack }) => {
 
         <CounterButton
           label="Adultos"
-          sublabel="18+ años"
+          sublabel="8+ años"
           value={group.adults}
           min={1}
           onChange={(v) => setGroup({ ...group, adults: v })}
         />
         <CounterButton
           label="Niños"
-          sublabel="4-17 años"
+          sublabel="3-7 años"
           value={group.children}
           onChange={(v) => setGroup({ ...group, children: v })}
         />
         <CounterButton
           label="Bebés"
-          sublabel="0-3 años"
+          sublabel="0-2 años"
           value={group.babies}
           onChange={(v) => setGroup({ ...group, babies: v })}
         />

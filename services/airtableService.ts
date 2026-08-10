@@ -90,9 +90,9 @@ export async function createCotizacionGG(payload: {
     if (payload.precioTotal !== undefined) fields['Precio total'] = payload.precioTotal;
     if (payload.fechaInicio) fields['Fecha Inicio'] = payload.fechaInicio;
     if (payload.fechaFin) fields['Fecha Fin'] = payload.fechaFin;
-    if (payload.adultos !== undefined && payload.adultos > 0) fields['Adultos 18 - 99 años'] = payload.adultos;
-    if (payload.ninos !== undefined && payload.ninos > 0) fields['Niños 4 - 17 años'] = payload.ninos;
-    if (payload.bebes !== undefined && payload.bebes > 0) fields['Bebes 0 - 3 años'] = payload.bebes;
+    if (payload.adultos !== undefined && payload.adultos > 0) fields['Adultos 8 - 99 años'] = payload.adultos;
+    if (payload.ninos !== undefined && payload.ninos > 0) fields['Niños 3 - 7 años'] = payload.ninos;
+    if (payload.bebes !== undefined && payload.bebes > 0) fields['Bebes 0 - 2 años'] = payload.bebes;
     if (payload.notasInternas) fields['Notas internas'] = payload.notasInternas;
     const response = await axios.post(url, { fields }, { headers: getHeaders() });
     return response.data?.id as string;
@@ -126,9 +126,9 @@ export async function createCotizacionItemGG(payload: {
     if (payload.fechaFin) fields['Fecha Fin'] = payload.fechaFin;
     if (payload.precioUnitario !== undefined) fields['Precio Unitario'] = payload.precioUnitario;
     if (payload.subtotal !== undefined) fields['Precio Subtotal'] = payload.subtotal;
-    if (payload.adultos !== undefined && payload.adultos > 0) fields['Adultos 18 - 99 años'] = payload.adultos;
-    if (payload.ninos !== undefined && payload.ninos > 0) fields['Niños 4 - 17 años'] = payload.ninos;
-    if (payload.bebes !== undefined && payload.bebes > 0) fields['Bebes 0 - 3 años'] = payload.bebes;
+    if (payload.adultos !== undefined && payload.adultos > 0) fields['Adultos 8 - 99 años'] = payload.adultos;
+    if (payload.ninos !== undefined && payload.ninos > 0) fields['Niños 3 - 7 años'] = payload.ninos;
+    if (payload.bebes !== undefined && payload.bebes > 0) fields['Bebes 0 - 2 años'] = payload.bebes;
     const response = await axios.post(url, { fields }, { headers: getHeaders() });
     return response.data?.id as string;
   } catch (error: any) {

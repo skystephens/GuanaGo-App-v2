@@ -1989,7 +1989,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Adultos (18-99 años)
+                    Adultos (8-99 años)
                   </label>
                   <input
                     type="number"
@@ -2001,7 +2001,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Niños (4-18 años)
+                    Niños (3-7 años)
                   </label>
                   <input
                     type="number"
@@ -2013,7 +2013,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Bebés (0-3 años)
+                    Bebés (0-2 años)
                   </label>
                   <input
                     type="number"
@@ -2109,7 +2109,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                   {(['adultos', 'ninos', 'bebes'] as const).map(field => (
                     <div key={field}>
                       <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wide">
-                        {field === 'adultos' ? 'Adultos 18+' : field === 'ninos' ? 'Niños 4-17' : 'Bebés 0-3'}
+                        {field === 'adultos' ? 'Adultos 8+' : field === 'ninos' ? 'Niños 3-7' : 'Bebés 0-2'}
                       </label>
                       <input type="number" min="0" value={headerForm[field]}
                         onChange={e => setHeaderForm(p => ({...p, [field]: parseInt(e.target.value) || 0}))}

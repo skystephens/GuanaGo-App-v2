@@ -334,9 +334,9 @@ export async function createCotizacionGG(payload: {
     // Campos opcionales
     if (payload.fechaInicio) fields['Fecha Inicio'] = payload.fechaInicio
     if (payload.fechaFin) fields['Fecha Fin'] = payload.fechaFin
-    if (payload.adultos !== undefined && payload.adultos > 0) fields['Adultos 18 - 99 años'] = payload.adultos
-    if (payload.ninos !== undefined && payload.ninos > 0) fields['Niños 4 - 17 años'] = payload.ninos
-    if (payload.bebes !== undefined && payload.bebes > 0) fields['Bebes 0 - 3 años'] = payload.bebes
+    if (payload.adultos !== undefined && payload.adultos > 0) fields['Adultos 8 - 99 años'] = payload.adultos
+    if (payload.ninos !== undefined && payload.ninos > 0) fields['Niños 3 - 7 años'] = payload.ninos
+    if (payload.bebes !== undefined && payload.bebes > 0) fields['Bebes 0 - 2 años'] = payload.bebes
 
     // 🆕 Generar resumen detallado de los items seleccionados
     let resumenCompleto = ''
@@ -601,13 +601,13 @@ export async function createCotizacionItemGG(payload: {
 
     // Pasajeros - incluir solo si > 0
     if (payload.adultos !== undefined && payload.adultos > 0) {
-      fields['Adultos 18 - 99 años'] = payload.adultos
+      fields['Adultos 8 - 99 años'] = payload.adultos
     }
     if (payload.ninos !== undefined && payload.ninos > 0) {
-      fields['Niños 4 - 17 años'] = payload.ninos
+      fields['Niños 3 - 7 años'] = payload.ninos
     }
     if (payload.bebes !== undefined && payload.bebes > 0) {
-      fields['Bebes 0 - 3 años'] = payload.bebes
+      fields['Bebes 0 - 2 años'] = payload.bebes
     }
 
     // 🆕 Agregar notas con los IDs de referencia
