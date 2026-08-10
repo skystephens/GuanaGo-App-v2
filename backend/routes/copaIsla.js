@@ -34,6 +34,7 @@ const TABLES = {
   VIAJEROS: 'tblpxiCyegu9qVUsN',     // Copa_Viajeros
   COTIZACIONES: 'CotizacionesGG',
   SERVICIOS: 'ServiciosTuristicos_SAI',
+  SOLICITUDES: 'tblt6yphmlc2Jkig1', // Copa_Solicitudes
 };
 
 const AT = () => {
@@ -456,11 +457,22 @@ router.get('/delegaciones', async (_req, res) => {
     });
 
     const dRaw = (await (await fetch(`${atUrl(TABLES.DELEGACIONES)}?pageSize=100`, { headers })).json()).records || [];
+
+    // Conteo de solicitudes pendientes por delegación
+    const rSol = await fetch(`${atUrl(TABLES.SOLICITUDES)}?filterByFormula=${encodeURIComponent("{Estado}='Pendiente'")}&pageSize=100`, { headers });
+    const dSol = rSol.ok ? await rSol.json() : { records: [] };
+    const pendientesPorDelegacion = {};
+    (dSol.records || []).forEach(s => {
+      (s.fields['Delegacion_Id'] || []).forEach(did => {
+        pendientesPorDelegacion[did] = (pendientesPorDelegacion[did] || 0) + 1;
+      });
+    });
+
     const conCalculo = await Promise.all(dels.map(async del => {
       const raw = dRaw.find(r => r.id === del.id);
       const viajeros = viajerosPorDelegacion[del.id] || [];
       const calc = await calcularDelegacion(raw.fields, viajeros.length);
-      return { ...del, viajerosCount: viajeros.length, ...calc };
+      return { ...del, viajerosCount: viajeros.length, solicitudesPendientes: pendientesPorDelegacion[del.id] || 0, ...calc };
     }));
 
     res.json(conCalculo);
@@ -755,9 +767,21 @@ async function construirSnapshotPortal(rec) {
     ? await traerCotizacionesPorId(del.cotizacionesVinculadas)
     : await buscarCotizacionesPorTelefono(del.whatsapp);
 
+  const rs = await fetch(`${atUrl(TABLES.SOLICITUDES)}?filterByFormula=${encodeURIComponent(`FIND('${rec.id}', ARRAYJOIN({Delegacion_Id})) > 0`)}&sort[0][field]=Fecha_Solicitud&sort[0][direction]=desc`, { headers });
+  const ds = rs.ok ? await rs.json() : { records: [] };
+  const solicitudes = (ds.records || []).map(r2 => ({
+    id: r2.id,
+    tipo: r2.fields['Tipo'] || '',
+    descripcion: r2.fields['Descripcion'] || '',
+    estado: r2.fields['Estado'] || 'Pendiente',
+    respuesta: r2.fields['Respuesta'] || '',
+    fechaSolicitud: r2.fields['Fecha_Solicitud'] || '',
+  }));
+
   return {
     snapshot: {
       actualizado: new Date().toISOString(),
+      delegacionId: rec.id,
       evento: del.evento,
       delegacion: {
         club: del.club, ciudad: del.ciudad, lider: del.coordinador,
@@ -767,6 +791,7 @@ async function construirSnapshotPortal(rec) {
       inscritos, completos, abonados,
       total: calc.total, abono: calc.abono, saldo: calc.saldo,
       servicios: calc.lineas.map(l => ({ id: l.servicioId, titulo: l.titulo, detalle: l.detalle, valor: l.valorVenta, origen: l.origen })),
+      solicitudes,
       personas: viajeros,
       cotizacionesRelacionadas,
     },
@@ -802,6 +827,79 @@ router.get('/cotizaciones-buscar', async (req, res) => {
       total: rec.fields['Precio total'] || 0,
     })));
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/copa/solicitudes — el delegado envía una solicitud desde el portal
+router.post('/solicitudes', async (req, res) => {
+  try {
+    const { headers } = AT();
+    const { delegacionId, tipo, descripcion } = req.body;
+    if (!delegacionId || !tipo || !descripcion) return res.status(400).json({ error: 'Falta delegacionId, tipo o descripcion' });
+
+    const body = {
+      records: [{
+        fields: {
+          Delegacion_Id: [delegacionId],
+          Tipo: tipo,
+          Descripcion: descripcion,
+          Estado: 'Pendiente',
+          Fecha_Solicitud: new Date().toISOString().slice(0, 10),
+        },
+      }],
+      typecast: true,
+    };
+    const r = await fetch(atUrl(TABLES.SOLICITUDES), { method: 'POST', headers, body: JSON.stringify(body) });
+    if (!r.ok) { const t = await r.text().catch(() => ''); return res.status(r.status).json({ error: t.slice(0, 300) }); }
+    const data = await r.json();
+    res.json({ success: true, id: data.records[0].id });
+  } catch (err) {
+    console.error('❌ copa/solicitudes POST:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/copa/solicitudes?delegacionId=X — listar solicitudes de una delegación
+router.get('/solicitudes', async (req, res) => {
+  try {
+    const { headers } = AT();
+    const { delegacionId } = req.query;
+    if (!delegacionId) return res.status(400).json({ error: 'Falta delegacionId' });
+    const formula = `FIND('${delegacionId}', ARRAYJOIN({Delegacion_Id})) > 0`;
+    const r = await fetch(`${atUrl(TABLES.SOLICITUDES)}?filterByFormula=${encodeURIComponent(formula)}&sort[0][field]=Fecha_Solicitud&sort[0][direction]=desc`, { headers });
+    if (!r.ok) return res.json([]);
+    const data = await r.json();
+    res.json((data.records || []).map(rec => ({
+      id: rec.id,
+      tipo: rec.fields['Tipo'] || '',
+      descripcion: rec.fields['Descripcion'] || '',
+      estado: rec.fields['Estado'] || 'Pendiente',
+      respuesta: rec.fields['Respuesta'] || '',
+      fechaSolicitud: rec.fields['Fecha_Solicitud'] || '',
+      fechaRespuesta: rec.fields['Fecha_Respuesta'] || '',
+    })));
+  } catch (err) {
+    console.error('❌ copa/solicitudes GET:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/copa/solicitudes/:id — Sky responde/actualiza el estado
+router.patch('/solicitudes/:id', async (req, res) => {
+  try {
+    const { headers } = AT();
+    const { respuesta, estado } = req.body;
+    const fields = {};
+    if (respuesta !== undefined) { fields.Respuesta = respuesta; fields.Fecha_Respuesta = new Date().toISOString().slice(0, 10); }
+    if (estado !== undefined) fields.Estado = estado;
+    const r = await fetch(`${atUrl(TABLES.SOLICITUDES)}/${req.params.id}`, {
+      method: 'PATCH', headers, body: JSON.stringify({ fields, typecast: true }),
+    });
+    if (!r.ok) { const t = await r.text().catch(() => ''); return res.status(r.status).json({ error: t.slice(0, 300) }); }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ copa/solicitudes PATCH:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

@@ -23,6 +23,7 @@ interface Del {
   serviciosActivos: string[]; actividadesCatalogo: string[]; publicado: boolean; estado: string; evento: string;
   viajerosCount: number; pax: number; noches: number; total: number; abono: number;
   cotizacionesVinculadas: string[];
+  solicitudesPendientes: number;
 }
 interface Tarifa { id: string; servicioId: string; nombre: string; unidad: string; multiplicador: string; descripcion: string; precioVenta: number; proveedor: string }
 interface Viajero { id: string; nombre: string; documento: string; telefono: string; subgrupo: string; rol: string; estadoPago: string }
@@ -49,6 +50,10 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
   const [resultadosCot, setResultadosCot] = useState<{ id: string; nombre: string; estado: string; total: number }[]>([]);
   const [buscandoCot, setBuscandoCot] = useState(false);
   const [buscarAct, setBuscarAct] = useState('');
+  const [solicitudes, setSolicitudes] = useState<{ id: string; tipo: string; descripcion: string; estado: string; respuesta: string; fechaSolicitud: string }[]>([]);
+  const [cargandoSol, setCargandoSol] = useState(false);
+  const [respuestaTexto, setRespuestaTexto] = useState<Record<string, string>>({});
+  const [enviandoResp, setEnviandoResp] = useState<string | null>(null);
 
   const sel = dels.find(d => d.id === selId) || null;
   const eventosConocidos = Array.from(new Set(['Copa de la Isla', 'Seven Colors SAI', ...dels.map(d => d.evento)]));
@@ -80,6 +85,38 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
 
   useEffect(() => { cargarTodo(); }, []);
   useEffect(() => { if (selId) { cargarViajeros(selId); setPagoLink(null); } }, [selId]);
+
+  const cargarSolicitudes = (delId: string) => {
+    setCargandoSol(true);
+    fetch(`${API}/api/copa/solicitudes?delegacionId=${delId}`).then(r => r.json())
+      .then(d => Array.isArray(d) && setSolicitudes(d)).finally(() => setCargandoSol(false));
+  };
+  useEffect(() => { if (selId) cargarSolicitudes(selId); }, [selId]);
+
+  const responderSolicitud = async (id: string) => {
+    const respuesta = (respuestaTexto[id] || '').trim();
+    if (!respuesta) return;
+    setEnviandoResp(id);
+    try {
+      await fetch(`${API}/api/copa/solicitudes/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ respuesta, estado: 'Revisada' }),
+      });
+      if (selId) cargarSolicitudes(selId);
+      cargarTodo();
+      setRespuestaTexto(prev => ({ ...prev, [id]: '' }));
+    } finally {
+      setEnviandoResp(null);
+    }
+  };
+
+  const marcarResuelta = async (id: string) => {
+    await fetch(`${API}/api/copa/solicitudes/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: 'Resuelta' }),
+    });
+    if (selId) cargarSolicitudes(selId);
+    cargarTodo();
+  };
 
   useEffect(() => {
     if (sel && sel.cotizacionesVinculadas?.length > 0) {
@@ -263,6 +300,7 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
                     <th className="text-left px-2 py-2">Ciudad</th>
                     <th className="text-left px-2 py-2">Código</th>
                     <th className="text-left px-2 py-2">Estado</th>
+                    <th className="text-center px-2 py-2">Solicitudes</th>
                     <th className="text-right px-3 py-2">Acciones</th>
                   </tr>
                 </thead>
@@ -280,6 +318,15 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
                         <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full ${d.publicado ? 'bg-emerald-900/40 text-emerald-400' : 'bg-white/10 text-[#5E7E92]'}`}>
                           {d.publicado ? 'Publicado' : 'Oculto'}
                         </span>
+                      </td>
+                      <td className="px-2 py-2.5 text-center">
+                        {d.solicitudesPendientes > 0 ? (
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold bg-red-900/40 text-red-400 px-2 py-0.5 rounded-full animate-pulse">
+                            🔔 {d.solicitudesPendientes}
+                          </span>
+                        ) : (
+                          <span className="text-[#5E7E92] text-[10px]">—</span>
+                        )}
                       </td>
                       <td className="px-3 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
@@ -367,6 +414,72 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
                 <button onClick={copiarCodigo} className="flex items-center gap-1.5 bg-[#F5EFE3] border border-[#E7DFCE] px-3 py-2 rounded font-mono text-xs font-bold">
                   {copiado ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />} {sel.codigoAcceso}
                 </button>
+              </div>
+            </div>
+
+            {/* Solicitudes enviadas por el delegado desde el portal */}
+            <div className="bg-white border-2 border-[#FF6600] rounded-lg overflow-hidden">
+              <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#8A4B00] bg-[#FFF3E9] px-4 py-3 flex items-center justify-between">
+                Solicitudes del delegado
+                {solicitudes.filter(s => s.estado === 'Pendiente').length > 0 && (
+                  <span className="text-[10px] font-bold bg-red-600 text-white px-2 py-0.5 rounded-full">
+                    {solicitudes.filter(s => s.estado === 'Pendiente').length} pendiente(s)
+                  </span>
+                )}
+              </h2>
+              <div className="p-4 space-y-3">
+                {cargandoSol ? (
+                  <p className="text-sm text-[#6B7785]">Cargando...</p>
+                ) : solicitudes.length === 0 ? (
+                  <p className="text-sm text-[#6B7785]">Sin solicitudes todavía.</p>
+                ) : solicitudes.map(s => (
+                  <div key={s.id} className={`border rounded-lg p-3 ${s.estado === 'Pendiente' ? 'border-[#FF6600] bg-[#FFF8F3]' : s.estado === 'Revisada' ? 'border-[#0E7C86] bg-[#F0FAFA]' : 'border-[#E7DFCE] bg-[#FBF8F2]'}`}>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <span className="text-[10px] font-mono font-bold uppercase text-[#0A5C64]">{s.tipo}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-[#6B7785]">{s.fechaSolicitud}</span>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${s.estado === 'Pendiente' ? 'bg-orange-200 text-orange-800' : s.estado === 'Revisada' ? 'bg-teal-200 text-teal-800' : 'bg-emerald-200 text-emerald-800'}`}>
+                          {s.estado}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-[#374151] mb-2">{s.descripcion}</p>
+
+                    {s.respuesta && (
+                      <div className="bg-white border border-[#E7DFCE] rounded p-2 mb-2">
+                        <p className="text-[9px] font-bold text-[#0E7C86] uppercase mb-0.5">Tu respuesta</p>
+                        <p className="text-[13px] text-[#374151]">{s.respuesta}</p>
+                      </div>
+                    )}
+
+                    {s.estado !== 'Resuelta' && (
+                      <div className="space-y-1.5">
+                        <textarea
+                          value={respuestaTexto[s.id] || ''}
+                          onChange={e => setRespuestaTexto(prev => ({ ...prev, [s.id]: e.target.value }))}
+                          placeholder="Escribe tu respuesta..."
+                          rows={2}
+                          className="w-full border border-[#E7DFCE] rounded px-2.5 py-1.5 text-sm focus:outline-none focus:border-[#0E7C86]"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => responderSolicitud(s.id)}
+                            disabled={enviandoResp === s.id || !(respuestaTexto[s.id] || '').trim()}
+                            className="flex-1 bg-[#0E7C86] hover:bg-[#0A5C64] disabled:opacity-40 text-white text-xs font-bold py-1.5 rounded"
+                          >
+                            {enviandoResp === s.id ? 'Enviando...' : 'Responder'}
+                          </button>
+                          <button
+                            onClick={() => marcarResuelta(s.id)}
+                            className="text-xs font-bold text-emerald-700 border border-emerald-300 hover:bg-emerald-50 px-3 rounded"
+                          >
+                            Marcar resuelta
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 

@@ -21,6 +21,7 @@ const wa = 'https://wa.me/573153836043';
 
 interface Snapshot {
   actualizado: string;
+  delegacionId: string;
   evento: string;
   delegacion: { club: string; ciudad: string; lider: string; meta: number; inn: string; out: string };
   pax: number; noches: number; inscritos: number; completos: number; abonados: number;
@@ -28,6 +29,7 @@ interface Snapshot {
   servicios: { id: string; titulo: string; detalle: string; valor: number; origen?: string }[];
   personas: { nombre: string; doc: string; rol: string; sub: string; datos: boolean; pago: string }[];
   cotizacionesRelacionadas?: { id: string; nombre: string; estado: string; total: number }[];
+  solicitudes: { id: string; tipo: string; descripcion: string; estado: string; respuesta: string; fechaSolicitud: string }[];
 }
 interface HotelDisp { id: string; nombre: string; tipo: string; precioNoche: number; imagen: string; descripcion: string; habitacionesDisponibles: number; capacidadEstimada: number }
 
@@ -214,6 +216,16 @@ const CopaPortal: React.FC = () => {
   const tieneServicios = data.servicios.length > 0;
 
   const irA = (n: number) => setPaso(Math.max(0, Math.min(PASOS.length - 1, n)));
+
+  const agregarSolicitudLocal = (nueva: { id: string; tipo: string; descripcion: string }) => {
+    setData(prev => prev ? {
+      ...prev,
+      solicitudes: [
+        { id: nueva.id, tipo: nueva.tipo, descripcion: nueva.descripcion, estado: 'Pendiente', respuesta: '', fechaSolicitud: new Date().toISOString().slice(0, 10) },
+        ...prev.solicitudes,
+      ],
+    } : prev);
+  };
 
   const waLink = (msg: string) => `${wa}?text=${encodeURIComponent(msg)}`;
 
@@ -468,6 +480,7 @@ const CopaPortal: React.FC = () => {
               className="mt-3 flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm py-3 rounded-xl transition-colors">
               <MessageCircle size={14} /> Coordinar alimentación
             </a>
+            <FormularioSolicitud tipo="Alimentación" delegacionId={data.delegacionId} solicitudes={data.solicitudes} onEnviada={agregarSolicitudLocal} color="orange" />
           </div>
         )}
 
@@ -488,6 +501,7 @@ const CopaPortal: React.FC = () => {
               className="mt-3 flex items-center justify-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm py-3 rounded-xl transition-colors">
               <MessageCircle size={14} /> Confirmar horarios de traslado
             </a>
+            <FormularioSolicitud tipo="Traslado" delegacionId={data.delegacionId} solicitudes={data.solicitudes} onEnviada={agregarSolicitudLocal} color="teal" />
           </div>
         )}
 
@@ -516,6 +530,7 @@ const CopaPortal: React.FC = () => {
               className="flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm py-3 rounded-xl transition-colors">
               <MessageCircle size={14} /> Escribir a GuíaSAI por WhatsApp
             </a>
+            <FormularioSolicitud tipo="Otro" delegacionId={data.delegacionId} solicitudes={data.solicitudes} onEnviada={agregarSolicitudLocal} color="emerald" etiqueta="Otra solicitud" />
           </div>
         )}
 
@@ -576,5 +591,89 @@ const CopaPortal: React.FC = () => {
     </div>
   );
 };
+
+function FormularioSolicitud({ tipo, delegacionId, solicitudes, onEnviada, color, etiqueta }: {
+  tipo: string; delegacionId: string;
+  solicitudes: { id: string; tipo: string; descripcion: string; estado: string; respuesta: string; fechaSolicitud: string }[];
+  onEnviada: (s: { id: string; tipo: string; descripcion: string }) => void;
+  color: 'orange' | 'teal' | 'emerald';
+  etiqueta?: string;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const [texto, setTexto] = useState('');
+  const [enviando, setEnviando] = useState(false);
+
+  const propias = solicitudes.filter(s => s.tipo === tipo);
+  const colores = {
+    orange: { bg: 'bg-orange-500 hover:bg-orange-600', border: 'border-orange-200', focus: 'focus:border-orange-500' },
+    teal: { bg: 'bg-teal-600 hover:bg-teal-700', border: 'border-teal-200', focus: 'focus:border-teal-500' },
+    emerald: { bg: 'bg-emerald-500 hover:bg-emerald-600', border: 'border-emerald-200', focus: 'focus:border-emerald-500' },
+  }[color];
+
+  const enviar = async () => {
+    if (!texto.trim()) return;
+    setEnviando(true);
+    try {
+      const r = await fetch(`${API}/api/copa/solicitudes`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ delegacionId, tipo, descripcion: texto.trim() }),
+      });
+      const resData = await r.json();
+      if (resData.success) {
+        onEnviada({ id: resData.id, tipo, descripcion: texto.trim() });
+        setTexto('');
+        setAbierto(false);
+      }
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-100">
+      {propias.length > 0 && (
+        <div className="space-y-2 mb-3">
+          {propias.map(s => (
+            <div key={s.id} className="bg-gray-50 rounded-xl p-3">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className="text-[10px] text-gray-400">{s.fechaSolicitud}</span>
+                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${s.estado === 'Pendiente' ? 'bg-orange-100 text-orange-700' : s.estado === 'Revisada' ? 'bg-teal-100 text-teal-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                  {s.estado}
+                </span>
+              </div>
+              <p className="text-[13px] text-gray-700">{s.descripcion}</p>
+              {s.respuesta && (
+                <div className="bg-white border border-gray-200 rounded-lg p-2 mt-1.5">
+                  <p className="text-[9px] font-bold text-gray-400 uppercase mb-0.5">Respuesta de GuíaSAI</p>
+                  <p className="text-[13px] text-gray-700">{s.respuesta}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!abierto ? (
+        <button onClick={() => setAbierto(true)} className="w-full text-xs font-bold text-gray-500 hover:text-gray-700 py-2 flex items-center justify-center gap-1">
+          + {etiqueta || `Enviar solicitud de ${tipo.toLowerCase()}`}
+        </button>
+      ) : (
+        <div className="space-y-2">
+          <textarea
+            value={texto} onChange={e => setTexto(e.target.value)} rows={3} autoFocus
+            placeholder="Escribe los detalles de tu solicitud..."
+            className={`w-full border ${colores.border} rounded-xl px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none ${colores.focus}`}
+          />
+          <div className="flex gap-2">
+            <button onClick={enviar} disabled={enviando || !texto.trim()} className={`flex-1 ${colores.bg} disabled:opacity-50 text-white font-bold text-sm py-2.5 rounded-xl transition-colors`}>
+              {enviando ? 'Enviando...' : 'Enviar solicitud'}
+            </button>
+            <button onClick={() => { setAbierto(false); setTexto(''); }} className="px-4 text-sm font-bold text-gray-500">Cancelar</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default CopaPortal;
