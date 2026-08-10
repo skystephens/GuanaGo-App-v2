@@ -36,16 +36,11 @@ const CATEGORIAS = [
   { nombre: 'Sub 21', rango: '2005', genero: 'Masculino' },
 ];
 
-const ESCENARIOS = [
-  'Coliseo Cove Hill (cubierto) + cancha externa',
-  'Colegio Bilingüe (cubierto) + cancha de colores externa',
-  'Colegio El Rancho (cubierto)',
-  'Cancha Brooks Hill (cubierta)',
-  'Cancha Cajasai',
-  'Parque Aeropuerto',
-  'Parque Sariebay',
-  '3 canchas externas — Estadio de Béisbol',
-  '4 canchas externas — Telecom',
+const ESCENARIOS_CONFIRMADOS = [
+  { nombre: 'Coliseo Cove Hill', detalle: 'Cubierto — sede principal', lat: 12.541243, lon: -81.725084 },
+  { nombre: 'Colegio Bilingüe Flowers Hill', detalle: 'Cubierto', lat: 12.5701, lon: -81.7138 },
+  { nombre: 'Cancha Colegio Philip Bigman (El Rancho)', detalle: 'Cubierto', lat: 12.547566, lon: -81.7046083 },
+  { nombre: 'Cancha Brooks Hill', detalle: 'Cubierta', lat: 12.556099, lon: -81.721529 },
 ];
 
 interface HotelDisp { id: string; nombre: string; tipo: string; precioNoche: number; imagen: string; capacidadEstimada: number }
@@ -135,10 +130,22 @@ const CopaLanding: React.FC = () => {
 
         {/* Escenarios deportivos */}
         <div className="bg-white rounded-2xl shadow-sm p-5">
-          <h2 className="text-lg font-bold text-[#003D5C] mb-3 flex items-center gap-2"><MapPin size={18} className="text-orange-500" /> Escenarios deportivos</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            {ESCENARIOS.map(e => (
-              <p key={e} className="text-[12.5px] text-gray-600 flex items-start gap-1.5"><span className="text-orange-400 mt-0.5">•</span> {e}</p>
+          <h2 className="text-lg font-bold text-[#003D5C] mb-1 flex items-center gap-2"><MapPin size={18} className="text-orange-500" /> Escenarios deportivos</h2>
+          <p className="text-[12px] text-gray-500 mb-3">Las 4 sedes cubiertas confirmadas para el torneo.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {ESCENARIOS_CONFIRMADOS.map(e => (
+              <a
+                key={e.nombre}
+                href={`https://www.google.com/maps/dir/?api=1&destination=${e.lat},${e.lon}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-between gap-2 bg-gray-50 hover:bg-gray-100 rounded-xl p-3 transition-colors"
+              >
+                <div className="min-w-0">
+                  <p className="text-[13px] font-bold text-gray-800 leading-snug">{e.nombre}</p>
+                  <p className="text-[11px] text-gray-500">{e.detalle}</p>
+                </div>
+                <span className="text-orange-500 text-xs font-bold shrink-0">📍</span>
+              </a>
             ))}
           </div>
         </div>
