@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Loader2, Plus, Save, Send, Link as LinkIcon, Trash2, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Save, Send, Link as LinkIcon, Trash2, Copy, Check, MessageCircle } from 'lucide-react';
 
 const API = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 const cop = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
@@ -253,16 +253,59 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
             ))}
           </div>
 
-          {/* Selector de delegación */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {delsFiltradas.map(d => (
-              <button key={d.id} onClick={() => setSelId(d.id)}
-                className={`shrink-0 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-                  selId === d.id ? 'bg-[#FF6600] text-white' : 'bg-white/10 text-[#9FB6C4] hover:bg-white/20'}`}>
-                {d.club} {d.publicado && '✓'}
-              </button>
-            ))}
-            {delsFiltradas.length === 0 && <p className="text-xs text-[#5E7E92] py-2">Sin delegaciones en este evento todavía.</p>}
+          {/* Tabla resumen — todas las delegaciones con su código, de un vistazo */}
+          <div className="bg-white/5 rounded-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-[9.5px] uppercase text-[#5E7E92] border-b border-white/10">
+                    <th className="text-left px-3 py-2">Club</th>
+                    <th className="text-left px-2 py-2">Ciudad</th>
+                    <th className="text-left px-2 py-2">Código</th>
+                    <th className="text-left px-2 py-2">Estado</th>
+                    <th className="text-right px-3 py-2">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {delsFiltradas.map(d => (
+                    <tr
+                      key={d.id}
+                      onClick={() => setSelId(d.id)}
+                      className={`border-b border-white/5 cursor-pointer transition-colors ${selId === d.id ? 'bg-[#FF6600]/15' : 'hover:bg-white/5'}`}
+                    >
+                      <td className="px-3 py-2.5 font-bold text-white">{d.club}</td>
+                      <td className="px-2 py-2.5 text-[#9FB6C4]">{d.ciudad}</td>
+                      <td className="px-2 py-2.5 font-mono font-bold text-[#FF6600]">{d.codigoAcceso}</td>
+                      <td className="px-2 py-2.5">
+                        <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full ${d.publicado ? 'bg-emerald-900/40 text-emerald-400' : 'bg-white/10 text-[#5E7E92]'}`}>
+                          {d.publicado ? 'Publicado' : 'Oculto'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
+                          <button
+                            onClick={() => navigator.clipboard.writeText(d.codigoAcceso)}
+                            title="Copiar código"
+                            className="text-[#9FB6C4] hover:text-white p-1.5 rounded hover:bg-white/10"
+                          >
+                            <Copy size={12} />
+                          </button>
+                          <a
+                            href={`https://wa.me/${d.whatsapp?.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${d.coordinador}, soy de GuíaSAI. Aquí tienes el acceso al portal de tu delegación "${d.club}" en la Copa de la Isla — entra en ${window.location.origin}${window.location.pathname}?copa=${d.codigoAcceso}`)}`}
+                            target="_blank" rel="noopener noreferrer"
+                            title="Enviar acceso por WhatsApp"
+                            className="text-emerald-400 hover:text-emerald-300 p-1.5 rounded hover:bg-white/10"
+                          >
+                            <MessageCircle size={12} />
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {delsFiltradas.length === 0 && <p className="text-xs text-[#5E7E92] py-4 text-center">Sin delegaciones en este evento todavía.</p>}
+            </div>
           </div>
         </div>
       </div>
