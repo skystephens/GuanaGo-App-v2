@@ -6,6 +6,7 @@ import {
   type VoucherRecord, type VoucherFormData, type ServicioTuristico,
 } from '../services/airtableService'
 import { NavigationBar } from '../components/NavigationBar'
+import { formatFechaLarga } from '../components/VoucherTicket'
 import '../styles/guiasai-theme.css'
 
 const ORANGE = '#FF6600'
@@ -352,7 +353,7 @@ function VoucherRow({ voucher }: { voucher: VoucherRecord }) {
       <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', fontSize: '0.8rem' }}>
         <Info label="ID" value={voucher.reservaNum} color={ORANGE} />
         <Info label="Pax" value={voucher.pax} />
-        <Info label="Fecha" value={voucher.fecha} />
+        <Info label="Fecha" value={formatFechaLarga(voucher.fecha)} />
         <Info label="Hora" value={voucher.hora} color={TEAL} />
       </div>
       <div style={{ color: '#94a3b8', fontSize: '0.75rem', minWidth: '140px', maxWidth: '200px' }}>

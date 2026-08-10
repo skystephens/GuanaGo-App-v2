@@ -14,6 +14,21 @@ function estadoStyle(estado: string) {
   return ESTADO_COLORS[estado?.toUpperCase()] ?? { bg: TEAL, text: '#fff' }
 }
 
+/**
+ * 'Fecha de Inicio' es un campo de TEXTO simple en Airtable (no fecha real),
+ * así que puede llegar como '2026-08-10' (ISO) o '08/10/2026' (MM/DD/YYYY).
+ * JS Date interpreta ambos formatos correctamente — el problema real era
+ * mostrar el string crudo tal cual, ambiguo para un lector en español.
+ * Esto lo reformatea siempre como '10 de agosto de 2026'.
+ */
+export function formatFechaLarga(raw: string): string {
+  if (!raw) return ''
+  const esISO = /^\d{4}-\d{2}-\d{2}$/.test(raw.trim())
+  const fecha = new Date(esISO ? `${raw}T12:00:00` : raw)
+  if (isNaN(fecha.getTime())) return raw // si no se puede interpretar, se muestra tal cual en vez de "Invalid Date"
+  return fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
 export function VoucherTicket({ voucher }: { voucher: VoucherRecord }) {
   const { bg: estadoBg, text: estadoText } = estadoStyle(voucher.estado)
 
@@ -122,7 +137,7 @@ export function VoucherTicket({ voucher }: { voucher: VoucherRecord }) {
 
         {/* Fecha + Hora */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
-          <DataCard label="Fecha" value={voucher.fecha} />
+          <DataCard label="Fecha" value={formatFechaLarga(voucher.fecha)} />
           <DataCard label="Hora de Encuentro" value={voucher.hora} valueColor={TEAL} valueLarge />
         </div>
 
