@@ -51,6 +51,26 @@ const atUrl = (tableId) => { const { base } = AT(); return `https://api.airtable
 // Trae los servicios reservados (tours, traslados, etc. — todo lo que NO es
 // una línea de hotel) de las cotizaciones vinculadas, para enriquecer el
 // itinerario del portal con lo que el equipo ya tiene contratado.
+// Trae TODOS los ítems (incluyendo la línea de hotel) de una cotización real
+// específica -- usado para mostrar "Tu cotización" con datos reales cuando
+// ya hay una cotización Aceptada entre las vinculadas a la delegación.
+async function traerItemsDeCotizacion(cotizacionId) {
+  if (!cotizacionId) return [];
+  try {
+    const { headers } = AT();
+    const formula = `FIND('${cotizacionId}', ARRAYJOIN({CotizacionesGG})) > 0`;
+    const url = `${atUrl('cotizaciones_Items')}?filterByFormula=${encodeURIComponent(formula)}&pageSize=100`;
+    const r = await fetch(url, { headers });
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (data.records || []).map(rec => ({
+      titulo: rec.fields['Nombre'] || '',
+      detalle: rec.fields['Fecha Inicio'] || '',
+      valor: rec.fields['Precio Subtotal'] || 0,
+    })).filter(s => s.titulo);
+  } catch { return []; }
+}
+
 async function traerServiciosReservados(cotizacionIds) {
   if (!cotizacionIds || cotizacionIds.length === 0) return [];
   try {
@@ -794,6 +814,9 @@ async function construirSnapshotPortal(rec) {
     del.cotizacionesVinculadas.length > 0 ? del.cotizacionesVinculadas : cotizacionesRelacionadas.map(c => c.id)
   );
 
+  const cotAceptada = cotizacionesRelacionadas.find(c => c.estado === 'Aceptada');
+  const serviciosContratados = cotAceptada ? await traerItemsDeCotizacion(cotAceptada.id) : [];
+
   const rs = await fetch(`${atUrl(TABLES.SOLICITUDES)}?filterByFormula=${encodeURIComponent(`FIND('${rec.id}', ARRAYJOIN({Delegacion_Id})) > 0`)}&sort[0][field]=Fecha_Solicitud&sort[0][direction]=desc`, { headers });
   const ds = rs.ok ? await rs.json() : { records: [] };
   const solicitudes = (ds.records || []).map(r2 => ({
@@ -817,7 +840,9 @@ async function construirSnapshotPortal(rec) {
       pax: calc.pax, noches: calc.noches,
       inscritos, completos, abonados,
       total: calc.total, abono: calc.abono, saldo: calc.saldo,
-      servicios: calc.lineas.map(l => ({ id: l.servicioId, titulo: l.titulo, detalle: l.detalle, valor: l.valorVenta, origen: l.origen })),
+      servicios: serviciosContratados.length > 0
+        ? serviciosContratados
+        : calc.lineas.map(l => ({ id: l.servicioId, titulo: l.titulo, detalle: l.detalle, valor: l.valorVenta, origen: l.origen })),
       serviciosReservados,
       solicitudes,
       personas: viajeros,
