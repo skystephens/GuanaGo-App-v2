@@ -600,8 +600,24 @@ function FormularioSolicitud({ tipo, delegacionId, solicitudes, onEnviada, color
   etiqueta?: string;
 }) {
   const [abierto, setAbierto] = useState(false);
-  const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(false);
+
+  // Campos estructurados — Alimentación
+  const [fechaAlim, setFechaAlim] = useState('');
+  const [desayuno, setDesayuno] = useState(false);
+  const [almuerzo, setAlmuerzo] = useState(false);
+  const [cena, setCena] = useState(false);
+  const [numPersonasAlim, setNumPersonasAlim] = useState('');
+
+  // Campos estructurados — Traslado
+  const [fechaTras, setFechaTras] = useState('');
+  const [horaTras, setHoraTras] = useState('');
+  const [numPasajeros, setNumPasajeros] = useState('');
+  const [desde, setDesde] = useState('');
+  const [hacia, setHacia] = useState('');
+
+  // Texto libre — Otro
+  const [texto, setTexto] = useState('');
 
   const propias = solicitudes.filter(s => s.tipo === tipo);
   const colores = {
@@ -610,17 +626,37 @@ function FormularioSolicitud({ tipo, delegacionId, solicitudes, onEnviada, color
     emerald: { bg: 'bg-emerald-500 hover:bg-emerald-600', border: 'border-emerald-200', focus: 'focus:border-emerald-500' },
   }[color];
 
+  const construirDescripcion = (): string => {
+    if (tipo === 'Alimentación') {
+      const comidas = [desayuno && 'Desayuno', almuerzo && 'Almuerzo', cena && 'Cena'].filter(Boolean).join(', ');
+      return `Fecha: ${fechaAlim || '—'} | Comidas: ${comidas || '—'} | N.º de personas: ${numPersonasAlim || '—'}`;
+    }
+    if (tipo === 'Traslado') {
+      return `Fecha: ${fechaTras || '—'} | Hora: ${horaTras || '—'} | Pasajeros: ${numPasajeros || '—'} | Desde: ${desde || '—'} | Hacia: ${hacia || '—'}`;
+    }
+    return texto.trim();
+  };
+
+  const formValido = tipo === 'Alimentación'
+    ? !!(fechaAlim && (desayuno || almuerzo || cena) && numPersonasAlim)
+    : tipo === 'Traslado'
+    ? !!(fechaTras && horaTras && numPasajeros && desde && hacia)
+    : !!texto.trim();
+
   const enviar = async () => {
-    if (!texto.trim()) return;
+    const descripcion = construirDescripcion();
+    if (!formValido) return;
     setEnviando(true);
     try {
       const r = await fetch(`${API}/api/copa/solicitudes`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ delegacionId, tipo, descripcion: texto.trim() }),
+        body: JSON.stringify({ delegacionId, tipo, descripcion }),
       });
       const resData = await r.json();
       if (resData.success) {
-        onEnviada({ id: resData.id, tipo, descripcion: texto.trim() });
+        onEnviada({ id: resData.id, tipo, descripcion });
+        setFechaAlim(''); setDesayuno(false); setAlmuerzo(false); setCena(false); setNumPersonasAlim('');
+        setFechaTras(''); setHoraTras(''); setNumPasajeros(''); setDesde(''); setHacia('');
         setTexto('');
         setAbierto(false);
       }
@@ -628,6 +664,8 @@ function FormularioSolicitud({ tipo, delegacionId, solicitudes, onEnviada, color
       setEnviando(false);
     }
   };
+
+  const inputCls = `w-full border ${colores.border} rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none ${colores.focus}`;
 
   return (
     <div className="mt-4 pt-4 border-t border-gray-100">
@@ -658,17 +696,72 @@ function FormularioSolicitud({ tipo, delegacionId, solicitudes, onEnviada, color
           + {etiqueta || `Enviar solicitud de ${tipo.toLowerCase()}`}
         </button>
       ) : (
-        <div className="space-y-2">
-          <textarea
-            value={texto} onChange={e => setTexto(e.target.value)} rows={3} autoFocus
-            placeholder="Escribe los detalles de tu solicitud..."
-            className={`w-full border ${colores.border} rounded-xl px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none ${colores.focus}`}
-          />
+        <div className="space-y-2.5">
+          {tipo === 'Alimentación' && (
+            <>
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase">Fecha</label>
+                <input type="date" value={fechaAlim} onChange={e => setFechaAlim(e.target.value)} className={inputCls} />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Comidas necesarias</label>
+                <div className="flex gap-3">
+                  {[['Desayuno', desayuno, setDesayuno], ['Almuerzo', almuerzo, setAlmuerzo], ['Cena', cena, setCena]].map(([lbl, val, setter]: any) => (
+                    <label key={lbl} className="flex items-center gap-1.5 text-sm text-gray-700">
+                      <input type="checkbox" checked={val} onChange={e => setter(e.target.checked)} className="accent-orange-500 w-4 h-4" /> {lbl}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase">N.º de personas</label>
+                <input type="number" min={1} value={numPersonasAlim} onChange={e => setNumPersonasAlim(e.target.value)} placeholder="Ej: 30" className={inputCls} />
+              </div>
+            </>
+          )}
+
+          {tipo === 'Traslado' && (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase">Fecha</label>
+                  <input type="date" value={fechaTras} onChange={e => setFechaTras(e.target.value)} className={inputCls} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase">Hora</label>
+                  <input type="time" value={horaTras} onChange={e => setHoraTras(e.target.value)} className={inputCls} />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase">N.º de pasajeros</label>
+                <input type="number" min={1} value={numPasajeros} onChange={e => setNumPasajeros(e.target.value)} placeholder="Ej: 30" className={inputCls} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase">Desde</label>
+                  <input value={desde} onChange={e => setDesde(e.target.value)} placeholder="Ej: Aeropuerto" className={inputCls} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase">Hacia</label>
+                  <input value={hacia} onChange={e => setHacia(e.target.value)} placeholder="Ej: Hotel Las Americas" className={inputCls} />
+                </div>
+              </div>
+            </>
+          )}
+
+          {tipo === 'Otro' && (
+            <textarea
+              value={texto} onChange={e => setTexto(e.target.value)} rows={3} autoFocus
+              placeholder="Escribe los detalles de tu solicitud..."
+              className={`w-full border ${colores.border} rounded-xl px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none ${colores.focus}`}
+            />
+          )}
+
           <div className="flex gap-2">
-            <button onClick={enviar} disabled={enviando || !texto.trim()} className={`flex-1 ${colores.bg} disabled:opacity-50 text-white font-bold text-sm py-2.5 rounded-xl transition-colors`}>
+            <button onClick={enviar} disabled={enviando || !formValido} className={`flex-1 ${colores.bg} disabled:opacity-50 text-white font-bold text-sm py-2.5 rounded-xl transition-colors`}>
               {enviando ? 'Enviando...' : 'Enviar solicitud'}
             </button>
-            <button onClick={() => { setAbierto(false); setTexto(''); }} className="px-4 text-sm font-bold text-gray-500">Cancelar</button>
+            <button onClick={() => setAbierto(false)} className="px-4 text-sm font-bold text-gray-500">Cancelar</button>
           </div>
         </div>
       )}
