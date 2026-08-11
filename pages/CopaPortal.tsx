@@ -599,7 +599,7 @@ function FormularioSolicitud({ tipo, delegacionId, solicitudes, onEnviada, color
   color: 'orange' | 'teal' | 'emerald';
   etiqueta?: string;
 }) {
-  const [abierto, setAbierto] = useState(false);
+  const [abierto, setAbierto] = useState(true);
   const [enviando, setEnviando] = useState(false);
 
   // Campos estructurados — Alimentación
@@ -697,6 +697,7 @@ function FormularioSolicitud({ tipo, delegacionId, solicitudes, onEnviada, color
         </button>
       ) : (
         <div className="space-y-2.5">
+          <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">{etiqueta || `Enviar solicitud de ${tipo.toLowerCase()}`}</p>
           {tipo === 'Alimentación' && (
             <>
               <div>
