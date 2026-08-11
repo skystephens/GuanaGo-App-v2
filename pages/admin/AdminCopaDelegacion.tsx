@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Loader2, Plus, Save, Send, Link as LinkIcon, Trash2, Copy, Check, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Save, Send, Link as LinkIcon, Trash2, Copy, Check, MessageCircle, Pencil } from 'lucide-react';
 
 const API = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 const cop = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
@@ -51,6 +51,9 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
   const [buscandoCot, setBuscandoCot] = useState(false);
   const [buscarAct, setBuscarAct] = useState('');
   const [solicitudes, setSolicitudes] = useState<{ id: string; tipo: string; descripcion: string; estado: string; respuesta: string; fechaSolicitud: string }[]>([]);
+  const [serviciosReservados, setServiciosReservados] = useState<{ nombre: string; fecha: string }[]>([]);
+  const [editandoDescId, setEditandoDescId] = useState<string | null>(null);
+  const [descEditada, setDescEditada] = useState('');
   const [cargandoSol, setCargandoSol] = useState(false);
   const [respuestaTexto, setRespuestaTexto] = useState<Record<string, string>>({});
   const [enviandoResp, setEnviandoResp] = useState<string | null>(null);
@@ -126,6 +129,23 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
     if (selId) cargarSolicitudes(selId);
     cargarTodo();
   };
+
+  const guardarDescripcion = async (id: string) => {
+    await fetch(`${API}/api/copa/solicitudes/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ descripcion: descEditada }),
+    });
+    setEditandoDescId(null);
+    if (selId) cargarSolicitudes(selId);
+  };
+
+  useEffect(() => {
+    if (sel && sel.cotizacionesVinculadas?.length > 0) {
+      fetch(`${API}/api/copa/servicios-reservados?cotizacionIds=${sel.cotizacionesVinculadas.join(',')}`)
+        .then(r => r.json()).then(d => Array.isArray(d) && setServiciosReservados(d));
+    } else {
+      setServiciosReservados([]);
+    }
+  }, [sel?.id, sel?.cotizacionesVinculadas?.length]);
 
   useEffect(() => {
     if (sel && sel.cotizacionesVinculadas?.length > 0) {
@@ -423,6 +443,71 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
                 <button onClick={copiarCodigo} className="flex items-center gap-1.5 bg-[#F5EFE3] border border-[#E7DFCE] px-3 py-2 rounded font-mono text-xs font-bold">
                   {copiado ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />} {sel.codigoAcceso}
                 </button>
+              </div>
+            </div>
+
+            {/* Itinerario — espeja lo que ve el delegado, editable */}
+            <div className="bg-white border-2 border-[#0A5C64] rounded-lg overflow-hidden">
+              <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#0A5C64] bg-[#E8F1F2] px-4 py-3">📋 Itinerario</h2>
+              <div className="p-4 space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-[#E8F1F2] rounded p-3">
+                    <p className="text-[9.5px] uppercase text-[#0A5C64] font-bold mb-1">Check-in</p>
+                    <p className="font-bold text-sm">{sel.checkin ? new Date(sel.checkin + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'long' }) : '—'}</p>
+                    <p className="text-[12px] text-[#0A5C64] font-bold">3:00 PM</p>
+                  </div>
+                  <div className="bg-[#FFF3E9] rounded p-3">
+                    <p className="text-[9.5px] uppercase text-[#8A4B00] font-bold mb-1">Check-out</p>
+                    <p className="font-bold text-sm">{sel.checkout ? new Date(sel.checkout + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'long' }) : '—'}</p>
+                    <p className="text-[12px] text-[#8A4B00] font-bold">12:00 PM</p>
+                  </div>
+                </div>
+
+                {(['Alimentación', 'Traslado'] as const).map(tipoItin => (
+                  <div key={tipoItin}>
+                    <p className="text-[10px] font-bold text-[#6B7785] uppercase mb-1.5">{tipoItin === 'Alimentación' ? '🍽️ Alimentación' : '🚐 Traslados'}</p>
+                    {solicitudes.filter(s => s.tipo === tipoItin).length === 0 ? (
+                      <p className="text-xs text-[#9CA8B0]">Sin registros todavía.</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {solicitudes.filter(s => s.tipo === tipoItin).map(s => (
+                          <div key={s.id} className="bg-[#F5EFE3] rounded p-2.5">
+                            {editandoDescId === s.id ? (
+                              <div className="space-y-1.5">
+                                <textarea value={descEditada} onChange={e => setDescEditada(e.target.value)} rows={2}
+                                  className="w-full border border-[#0E7C86] rounded px-2 py-1.5 text-xs focus:outline-none" />
+                                <div className="flex gap-1.5">
+                                  <button onClick={() => guardarDescripcion(s.id)} className="text-[10px] font-bold bg-[#0E7C86] text-white px-2.5 py-1 rounded">Guardar</button>
+                                  <button onClick={() => setEditandoDescId(null)} className="text-[10px] font-bold text-[#6B7785] px-2">Cancelar</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="text-xs text-[#374151] flex-1">{s.descripcion}</p>
+                                <button onClick={() => { setEditandoDescId(s.id); setDescEditada(s.descripcion); }} className="text-[#0E7C86] shrink-0"><Pencil size={12} /></button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {serviciosReservados.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-[#6B7785] uppercase mb-1.5">🏝️ Tours y servicios reservados</p>
+                    <div className="space-y-1.5">
+                      {serviciosReservados.map((s, i) => (
+                        <div key={i} className="bg-[#F5EFE3] rounded p-2.5 flex items-center justify-between gap-2">
+                          <p className="text-xs font-bold text-[#374151]">{s.nombre}</p>
+                          {s.fecha && <span className="text-[10px] text-[#6B7785]">{s.fecha}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <p className="text-[10px] text-[#9CA8B0]">Lo que edites aquí se refleja directo en el portal del delegado.</p>
               </div>
             </div>
 

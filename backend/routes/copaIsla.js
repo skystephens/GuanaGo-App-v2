@@ -826,6 +826,16 @@ async function construirSnapshotPortal(rec) {
   };
 }
 
+// GET /api/copa/servicios-reservados?cotizacionIds=recA,recB — para el itinerario del admin
+router.get('/servicios-reservados', async (req, res) => {
+  try {
+    const ids = String(req.query.cotizacionIds || '').split(',').map(s => s.trim()).filter(Boolean);
+    res.json(await traerServiciosReservados(ids));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/copa/cotizaciones-por-id?ids=recA,recB — para mostrar el nombre real
 // de las cotizaciones ya vinculadas a una delegación
 router.get('/cotizaciones-por-id', async (req, res) => {
@@ -917,10 +927,11 @@ router.get('/solicitudes', async (req, res) => {
 router.patch('/solicitudes/:id', async (req, res) => {
   try {
     const { headers } = AT();
-    const { respuesta, estado } = req.body;
+    const { respuesta, estado, descripcion } = req.body;
     const fields = {};
     if (respuesta !== undefined) { fields.Respuesta = respuesta; fields.Fecha_Respuesta = new Date().toISOString().slice(0, 10); }
     if (estado !== undefined) fields.Estado = estado;
+    if (descripcion !== undefined) fields.Descripcion = descripcion;
     const r = await fetch(`${atUrl(TABLES.SOLICITUDES)}/${req.params.id}`, {
       method: 'PATCH', headers, body: JSON.stringify({ fields, typecast: true }),
     });
