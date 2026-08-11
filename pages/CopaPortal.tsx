@@ -27,13 +27,14 @@ interface Snapshot {
   pax: number; noches: number; inscritos: number; completos: number; abonados: number;
   total: number; abono: number; saldo: number;
   servicios: { id: string; titulo: string; detalle: string; valor: number; origen?: string }[];
+  serviciosReservados?: { nombre: string; fecha: string }[];
   personas: { nombre: string; doc: string; rol: string; sub: string; datos: boolean; pago: string }[];
   cotizacionesRelacionadas?: { id: string; nombre: string; estado: string; total: number }[];
   solicitudes: { id: string; tipo: string; descripcion: string; estado: string; respuesta: string; fechaSolicitud: string }[];
 }
 interface HotelDisp { id: string; nombre: string; tipo: string; precioNoche: number; imagen: string; descripcion: string; habitacionesDisponibles: number; capacidadEstimada: number }
 
-const PASOS = ['Bienvenida', 'Quiénes somos', 'Cotización', 'Alimentos', 'Traslados', 'Pago', 'Consultas', 'Tu grupo'];
+const PASOS = ['Bienvenida', 'Quiénes somos', 'Cotización', 'Alimentos', 'Traslados', 'Pago', 'Consultas', 'Tu grupo', 'Itinerario'];
 
 const CopaPortal: React.FC = () => {
   const { userProfile, isAuthenticated, logout } = useAuth();
@@ -571,6 +572,78 @@ const CopaPortal: React.FC = () => {
               <button onClick={() => buscar(codigo)} className="flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-600 font-bold text-sm px-4 rounded-xl hover:bg-gray-50"><RefreshCw size={13} /></button>
             </div>
           </>
+        )}
+
+        {/* ══ 9. ITINERARIO ══ */}
+        {paso === 8 && (
+          <div className="bg-white rounded-2xl shadow-sm p-5 space-y-5">
+            <h2 className="text-lg font-bold text-[#003D5C] flex items-center gap-2">📋 Itinerario de tu delegación</h2>
+
+            {/* Check-in / Check-out */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-teal-50 rounded-xl p-3">
+                <p className="text-[9.5px] uppercase text-teal-600 font-bold mb-1">Check-in</p>
+                <p className="font-bold text-sm text-gray-800">{new Date(d.inn + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })}</p>
+                <p className="text-[13px] text-teal-700 font-bold">3:00 PM</p>
+              </div>
+              <div className="bg-orange-50 rounded-xl p-3">
+                <p className="text-[9.5px] uppercase text-orange-600 font-bold mb-1">Check-out</p>
+                <p className="font-bold text-sm text-gray-800">{new Date(d.out + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })}</p>
+                <p className="text-[13px] text-orange-700 font-bold">12:00 PM (mediodía)</p>
+              </div>
+            </div>
+
+            {/* Alimentación */}
+            <div>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">🍽️ Alimentación</p>
+              {data.solicitudes.filter(s => s.tipo === 'Alimentación').length === 0 ? (
+                <p className="text-[13px] text-gray-400">Sin solicitudes de alimentación registradas todavía.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {data.solicitudes.filter(s => s.tipo === 'Alimentación').map(s => (
+                    <div key={s.id} className="bg-gray-50 rounded-lg p-2.5 flex items-center justify-between gap-2">
+                      <p className="text-[13px] text-gray-700">{s.descripcion}</p>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${s.estado === 'Resuelta' ? 'bg-emerald-100 text-emerald-700' : s.estado === 'Revisada' ? 'bg-teal-100 text-teal-700' : 'bg-orange-100 text-orange-700'}`}>{s.estado}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Traslados */}
+            <div>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">🚐 Traslados</p>
+              {data.solicitudes.filter(s => s.tipo === 'Traslado').length === 0 ? (
+                <p className="text-[13px] text-gray-400">Sin solicitudes de traslado registradas todavía.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {data.solicitudes.filter(s => s.tipo === 'Traslado').map(s => (
+                    <div key={s.id} className="bg-gray-50 rounded-lg p-2.5 flex items-center justify-between gap-2">
+                      <p className="text-[13px] text-gray-700">{s.descripcion}</p>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${s.estado === 'Resuelta' ? 'bg-emerald-100 text-emerald-700' : s.estado === 'Revisada' ? 'bg-teal-100 text-teal-700' : 'bg-orange-100 text-orange-700'}`}>{s.estado}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Tours y otros servicios reservados */}
+            {data.serviciosReservados && data.serviciosReservados.length > 0 && (
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">🏝️ Tours y servicios reservados</p>
+                <div className="space-y-1.5">
+                  {data.serviciosReservados.map((s, i) => (
+                    <div key={i} className="bg-gray-50 rounded-lg p-2.5 flex items-center justify-between gap-2">
+                      <p className="text-[13px] font-bold text-gray-700">{s.nombre}</p>
+                      {s.fecha && <span className="text-[11px] text-gray-500 shrink-0">{s.fecha}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <p className="text-[11px] text-gray-400 pt-1">Este itinerario se actualiza solo, según lo que confirmes en Alimentos, Traslados y las cotizaciones vinculadas a tu delegación.</p>
+          </div>
         )}
 
         {/* Navegación Atrás / Siguiente */}

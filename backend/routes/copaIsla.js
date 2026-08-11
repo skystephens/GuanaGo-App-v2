@@ -48,6 +48,29 @@ const atUrl = (tableId) => { const { base } = AT(); return `https://api.airtable
 // desde Copa_Delegaciones.Cotizaciones_Vinculadas, evitando que el
 // teléfono compartido de un organizador (que coordina varios equipos)
 // mezcle cotizaciones de delegaciones distintas.
+// Trae los servicios reservados (tours, traslados, etc. — todo lo que NO es
+// una línea de hotel) de las cotizaciones vinculadas, para enriquecer el
+// itinerario del portal con lo que el equipo ya tiene contratado.
+async function traerServiciosReservados(cotizacionIds) {
+  if (!cotizacionIds || cotizacionIds.length === 0) return [];
+  try {
+    const { headers } = AT();
+    const orFormula = cotizacionIds.map(id => `FIND('${id}', ARRAYJOIN({CotizacionesGG}))`).join(',');
+    const formula = `OR(${orFormula})`;
+    const url = `${atUrl('cotizaciones_Items')}?filterByFormula=${encodeURIComponent(formula)}&pageSize=100`;
+    const r = await fetch(url, { headers });
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (data.records || [])
+      .filter(rec => !(rec.fields['AlojamientosTuristicos_SAI'] || []).length) // excluye líneas de hotel
+      .map(rec => ({
+        nombre: rec.fields['Nombre'] || '',
+        fecha: rec.fields['Fecha Inicio'] || '',
+      }))
+      .filter(s => s.nombre);
+  } catch { return []; }
+}
+
 async function traerCotizacionesPorId(ids) {
   if (!ids || ids.length === 0) return [];
   try {
@@ -767,6 +790,10 @@ async function construirSnapshotPortal(rec) {
     ? await traerCotizacionesPorId(del.cotizacionesVinculadas)
     : await buscarCotizacionesPorTelefono(del.whatsapp);
 
+  const serviciosReservados = await traerServiciosReservados(
+    del.cotizacionesVinculadas.length > 0 ? del.cotizacionesVinculadas : cotizacionesRelacionadas.map(c => c.id)
+  );
+
   const rs = await fetch(`${atUrl(TABLES.SOLICITUDES)}?filterByFormula=${encodeURIComponent(`FIND('${rec.id}', ARRAYJOIN({Delegacion_Id})) > 0`)}&sort[0][field]=Fecha_Solicitud&sort[0][direction]=desc`, { headers });
   const ds = rs.ok ? await rs.json() : { records: [] };
   const solicitudes = (ds.records || []).map(r2 => ({
@@ -791,6 +818,7 @@ async function construirSnapshotPortal(rec) {
       inscritos, completos, abonados,
       total: calc.total, abono: calc.abono, saldo: calc.saldo,
       servicios: calc.lineas.map(l => ({ id: l.servicioId, titulo: l.titulo, detalle: l.detalle, valor: l.valorVenta, origen: l.origen })),
+      serviciosReservados,
       solicitudes,
       personas: viajeros,
       cotizacionesRelacionadas,
