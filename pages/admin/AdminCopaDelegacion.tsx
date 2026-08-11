@@ -446,68 +446,96 @@ const AdminCopaDelegacion: React.FC<Props> = ({ onBack }) => {
               </div>
             </div>
 
-            {/* Itinerario — espeja lo que ve el delegado, editable */}
+            {/* Itinerario — día por día, editable, igual al portal del delegado */}
             <div className="bg-white border-2 border-[#0A5C64] rounded-lg overflow-hidden">
-              <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#0A5C64] bg-[#E8F1F2] px-4 py-3">📋 Itinerario</h2>
-              <div className="p-4 space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-[#E8F1F2] rounded p-3">
-                    <p className="text-[9.5px] uppercase text-[#0A5C64] font-bold mb-1">Check-in</p>
-                    <p className="font-bold text-sm">{sel.checkin ? new Date(sel.checkin + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'long' }) : '—'}</p>
-                    <p className="text-[12px] text-[#0A5C64] font-bold">3:00 PM</p>
-                  </div>
-                  <div className="bg-[#FFF3E9] rounded p-3">
-                    <p className="text-[9.5px] uppercase text-[#8A4B00] font-bold mb-1">Check-out</p>
-                    <p className="font-bold text-sm">{sel.checkout ? new Date(sel.checkout + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'long' }) : '—'}</p>
-                    <p className="text-[12px] text-[#8A4B00] font-bold">12:00 PM</p>
-                  </div>
-                </div>
+              <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#0A5C64] bg-[#E8F1F2] px-4 py-3">📅 Itinerario día a día</h2>
+              <div className="p-4">
+                {(() => {
+                  const extraer = (texto: string, campo: string): string | null => {
+                    const m = texto.match(new RegExp(`${campo}:\\s*([^|]+)`));
+                    return m ? m[1].trim() : null;
+                  };
 
-                {(['Alimentación', 'Traslado'] as const).map(tipoItin => (
-                  <div key={tipoItin}>
-                    <p className="text-[10px] font-bold text-[#6B7785] uppercase mb-1.5">{tipoItin === 'Alimentación' ? '🍽️ Alimentación' : '🚐 Traslados'}</p>
-                    {solicitudes.filter(s => s.tipo === tipoItin).length === 0 ? (
-                      <p className="text-xs text-[#9CA8B0]">Sin registros todavía.</p>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {solicitudes.filter(s => s.tipo === tipoItin).map(s => (
-                          <div key={s.id} className="bg-[#F5EFE3] rounded p-2.5">
-                            {editandoDescId === s.id ? (
-                              <div className="space-y-1.5">
-                                <textarea value={descEditada} onChange={e => setDescEditada(e.target.value)} rows={2}
-                                  className="w-full border border-[#0E7C86] rounded px-2 py-1.5 text-xs focus:outline-none" />
-                                <div className="flex gap-1.5">
-                                  <button onClick={() => guardarDescripcion(s.id)} className="text-[10px] font-bold bg-[#0E7C86] text-white px-2.5 py-1 rounded">Guardar</button>
-                                  <button onClick={() => setEditandoDescId(null)} className="text-[10px] font-bold text-[#6B7785] px-2">Cancelar</button>
+                  type Evento = { hora: string; icono: string; solicitud?: typeof solicitudes[0]; texto: string; fecha_?: string };
+                  const porDia: Record<string, Evento[]> = {};
+                  const agregar = (fecha: string | null, ev: Evento) => {
+                    if (!fecha) return;
+                    if (!porDia[fecha]) porDia[fecha] = [];
+                    porDia[fecha].push(ev);
+                  };
+
+                  agregar(sel.checkin, { hora: '15:00', icono: '🏨', texto: 'Check-in' });
+                  agregar(sel.checkout, { hora: '12:00', icono: '🧳', texto: 'Check-out' });
+                  solicitudes.forEach(s => {
+                    const fecha = extraer(s.descripcion, 'Fecha');
+                    const hora = extraer(s.descripcion, 'Hora') || (s.tipo === 'Alimentación' ? '08:00' : '00:00');
+                    agregar(fecha, { hora, icono: s.tipo === 'Alimentación' ? '🍽️' : s.tipo === 'Traslado' ? '🚐' : '📌', texto: s.descripcion, solicitud: s });
+                  });
+                  serviciosReservados.forEach(s => agregar(s.fecha, { hora: '00:00', icono: '🏝️', texto: s.nombre }));
+
+                  const dias: string[] = [];
+                  if (sel.checkin && sel.checkout) {
+                    let cursor = new Date(sel.checkin + 'T12:00:00');
+                    const fin = new Date(sel.checkout + 'T12:00:00');
+                    let i = 0;
+                    while (cursor <= fin && i < 30) { dias.push(cursor.toISOString().slice(0, 10)); cursor.setDate(cursor.getDate() + 1); i++; }
+                  }
+
+                  if (dias.length === 0) return <p className="text-sm text-[#6B7785]">Faltan fechas de check-in/check-out para armar el itinerario.</p>;
+
+                  return (
+                    <div className="space-y-3">
+                      {dias.map(fecha => {
+                        const eventos = (porDia[fecha] || []).sort((a, b) => a.hora.localeCompare(b.hora));
+                        const fechaObj = new Date(fecha + 'T12:00:00');
+                        return (
+                          <div key={fecha} className="flex gap-3">
+                            <div className="w-12 shrink-0 text-center pt-1">
+                              <p className="text-[8.5px] uppercase text-[#9CA8B0] font-bold">{fechaObj.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
+                              <p className="text-lg font-black text-[#0A5C64]">{fechaObj.getDate()}</p>
+                            </div>
+                            <div className="flex-1 border-l-2 border-[#E7DFCE] pl-3 pb-2">
+                              {eventos.length === 0 ? (
+                                <p className="text-[11px] text-[#C4C0B4] italic pt-1">Sin eventos</p>
+                              ) : (
+                                <div className="space-y-1.5">
+                                  {eventos.map((ev, i) => (
+                                    <div key={i} className="bg-[#F5EFE3] rounded p-2">
+                                      {ev.solicitud && editandoDescId === ev.solicitud.id ? (
+                                        <div className="space-y-1.5">
+                                          <textarea value={descEditada} onChange={e => setDescEditada(e.target.value)} rows={2}
+                                            className="w-full border border-[#0E7C86] rounded px-2 py-1.5 text-xs focus:outline-none" />
+                                          <div className="flex gap-1.5">
+                                            <button onClick={() => guardarDescripcion(ev.solicitud!.id)} className="text-[10px] font-bold bg-[#0E7C86] text-white px-2.5 py-1 rounded">Guardar</button>
+                                            <button onClick={() => setEditandoDescId(null)} className="text-[10px] font-bold text-[#6B7785] px-2">Cancelar</button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div className="min-w-0">
+                                            <div className="flex items-center gap-1.5">
+                                              {ev.hora !== '00:00' && <span className="text-[9px] font-mono font-bold text-[#6B7785]">{ev.hora}</span>}
+                                              <span className="text-[11px]">{ev.icono}</span>
+                                            </div>
+                                            <p className="text-xs text-[#374151]">{ev.texto}</p>
+                                          </div>
+                                          {ev.solicitud && (
+                                            <button onClick={() => { setEditandoDescId(ev.solicitud!.id); setDescEditada(ev.solicitud!.descripcion); }} className="text-[#0E7C86] shrink-0"><Pencil size={11} /></button>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
                                 </div>
-                              </div>
-                            ) : (
-                              <div className="flex items-start justify-between gap-2">
-                                <p className="text-xs text-[#374151] flex-1">{s.descripcion}</p>
-                                <button onClick={() => { setEditandoDescId(s.id); setDescEditada(s.descripcion); }} className="text-[#0E7C86] shrink-0"><Pencil size={12} /></button>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                {serviciosReservados.length > 0 && (
-                  <div>
-                    <p className="text-[10px] font-bold text-[#6B7785] uppercase mb-1.5">🏝️ Tours y servicios reservados</p>
-                    <div className="space-y-1.5">
-                      {serviciosReservados.map((s, i) => (
-                        <div key={i} className="bg-[#F5EFE3] rounded p-2.5 flex items-center justify-between gap-2">
-                          <p className="text-xs font-bold text-[#374151]">{s.nombre}</p>
-                          {s.fecha && <span className="text-[10px] text-[#6B7785]">{s.fecha}</span>}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
-                  </div>
-                )}
-                <p className="text-[10px] text-[#9CA8B0]">Lo que edites aquí se refleja directo en el portal del delegado.</p>
+                  );
+                })()}
+                <p className="text-[10px] text-[#9CA8B0] mt-3 pt-2 border-t border-[#E7DFCE]">Lo que edites aquí se refleja directo en el portal del delegado.</p>
               </div>
             </div>
 
