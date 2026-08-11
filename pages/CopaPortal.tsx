@@ -574,77 +574,104 @@ const CopaPortal: React.FC = () => {
           </>
         )}
 
-        {/* ══ 9. ITINERARIO ══ */}
-        {paso === 8 && (
-          <div className="bg-white rounded-2xl shadow-sm p-5 space-y-5">
-            <h2 className="text-lg font-bold text-[#003D5C] flex items-center gap-2">📋 Itinerario de tu delegación</h2>
+        {/* ══ 9. ITINERARIO — vista día por día ══ */}
+        {paso === 8 && (() => {
+          // Extrae 'Fecha: YYYY-MM-DD' y 'Hora: HH:MM' del texto compuesto de cada solicitud
+          const extraer = (texto: string, campo: string): string | null => {
+            const m = texto.match(new RegExp(`${campo}:\\s*([^|]+)`));
+            return m ? m[1].trim() : null;
+          };
 
-            {/* Check-in / Check-out */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-teal-50 rounded-xl p-3">
-                <p className="text-[9.5px] uppercase text-teal-600 font-bold mb-1">Check-in</p>
-                <p className="font-bold text-sm text-gray-800">{new Date(d.inn + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })}</p>
-                <p className="text-[13px] text-teal-700 font-bold">3:00 PM</p>
-              </div>
-              <div className="bg-orange-50 rounded-xl p-3">
-                <p className="text-[9.5px] uppercase text-orange-600 font-bold mb-1">Check-out</p>
-                <p className="font-bold text-sm text-gray-800">{new Date(d.out + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })}</p>
-                <p className="text-[13px] text-orange-700 font-bold">12:00 PM (mediodía)</p>
-              </div>
-            </div>
+          type Evento = { hora: string; icono: string; texto: string; estado?: string; color: string };
+          const porDia: Record<string, Evento[]> = {};
 
-            {/* Alimentación */}
-            <div>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">🍽️ Alimentación</p>
-              {data.solicitudes.filter(s => s.tipo === 'Alimentación').length === 0 ? (
-                <p className="text-[13px] text-gray-400">Sin solicitudes de alimentación registradas todavía.</p>
-              ) : (
-                <div className="space-y-1.5">
-                  {data.solicitudes.filter(s => s.tipo === 'Alimentación').map(s => (
-                    <div key={s.id} className="bg-gray-50 rounded-lg p-2.5 flex items-center justify-between gap-2">
-                      <p className="text-[13px] text-gray-700">{s.descripcion}</p>
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${s.estado === 'Resuelta' ? 'bg-emerald-100 text-emerald-700' : s.estado === 'Revisada' ? 'bg-teal-100 text-teal-700' : 'bg-orange-100 text-orange-700'}`}>{s.estado}</span>
+          const agregar = (fecha: string | null, ev: Evento) => {
+            if (!fecha) return;
+            if (!porDia[fecha]) porDia[fecha] = [];
+            porDia[fecha].push(ev);
+          };
+
+          // Check-in / Check-out como eventos del día correspondiente
+          agregar(d.inn, { hora: '15:00', icono: '🏨', texto: 'Check-in', color: 'bg-teal-500' });
+          agregar(d.out, { hora: '12:00', icono: '🧳', texto: 'Check-out', color: 'bg-orange-500' });
+
+          data.solicitudes.forEach(s => {
+            const fecha = extraer(s.descripcion, 'Fecha');
+            const hora = extraer(s.descripcion, 'Hora') || (s.tipo === 'Alimentación' ? '08:00' : '00:00');
+            agregar(fecha, {
+              hora,
+              icono: s.tipo === 'Alimentación' ? '🍽️' : s.tipo === 'Traslado' ? '🚐' : '📌',
+              texto: s.descripcion,
+              estado: s.estado,
+              color: s.tipo === 'Alimentación' ? 'bg-orange-400' : s.tipo === 'Traslado' ? 'bg-teal-500' : 'bg-gray-400',
+            });
+          });
+
+          (data.serviciosReservados || []).forEach(s => {
+            agregar(s.fecha, { hora: '00:00', icono: '🏝️', texto: s.nombre, color: 'bg-indigo-400' });
+          });
+
+          // Construye todos los días entre check-in y check-out (aunque no tengan eventos)
+          const dias: string[] = [];
+          if (d.inn && d.out) {
+            let cursor = new Date(d.inn + 'T12:00:00');
+            const fin = new Date(d.out + 'T12:00:00');
+            let i = 0;
+            while (cursor <= fin && i < 30) {
+              dias.push(cursor.toISOString().slice(0, 10));
+              cursor.setDate(cursor.getDate() + 1);
+              i++;
+            }
+          }
+
+          return (
+            <div className="bg-white rounded-2xl shadow-sm p-5">
+              <h2 className="text-lg font-bold text-[#003D5C] mb-1 flex items-center gap-2">📅 Itinerario día a día</h2>
+              <p className="text-[12px] text-gray-500 mb-4">De tu llegada ({d.inn}) a tu salida ({d.out}).</p>
+
+              <div className="space-y-3">
+                {dias.map(fecha => {
+                  const eventos = (porDia[fecha] || []).sort((a, b) => a.hora.localeCompare(b.hora));
+                  const fechaObj = new Date(fecha + 'T12:00:00');
+                  return (
+                    <div key={fecha} className="flex gap-3">
+                      <div className="w-14 shrink-0 text-center pt-1">
+                        <p className="text-[9px] uppercase text-gray-400 font-bold">{fechaObj.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
+                        <p className="text-xl font-black text-[#003D5C]">{fechaObj.getDate()}</p>
+                        <p className="text-[9px] text-gray-400">{fechaObj.toLocaleDateString('es-CO', { month: 'short' })}</p>
+                      </div>
+                      <div className="flex-1 border-l-2 border-gray-100 pl-3 pb-3">
+                        {eventos.length === 0 ? (
+                          <p className="text-[12px] text-gray-300 italic pt-1">Sin eventos programados</p>
+                        ) : (
+                          <div className="space-y-1.5">
+                            {eventos.map((ev, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${ev.color}`} />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5">
+                                    {ev.hora !== '00:00' && <span className="text-[10px] font-mono font-bold text-gray-400">{ev.hora}</span>}
+                                    <span className="text-xs">{ev.icono}</span>
+                                    {ev.estado && (
+                                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${ev.estado === 'Resuelta' ? 'bg-emerald-100 text-emerald-700' : ev.estado === 'Revisada' ? 'bg-teal-100 text-teal-700' : 'bg-orange-100 text-orange-700'}`}>{ev.estado}</span>
+                                    )}
+                                  </div>
+                                  <p className="text-[13px] text-gray-700 leading-snug">{ev.texto}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Traslados */}
-            <div>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">🚐 Traslados</p>
-              {data.solicitudes.filter(s => s.tipo === 'Traslado').length === 0 ? (
-                <p className="text-[13px] text-gray-400">Sin solicitudes de traslado registradas todavía.</p>
-              ) : (
-                <div className="space-y-1.5">
-                  {data.solicitudes.filter(s => s.tipo === 'Traslado').map(s => (
-                    <div key={s.id} className="bg-gray-50 rounded-lg p-2.5 flex items-center justify-between gap-2">
-                      <p className="text-[13px] text-gray-700">{s.descripcion}</p>
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${s.estado === 'Resuelta' ? 'bg-emerald-100 text-emerald-700' : s.estado === 'Revisada' ? 'bg-teal-100 text-teal-700' : 'bg-orange-100 text-orange-700'}`}>{s.estado}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Tours y otros servicios reservados */}
-            {data.serviciosReservados && data.serviciosReservados.length > 0 && (
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">🏝️ Tours y servicios reservados</p>
-                <div className="space-y-1.5">
-                  {data.serviciosReservados.map((s, i) => (
-                    <div key={i} className="bg-gray-50 rounded-lg p-2.5 flex items-center justify-between gap-2">
-                      <p className="text-[13px] font-bold text-gray-700">{s.nombre}</p>
-                      {s.fecha && <span className="text-[11px] text-gray-500 shrink-0">{s.fecha}</span>}
-                    </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-            )}
 
-            <p className="text-[11px] text-gray-400 pt-1">Este itinerario se actualiza solo, según lo que confirmes en Alimentos, Traslados y las cotizaciones vinculadas a tu delegación.</p>
-          </div>
-        )}
+              <p className="text-[11px] text-gray-400 pt-3 border-t border-gray-100 mt-2">Se actualiza solo, según lo que confirmes en Alimentos, Traslados y las cotizaciones vinculadas a tu delegación.</p>
+            </div>
+          );
+        })()}
 
         {/* Navegación Atrás / Siguiente */}
         <div className="flex items-center justify-between pt-3">
