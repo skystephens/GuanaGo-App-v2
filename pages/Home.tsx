@@ -151,7 +151,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               <p className="text-xs md:text-sm opacity-80">Alojamiento + Tours + Traslados</p>
             </button>
             <button 
-              onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'tour' })}
+              onClick={() => onNavigate(AppRoute.TOUR_LIST)}
               className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white p-4 md:p-6 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
             >
               <Anchor size={24} className="mb-2 md:mb-3" />

@@ -350,6 +350,58 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
         </div>
         )}
 
+        {/* Resumen del servicio — descripción + qué incluye, ANTES de pedir fecha/pasajeros */}
+        <div className="mb-8">
+           <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
+              <h3 className="text-sm font-black text-gray-800 uppercase tracking-tighter mb-4">Sobre esta experiencia</h3>
+              <p className="text-gray-500 leading-relaxed text-sm font-medium mb-6 text-justify">{data.description}</p>
+
+              {(data.duration || data.diasOperacion || data.operatingDays || data.horario || data.schedule || data.operatingHours) && (
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                   {data.duration && (
+                     <div className="bg-gray-50 rounded-2xl p-4">
+                       <div className="flex items-center gap-2 mb-1">
+                         <Clock size={14} className="text-emerald-600" />
+                         <span className="text-[10px] font-black text-gray-400 uppercase">Duración</span>
+                       </div>
+                       <p className="text-sm font-bold text-gray-800">{data.duration}</p>
+                     </div>
+                   )}
+                   {(data.diasOperacion || data.operatingDays) && (
+                     <div className="bg-gray-50 rounded-2xl p-4">
+                       <div className="flex items-center gap-2 mb-1">
+                         <Calendar size={14} className="text-emerald-600" />
+                         <span className="text-[10px] font-black text-gray-400 uppercase">Días</span>
+                       </div>
+                       <p className="text-sm font-bold text-gray-800">{data.diasOperacion || data.operatingDays}</p>
+                     </div>
+                   )}
+                   {(data.horario || data.schedule || data.operatingHours) && (
+                     <div className="bg-gray-50 rounded-2xl p-4 col-span-2">
+                       <div className="flex items-center gap-2 mb-1">
+                         <Clock size={14} className="text-emerald-600" />
+                         <span className="text-[10px] font-black text-gray-400 uppercase">Horarios de Operación</span>
+                       </div>
+                       <p className="text-sm font-bold text-gray-800">{data.horario || data.schedule || data.operatingHours}</p>
+                     </div>
+                   )}
+                </div>
+              )}
+
+              {(data.incluye || data.includes) && (
+                <div>
+                   <h4 className="text-xs font-black text-gray-600 uppercase mb-3 flex items-center gap-2">
+                     <CheckCircle size={14} className="text-emerald-500" />
+                     Qué Incluye
+                   </h4>
+                   <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+                     <p className="text-sm text-emerald-800 font-medium leading-relaxed whitespace-pre-line">{data.incluye || data.includes}</p>
+                   </div>
+                </div>
+              )}
+           </div>
+        </div>
+
         {/* Info Box / Booking Details */}
         <div className="mb-10 space-y-4">
            <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100">
@@ -592,9 +644,7 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                  </div>
                </div>
              )}
-             
-             <p className="text-gray-500 leading-relaxed text-sm font-medium mb-6 text-justify">{data.description}</p>
-             
+
              {/* 🆕 Mapa de Ubicación Aproximada - Solo para hoteles */}
              {isHotel && safeData.latLon && (
                <HotelLocationMap 
@@ -602,55 +652,6 @@ const Detail: React.FC<DetailProps> = ({ type, data: propData, onBack, onNavigat
                  title={safeData.title} 
                  approximationRadiusKm={0.5}
                />
-             )}
-             
-             {/* Información del servicio */}
-             <div className="grid grid-cols-2 gap-4 mb-6">
-               {/* Duración */}
-               {data.duration && (
-                 <div className="bg-gray-50 rounded-2xl p-4">
-                   <div className="flex items-center gap-2 mb-1">
-                     <Clock size={14} className="text-emerald-600" />
-                     <span className="text-[10px] font-black text-gray-400 uppercase">Duración</span>
-                   </div>
-                   <p className="text-sm font-bold text-gray-800">{data.duration}</p>
-                 </div>
-               )}
-               
-               {/* Días de operación */}
-               {(data.diasOperacion || data.operatingDays) && (
-                 <div className="bg-gray-50 rounded-2xl p-4">
-                   <div className="flex items-center gap-2 mb-1">
-                     <Calendar size={14} className="text-emerald-600" />
-                     <span className="text-[10px] font-black text-gray-400 uppercase">Días</span>
-                   </div>
-                   <p className="text-sm font-bold text-gray-800">{data.diasOperacion || data.operatingDays}</p>
-                 </div>
-               )}
-               
-               {/* Horarios de operación */}
-               {(data.horario || data.schedule || data.operatingHours) && (
-                 <div className="bg-gray-50 rounded-2xl p-4 col-span-2">
-                   <div className="flex items-center gap-2 mb-1">
-                     <Clock size={14} className="text-emerald-600" />
-                     <span className="text-[10px] font-black text-gray-400 uppercase">Horarios de Operación</span>
-                   </div>
-                   <p className="text-sm font-bold text-gray-800">{data.horario || data.schedule || data.operatingHours}</p>
-                 </div>
-               )}
-             </div>
-             
-             {/* Qué incluye */}
-             {(data.incluye || data.includes) && (
-               <div className="mb-6">
-                 <h4 className="text-xs font-black text-gray-600 uppercase mb-3 flex items-center gap-2">
-                   <CheckCircle size={14} className="text-emerald-500" />
-                   Qué Incluye
-                 </h4>
-                 <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
-                   <p className="text-sm text-emerald-800 font-medium leading-relaxed whitespace-pre-line">{data.incluye || data.includes}</p>
-                 </div>
-               </div>
              )}
              
              {/* Cancelación */}

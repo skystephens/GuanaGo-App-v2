@@ -17,7 +17,7 @@ const API = typeof window !== 'undefined' && window.location.hostname === 'local
   : '';
 
 interface HomeConfig { [k: string]: string }
-interface Experiencia { nombre: string; precio: number; unidad: string; tag: string; meta: string; img: string }
+interface Experiencia { nombre: string; precio: number; unidad: string; tag: string; meta: string; img: string; descripcion?: string }
 interface PaqueteIntl { id: string; nombre: string; categoria: string; duracion: string; origen: string; salidas: string; precioDesde: number; imagen: string }
 
 interface Props { onNavigate: (route: AppRoute) => void; onCotizar?: () => void }
@@ -35,6 +35,7 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
   const [heroIdx, setHeroIdx] = useState(0);
   const [mostrarTodas, setMostrarTodas] = useState(false);
   const [paquetes, setPaquetes] = useState<PaqueteIntl[]>([]);
+  const [experienciaSeleccionada, setExperienciaSeleccionada] = useState<Experiencia | null>(null);
 
   useEffect(() => {
     fetch(`${API}/api/home-config`).then(r => r.json()).then(setCfg).catch(() => {});
@@ -256,7 +257,7 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
             {(mostrarTodas ? experiencias : experiencias.slice(0, 8)).map(e => (
               <button
                 key={e.nombre}
-                onClick={() => onCotizar?.()}
+                onClick={() => setExperienciaSeleccionada(e)}
                 className="text-left bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all"
               >
                 <div className="h-36 md:h-40 bg-cover bg-center relative" style={{ backgroundImage: `url('${e.img}')` }}>
@@ -272,7 +273,7 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
                       <p className="text-[8px] uppercase tracking-wide text-slate-400 font-semibold">Desde · {e.unidad}</p>
                       <p className="font-black text-[#003D5C] text-[13px]">{fmtCOP(e.precio)}</p>
                     </div>
-                    <span className="text-[10px] font-bold text-orange-500">Reservar →</span>
+                    <span className="text-[10px] font-bold text-orange-500">Ver más →</span>
                   </div>
                 </div>
               </button>
@@ -392,6 +393,66 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
           </div>
         </div>
       </footer>
+
+      {/* ══ MODAL RESUMEN DE EXPERIENCIA ══ */}
+      {experienciaSeleccionada && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-5"
+          onClick={() => setExperienciaSeleccionada(null)}
+        >
+          <div
+            className="bg-white w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl overflow-hidden max-h-[90vh] overflow-y-auto"
+            onClick={(ev) => ev.stopPropagation()}
+          >
+            <div
+              className="h-56 bg-cover bg-center relative"
+              style={{ backgroundImage: `url('${experienciaSeleccionada.img}')` }}
+            >
+              <span className={`absolute top-3 left-3 text-white text-[9px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full backdrop-blur ${experienciaSeleccionada.tag === 'Ruta Raizal' ? 'bg-orange-500/90' : 'bg-[#003D5C]/85'}`}>
+                {experienciaSeleccionada.tag}
+              </span>
+              <button
+                onClick={() => setExperienciaSeleccionada(null)}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60"
+                aria-label="Cerrar"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6">
+              <h3 className="text-xl font-black text-[#003D5C] leading-snug">{experienciaSeleccionada.nombre}</h3>
+              <p className="text-sm text-slate-500 mt-1">{experienciaSeleccionada.meta}</p>
+
+              {experienciaSeleccionada.descripcion && (
+                <p className="text-sm text-slate-600 leading-relaxed mt-4">{experienciaSeleccionada.descripcion}</p>
+              )}
+
+              <div className="flex items-center justify-between mt-6 mb-2">
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">Desde · {experienciaSeleccionada.unidad}</p>
+                  <p className="font-black text-[#003D5C] text-2xl">{fmtCOP(experienciaSeleccionada.precio)}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => { setExperienciaSeleccionada(null); onCotizar?.(); }}
+                className="w-full mt-3 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl py-4 transition-colors"
+              >
+                Cotizar esta experiencia →
+              </button>
+              <a
+                href={wa}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full mt-2 flex items-center justify-center gap-2 border-2 border-emerald-500 text-emerald-600 font-bold rounded-xl py-3 hover:bg-emerald-50 transition-colors"
+              >
+                💬 Preguntar por WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
