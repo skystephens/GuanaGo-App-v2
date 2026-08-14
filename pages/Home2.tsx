@@ -186,7 +186,7 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
             <p className="text-[11px] opacity-80">Alojamiento + Tours</p>
           </button>
           <button
-            onClick={() => onCotizar?.()}
+            onClick={() => onNavigate(AppRoute.TOUR_LIST)}
             className="bg-gradient-to-br from-[#003D5C] to-[#2AABBB] text-white p-4 md:p-5 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
           >
             <span className="text-2xl mb-2 block">⚓</span>
