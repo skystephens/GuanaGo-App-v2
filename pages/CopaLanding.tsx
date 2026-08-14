@@ -12,7 +12,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { MessageCircle, Trophy, Users, MapPin, Calendar, ArrowRight, KeyRound, Hotel, ExternalLink } from 'lucide-react';
+import { MessageCircle, Trophy, Users, MapPin, Calendar, ArrowRight, ArrowLeft, KeyRound, Hotel, ExternalLink } from 'lucide-react';
 import { GUANA_LOGO } from '../constants';
 
 const API = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
@@ -46,7 +46,11 @@ const ESCENARIOS_CONFIRMADOS = [
 interface HotelDisp { id: string; nombre: string; tipo: string; precioNoche: number; imagen: string; capacidadEstimada: number }
 interface ServicioDestacado { id: string; nombre: string; tipo: string; precio: number; descripcion: string; imagen: string }
 
-const CopaLanding: React.FC = () => {
+interface CopaLandingProps {
+  onBack?: () => void;
+}
+
+const CopaLanding: React.FC<CopaLandingProps> = ({ onBack }) => {
   const [equipos, setEquipos] = useState<{ club: string; ciudad: string }[]>([]);
   const [hoteles, setHoteles] = useState<HotelDisp[]>([]);
   const [servicios, setServicios] = useState<{ tours: ServicioDestacado[]; traslados: ServicioDestacado[]; cultura: ServicioDestacado[] }>({ tours: [], traslados: [], cultura: [] });
@@ -72,6 +76,15 @@ const CopaLanding: React.FC = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
         <div className="max-w-4xl mx-auto px-5 py-6">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 transition-colors mb-4"
+              aria-label="Volver al inicio"
+            >
+              <ArrowLeft size={18} />
+            </button>
+          )}
           <div className="flex items-center gap-3 mb-4">
             <div className="bg-white rounded-2xl w-12 h-12 p-1.5 flex items-center justify-center shadow-md shrink-0">
               <img src={GUANA_LOGO} alt="GuiaSAI" className="w-full h-full object-contain" />

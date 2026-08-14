@@ -366,7 +366,7 @@ const App: React.FC = () => {
       case AppRoute.CULTURA_EVENTOS: return <CulturaEventos onNavigate={navigateTo} onBack={goBack} />;
       case AppRoute.DESTINOS_INTERNACIONALES: return <DestinosInternacionales onNavigate={navigateTo} onBack={goBack} />;
       case AppRoute.ADMIN_COPA_DELEGACION: return <AdminCopaDelegacion onBack={goBack} />;
-      case AppRoute.COPA_LANDING: return <CopaLanding />;
+      case AppRoute.COPA_LANDING: return <CopaLanding onBack={goBack} />;
       case AppRoute.ADMIN_TORRE_COPA: return <AdminTorreCopa onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.COPA_PORTAL: return <CopaPortal />;
       case AppRoute.ADMIN_TRASLADOS_CALC: return <AdminTrasladosCalc onBack={goBack} />;
