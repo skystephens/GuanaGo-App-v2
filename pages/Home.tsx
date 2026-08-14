@@ -159,7 +159,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               <p className="text-xs md:text-sm opacity-80">Explora la isla</p>
             </button>
             <button 
-              onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'hotel' })}
+              onClick={() => onNavigate(AppRoute.HOTEL_LIST)}
               className="bg-gradient-to-br from-amber-500 to-orange-500 text-white p-4 md:p-6 rounded-2xl text-left shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
             >
               <Bed size={24} className="mb-2 md:mb-3" />
@@ -330,7 +330,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                 <p className="text-[10px] text-gray-400 mt-0.5">{t('home.subtitle')}</p>
               </div>
               <button
-                onClick={() => onNavigate(AppRoute.DYNAMIC_ITINERARY, { category: 'hotel' })}
+                onClick={() => onNavigate(AppRoute.HOTEL_LIST)}
                 className="text-emerald-600 text-xs md:text-sm font-bold hover:underline"
               >
                 Ver todos →
