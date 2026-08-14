@@ -82,7 +82,6 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
             <a href="#experiencias" className="hover:text-teal-600">Experiencias</a>
             <a href="#raizal" className="hover:text-teal-600">Ruta Raizal</a>
-            <button onClick={() => onNavigate(AppRoute.MIS_COTIZACIONES)} className="hover:text-teal-600">Mis cotizaciones</button>
           </div>
           <div className="flex items-center gap-2">
             {paquetes.length > 0 && (
