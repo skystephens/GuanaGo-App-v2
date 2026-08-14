@@ -240,6 +240,25 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
         </div>
       )}
 
+      {/* ══ COPA DE LA ISLA — banner del torneo ══ */}
+      <div className="max-w-6xl mx-auto px-5 pt-6">
+        <button
+          onClick={() => onNavigate(AppRoute.COPA_LANDING)}
+          className="w-full flex items-center justify-between gap-4 bg-gradient-to-r from-[#003D5C] to-[#0a6a86] text-white p-5 md:p-7 rounded-3xl shadow-md hover:shadow-lg hover:scale-[1.01] transition-all active:scale-[0.99] text-left overflow-hidden relative"
+        >
+          <div className="flex items-center gap-4 relative z-10">
+            <span className="text-4xl md:text-5xl">🏐</span>
+            <div>
+              <p className="text-[10px] font-bold tracking-[.14em] uppercase text-cyan-200 mb-1">18–21 de diciembre · San Andrés Islas</p>
+              <h4 className="font-black text-lg md:text-2xl">Copa de la Isla 2026</h4>
+              <p className="text-[12px] md:text-sm text-cyan-100/85 mt-1">Escenarios, categorías, hospedaje y todo el torneo en un solo lugar</p>
+            </div>
+          </div>
+          <span className="text-2xl shrink-0 relative z-10">→</span>
+          <span className="absolute -right-6 -bottom-8 text-[140px] opacity-10 select-none">🏐</span>
+        </button>
+      </div>
+
       {/* ══ EXPERIENCIAS ══ */}
       <section id="experiencias" className="py-16">
         <div className="max-w-6xl mx-auto px-5">
