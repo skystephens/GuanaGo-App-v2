@@ -194,7 +194,7 @@ function DetallePaquete({ paquete: p, relacionados, onBack, onVerOtro, onSalir }
       <div className="max-w-5xl mx-auto px-5 py-6">
         {imagenes.length > 0 ? (
           <div>
-            <div className="h-56 md:h-80 rounded-2xl overflow-hidden bg-cover bg-center" style={{ backgroundImage: `url('${imagenes[fotoActiva]}')` }} />
+            <div className="aspect-[27/16] rounded-2xl overflow-hidden bg-cover bg-center" style={{ backgroundImage: `url('${imagenes[fotoActiva]}')` }} />
             {imagenes.length > 1 && (
               <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar">
                 {imagenes.map((img, i) => (
@@ -209,7 +209,7 @@ function DetallePaquete({ paquete: p, relacionados, onBack, onVerOtro, onSalir }
             )}
           </div>
         ) : (
-          <div className="h-56 md:h-80 rounded-2xl flex items-center justify-center text-7xl" style={{ background: 'linear-gradient(115deg,#003D5C,#2AABBB)' }}>{emoji}</div>
+          <div className="aspect-[27/16] rounded-2xl flex items-center justify-center text-7xl" style={{ background: 'linear-gradient(115deg,#003D5C,#2AABBB)' }}>{emoji}</div>
         )}
 
         <div className="mt-5">
