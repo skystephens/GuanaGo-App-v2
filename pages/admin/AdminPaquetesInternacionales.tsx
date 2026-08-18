@@ -15,7 +15,7 @@ const API = typeof window !== 'undefined' && window.location.hostname === 'local
 interface Paquete {
   id: string; nombre: string; categoria: string; duracion: string; origen: string;
   salidas: string; precioDesde: number; precioSencilla: number | null; precioNino: number | null;
-  flyerDrive: string; imagen: string; notas: string; operador: string; estado: string;
+  flyerDrive: string; imagen: string; notas: string; operador: string; estado: string; publicado: boolean;
 }
 
 interface Props { onBack: () => void; onNavigate: (route: AppRoute) => void; }
@@ -59,7 +59,7 @@ export default function AdminPaquetesInternacionales({ onBack }: Props) {
           </button>
           <div>
             <h1 className="font-bold text-lg flex items-center gap-2"><Globe2 size={18} className="text-indigo-400" /> Paquetes Internacionales</h1>
-            <p className="text-[11px] text-gray-500">{paquetes.filter(p => p.estado === 'Activo').length} activos de {paquetes.length} totales</p>
+            <p className="text-[11px] text-gray-500">{paquetes.filter(p => p.estado === 'Activo').length} activos · {paquetes.filter(p => p.publicado).length} publicados de {paquetes.length} totales</p>
           </div>
         </div>
         <button onClick={() => setModal('nuevo')} className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-xl text-xs font-bold">
@@ -82,6 +82,9 @@ export default function AdminPaquetesInternacionales({ onBack }: Props) {
               <div className="flex items-center gap-2 mb-1">
                 <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${p.estado === 'Activo' ? 'bg-emerald-900/40 text-emerald-400' : 'bg-gray-800 text-gray-400'}`}>
                   {p.estado || 'Sin estado'}
+                </span>
+                <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${p.publicado ? 'bg-teal-900/40 text-teal-400' : 'bg-orange-900/40 text-orange-400'}`}>
+                  {p.publicado ? 'Publicado' : 'Oculto'}
                 </span>
                 <span className="text-[10px] text-indigo-400 font-bold">{p.categoria}</span>
               </div>
@@ -126,6 +129,7 @@ function ModalPaquete({ paquete, onClose, onSaved, onDelete }: {
     notas: paquete?.notas || 'USD por persona; pago en COP a TRM. Doble/triple mismo valor.',
     operador: paquete?.operador || 'Mayorista (marca blanca)',
     estado: paquete?.estado || 'Activo',
+    publicado: paquete?.publicado ?? false,
   });
   const [saving, setSaving] = useState(false);
 
@@ -193,7 +197,11 @@ function ModalPaquete({ paquete, onClose, onSaved, onDelete }: {
               <option>Activo</option><option>Inactivo</option><option>Agotado</option>
             </select>
           </Campo>
-          <p className="text-[10px] text-gray-500">Solo los paquetes con estado <b>Activo</b> se muestran en la app.</p>
+          <label className="flex items-center gap-2 text-sm text-white bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 cursor-pointer">
+            <input type="checkbox" checked={form.publicado} onChange={e => setForm({ ...form, publicado: e.target.checked })} className="w-4 h-4 accent-teal-500" />
+            Publicado (visible en Otros Destinos)
+          </label>
+          <p className="text-[10px] text-gray-500">Solo se muestran en la app los paquetes con estado <b>Activo</b> Y <b>Publicado</b> marcado — los dos a la vez.</p>
 
           {esEdicion && onDelete && (
             <button onClick={onDelete} className="w-full py-2 mt-2 border border-red-900 text-red-400 hover:bg-red-950/40 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5">

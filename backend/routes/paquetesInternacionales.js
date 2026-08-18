@@ -33,7 +33,7 @@ router.get('/', async (_req, res) => {
       return res.json([]);
     }
 
-    const formula = encodeURIComponent(`{Estado}="Activo"`);
+    const formula = encodeURIComponent(`AND({Estado}="Activo", {Publicado}=1)`);
     const r = await fetch(
       `https://api.airtable.com/v0/${base}/${encodeURIComponent(TABLE)}?filterByFormula=${formula}&pageSize=50`,
       { headers: { Authorization: `Bearer ${key}` } },
@@ -107,6 +107,7 @@ router.get('/admin', async (_req, res) => {
       notas: rec.fields['Notas_Tarifa'] || '',
       operador: rec.fields['Operador'] || '',
       estado: rec.fields['Estado'] || '',
+      publicado: rec.fields['Publicado'] === true,
     }));
     paquetes.sort((a, b) => a.nombre.localeCompare(b.nombre));
     res.json(paquetes);
@@ -131,6 +132,7 @@ const buildFields = (body) => {
   if (body.notas !== undefined) fields['Notas_Tarifa'] = body.notas;
   if (body.operador !== undefined) fields['Operador'] = body.operador;
   if (body.estado !== undefined) fields['Estado'] = body.estado;
+  if (body.publicado !== undefined) fields['Publicado'] = !!body.publicado;
   return fields;
 };
 
