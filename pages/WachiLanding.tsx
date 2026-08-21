@@ -114,9 +114,11 @@ const WachiLanding: React.FC<WachiLandingProps> = ({ onBack }) => {
                 <div className="text-[10px] uppercase tracking-wider text-[#C9DCE4]">Alianza con</div>
                 <div className="text-[13px] font-bold text-white tracking-wide">Club Wachi</div>
               </div>
-              <div className="w-9 h-9 rounded-full bg-[#F5831F] border-2 border-white/40 flex items-center justify-center text-[#003D5C] font-mono font-bold text-sm">
-                W
-              </div>
+              <img
+                src="/logo-wachi.jpg"
+                alt="Club Deportivo Wachi"
+                className="w-11 h-11 rounded-full border-2 border-white/40 object-cover"
+              />
             </div>
           </div>
 
