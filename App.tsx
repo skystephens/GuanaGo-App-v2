@@ -57,6 +57,7 @@ import AdminCaribbeanNight from './pages/admin/AdminCaribbeanNight';
 import AdminArtistas from './pages/admin/AdminArtistas';
 import AdminCampanas from './pages/admin/AdminCampanas';
 import Home2 from './pages/Home2';
+import WachiLanding from './pages/WachiLanding';
 import AdminEditorHome from './pages/admin/AdminEditorHome';
 import AdminCRM from './pages/admin/AdminCRM';
 import CulturaEventos from './pages/CulturaEventos';
@@ -215,6 +216,9 @@ const App: React.FC = () => {
     if (params.get('p') === 'copa-torneo') {
       setCurrentRoute(AppRoute.COPA_LANDING);
     }
+    if (params.get('p') === 'wachi2026') {
+      setCurrentRoute(AppRoute.WACHI_LANDING);
+    }
     if (params.get('p') === 'copa' || params.get('copa')) {
       setCurrentRoute(AppRoute.COPA_PORTAL);
     }
@@ -367,6 +371,7 @@ const App: React.FC = () => {
       case AppRoute.DESTINOS_INTERNACIONALES: return <DestinosInternacionales onNavigate={navigateTo} onBack={goBack} />;
       case AppRoute.ADMIN_COPA_DELEGACION: return <AdminCopaDelegacion onBack={goBack} />;
       case AppRoute.COPA_LANDING: return <CopaLanding onBack={goBack} />;
+      case AppRoute.WACHI_LANDING: return <WachiLanding onBack={goBack} />;
       case AppRoute.ADMIN_TORRE_COPA: return <AdminTorreCopa onBack={goBack} onNavigate={navigateTo} />;
       case AppRoute.COPA_PORTAL: return <CopaPortal />;
       case AppRoute.ADMIN_TRASLADOS_CALC: return <AdminTrasladosCalc onBack={goBack} />;
