@@ -681,6 +681,27 @@ const AdminTasks: React.FC<AdminTasksProps> = ({ onBack, onNavigate }) => {
     }
   };
 
+  // Guardar edición completa de una tarea existente (con sincronización a Airtable)
+  const handleUpdateTaskFull = async (taskId: string, changes: Partial<ProjectTask>) => {
+    const updatedAt = new Date().toISOString().split('T')[0];
+
+    // Actualizar localmente primero (optimistic update)
+    setTasks(prev => prev.map(task =>
+      task.id === taskId ? { ...task, ...changes, updatedAt } : task
+    ));
+
+    // Sincronizar con Airtable
+    try {
+      await updateTarea(taskId, { ...changes, updatedAt });
+      console.log(`✅ Tarea ${taskId} editada y sincronizada en Airtable`);
+    } catch (error) {
+      console.error('❌ Error sincronizando edición de tarea:', error);
+      // No revertimos el cambio local para mejor UX
+    }
+
+    setEditingTask(null);
+  };
+
   // Análisis local inteligente de tareas
   const runAIAnalysis = async () => {
     setIsAnalyzing(true);
@@ -1098,6 +1119,12 @@ ${sinDependencias[0] ? `Enfocarse en: **"${sinDependencias[0].titulo}"** - es la
                         {config.label}
                       </button>
                     ))}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setEditingTask(task.id); }}
+                      className="px-2 py-1 rounded text-xs flex items-center gap-1 bg-gray-700 text-cyan-400 hover:bg-gray-600 ml-auto"
+                    >
+                      <Edit3 size={12} /> Editar
+                    </button>
                   </div>
                 </div>
               )}
@@ -1157,6 +1184,19 @@ ${sinDependencias[0] ? `Enfocarse en: **"${sinDependencias[0].titulo}"** - es la
           archivosReferencia={archivosReferencia.filter(a => a !== 'todos')}
         />
       )}
+
+      {editingTask && (() => {
+        const taskToEdit = tasks.find(t => t.id === editingTask);
+        if (!taskToEdit) return null;
+        return (
+          <EditTaskModal
+            task={taskToEdit}
+            onClose={() => setEditingTask(null)}
+            onSave={(changes) => handleUpdateTaskFull(taskToEdit.id, changes)}
+            archivosReferencia={archivosReferencia.filter(a => a !== 'todos')}
+          />
+        );
+      })()}
     </div>
   );
 };
@@ -1307,6 +1347,155 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ onClose, onSave, archivosRe
             className="flex-1 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Crear Tarea
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Modal para editar una tarea existente
+interface EditTaskModalProps {
+  task: ProjectTask;
+  onClose: () => void;
+  onSave: (changes: Partial<ProjectTask>) => void;
+  archivosReferencia: string[];
+}
+
+const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, onClose, onSave, archivosReferencia }) => {
+  const [titulo, setTitulo] = useState(task.titulo);
+  const [descripcion, setDescripcion] = useState(task.descripcion);
+  const [prioridad, setPrioridad] = useState<TaskPriority>(task.prioridad);
+  const [categoria, setCategoria] = useState<TaskCategory>(task.categoria);
+  const [archivoRef, setArchivoRef] = useState(task.archivoReferencia || '');
+  const [seccionRef, setSeccionRef] = useState(task.seccionReferencia || '');
+  const [estimacion, setEstimacion] = useState(task.estimacionHoras ? String(task.estimacionHoras) : '');
+
+  const handleSave = () => {
+    if (!titulo.trim()) return;
+
+    onSave({
+      titulo,
+      descripcion,
+      prioridad,
+      categoria,
+      archivoReferencia: archivoRef || undefined,
+      seccionReferencia: seccionRef || undefined,
+      estimacionHoras: estimacion ? parseInt(estimacion) : undefined,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+          <h3 className="font-bold">✏️ Editar Tarea</h3>
+          <button onClick={onClose} className="p-1 hover:bg-gray-700 rounded">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-4">
+          <div>
+            <label className="text-xs text-gray-400 block mb-1">Título *</label>
+            <input
+              type="text"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              placeholder="Nombre de la tarea..."
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-400 block mb-1">Descripción</label>
+            <textarea
+              value={descripcion}
+              onChange={(e) => setDescripcion(e.target.value)}
+              placeholder="Describe la tarea..."
+              rows={5}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Prioridad</label>
+              <select
+                value={prioridad}
+                onChange={(e) => setPrioridad(e.target.value as TaskPriority)}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm"
+              >
+                {Object.entries(TASK_PRIORITY_CONFIG).map(([key, config]) => (
+                  <option key={key} value={key}>{config.icon} {config.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Categoría</label>
+              <select
+                value={categoria}
+                onChange={(e) => setCategoria(e.target.value as TaskCategory)}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm"
+              >
+                {Object.entries(TASK_CATEGORY_CONFIG).map(([key, config]) => (
+                  <option key={key} value={key}>{config.icon} {config.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-400 block mb-1">Archivo de referencia</label>
+            <select
+              value={archivoRef}
+              onChange={(e) => setArchivoRef(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm"
+            >
+              <option value="">Sin archivo</option>
+              {archivosReferencia.map(archivo => (
+                <option key={archivo} value={archivo}>{archivo}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-400 block mb-1">Sección de referencia</label>
+            <input
+              type="text"
+              value={seccionRef}
+              onChange={(e) => setSeccionRef(e.target.value)}
+              placeholder="Ej: Fase 2: Contenido"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-400 block mb-1">Estimación (horas)</label>
+            <input
+              type="number"
+              value={estimacion}
+              onChange={(e) => setEstimacion(e.target.value)}
+              placeholder="8"
+              min="1"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-gray-700 flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!titulo.trim()}
+            className="flex-1 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Guardar Cambios
           </button>
         </div>
       </div>
