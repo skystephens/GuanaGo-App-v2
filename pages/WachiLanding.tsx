@@ -126,16 +126,25 @@ const WachiLanding: React.FC<WachiLandingProps> = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-[#F6F1E7] text-[#10242C]">
       {/* HERO */}
-      <header className="relative overflow-hidden bg-[#003D5C] text-[#F6F1E7] pt-10 pb-16">
+      <header className="relative overflow-hidden pt-10 pb-16 text-[#F6F1E7]" style={{ background: 'linear-gradient(150deg, #003664 0%, #003664 55%, #02ABE2 130%)' }}>
         <svg
           viewBox="0 0 100 100"
-          className="pointer-events-none absolute -top-10 -right-10 w-56 h-56 opacity-10"
+          className="pointer-events-none absolute -top-10 -right-10 w-56 h-56 opacity-20"
           fill="none"
         >
           <circle cx="50" cy="50" r="48" stroke="white" strokeWidth="2" />
           <path d="M50 2C50 2 30 25 50 50C70 75 50 98 50 98" stroke="white" strokeWidth="2" />
           <path d="M2 50C2 50 25 30 50 50C75 70 98 50 98 50" stroke="white" strokeWidth="2" />
           <path d="M14 20C14 20 35 35 50 50C65 65 86 80 86 80" stroke="white" strokeWidth="2" />
+        </svg>
+        <svg
+          viewBox="0 0 100 100"
+          className="pointer-events-none absolute -bottom-16 -left-16 w-72 h-72 opacity-10"
+          fill="none"
+        >
+          <circle cx="50" cy="50" r="48" stroke="#8FE3DC" strokeWidth="1.5" />
+          <path d="M50 2C50 2 30 25 50 50C70 75 50 98 50 98" stroke="#8FE3DC" strokeWidth="1.5" />
+          <path d="M2 50C2 50 25 30 50 50C75 70 98 50 98 50" stroke="#8FE3DC" strokeWidth="1.5" />
         </svg>
 
         <div className="max-w-3xl mx-auto px-6">
@@ -198,24 +207,19 @@ const WachiLanding: React.FC<WachiLandingProps> = ({ onBack }) => {
         }}
       />
 
-      {/* PHOTO STRIP — placeholder hasta subir fotos reales del equipo */}
-      <section className="py-6 bg-[#F6F1E7]">
+      {/* PHOTO STRIP — fotos reales del equipo en acción */}
+      <section className="py-6" style={{ background: 'linear-gradient(180deg, #003664 0%, #F6F1E7 0%)' }}>
         <div className="max-w-3xl mx-auto px-6 grid grid-cols-3 gap-3">
-          {['Foto del equipo', 'Jugadores en entrenamiento', 'Torneo anterior'].map((label, i) => (
-            <div
-              key={i}
-              className="aspect-[4/3] rounded-lg border border-dashed border-[#003D5C]/30 flex flex-col items-center justify-center gap-1.5 text-[#003D5C] text-center p-3"
-              style={{
-                backgroundImage:
-                  'repeating-linear-gradient(135deg, rgba(0,61,92,0.05) 0 10px, rgba(0,61,92,0.09) 10px 20px)',
-              }}
-            >
-              <svg viewBox="0 0 24 24" className="w-6 h-6 opacity-55" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                <rect x="3" y="6" width="18" height="14" rx="2" />
-                <circle cx="12" cy="13" r="3.5" />
-                <path d="M8 6l1.5-2h5L16 6" />
-              </svg>
-              <span className="text-[11px] font-mono opacity-70 leading-tight">{label}<br />próximamente</span>
+          {[
+            { src: '/wachi-accion-1.jpg', label: 'Servicio' },
+            { src: '/wachi-accion-2.jpg', label: 'Ataque' },
+            { src: '/wachi-accion-3.jpg', label: 'Bloqueo' },
+          ].map((foto, i) => (
+            <div key={i} className="relative aspect-[4/3] rounded-lg overflow-hidden border border-[#003664]/15">
+              <img src={foto.src} alt={`Club Wachi — ${foto.label}`} className="w-full h-full object-cover" />
+              <span className="absolute bottom-1.5 left-1.5 bg-black/40 text-white text-[10px] font-mono uppercase tracking-wide px-2 py-0.5 rounded-full">
+                {foto.label}
+              </span>
             </div>
           ))}
         </div>
