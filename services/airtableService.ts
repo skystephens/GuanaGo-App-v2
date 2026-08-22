@@ -1194,6 +1194,58 @@ export async function getAllLeads(maxRecords = 150) {
   }));
 }
 
+/**
+ * Crear lead desde la landing pública de alianzas tipo Club Wachi.
+ * Usa los nombres de campo reales de la tabla Leads (verificados contra el
+ * schema actual — createLead() de arriba usa nombres desactualizados).
+ * Requiere que existan los campos Codigo_Club y Codigo_Jugador en Leads
+ * (agregados manualmente por Sky, no vía MCP).
+ */
+export async function createLeadWachi(leadData: {
+  nombre: string;
+  telefono: string;
+  codigoClub: string;
+  codigoJugador?: string;
+}) {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    console.warn('⚠️ Airtable credentials not configured');
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.LEADS)}`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        records: [{
+          fields: {
+            Nombre: leadData.nombre,
+            WhatsApp: leadData.telefono,
+            'Fuente del Lead': 'Recomendación',
+            'Detalles Adicionales': `Alianza Club Wachi — landing /?p=wachi2026`,
+            Estado_del_Lead: 'Nuevo',
+            Fecha_de_Registro: new Date().toISOString(),
+            Codigo_Club: leadData.codigoClub,
+            ...(leadData.codigoJugador ? { Codigo_Jugador: leadData.codigoJugador } : {}),
+          }
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Error creating lead: ${response.status} — ${errText}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ Lead Wachi creado:', data.records[0].id);
+    return data.records[0];
+  } catch (error) {
+    console.error('❌ Error creando lead Wachi:', error);
+    throw error;
+  }
+}
+
 export async function createLead(leadData: {
   nombre: string;
   email: string;
@@ -2773,6 +2825,7 @@ export const airtableService = {
   
   // Leads
   createLead,
+  createLeadWachi,
   
   // GUANA Points / Usuarios
   getUserByEmail,

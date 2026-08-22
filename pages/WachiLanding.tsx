@@ -10,6 +10,11 @@
 
 import React, { useState } from 'react';
 import { GUANA_LOGO } from '../constants';
+import { createLeadWachi } from '../services/airtableService';
+
+const CODIGO_CLUB = 'WACHI2026';
+
+const normalizarCodigo = (raw: string) => raw.trim().toUpperCase().replace(/\s+/g, '');
 
 const cop = (n: number) => `$${Math.round(n || 0).toLocaleString('es-CO')}`;
 
@@ -73,16 +78,49 @@ const WachiLanding: React.FC<WachiLandingProps> = ({ onBack }) => {
   const [telefono, setTelefono] = useState('');
   const [codigo, setCodigo] = useState('');
   const [enviado, setEnviado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const scrollToForm = () => {
     document.getElementById('wachi-form')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // v1: solo confirmación visual. Persistencia real a Leads (Codigo_Club /
-    // Codigo_Jugador) se conecta en v2, ver CLAUDE_CODE_WACHI_LANDING.md.
-    setEnviado(true);
+    if (!nombre.trim() || !telefono.trim()) return;
+
+    setEnviando(true);
+    setError(null);
+
+    const codigoNormalizado = codigo ? normalizarCodigo(codigo) : undefined;
+
+    try {
+      await createLeadWachi({
+        nombre: nombre.trim(),
+        telefono: telefono.trim(),
+        codigoClub: CODIGO_CLUB,
+        codigoJugador: codigoNormalizado,
+      });
+
+      // Persistir atribución para que otras secciones del sitio (tours,
+      // alojamientos, traslados) puedan adjuntarla si el usuario navega
+      // fuera de esta landing y cotiza después. Ver CLAUDE_CODE_WACHI_LANDING.md §7.
+      try {
+        localStorage.setItem('guiasai_ref_club', CODIGO_CLUB);
+        if (codigoNormalizado) {
+          localStorage.setItem('guiasai_ref_jugador', codigoNormalizado);
+        }
+      } catch {
+        // localStorage puede fallar en navegación privada — no bloquea el envío
+      }
+
+      setEnviado(true);
+    } catch (err) {
+      console.error('Error enviando formulario Wachi:', err);
+      setError('No pudimos enviar tu solicitud. Intenta de nuevo o escríbenos directo por WhatsApp.');
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -236,10 +274,14 @@ const WachiLanding: React.FC<WachiLandingProps> = ({ onBack }) => {
               </div>
               <button
                 type="submit"
-                className="justify-self-start mt-1 bg-[#F5831F] hover:bg-[#DE7112] text-white font-semibold text-[15px] px-7 py-3.5 rounded-lg transition-transform hover:-translate-y-0.5"
+                disabled={enviando}
+                className="justify-self-start mt-1 bg-[#F5831F] hover:bg-[#DE7112] text-white font-semibold text-[15px] px-7 py-3.5 rounded-lg transition-transform hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
               >
-                Enviar y ver disponibilidad
+                {enviando ? 'Enviando...' : 'Enviar y ver disponibilidad'}
               </button>
+              {error && (
+                <p className="text-[13px] text-red-600 -mt-2">{error}</p>
+              )}
             </form>
           )}
         </div>
