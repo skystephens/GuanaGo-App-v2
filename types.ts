@@ -316,6 +316,7 @@ export enum AppRoute {
   ADMIN_COPA_DELEGACION = 'ADMIN_COPA_DELEGACION',
   COPA_LANDING = 'COPA_LANDING',
   WACHI_LANDING = 'WACHI_LANDING',
+  WACHI_PORTAL = 'WACHI_PORTAL',
   ADMIN_TORRE_COPA = 'ADMIN_TORRE_COPA',
   COPA_PORTAL = 'COPA_PORTAL',
   ADMIN_TRASLADOS_CALC = 'ADMIN_TRASLADOS_CALC',
@@ -372,11 +373,37 @@ export enum AppRoute {
   PUBLIC_QUOTE = 'PUBLIC_QUOTE',
 }
 
-export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Residente' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista' | 'ClubDeportivo';
+export type UserRole = 'tourist' | 'partner' | 'admin' | 'Turista' | 'Residente' | 'Local' | 'Socio' | 'SuperAdmin' | 'Aliado' | 'Operador' | 'Artista' | 'ClubDeportivo' | 'Acudiente';
 
 export type TaskStatus = 'pendiente' | 'en_progreso' | 'urgente_pendiente' | 'terminado' | 'bloqueado';
 export type TaskPriority = 'baja' | 'media' | 'alta' | 'critica';
 export type TaskCategory = 'backend' | 'frontend' | 'infraestructura' | 'diseno' | 'documentacion' | 'testing' | 'blockchain' | 'negocio';
+
+export interface JugadorWachi {
+  id: string;
+  nombre: string;
+  codigoJugador: string;
+  fechaNacimiento?: string;
+  club: string;
+  nombreAcudiente?: string;
+  telefonoAcudiente?: string;
+  consentimientoAcudiente: boolean;
+  metaTotal: number;
+  descripcionMeta?: string;
+  recaudado: number;
+  activo: boolean;
+}
+
+export interface TorneoClub {
+  id: string;
+  club: string;
+  nombreTorneo: string;
+  ciudad?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  estado: string; // texto libre: Proximo / En curso / Finalizado
+  notas?: string;
+}
 
 export interface ProjectTask {
   id: string;

@@ -381,6 +381,10 @@ const TABLES = {
   LEADS: 'Leads',                 // Alias legacy para compatibilidad
   EMPRESAS: 'Directorio_Mapa',    // Directorio_Mapa también funciona como Empresas/Aliados
   DIRECTORIO: 'Directorio_Mapa',  // Alias para el mapa
+
+  // Alianza Club Wachi
+  JUGADORES_WACHI: 'Jugadores_wachi',
+  TORNEOS_CLUB: 'Torneos_club',
   
   // Servicios turísticos
   SERVICIOS: 'ServiciosTuristicos_SAI',
@@ -2865,6 +2869,13 @@ export const airtableService = {
   createTarea,
   updateTarea,
   deleteTarea,
+
+  // 🏐 Alianza Club Wachi
+  getJugadoresWachi,
+  createJugadorWachi,
+  updateJugadorWachi,
+  getTorneosClub,
+  createTorneoClub,
   
   // Acceso genérico a tablas
   fetchTable,
@@ -2873,6 +2884,133 @@ export const airtableService = {
   isConfigured: () => Boolean(AIRTABLE_API_KEY && AIRTABLE_BASE_ID),
   tables: TABLES
 };
+
+import type { JugadorWachi, TorneoClub } from '../types';
+
+// =========================================================
+// 🏐 ALIANZA CLUB WACHI - Jugadores y Torneos
+// =========================================================
+
+function mapJugadorFields(record: any): JugadorWachi {
+  const f = record.fields || {};
+  return {
+    id: record.id,
+    nombre: f['Nombre'] || '',
+    codigoJugador: f['Codigo_Jugador'] || '',
+    fechaNacimiento: f['Fecha_Nacimiento'] || undefined,
+    club: f['Club'] || '',
+    nombreAcudiente: f['Nombre_Acudiente'] || undefined,
+    telefonoAcudiente: f['Telefono_Acudiente'] != null ? String(f['Telefono_Acudiente']) : undefined,
+    consentimientoAcudiente: !!f['Consentimiento_Acudiente'],
+    metaTotal: f['Meta_Total'] || 0,
+    descripcionMeta: f['Descripcion_Meta'] || undefined,
+    recaudado: f['Recaudado'] || 0,
+    activo: f['Activo'] !== false,
+  };
+}
+
+function mapJugadorToAirtableFields(j: Partial<JugadorWachi>): Record<string, any> {
+  const fields: Record<string, any> = {};
+  if (j.nombre !== undefined) fields['Nombre'] = j.nombre;
+  if (j.codigoJugador !== undefined) fields['Codigo_Jugador'] = j.codigoJugador;
+  if (j.fechaNacimiento !== undefined) fields['Fecha_Nacimiento'] = j.fechaNacimiento;
+  if (j.club !== undefined) fields['Club'] = j.club;
+  if (j.nombreAcudiente !== undefined) fields['Nombre_Acudiente'] = j.nombreAcudiente;
+  if (j.telefonoAcudiente !== undefined) fields['Telefono_Acudiente'] = Number(j.telefonoAcudiente) || j.telefonoAcudiente;
+  if (j.consentimientoAcudiente !== undefined) fields['Consentimiento_Acudiente'] = j.consentimientoAcudiente;
+  if (j.metaTotal !== undefined) fields['Meta_Total'] = j.metaTotal;
+  if (j.descripcionMeta !== undefined) fields['Descripcion_Meta'] = j.descripcionMeta;
+  if (j.recaudado !== undefined) fields['Recaudado'] = j.recaudado;
+  if (j.activo !== undefined) fields['Activo'] = j.activo;
+  return fields;
+}
+
+export async function getJugadoresWachi(club?: string): Promise<JugadorWachi[]> {
+  const records = await fetchTable(TABLES.JUGADORES_WACHI, club ? { filterByFormula: `{Club}="${club}"` } : {});
+  return records.map(mapJugadorFields);
+}
+
+export async function createJugadorWachi(jugador: Omit<JugadorWachi, 'id' | 'recaudado'>): Promise<JugadorWachi | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return null;
+  try {
+    const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.JUGADORES_WACHI)}`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ records: [{ fields: mapJugadorToAirtableFields({ ...jugador, recaudado: 0 }) }] }),
+    });
+    if (!response.ok) throw new Error(`Error creando jugador: ${response.status} — ${await response.text()}`);
+    const data = await response.json();
+    return mapJugadorFields(data.records[0]);
+  } catch (error) {
+    console.error('❌ Error creando jugador Wachi:', error);
+    throw error;
+  }
+}
+
+export async function updateJugadorWachi(id: string, changes: Partial<JugadorWachi>): Promise<JugadorWachi | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return null;
+  try {
+    const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.JUGADORES_WACHI)}/${id}`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify({ fields: mapJugadorToAirtableFields(changes) }),
+    });
+    if (!response.ok) throw new Error(`Error actualizando jugador: ${response.status} — ${await response.text()}`);
+    const data = await response.json();
+    return mapJugadorFields(data);
+  } catch (error) {
+    console.error('❌ Error actualizando jugador Wachi:', error);
+    throw error;
+  }
+}
+
+function mapTorneoFields(record: any): TorneoClub {
+  const f = record.fields || {};
+  return {
+    id: record.id,
+    club: f['Club'] || '',
+    nombreTorneo: f['Nombre_Torneo'] || '',
+    ciudad: f['Ciudad'] || undefined,
+    fechaInicio: f['Fecha_Inicio'] || undefined,
+    fechaFin: f['Fecha_Fin'] || undefined,
+    estado: f['Estado'] || 'Próximo',
+    notas: f['Notas'] || undefined,
+  };
+}
+
+export async function getTorneosClub(club?: string): Promise<TorneoClub[]> {
+  const records = await fetchTable(TABLES.TORNEOS_CLUB, club ? { filterByFormula: `{Club}="${club}"` } : {});
+  return records.map(mapTorneoFields);
+}
+
+export async function createTorneoClub(torneo: Omit<TorneoClub, 'id'>): Promise<TorneoClub | null> {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return null;
+  try {
+    const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.TORNEOS_CLUB)}`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        records: [{
+          fields: {
+            Club: torneo.club,
+            Nombre_Torneo: torneo.nombreTorneo,
+            Ciudad: torneo.ciudad,
+            Fecha_Inicio: torneo.fechaInicio,
+            Fecha_Fin: torneo.fechaFin,
+            Estado: torneo.estado,
+            Notas: torneo.notas,
+          }
+        }]
+      }),
+    });
+    if (!response.ok) throw new Error(`Error creando torneo: ${response.status} — ${await response.text()}`);
+    const data = await response.json();
+    return mapTorneoFields(data.records[0]);
+  } catch (error) {
+    console.error('❌ Error creando torneo:', error);
+    throw error;
+  }
+}
 
 // =========================================================
 // 📋 TAREAS DEL PROYECTO - CRUD con Airtable
