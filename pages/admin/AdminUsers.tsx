@@ -35,6 +35,8 @@ const ROLES = [
   { value: 'Operador',         label: 'Operador',          color: 'text-blue-400',    bg: 'bg-blue-900/40' },
   { value: 'Socio',            label: 'Socio',             color: 'text-emerald-400', bg: 'bg-emerald-900/40' },
   { value: 'Artista',          label: 'Artista',           color: 'text-pink-400',    bg: 'bg-pink-900/40' },
+  { value: 'ClubDeportivo',    label: 'Club Deportivo',    color: 'text-cyan-400',    bg: 'bg-cyan-900/40' },
+  { value: 'Acudiente',        label: 'Acudiente',         color: 'text-lime-400',    bg: 'bg-lime-900/40' },
   { value: 'Asesor',           label: 'Asesor',            color: 'text-yellow-400',  bg: 'bg-yellow-900/40' },
   { value: 'Admin',            label: 'Admin',             color: 'text-purple-400',  bg: 'bg-purple-900/40' },
   { value: 'Super_Admin',      label: 'Super Admin',       color: 'text-red-400',     bg: 'bg-red-900/40' },
