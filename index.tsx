@@ -5,6 +5,7 @@ import App from './App';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import './lib/i18n'; // ← sistema de idiomas ES/EN/PT
+import './index.css'; // ← Tailwind compilado en build (reemplaza el CDN)
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
