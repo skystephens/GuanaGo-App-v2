@@ -296,7 +296,7 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
           cotizacionId,
           servicioId: f['AlojamientosTuristicos_SAI']?.[0] || f.Servicio?.[0] || undefined,
           servicioNombre: f.Nombre || '',
-          servicioTipo: (f['AlojamientosTuristicos_SAI']?.[0] ? 'hotel' : (f['Tipo de Servicio'] || 'otro')) as CotizacionItem['servicioTipo'],
+          servicioTipo: (f['AlojamientosTuristicos_SAI']?.[0] ? 'hotel' : (f['Tipo_Item_Libre'] || f['Tipo de Servicio'] || 'otro')) as CotizacionItem['servicioTipo'],
           opcion: f['Opcion'] || undefined,
           fecha: '',
           adultos: 0, ninos: 0, bebes: 0,
@@ -729,7 +729,7 @@ function mapRecordToCotizacionItem(record: any): CotizacionItem {
     cotizacionId: f.CotizacionesGG?.[0] || '',
     servicioId: f['AlojamientosTuristicos_SAI']?.[0] || f.ServiciosTuristicos_SAI?.[0] || f.Servicio?.[0] || undefined,
     servicioNombre: f.Nombre || servicioData.Servicio || servicioData.nombre || '',
-    servicioTipo: (f['AlojamientosTuristicos_SAI']?.[0] ? 'hotel' : (f['Tipo de Servicio'] || servicioData.category || servicioData.Categoria || 'tour')) as CotizacionItem['servicioTipo'],
+    servicioTipo: (f['AlojamientosTuristicos_SAI']?.[0] ? 'hotel' : (f['Tipo_Item_Libre'] || f['Tipo de Servicio'] || servicioData.category || servicioData.Categoria || 'tour')) as CotizacionItem['servicioTipo'],
     fecha: f['Fecha Inicio'] || '',
     fechaFin: f['Fecha Fin'] || '',
     horarioInicio: servicioData['Horario Inicio'] || '',
@@ -768,6 +768,9 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
   if (item.esPersonalizado !== undefined) fields['Es Personalizado'] = item.esPersonalizado;
   if (item.descripcion !== undefined) fields['Descripcion'] = item.descripcion;
   if (item.latLon !== undefined) fields['Lat_Lon'] = item.latLon;
+  // Tipo de servicio, solo para ítems libres (los del catálogo lo derivan
+  // del link a AlojamientosTuristicos_SAI, que es de solo lectura)
+  if (item.esPersonalizado && item.servicioTipo !== undefined) fields['Tipo_Item_Libre'] = item.servicioTipo;
 
   // Imágenes adjuntas (campo de texto en Airtable — multilineText, NO Attachment).
   // Se guardan como URLs separadas por coma, igual que ImagenWP en otras tablas.
