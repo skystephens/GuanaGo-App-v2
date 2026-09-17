@@ -571,6 +571,7 @@ export interface CotizacionItem {
   esPersonalizado: boolean;           // true = ítem libre (tiquete, seguro, etc.)
   images?: string[];                  // Imágenes adjuntas en ítems libres (base64 o URLs)
   descripcion?: string;               // Descripción libre (ej. del alojamiento) en ítems libres
+  latLon?: string;                    // "lat,lon" — ubicación GPS en ítems libres, para el mapa
   status: QuoteItemStatus;
   conflictos?: string[];
   incluyeHuespedes?: number;

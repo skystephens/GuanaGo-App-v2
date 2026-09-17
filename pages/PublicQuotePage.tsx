@@ -172,7 +172,7 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
     : itemOwnImages) as string[];
   const description: string = svc?.description || svc?.descripcion || item.descripcion || '';
   const ubicacion: string   = svc?.ubicacion || '';
-  const latLon: string      = svc?.latLon || '';
+  const latLon: string      = svc?.latLon || item.latLon || '';
   const tipo: string        = svc?.tipoAlojamiento || (isHotel ? 'HOTEL' : item.servicioTipo);
   const capacidad: number   = svc?.capacidadMaxima || 0;
   const diasOp: string      = svc?.operatingDays || svc?.diasOperacion || '';
@@ -432,7 +432,7 @@ const PublicQuotePage: React.FC<Props> = ({ cotId, config, onBack, printOnLoad }
   const allMapAccommodations: MapAccommodation[] = [...itemsIncluidos, ...opciones.flatMap(op => items.filter(i => i.opcion === op))]
     .reduce<MapAccommodation[]>((acc, item) => {
       const svc = services.find(s => s.id === item.servicioId) as any;
-      const latLon: string = svc?.latLon || '';
+      const latLon: string = svc?.latLon || item.latLon || '';
       if (latLon && !acc.some(a => a.id === (item.servicioId || item.id))) {
         acc.push({ id: item.servicioId || item.id, title: item.servicioNombre, latLon });
       }
