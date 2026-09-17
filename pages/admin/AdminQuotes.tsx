@@ -30,6 +30,21 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 /** Convierte YYYY-MM-DD a Date local (evita el offset UTC de new Date("YYYY-MM-DD")) */
+// Separa un texto pegado en varias URLs de imagen — acepta coma o salto de
+// línea como separador, y además corta URLs que quedaron pegadas sin
+// separador por un accidente de copiar/pegar (ej: "...jpghttps://...").
+function parsearUrlsDeImagenes(raw: string): { validas: string[]; invalidas: string[] } {
+  const piezas = raw
+    .split(/[,\n]+/)
+    .flatMap(p => p.split(/(?<=\.(?:jpe?g|png|webp|gif))(?=https?:\/\/)/i))
+    .map(p => p.trim())
+    .filter(Boolean);
+  return {
+    validas: piezas.filter(p => /^https?:\/\//i.test(p)),
+    invalidas: piezas.filter(p => !/^https?:\/\//i.test(p)),
+  };
+}
+
 function safeDate(d: string | null | undefined): Date | null {
   if (!d) return null;
   if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
@@ -285,6 +300,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   // Estados para edición completa de items (fecha, pax)
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingItemData, setEditingItemData] = useState<Partial<CotizacionItem>>({});
+  const [editingImageUrlInput, setEditingImageUrlInput] = useState('');
 
   // Estado para edición inline de precio (solo precio, sin abrir todo el editor)
   const [inlinePriceId, setInlinePriceId] = useState<string | null>(null);
@@ -589,17 +605,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
     const raw = freeItemImageUrlInput.trim();
     if (!raw) return;
 
-    // Separa por coma o salto de línea, y además detecta el caso típico de
-    // copiar/pegar donde 2 URLs quedan pegadas sin separador
-    // (ej: "...jpghttps://...") y las corta ahí también.
-    const piezas = raw
-      .split(/[,\n]+/)
-      .flatMap(p => p.split(/(?<=\.(?:jpe?g|png|webp|gif))(?=https?:\/\/)/i))
-      .map(p => p.trim())
-      .filter(Boolean);
-
-    const validas = piezas.filter(p => /^https?:\/\//i.test(p));
-    const invalidas = piezas.filter(p => !/^https?:\/\//i.test(p));
+    const { validas, invalidas } = parsearUrlsDeImagenes(raw);
 
     if (validas.length === 0) {
       alert('No encontré ninguna URL válida (debe empezar con http:// o https://)');
@@ -1083,6 +1089,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       ...item,
       precioEditado: item.precioEditado || item.precioUnitario
     });
+    setEditingImageUrlInput('');
   };
 
   const handleSaveEditItem = async (itemId: string) => {
@@ -1120,6 +1127,8 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
         ? { servicioNombre: editingItemData.servicioNombre } : {}),
       // Imágenes: solo si cambiaron (ítems libres)
       ...(editingItemData.images !== undefined ? { images: editingItemData.images } : {}),
+      ...(editingItemData.descripcion !== undefined ? { descripcion: editingItemData.descripcion } : {}),
+      ...(editingItemData.latLon !== undefined ? { latLon: editingItemData.latLon } : {}),
     };
     const saved = await updateCotizacionItem(itemId, patchFields);
     if (!saved) {
@@ -1142,6 +1151,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const handleCancelEditItem = () => {
     setEditingItemId(null);
     setEditingItemData({});
+    setEditingImageUrlInput('');
   };
 
   /** Guarda solo el precio editado inline, recalcula subtotal y persiste */
@@ -2516,6 +2526,80 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                       </label>
                                     )}
                                   </div>
+
+                                  {/* Texto de las URLs, para verlas/copiarlas (no solo la miniatura) */}
+                                  {(editingItemData.images ?? item.images ?? []).length > 0 && (
+                                    <div className="mt-2 space-y-1">
+                                      {(editingItemData.images ?? item.images ?? []).map((url, idx) => (
+                                        <p key={idx} className="text-[10px] text-gray-500 truncate" title={url}>{idx + 1}. {url}</p>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {/* Pegar URL(s) de imagen */}
+                                  {(editingItemData.images ?? item.images ?? []).length < 4 && (
+                                    <div className="flex gap-1.5 mt-2 items-start">
+                                      <textarea
+                                        value={editingImageUrlInput}
+                                        onChange={e => setEditingImageUrlInput(e.target.value)}
+                                        rows={2}
+                                        placeholder="Pega una o varias URLs de imagen separadas por coma"
+                                        className="flex-1 px-2.5 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-xs focus:border-purple-500 focus:outline-none resize-none"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const raw = editingImageUrlInput.trim();
+                                          if (!raw) return;
+                                          const { validas, invalidas } = parsearUrlsDeImagenes(raw);
+                                          if (validas.length === 0) { alert('No encontré ninguna URL válida'); return; }
+                                          const current = editingItemData.images ?? item.images ?? [];
+                                          const espacio = 4 - current.length;
+                                          const aAgregar = validas.slice(0, espacio);
+                                          setEditingItemData(p => ({ ...p, images: [...current, ...aAgregar].slice(0, 4) }));
+                                          setEditingImageUrlInput('');
+                                          const sobrantes = validas.length - aAgregar.length;
+                                          if (invalidas.length > 0 || sobrantes > 0) {
+                                            const avisos = [];
+                                            if (invalidas.length > 0) avisos.push(`${invalidas.length} URL(s) mal formada(s) ignorada(s)`);
+                                            if (sobrantes > 0) avisos.push(`${sobrantes} imagen(es) no entraron (máximo 4)`);
+                                            alert(avisos.join('\n'));
+                                          }
+                                        }}
+                                        disabled={!editingImageUrlInput.trim()}
+                                        className="px-2.5 py-1.5 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 rounded-lg text-white text-xs font-bold shrink-0"
+                                      >
+                                        Agregar
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Descripción (ítems libres) */}
+                              {item.esPersonalizado && (
+                                <div>
+                                  <label className="block text-[10px] text-gray-500 mb-1">Descripción</label>
+                                  <textarea
+                                    value={editingItemData.descripcion ?? item.descripcion ?? ''}
+                                    onChange={e => setEditingItemData({ ...editingItemData, descripcion: e.target.value })}
+                                    rows={3}
+                                    placeholder="Ej: Habitación doble con baño privado, aire acondicionado, desayuno incluido..."
+                                    className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm resize-none"
+                                  />
+                                </div>
+                              )}
+
+                              {/* Ubicación GPS (ítems libres) */}
+                              {item.esPersonalizado && (
+                                <div>
+                                  <label className="block text-[10px] text-gray-500 mb-1">Ubicación GPS (para el mapa)</label>
+                                  <input
+                                    value={editingItemData.latLon ?? item.latLon ?? ''}
+                                    onChange={e => setEditingItemData({ ...editingItemData, latLon: e.target.value })}
+                                    placeholder="Ej: 12.5410,-81.7238"
+                                    className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                                  />
                                 </div>
                               )}
 
