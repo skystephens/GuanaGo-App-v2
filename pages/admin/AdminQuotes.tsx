@@ -583,6 +583,16 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
        aerolinea: 'JetSmart', origen: '', destino: 'ADZ', tipoVuelo: 'Ida y vuelta', notasTiquete: '',
        images: [] });
   const freeItemFileRef = useRef<HTMLInputElement>(null);
+  const [freeItemImageUrlInput, setFreeItemImageUrlInput] = useState('');
+
+  const handleAddFreeItemImageUrl = () => {
+    const url = freeItemImageUrlInput.trim();
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url)) { alert('Pega una URL completa (debe empezar con http:// o https://)'); return; }
+    if (freeItemForm.images.length >= 4) return;
+    setFreeItemForm(prev => ({ ...prev, images: [...prev.images, url].slice(0, 4) }));
+    setFreeItemImageUrlInput('');
+  };
 
   // Form states
   const [formData, setFormData] = useState({
@@ -942,6 +952,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       setSelectedCotizacion(prev => prev ? { ...prev, precioTotal: newTotal } : prev);
       setFreeItemForm({ nombre: '', tipo: 'tour', valorUnitario: '', personas: String((selectedCotizacion?.adultos || 0) + (selectedCotizacion?.ninos || 0) || 2), cantidad: '1',
         aerolinea: 'JetSmart', origen: '', destino: 'ADZ', tipoVuelo: 'Ida y vuelta', notasTiquete: '', images: [] });
+      setFreeItemImageUrlInput('');
     } else {
       alert('❌ Error al agregar el ítem');
     }
@@ -3295,6 +3306,26 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                             </button>
                           )}
                         </div>
+                        {freeItemForm.images.length < 4 && (
+                          <div className="flex gap-1.5 mt-2">
+                            <input
+                              type="url"
+                              value={freeItemImageUrlInput}
+                              onChange={e => setFreeItemImageUrlInput(e.target.value)}
+                              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddFreeItemImageUrl(); } }}
+                              placeholder="O pega la URL de una imagen (ej. de tu WordPress)"
+                              className="flex-1 px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-xs focus:border-purple-500 focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleAddFreeItemImageUrl}
+                              disabled={!freeItemImageUrlInput.trim()}
+                              className="px-2.5 py-1.5 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 rounded-lg text-white text-xs font-bold shrink-0"
+                            >
+                              Agregar
+                            </button>
+                          </div>
+                        )}
                         {freeItemForm.images.length > 0 && (
                           <p className="text-[10px] text-gray-600 mt-1">
                             {freeItemForm.images.length}/4 — aparecerán en el PDF de cotización
