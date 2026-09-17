@@ -586,12 +586,39 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [freeItemImageUrlInput, setFreeItemImageUrlInput] = useState('');
 
   const handleAddFreeItemImageUrl = () => {
-    const url = freeItemImageUrlInput.trim();
-    if (!url) return;
-    if (!/^https?:\/\//i.test(url)) { alert('Pega una URL completa (debe empezar con http:// o https://)'); return; }
-    if (freeItemForm.images.length >= 4) return;
-    setFreeItemForm(prev => ({ ...prev, images: [...prev.images, url].slice(0, 4) }));
+    const raw = freeItemImageUrlInput.trim();
+    if (!raw) return;
+
+    // Separa por coma o salto de línea, y además detecta el caso típico de
+    // copiar/pegar donde 2 URLs quedan pegadas sin separador
+    // (ej: "...jpghttps://...") y las corta ahí también.
+    const piezas = raw
+      .split(/[,\n]+/)
+      .flatMap(p => p.split(/(?<=\.(?:jpe?g|png|webp|gif))(?=https?:\/\/)/i))
+      .map(p => p.trim())
+      .filter(Boolean);
+
+    const validas = piezas.filter(p => /^https?:\/\//i.test(p));
+    const invalidas = piezas.filter(p => !/^https?:\/\//i.test(p));
+
+    if (validas.length === 0) {
+      alert('No encontré ninguna URL válida (debe empezar con http:// o https://)');
+      return;
+    }
+
+    const espacioDisponible = 4 - freeItemForm.images.length;
+    const aAgregar = validas.slice(0, espacioDisponible);
+    const sobrantes = validas.length - aAgregar.length;
+
+    setFreeItemForm(prev => ({ ...prev, images: [...prev.images, ...aAgregar].slice(0, 4) }));
     setFreeItemImageUrlInput('');
+
+    if (invalidas.length > 0 || sobrantes > 0) {
+      const avisos = [];
+      if (invalidas.length > 0) avisos.push(`${invalidas.length} URL(s) mal formada(s) ignorada(s) — revisa que no queden 2 pegadas sin coma entre ellas`);
+      if (sobrantes > 0) avisos.push(`${sobrantes} imagen(es) no se agregaron porque el máximo es 4 por ítem`);
+      alert(avisos.join('\n'));
+    }
   };
 
   // Form states
@@ -3340,14 +3367,13 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                           )}
                         </div>
                         {freeItemForm.images.length < 4 && (
-                          <div className="flex gap-1.5 mt-2">
-                            <input
-                              type="url"
+                          <div className="flex gap-1.5 mt-2 items-start">
+                            <textarea
                               value={freeItemImageUrlInput}
                               onChange={e => setFreeItemImageUrlInput(e.target.value)}
-                              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddFreeItemImageUrl(); } }}
-                              placeholder="O pega la URL de una imagen (ej. de tu WordPress)"
-                              className="flex-1 px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-xs focus:border-purple-500 focus:outline-none"
+                              rows={2}
+                              placeholder="Pega una o varias URLs de imagen separadas por coma (ej. de tu WordPress)"
+                              className="flex-1 px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-xs focus:border-purple-500 focus:outline-none resize-none"
                             />
                             <button
                               type="button"
