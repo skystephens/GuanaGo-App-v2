@@ -170,7 +170,7 @@ const ItemRow: React.FC<{ item: CotizacionItem; services: Tour[] }> = ({ item, s
     : svc?.gallery?.length > 0 ? svc.gallery
     : svc?.image ? [svc.image]
     : itemOwnImages) as string[];
-  const description: string = svc?.description || svc?.descripcion || '';
+  const description: string = svc?.description || svc?.descripcion || item.descripcion || '';
   const ubicacion: string   = svc?.ubicacion || '';
   const latLon: string      = svc?.latLon || '';
   const tipo: string        = svc?.tipoAlojamiento || (isHotel ? 'HOTEL' : item.servicioTipo);

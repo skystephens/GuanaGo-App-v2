@@ -745,6 +745,7 @@ function mapRecordToCotizacionItem(record: any): CotizacionItem {
     subtotal,
     esPersonalizado: f['Es Personalizado'] === true,
     images: parseImagenesField(f['Imagenes']),
+    descripcion: f['Descripcion'] || undefined,
     status: 'disponible' as QuoteItemStatus,
     conflictos: []
   };
@@ -764,6 +765,7 @@ function mapCotizacionItemToFields(item: Partial<CotizacionItem>): Record<string
 
   // Ítem libre (no vinculado al catálogo)
   if (item.esPersonalizado !== undefined) fields['Es Personalizado'] = item.esPersonalizado;
+  if (item.descripcion !== undefined) fields['Descripcion'] = item.descripcion;
 
   // Imágenes adjuntas (campo de texto en Airtable — multilineText, NO Attachment).
   // Se guardan como URLs separadas por coma, igual que ImagenWP en otras tablas.

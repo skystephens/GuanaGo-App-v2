@@ -578,10 +578,10 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
   const [freeItemForm, setFreeItemForm] = useState<{
     nombre: string; tipo: CotizacionItem['servicioTipo']; valorUnitario: string; personas: string; cantidad: string;
     aerolinea: string; origen: string; destino: string; tipoVuelo: string; notasTiquete: string;
-    images: string[];
+    images: string[]; descripcion: string;
   }>({ nombre: '', tipo: 'tiquete', valorUnitario: '', personas: '2', cantidad: '1',
        aerolinea: 'JetSmart', origen: '', destino: 'ADZ', tipoVuelo: 'Ida y vuelta', notasTiquete: '',
-       images: [] });
+       images: [], descripcion: '' });
   const freeItemFileRef = useRef<HTMLInputElement>(null);
   const [freeItemImageUrlInput, setFreeItemImageUrlInput] = useState('');
 
@@ -939,6 +939,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       subtotal,
       esPersonalizado: true,
       images: freeItemForm.images.length > 0 ? freeItemForm.images : undefined,
+      descripcion: freeItemForm.descripcion.trim() || undefined,
       status: 'disponible',
       conflictos: []
     };
@@ -951,7 +952,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       await updateCotizacion(selectedCotizacion.id, { precioTotal: newTotal });
       setSelectedCotizacion(prev => prev ? { ...prev, precioTotal: newTotal } : prev);
       setFreeItemForm({ nombre: '', tipo: 'tour', valorUnitario: '', personas: String((selectedCotizacion?.adultos || 0) + (selectedCotizacion?.ninos || 0) || 2), cantidad: '1',
-        aerolinea: 'JetSmart', origen: '', destino: 'ADZ', tipoVuelo: 'Ida y vuelta', notasTiquete: '', images: [] });
+        aerolinea: 'JetSmart', origen: '', destino: 'ADZ', tipoVuelo: 'Ida y vuelta', notasTiquete: '', images: [], descripcion: '' });
       setFreeItemImageUrlInput('');
     } else {
       alert('❌ Error al agregar el ítem');
@@ -3264,6 +3265,22 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                           onChange={e => setFreeItemForm({ ...freeItemForm, nombre: e.target.value })}
                           placeholder={freeItemForm.tipo === 'gestion' ? 'Ej: Costos de gestión tiquetes' : 'Ej: Seguro de viaje Assist Card'}
                           className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+                    )}
+
+                    {/* Descripción (solo para ítems no-tiquete) */}
+                    {freeItemForm.tipo !== 'tiquete' && (
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1.5 font-semibold">
+                          Descripción <span className="text-gray-600 font-normal">(opcional — ej. del alojamiento)</span>
+                        </label>
+                        <textarea
+                          value={freeItemForm.descripcion}
+                          onChange={e => setFreeItemForm({ ...freeItemForm, descripcion: e.target.value })}
+                          rows={3}
+                          placeholder="Ej: Habitación doble con baño privado, aire acondicionado, desayuno incluido..."
+                          className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-purple-500 focus:outline-none resize-none"
                         />
                       </div>
                     )}
