@@ -307,6 +307,8 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
           subtotal,
           esPersonalizado,
           images: parseImagenesField(f['Imagenes']),
+          descripcion: f['Descripcion'] || undefined,
+          latLon: f['Lat_Lon'] || undefined,
           status: 'disponible',
           conflictos: []
         });
