@@ -1129,6 +1129,7 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
       ...(editingItemData.images !== undefined ? { images: editingItemData.images } : {}),
       ...(editingItemData.descripcion !== undefined ? { descripcion: editingItemData.descripcion } : {}),
       ...(editingItemData.latLon !== undefined ? { latLon: editingItemData.latLon } : {}),
+      ...(editingItemData.servicioTipo !== undefined ? { servicioTipo: editingItemData.servicioTipo, esPersonalizado: true } : {}),
     };
     const saved = await updateCotizacionItem(itemId, patchFields);
     if (!saved) {
@@ -2573,6 +2574,26 @@ const AdminQuotes: React.FC<AdminQuotesProps> = ({ onBack, onNavigate }) => {
                                       </button>
                                     </div>
                                   )}
+                                </div>
+                              )}
+
+                              {/* Tipo de ítem (solo ítems libres — el catálogo lo deriva del link) */}
+                              {item.esPersonalizado && (
+                                <div>
+                                  <label className="block text-[10px] text-gray-500 mb-1">Tipo de ítem</label>
+                                  <select
+                                    value={editingItemData.servicioTipo ?? item.servicioTipo}
+                                    onChange={e => setEditingItemData({ ...editingItemData, servicioTipo: e.target.value as CotizacionItem['servicioTipo'] })}
+                                    className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                                  >
+                                    <option value="tiquete">✈️ Tiquete aéreo</option>
+                                    <option value="seguro">🛡️ Seguro de viaje</option>
+                                    <option value="transfer">🚐 Transfer / Traslado</option>
+                                    <option value="tour">🏄 Tour</option>
+                                    <option value="hotel">🏨 Alojamiento</option>
+                                    <option value="taxi">🚕 Taxi</option>
+                                    <option value="otro">📦 Otro</option>
+                                  </select>
                                 </div>
                               )}
 
