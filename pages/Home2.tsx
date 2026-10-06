@@ -11,6 +11,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AppRoute } from '../types';
 import { GUANA_LOGO } from '../constants';
+import { hotelCacheService } from '../services/hotelCacheService';
 
 const API = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   ? 'http://localhost:5000'
@@ -20,7 +21,29 @@ interface HomeConfig { [k: string]: string }
 interface Experiencia { nombre: string; precio: number; unidad: string; tag: string; meta: string; img: string; descripcion?: string }
 interface PaqueteIntl { id: string; nombre: string; categoria: string; duracion: string; origen: string; salidas: string; precioDesde: number; imagen: string }
 
-interface Props { onNavigate: (route: AppRoute) => void; onCotizar?: () => void }
+interface Alojamiento {
+  id: string; title: string; image?: string; images?: string[];
+  price?: number; precioBajoPedido?: boolean; accommodationType?: string;
+  tipoAlojamiento?: string; ubicacion?: string; capacidadMaxima?: number;
+  vistaAlMar?: boolean; accesoPiscina?: boolean; [k: string]: any;
+}
+
+interface Props { onNavigate: (route: AppRoute, data?: any) => void; onCotizar?: () => void }
+
+const ESPACIOS_ALOJAMIENTOS = 8;
+
+// Fisher-Yates: mezcla una copia sin sesgo
+const mezclar = <T,>(arr: T[]): T[] => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+// Los precios de alojamiento vienen sin moneda explícita: valores >= 5.000 son COP, el resto USD
+const fmtPrecioAloj = (n: number) => (n >= 5000 ? `$${Math.round(n).toLocaleString('es-CO')} COP` : `USD ${n.toLocaleString()}`);
 
 const fmtCOP = (n: number) => `$${Math.round(n).toLocaleString('es-CO')}`;
 
@@ -36,6 +59,20 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
   const [mostrarTodas, setMostrarTodas] = useState(false);
   const [paquetes, setPaquetes] = useState<PaqueteIntl[]>([]);
   const [experienciaSeleccionada, setExperienciaSeleccionada] = useState<Experiencia | null>(null);
+  const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([]);
+
+  // 8 alojamientos al azar (solo los que tienen foto) — se re-sortean en cada visita al Home
+  useEffect(() => {
+    let vivo = true;
+    hotelCacheService.getHotels(false)
+      .then(res => {
+        if (!vivo) return;
+        const hoteles = (res.data as Alojamiento[]).filter(h => h.category === 'hotel' && (h.image || h.images?.[0]));
+        setAlojamientos(mezclar(hoteles).slice(0, ESPACIOS_ALOJAMIENTOS));
+      })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, []);
 
   useEffect(() => {
     fetch(`${API}/api/home-config`).then(r => r.json()).then(setCfg).catch(() => {});
@@ -318,6 +355,68 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
           </div>
         </div>
       </section>
+
+      {/* ══ ALOJAMIENTOS — 8 espacios aleatorios (se oculta si no hay datos) ══ */}
+      {alojamientos.length > 0 && (
+        <section id="alojamientos" className="pb-16">
+          <div className="max-w-6xl mx-auto px-5">
+            <div className="flex items-end justify-between flex-wrap gap-3 mb-8">
+              <div>
+                <p className="text-[11px] font-bold tracking-[.14em] uppercase text-teal-600">Hospédate con anfitriones locales</p>
+                <h2 className="text-3xl font-black text-[#003D5C] mt-1">Alojamientos en San Andrés</h2>
+              </div>
+              <button onClick={() => onNavigate(AppRoute.HOTEL_LIST)} className="text-sm font-bold text-orange-500 hover:text-orange-600">
+                Todos los alojamientos →
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {alojamientos.map(h => {
+                const foto = h.image || h.images?.[0] || '';
+                const tipo = h.accommodationType || h.tipoAlojamiento || 'Alojamiento';
+                const meta = [h.ubicacion, h.capacidadMaxima ? `Hasta ${h.capacidadMaxima} huéspedes` : '', h.vistaAlMar ? 'Vista al mar' : h.accesoPiscina ? 'Piscina' : '']
+                  .filter(Boolean).join(' · ');
+                return (
+                  <button
+                    key={h.id}
+                    onClick={() => onNavigate(AppRoute.HOTEL_DETAIL, {
+                      // mismas propiedades por defecto que arma HotelList para Detail.tsx
+                      ...h,
+                      image: foto,
+                      title: h.title || h.nombre || h.name || 'Alojamiento',
+                      description: h.description || h.descripcion || 'Alojamiento en San Andrés',
+                      price: h.price || 0,
+                      rating: h.rating || 4.5,
+                      reviews: h.reviews || 10,
+                      category: 'hotel',
+                    })}
+                    className="text-left bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all"
+                  >
+                    <div className="h-36 md:h-40 bg-cover bg-center relative bg-slate-100" style={{ backgroundImage: `url('${foto}')` }}>
+                      <span className="absolute top-2 left-2 text-white text-[8px] font-bold tracking-wider uppercase px-2 py-1 rounded-full backdrop-blur bg-[#003D5C]/85">
+                        {tipo}
+                      </span>
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-bold text-[13px] text-gray-800 leading-snug line-clamp-2">{h.title}</h3>
+                      <p className="text-[10px] text-slate-400 mt-0.5 mb-2 line-clamp-1">{meta || 'San Andrés Islas'}</p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[8px] uppercase tracking-wide text-slate-400 font-semibold">{h.price && !h.precioBajoPedido ? 'Desde · por noche' : 'Tarifa'}</p>
+                          <p className="font-black text-[#003D5C] text-[13px]">
+                            {h.price && !h.precioBajoPedido ? fmtPrecioAloj(h.price) : 'Consultar'}
+                          </p>
+                        </div>
+                        <span className="text-[10px] font-bold text-orange-500">Ver más →</span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ══ RUTA RAIZAL ══ */}
       <section id="raizal" className="py-16 bg-[#FFF6EC]">
