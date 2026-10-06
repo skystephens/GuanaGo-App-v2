@@ -42,8 +42,6 @@ const mezclar = <T,>(arr: T[]): T[] => {
   return a;
 };
 
-// Los precios de alojamiento vienen sin moneda explícita: valores >= 5.000 son COP, el resto USD
-const fmtPrecioAloj = (n: number) => (n >= 5000 ? `$${Math.round(n).toLocaleString('es-CO')} COP` : `USD ${n.toLocaleString()}`);
 
 const fmtCOP = (n: number) => `$${Math.round(n).toLocaleString('es-CO')}`;
 
@@ -61,13 +59,14 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
   const [experienciaSeleccionada, setExperienciaSeleccionada] = useState<Experiencia | null>(null);
   const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([]);
 
-  // 8 alojamientos al azar (solo los que tienen foto) — se re-sortean en cada visita al Home
+  // 8 alojamientos al azar entre los que tienen el check "Publicado" en Airtable
+  // (getHotels ya trae solo Publicado = 1) — se re-sortean en cada visita al Home
   useEffect(() => {
     let vivo = true;
     hotelCacheService.getHotels(false)
       .then(res => {
         if (!vivo) return;
-        const hoteles = (res.data as Alojamiento[]).filter(h => h.category === 'hotel' && (h.image || h.images?.[0]));
+        const hoteles = (res.data as Alojamiento[]).filter(h => h.category === 'hotel');
         setAlojamientos(mezclar(hoteles).slice(0, ESPACIOS_ALOJAMIENTOS));
       })
       .catch(() => {});
@@ -401,12 +400,12 @@ const Home2: React.FC<Props> = ({ onNavigate, onCotizar }) => {
                       <h3 className="font-bold text-[13px] text-gray-800 leading-snug line-clamp-2">{h.title}</h3>
                       <p className="text-[10px] text-slate-400 mt-0.5 mb-2 line-clamp-1">{meta || 'San Andrés Islas'}</p>
                       <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-[8px] uppercase tracking-wide text-slate-400 font-semibold">{h.price && !h.precioBajoPedido ? 'Desde · por noche' : 'Tarifa'}</p>
-                          <p className="font-black text-[#003D5C] text-[13px]">
-                            {h.price && !h.precioBajoPedido ? fmtPrecioAloj(h.price) : 'Consultar'}
-                          </p>
-                        </div>
+                        {h.price && h.price > 0 ? (
+                          <div>
+                            <p className="text-[8px] uppercase tracking-wide text-slate-400 font-semibold">Desde · por noche</p>
+                            <p className="font-black text-[#003D5C] text-[13px]">{fmtCOP(h.price)}</p>
+                          </div>
+                        ) : <span />}
                         <span className="text-[10px] font-bold text-orange-500">Ver más →</span>
                       </div>
                     </div>
