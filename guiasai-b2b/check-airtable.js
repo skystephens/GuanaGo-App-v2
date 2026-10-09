@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_KEY = 'patDWx13o3qtNjLqv.37cd343946b889d2044f1f5fa9039c06931d38a192f794c115f0efd21cca1658';
+// Uso: AIRTABLE_API_KEY=... node check-airtable.js  (nunca pegar el token en el archivo)
+const API_KEY = process.env.AIRTABLE_API_KEY;
+if (!API_KEY) { console.error('Falta AIRTABLE_API_KEY'); process.exit(1); }
 const BASE_ID = 'appiReH55Qhrbv4Lk';
 
 axios.get(`https://api.airtable.com/v0/${BASE_ID}/ServiciosTuristicos_SAI?maxRecords=5&filterByFormula=AND({Tipo de Servicio}='Tour',{Publicado}=1)`, {

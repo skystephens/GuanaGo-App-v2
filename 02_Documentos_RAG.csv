@@ -139,7 +139,7 @@ DOC-004,API Airtable: Endpoints Usados,API Docs,"# API Airtable - GuiaSAI/GuanaG
 
 ## Base Configuration
 - Base ID: `appXXXXXXXXXXXXXX` (reemplazar)
-- API Key: En `.env` como `VITE_AIRTABLE_API_KEY`
+- API Key: En `.env` como `AIRTABLE_API_KEY`
 
 ## Tabla: Servicios
 

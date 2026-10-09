@@ -373,7 +373,7 @@ Prueba:
 ### Paso 2: Verificar Variables de Entorno
 ```bash
 # .env o .env.local debe tener:
-VITE_AIRTABLE_API_KEY=your_key_here
+AIRTABLE_API_KEY=your_key_here
 VITE_AIRTABLE_BASE_ID=your_base_id_here
 ```
 

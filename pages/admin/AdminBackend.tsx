@@ -327,7 +327,7 @@ const AdminBackend: React.FC<AdminBackendProps> = ({ onBack, onNavigate }) => {
                 <div>
                   <p className="text-sm font-medium text-yellow-800">Credenciales no configuradas</p>
                   <p className="text-xs text-yellow-600 mt-1">
-                    Agrega VITE_AIRTABLE_API_KEY y VITE_AIRTABLE_BASE_ID en .env
+                    Agrega VITE_AIRTABLE_BASE_ID en .env y AIRTABLE_API_KEY en el servidor
                   </p>
                 </div>
               </div>
@@ -489,9 +489,7 @@ const AdminBackend: React.FC<AdminBackendProps> = ({ onBack, onNavigate }) => {
             <div className="flex justify-between items-center">
               <span className="text-gray-400">API Key:</span>
               <span className="font-mono text-xs bg-gray-700 px-2 py-1 rounded">
-                {import.meta.env.VITE_AIRTABLE_API_KEY 
-                  ? `${String(import.meta.env.VITE_AIRTABLE_API_KEY).slice(0, 12)}...` 
-                  : '❌ No configurado'}
+                🔒 Solo en el servidor
               </span>
             </div>
             <div className="flex justify-between items-center">

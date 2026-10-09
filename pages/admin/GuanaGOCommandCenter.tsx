@@ -28,9 +28,9 @@ import type { ProjectTask, TaskStatus, TaskPriority, TaskCategory } from '../../
 // ── Constantes ────────────────────────────────────────────────────────────────
 
 const SKY_EMAIL = 'skysk8ing@gmail.com';
-const AT_KEY    = import.meta.env.VITE_AIRTABLE_API_KEY;
+// El token de Airtable vive SOLO en el backend; se accede vía /api/airtable (backend/routes/airtableProxy.js)
 const AT_BASE   = import.meta.env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
-const AT_URL    = `https://api.airtable.com/v0/${AT_BASE}`;
+const AT_URL    = `/api/airtable/v0/${AT_BASE}`;
 
 type Tab = 'tareas' | 'avance' | 'rag' | 'ecosistema' | 'estrategia' | 'sistema' | 'traduccion' | 'docs';
 type AccessLevel = 'sky' | 'marta' | 'admin';
@@ -67,9 +67,7 @@ interface Props {
 // ── Helpers Airtable ──────────────────────────────────────────────────────────
 
 async function atFetch(table: string, params = '') {
-  if (!AT_KEY) return [];
   const res = await fetch(`${AT_URL}/${encodeURIComponent(table)}${params}`, {
-    headers: { Authorization: `Bearer ${AT_KEY}` },
   });
   if (!res.ok) throw new Error(`Airtable ${res.status}`);
   const json = await res.json();
@@ -77,10 +75,9 @@ async function atFetch(table: string, params = '') {
 }
 
 async function atPatch(table: string, id: string, fields: Record<string, any>) {
-  if (!AT_KEY) throw new Error('No AT_KEY');
   const res = await fetch(`${AT_URL}/${encodeURIComponent(table)}/${id}`, {
     method: 'PATCH',
-    headers: { Authorization: `Bearer ${AT_KEY}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ fields }),
   });
   if (!res.ok) throw new Error(`AT PATCH ${res.status}`);
@@ -88,10 +85,9 @@ async function atPatch(table: string, id: string, fields: Record<string, any>) {
 }
 
 async function atPost(table: string, fields: Record<string, any>) {
-  if (!AT_KEY) throw new Error('No AT_KEY');
   const res = await fetch(`${AT_URL}/${encodeURIComponent(table)}`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${AT_KEY}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ records: [{ fields }] }),
   });
   if (!res.ok) throw new Error(`AT POST ${res.status}`);
@@ -99,10 +95,8 @@ async function atPost(table: string, fields: Record<string, any>) {
 }
 
 async function atDeleteRec(table: string, id: string) {
-  if (!AT_KEY) throw new Error('No AT_KEY');
   await fetch(`${AT_URL}/${encodeURIComponent(table)}/${id}`, {
     method: 'DELETE',
-    headers: { Authorization: `Bearer ${AT_KEY}` },
   });
 }
 
@@ -1845,7 +1839,7 @@ function ModuloSistema({ onNavigate }: { onNavigate: (r: AppRoute, d?: any) => v
     // Airtable directo
     try {
       const t0 = Date.now();
-      const r = await fetch(`${AT_URL}/Tareas_To_do?maxRecords=1`, { headers: { Authorization: `Bearer ${AT_KEY}` }, signal: AbortSignal.timeout(8000) });
+      const r = await fetch(`${AT_URL}/Tareas_To_do?maxRecords=1`, { signal: AbortSignal.timeout(8000) });
       update('Airtable', r.ok ? 'ok' : 'error', `${Date.now() - t0}ms`);
     } catch { update('Airtable', 'error', 'Sin respuesta'); }
 
@@ -1924,7 +1918,7 @@ function ModuloSistema({ onNavigate }: { onNavigate: (r: AppRoute, d?: any) => v
       <div className="mt-4 bg-gray-800/60 border border-gray-700 rounded-xl p-4">
         <div className="text-xs font-semibold text-gray-400 mb-3">Variables de entorno</div>
         {[
-          ['VITE_AIRTABLE_API_KEY', AT_KEY ? '✓ configurada' : '✗ faltante'],
+          ['AIRTABLE_API_KEY (servidor)', '🔒 solo backend — verifica /api/config-check'],
           ['VITE_AIRTABLE_BASE_ID', AT_BASE ? '✓ ' + AT_BASE : '✗ faltante'],
           ['Render Backend', 'guanago-backend.onrender.com'],
         ].map(([k, v]) => (

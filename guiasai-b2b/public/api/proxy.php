@@ -43,10 +43,16 @@ if (!$path) {
     exit();
 }
 
-// Solo aceptar rutas que empiecen con /v0/ (previene abuso del proxy)
-if (!preg_match('#^/v0/#', $path)) {
+// Solo /v0/<base>/<tabla>[/<registro>] (sin /v0/meta/* ni otras rutas) y métodos conocidos
+$pathOnly = explode('?', $path, 2)[0];
+if (!preg_match('#^/v0/app[A-Za-z0-9]{14}/[^/?\#]+(/rec[A-Za-z0-9]{14})?$#', $pathOnly)) {
     http_response_code(400);
-    echo json_encode(['error' => 'Invalid path — must start with /v0/']);
+    echo json_encode(['error' => 'Invalid path']);
+    exit();
+}
+if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST', 'PATCH', 'DELETE'], true)) {
+    http_response_code(405);
+    echo json_encode(['error' => 'Method not allowed']);
     exit();
 }
 

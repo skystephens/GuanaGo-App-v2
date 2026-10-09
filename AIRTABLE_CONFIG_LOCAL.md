@@ -17,7 +17,7 @@
 
 ### Base Actual (Desarrollo)
 - **Base ID:** `appiReH55Qhrbv4Lk`
-- **API Key:** `patDWx13o3qtNjLqv.37cd343946b889d2044f1f5fa9039c06931d38a192f794c115f0efd21cca1658`
+- **API Key:** `pat_TU_TOKEN_AQUI`
 
 ### Tablas Principales
 1. **Partners_Aliados** - Información de socios/aliados
@@ -400,7 +400,7 @@ import axios from 'axios';
 
 const AIRTABLE_API = 'https://api.airtable.com/v0';
 const BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
-const API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY;
+const API_KEY = import.meta.env.AIRTABLE_API_KEY;
 
 async function getPartnerStats(partnerId: string) {
   const response = await axios.get(

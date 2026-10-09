@@ -17,7 +17,7 @@ let cache = { data: null, ts: 0 };
 const CACHE_MS = 60_000;
 
 const AT_BASE = () => process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
-const AT_KEY  = () => process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+const AT_KEY  = () => process.env.AIRTABLE_API_KEY;
 
 async function atList(table, params = '') {
   const r = await fetch(

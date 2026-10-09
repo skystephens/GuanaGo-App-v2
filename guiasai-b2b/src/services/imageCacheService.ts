@@ -106,32 +106,9 @@ function _buildProxyUrl(path: string): string {
 
 /**
  * Realiza una petición paginada a Airtable para obtener URLs de imágenes.
- * Intenta primero via proxy.php (seguro, token oculto).
- * Si el proxy falla con 403/404, cae en llamada directa usando VITE_AIRTABLE_API_KEY
- * (igual que GuanaGO — la clave queda en el bundle pero las imágenes siempre funcionan).
+ * Siempre via proxy.php (el token vive solo en el servidor).
  */
 async function _fetchImageRecords(basePath: string): Promise<any[]> {
-  const directKey = (import.meta.env.VITE_AIRTABLE_API_KEY || '') as string
-
-  // Directo a Airtable — como GuanaGO, siempre funciona
-  if (directKey) {
-    try {
-      console.log('[ImageCache] Llamando directamente a Airtable...')
-      const directUrl = `https://api.airtable.com${basePath}`
-      const resp = await fetch(directUrl, {
-        headers: { 'Authorization': `Bearer ${directKey}` },
-      })
-      if (resp.ok) {
-        const data = await resp.json()
-        console.log(`[ImageCache] Airtable directo OK — ${data.records?.length ?? 0} registros`)
-        return data.records ?? []
-      }
-      console.warn(`[ImageCache] Airtable directo devolvió ${resp.status}`)
-    } catch (err) {
-      console.warn('[ImageCache] Error en llamada directa a Airtable:', err)
-    }
-  }
-
   // Fallback: proxy.php (si el directo falla por CORS u otro motivo)
   try {
     const resp = await fetch(_buildProxyUrl(basePath), {

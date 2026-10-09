@@ -200,7 +200,7 @@ Para conectar con Claude Code y scripts de sincronización:
 
 9. **Guarda en `.env`:**
 ```bash
-VITE_AIRTABLE_API_KEY=patXXXXXXXXXXXXXX.XXXXXXXXXXXXXXXX
+AIRTABLE_API_KEY=patXXXXXXXXXXXXXX.XXXXXXXXXXXXXXXX
 VITE_AIRTABLE_BASE_ID=appXXXXXXXXXXXXXX
 ```
 

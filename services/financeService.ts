@@ -3,9 +3,9 @@
  * Tablas: Reservas_grupo, Pago_proveedores, Pagos (reusada)
  */
 
-const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY || '';
+// El token de Airtable vive SOLO en el backend; el frontend llama a /api/airtable (ver backend/routes/airtableProxy.js)
 const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
-const AIRTABLE_API_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
+const AIRTABLE_API_URL = `/api/airtable/v0/${AIRTABLE_BASE_ID}`;
 
 const TABLES = {
   RESERVAS_GRUPO: 'Reservas_grupo',
@@ -15,7 +15,6 @@ const TABLES = {
 };
 
 const getHeaders = () => ({
-  'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
   'Content-Type': 'application/json',
 });
 

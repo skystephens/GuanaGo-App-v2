@@ -196,7 +196,7 @@ Credenciales inválidas o sin internet
 ```bash
 # 1. Ve a backend/.env.local
 # 2. Verifica estas líneas:
-AIRTABLE_API_KEY=patDWx13o3qtNjLqv.37cd343946b889d2044f1f5fa9039c06931d38a192f794c115f0efd21cca1658
+AIRTABLE_API_KEY=pat_TU_TOKEN_AQUI
 AIRTABLE_BASE_ID=appiReH55Qhrbv4Lk
 
 # 3. Si están vacías o incorrectas, obtén nuevas:

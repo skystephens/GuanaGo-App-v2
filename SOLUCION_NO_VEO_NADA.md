@@ -130,7 +130,7 @@ CORS_ORIGINS=http://localhost:5173,http://localhost:3000
 #### Si ves: "Airtable error"
 ```bash
 # Verificar credenciales en .env.local
-VITE_AIRTABLE_API_KEY=patDWx13o3qtNjLqv...
+AIRTABLE_API_KEY=pat_TU_TOKEN_AQUI
 VITE_AIRTABLE_BASE_ID=appiReH55Qhrbv4Lk
 ```
 

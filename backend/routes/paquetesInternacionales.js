@@ -25,7 +25,7 @@ router.get('/', async (_req, res) => {
       return res.json(cache.data);
     }
 
-    const key  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+    const key  = process.env.AIRTABLE_API_KEY;
     const base = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
     console.log(`🔎 paquetes-internacionales: base=${base} key=${key ? 'presente (' + key.slice(0, 6) + '...)' : 'AUSENTE'}`);
     if (!key) {
@@ -74,7 +74,7 @@ router.get('/', async (_req, res) => {
 router.get('/admin', async (_req, res) => {
   res.set('Cache-Control', 'no-store');
   try {
-    const key  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+    const key  = process.env.AIRTABLE_API_KEY;
     const base = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
     if (!key) return res.status(500).json({ error: 'AIRTABLE_API_KEY no configurada' });
 
@@ -139,7 +139,7 @@ const buildFields = (body) => {
 // ── ADMIN: crear ────────────────────────────────────────────────────────────
 router.post('/', async (req, res) => {
   try {
-    const key  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+    const key  = process.env.AIRTABLE_API_KEY;
     const base = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
     if (!key) return res.status(500).json({ error: 'AIRTABLE_API_KEY no configurada' });
     if (!req.body.nombre) return res.status(400).json({ error: 'Falta el nombre del paquete' });
@@ -163,7 +163,7 @@ router.post('/', async (req, res) => {
 // ── ADMIN: editar ────────────────────────────────────────────────────────────
 router.patch('/:id', async (req, res) => {
   try {
-    const key  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+    const key  = process.env.AIRTABLE_API_KEY;
     const base = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
     if (!key) return res.status(500).json({ error: 'AIRTABLE_API_KEY no configurada' });
 
@@ -186,7 +186,7 @@ router.patch('/:id', async (req, res) => {
 // ── ADMIN: borrar ────────────────────────────────────────────────────────────
 router.delete('/:id', async (req, res) => {
   try {
-    const key  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+    const key  = process.env.AIRTABLE_API_KEY;
     const base = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
     if (!key) return res.status(500).json({ error: 'AIRTABLE_API_KEY no configurada' });
 

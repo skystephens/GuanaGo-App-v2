@@ -851,7 +851,7 @@ export default function AdminOperaciones({ onBack, onNavigate }: Props) {
                   Gestiona fechas disponibles, bloqueadas y promos de cada alojamiento. Genera links para que los propietarios actualicen su propio calendario.
                 </p>
                 <a
-                  href={`/disponibilidad-admin?key=${import.meta.env.VITE_AIRTABLE_API_KEY || ''}`}
+                  href="/disponibilidad-admin"
                   target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold"
                   style={{ color: '#22d3ee' }}
@@ -932,7 +932,7 @@ export default function AdminOperaciones({ onBack, onNavigate }: Props) {
                     {/* Actions */}
                     <div className="grid grid-cols-2 gap-2 px-3 pb-3">
                       <a
-                        href={`/disponibilidad-propietario?id=${a.id}&k=${import.meta.env.VITE_AIRTABLE_API_KEY || ''}`}
+                        href={`/disponibilidad-propietario?id=${a.id}`}
                         target="_blank" rel="noopener noreferrer"
                         className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold"
                         style={{ background: 'rgba(14,116,144,0.2)', color: '#22d3ee', border: '1px solid rgba(14,116,144,0.4)' }}

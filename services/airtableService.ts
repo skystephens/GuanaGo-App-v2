@@ -78,8 +78,8 @@ export async function createCotizacionGG(payload: {
   precioTotal: number;
   notasInternas?: string;
 }): Promise<string> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
-    throw new Error('Airtable no está configurado (VITE_AIRTABLE_API_KEY / VITE_AIRTABLE_BASE_ID)');
+  if (!AIRTABLE_BASE_ID) {
+    throw new Error('Airtable no está configurado (VITE_AIRTABLE_BASE_ID)');
   }
   try {
     const url = `${AIRTABLE_API_URL}/CotizacionesGG`;
@@ -114,8 +114,8 @@ export async function createCotizacionItemGG(payload: {
   precioUnitario?: number;
   subtotal: number;
 }): Promise<string> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
-    throw new Error('Airtable no está configurado (VITE_AIRTABLE_API_KEY / VITE_AIRTABLE_BASE_ID)');
+  if (!AIRTABLE_BASE_ID) {
+    throw new Error('Airtable no está configurado (VITE_AIRTABLE_BASE_ID)');
   }
   const url = `${AIRTABLE_API_URL}/cotizaciones_Items`;
   const fields: Record<string, any> = {};
@@ -140,7 +140,7 @@ export async function createCotizacionItemGG(payload: {
 // Obtener alojamientos (Alojamiento, Hotel, etc.)
 export async function getAccommodations() {
   try {
-    if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    if (!AIRTABLE_BASE_ID) {
       console.warn('⚠️ Airtable no configurado');
       return getMockAccommodations();
     }
@@ -187,7 +187,7 @@ export async function getAccommodations() {
 // Obtener transportes (Transporte, Taxi, etc.)
 export async function getTransports() {
   try {
-    if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    if (!AIRTABLE_BASE_ID) {
       console.warn('⚠️ Airtable no configurado');
       return getMockTransports();
     }
@@ -369,9 +369,9 @@ function getMockTransports() {
  */
 
 // Configuración de Airtable desde variables de entorno
-const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY || '';
+// El token de Airtable vive SOLO en el backend; el frontend llama a /api/airtable (ver backend/routes/airtableProxy.js)
 const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
-const AIRTABLE_API_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
+const AIRTABLE_API_URL = `/api/airtable/v0/${AIRTABLE_BASE_ID}`;
 
 
 // Nombres de las tablas
@@ -687,7 +687,6 @@ interface AirtableResponse<T = any> {
 
 // Headers para las peticiones
 const getHeaders = () => ({
-  'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
   'Content-Type': 'application/json'
 });
 
@@ -703,7 +702,7 @@ async function fetchTable<T = any>(
     sort?: { field: string; direction: 'asc' | 'desc' }[];
   } = {}
 ): Promise<AirtableRecord<T>[]> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     console.warn('⚠️ Airtable credentials not configured');
     return [];
   }
@@ -1211,7 +1210,7 @@ export async function createLeadWachi(leadData: {
   codigoClub: string;
   codigoJugador?: string;
 }) {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     console.warn('⚠️ Airtable credentials not configured');
     return null;
   }
@@ -1257,7 +1256,7 @@ export async function createLead(leadData: {
   mensaje?: string;
   origen?: string;
 }) {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     console.warn('⚠️ Airtable credentials not configured');
     return null;
   }
@@ -1386,7 +1385,7 @@ export async function registerGuanaUser(userData: {
   telefono?: string;
   whatsapp?: string;
 }): Promise<GuanaUser | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     console.warn('⚠️ Airtable credentials not configured');
     return null;
   }
@@ -1439,7 +1438,7 @@ export async function updateGuanaBalance(
   puntos: number, 
   tipo: 'add' | 'subtract'
 ): Promise<boolean> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return false;
   }
 
@@ -1530,7 +1529,7 @@ export async function updateUserRole(
     cedulaRut?: string;
   }
 ): Promise<boolean> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return false;
   }
 
@@ -1707,7 +1706,7 @@ export async function registerEmpresaAliada(empresaData: {
   lat?: number;
   lng?: number;
 }): Promise<GuanaEmpresa | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return null;
   }
 
@@ -1830,7 +1829,7 @@ export function getAvailableRetos(): GuanaReto[] {
 export async function createTransaction(
   data: CreateTransactionData
 ): Promise<GuanaTransaction | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     console.error('❌ Airtable no configurado');
     return null;
   }
@@ -1922,7 +1921,7 @@ export async function getTransactionHistory(
   guanaId: string,
   options?: { limit?: number; offset?: string }
 ): Promise<{ transactions: GuanaTransaction[]; offset?: string }> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return { transactions: [] };
   }
 
@@ -1964,7 +1963,7 @@ export async function getTransactionHistory(
  * Obtener una transacción por ID
  */
 export async function getTransactionById(txnId: string): Promise<GuanaTransaction | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return null;
   }
 
@@ -2006,7 +2005,7 @@ export async function updateTransactionBlockchainStatus(
     status: BlockchainStatus;
   }
 ): Promise<boolean> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return false;
   }
 
@@ -2043,7 +2042,7 @@ export async function updateTransactionBlockchainStatus(
  * Obtener transacciones pendientes de sincronizar con blockchain
  */
 export async function getPendingBlockchainTransactions(): Promise<GuanaTransaction[]> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return [];
   }
 
@@ -2138,7 +2137,7 @@ function mapRecordToTransaction(record: any): GuanaTransaction {
 export async function getArtistasPortafolio(
   options?: { estado?: EstadoGestion; limit?: number }
 ): Promise<ArtistaPortafolio[]> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return [];
   }
 
@@ -2174,7 +2173,7 @@ export async function getArtistasPortafolio(
  * Obtener un artista del portafolio por ID
  */
 export async function getArtistaPortafolioById(id: string): Promise<ArtistaPortafolio | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return null;
   }
 
@@ -2210,7 +2209,7 @@ export async function addArtistaToPortafolio(data: {
   telefono?: string;
   notasPrivadas?: string;
 }): Promise<ArtistaPortafolio | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return null;
   }
 
@@ -2272,7 +2271,7 @@ export async function updateArtistaPortafolio(
     notasPrivadas: string;
   }>
 ): Promise<boolean> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return false;
   }
 
@@ -2318,7 +2317,7 @@ export async function updateArtistaPortafolio(
 export async function getProductosArtista(
   options?: { artistaId?: string; categoria?: CategoriaProducto; activos?: boolean; limit?: number }
 ): Promise<ProductoArtista[]> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return [];
   }
 
@@ -2370,7 +2369,7 @@ export async function getProductosArtista(
  * Obtener un producto por ID
  */
 export async function getProductoById(id: string): Promise<ProductoArtista | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return null;
   }
 
@@ -2396,7 +2395,7 @@ export async function getProductoById(id: string): Promise<ProductoArtista | nul
  * Crear un nuevo producto de artista
  */
 export async function createProducto(data: CreateProductoData): Promise<ProductoArtista | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return null;
   }
 
@@ -2452,7 +2451,7 @@ export async function updateProducto(
   recordId: string,
   updates: Partial<ProductoArtista>
 ): Promise<boolean> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return false;
   }
 
@@ -2498,7 +2497,7 @@ export async function updateProducto(
  * Registrar una venta
  */
 export async function registrarVenta(data: CreateVentaData): Promise<VentaArtista | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return null;
   }
 
@@ -2580,7 +2579,7 @@ export async function registrarVenta(data: CreateVentaData): Promise<VentaArtist
 export async function getVentasArtista(
   options?: { artistaId?: string; compradorId?: string; estado?: EstadoPago; limit?: number }
 ): Promise<VentaArtista[]> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return [];
   }
 
@@ -2635,7 +2634,7 @@ export async function updateVenta(
     comentarioCliente: string;
   }>
 ): Promise<boolean> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return false;
   }
 
@@ -2881,7 +2880,7 @@ export const airtableService = {
   fetchTable,
   
   // Configuración
-  isConfigured: () => Boolean(AIRTABLE_API_KEY && AIRTABLE_BASE_ID),
+  isConfigured: () => Boolean(AIRTABLE_BASE_ID),
   tables: TABLES
 };
 
@@ -2931,7 +2930,7 @@ export async function getJugadoresWachi(club?: string): Promise<JugadorWachi[]> 
 }
 
 export async function createJugadorWachi(jugador: Omit<JugadorWachi, 'id' | 'recaudado'>): Promise<JugadorWachi | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return null;
+  if (!AIRTABLE_BASE_ID) return null;
   try {
     const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.JUGADORES_WACHI)}`, {
       method: 'POST',
@@ -2948,7 +2947,7 @@ export async function createJugadorWachi(jugador: Omit<JugadorWachi, 'id' | 'rec
 }
 
 export async function updateJugadorWachi(id: string, changes: Partial<JugadorWachi>): Promise<JugadorWachi | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return null;
+  if (!AIRTABLE_BASE_ID) return null;
   try {
     const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.JUGADORES_WACHI)}/${id}`, {
       method: 'PATCH',
@@ -2984,7 +2983,7 @@ export async function getTorneosClub(club?: string): Promise<TorneoClub[]> {
 }
 
 export async function createTorneoClub(torneo: Omit<TorneoClub, 'id'>): Promise<TorneoClub | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return null;
+  if (!AIRTABLE_BASE_ID) return null;
   try {
     const response = await fetch(`${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.TORNEOS_CLUB)}`, {
       method: 'POST',
@@ -3022,7 +3021,7 @@ import type { ProjectTask, TaskStatus, TaskPriority, TaskCategory } from '../typ
  * Obtener todas las tareas desde Airtable
  */
 export async function getTareas(): Promise<ProjectTask[]> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     console.warn('⚠️ Airtable no configurado, retornando tareas vacías');
     return [];
   }
@@ -3042,7 +3041,7 @@ export async function getTareas(): Promise<ProjectTask[]> {
  * Crear nueva tarea en Airtable
  */
 export async function createTarea(tarea: Omit<ProjectTask, 'id'>): Promise<ProjectTask | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     console.warn('⚠️ Airtable no configurado');
     return null;
   }
@@ -3083,7 +3082,7 @@ export async function createTarea(tarea: Omit<ProjectTask, 'id'>): Promise<Proje
  * Actualizar tarea existente en Airtable
  */
 export async function updateTarea(id: string, updates: Partial<ProjectTask>): Promise<ProjectTask | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     console.warn('⚠️ Airtable no configurado');
     return null;
   }
@@ -3116,7 +3115,7 @@ export async function updateTarea(id: string, updates: Partial<ProjectTask>): Pr
  * Eliminar tarea de Airtable
  */
 export async function deleteTarea(id: string): Promise<boolean> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     console.warn('⚠️ Airtable no configurado');
     return false;
   }
@@ -3259,7 +3258,7 @@ export interface ProcedimientoRAG {
 }
 
 export async function getProcedimientosRAG(): Promise<ProcedimientoRAG[]> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return [];
+  if (!AIRTABLE_BASE_ID) return [];
   try {
     const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PROCEDIMIENTOS_RAG)}?pageSize=100`;
     const res = await axios.get(url, { headers: getHeaders() });
@@ -3284,7 +3283,7 @@ export async function getProcedimientosRAG(): Promise<ProcedimientoRAG[]> {
 }
 
 export async function createProcedimientoRAG(data: Omit<ProcedimientoRAG, 'id'>): Promise<ProcedimientoRAG | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return null;
+  if (!AIRTABLE_BASE_ID) return null;
   try {
     const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PROCEDIMIENTOS_RAG)}`;
     const fields: Record<string, any> = {
@@ -3308,7 +3307,7 @@ export async function createProcedimientoRAG(data: Omit<ProcedimientoRAG, 'id'>)
 }
 
 export async function updateProcedimientoRAG(recordId: string, data: Partial<Omit<ProcedimientoRAG, 'id'>>): Promise<boolean> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return false;
+  if (!AIRTABLE_BASE_ID) return false;
   try {
     const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PROCEDIMIENTOS_RAG)}/${recordId}`;
     const fields: Record<string, any> = { 'Última_Actualización': new Date().toISOString().slice(0, 10) };
@@ -3328,7 +3327,7 @@ export async function updateProcedimientoRAG(recordId: string, data: Partial<Omi
 }
 
 export async function deleteProcedimientoRAG(recordId: string): Promise<boolean> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) return false;
+  if (!AIRTABLE_BASE_ID) return false;
   try {
     const url = `${AIRTABLE_API_URL}/${encodeURIComponent(TABLES.PROCEDIMIENTOS_RAG)}/${recordId}`;
     await axios.delete(url, { headers: getHeaders() });

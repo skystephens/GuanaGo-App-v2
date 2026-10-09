@@ -1,10 +1,11 @@
 /**
  * Admin: Directorio de Alojamientos — Gestión de Disponibilidad
  * GET /disponibilidad-admin  → HTML con todos los alojamientos
- * Protegido por ?key= (ADMIN_PANEL_KEY o AIRTABLE_API_KEY como fallback)
+ * Protegido por ?key= (ADMIN_PANEL_KEY — NUNCA el token de Airtable)
  */
 
 import express from 'express';
+import crypto from 'node:crypto';
 const router = express.Router();
 
 const BASE_ID  = process.env.AIRTABLE_BASE_ID  || 'appiReH55Qhrbv4Lk';
@@ -64,14 +65,14 @@ async function fetchAllAlojamientos() {
 }
 
 router.get('/', async (req, res) => {
-  const adminKey    = process.env.ADMIN_PANEL_KEY || '';
-  const provided    = req.query.key || '';
-  const airtableKey = process.env.AIRTABLE_API_KEY || '';
+  const adminKey = process.env.ADMIN_PANEL_KEY || '';
+  const provided = String(req.query.key || '');
 
-  // Autenticación simple: acepta ADMIN_PANEL_KEY o AIRTABLE_API_KEY
-  const isAuth = !adminKey
-    ? !!provided && provided === airtableKey   // sin ADMIN_PANEL_KEY: usar airtable key
-    : provided === adminKey || provided === airtableKey;
+  // Solo ADMIN_PANEL_KEY. El token de Airtable ya no sirve como contraseña ni se
+  // incrusta en la página. Si ADMIN_PANEL_KEY no está definida, el panel queda cerrado.
+  const a = Buffer.from(provided);
+  const b = Buffer.from(adminKey);
+  const isAuth = !!adminKey && a.length === b.length && crypto.timingSafeEqual(a, b);
 
   if (!isAuth) {
     return res.status(401).send(`<!DOCTYPE html>
@@ -84,7 +85,7 @@ router.get('/', async (req, res) => {
 
   try {
     const alojamientos = await fetchAllAlojamientos();
-    const html = buildPage(alojamientos, airtableKey, provided);
+    const html = buildPage(alojamientos, '', provided);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(html);
   } catch (err) {

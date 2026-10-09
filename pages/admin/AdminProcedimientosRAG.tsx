@@ -250,7 +250,6 @@ Tareas_To_do             → Tareas del proyecto
 
 ## Variables de entorno requeridas
 \`\`\`bash
-VITE_AIRTABLE_API_KEY=pat_...
 VITE_AIRTABLE_BASE_ID=appiReH55Qhrbv4Lk
 VITE_MAPBOX_API_KEY=pk_...
 GROQ_API_KEY=gsk_...
@@ -326,7 +325,7 @@ const AdminProcedimientosRAG: React.FC<Props> = ({ onBack }) => {
       saveCache(data);
       setSyncedAt(Date.now());
     } catch {
-      setError('Error al conectar con Airtable. Verifica VITE_AIRTABLE_API_KEY en .env');
+      setError('Error al conectar con Airtable. Verifica AIRTABLE_API_KEY en el servidor (/api/config-check)');
     } finally {
       setSyncing(false);
     }

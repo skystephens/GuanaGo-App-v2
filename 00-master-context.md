@@ -452,7 +452,7 @@ imágenes y un botón de cotizar..."
 
 ### Airtable:
 - Base ID: [Agregar cuando esté disponible]
-- API Key: En `.env` como `VITE_AIRTABLE_API_KEY`
+- API Key: En `.env` como `AIRTABLE_API_KEY`
 
 ### Contactos Clave:
 - Cluster de Música: cluster@musica-raizal.com

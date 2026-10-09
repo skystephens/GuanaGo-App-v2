@@ -1,4 +1,4 @@
-﻿services:
+services:
   - type: web
     name: guana-go-app
     runtime: node
@@ -11,6 +11,8 @@
         sync: false
       - key: AIRTABLE_BASE_ID
         value: appiReH55Qhrbv4Lk
+      - key: ADMIN_PANEL_KEY
+        sync: false
       - key: AIRTABLE_TABLE_NAME
         value: Directorio_Mapa
       - key: GEMINI_API_KEY
@@ -24,8 +26,8 @@
       - key: NODE_ENV
         value: production
       # ── Frontend VITE (baked at build time) ──────────────
-      - key: VITE_AIRTABLE_API_KEY
-        sync: false
+      # ⚠️ NUNCA poner secretos en variables VITE_*: quedan en el JS público.
+      # El token de Airtable es solo AIRTABLE_API_KEY (arriba).
       - key: VITE_AIRTABLE_BASE_ID
         value: appiReH55Qhrbv4Lk
       - key: VITE_API_URL
