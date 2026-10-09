@@ -5,9 +5,9 @@
 
 import { Cotizacion, CotizacionItem, QuoteStatus, QuoteItemStatus, Tour, ItinerarioDia, QuoteDisplayConfig, DEFAULT_QUOTE_DISPLAY_CONFIG } from '../types';
 
-const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY || '';
+// El token de Airtable vive SOLO en el backend; el frontend llama a /api/airtable (ver backend/routes/airtableProxy.js)
 const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
-const AIRTABLE_API_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
+const AIRTABLE_API_URL = `/api/airtable/v0/${AIRTABLE_BASE_ID}`;
 
 const parseImagenesField = (raw: any): string[] => {
   if (!raw) return [];
@@ -29,7 +29,6 @@ const TABLES = {
 };
 
 const getHeaders = () => ({
-  'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
   'Content-Type': 'application/json'
 });
 
@@ -149,7 +148,7 @@ export function validateOperatingDay(
  * Obtener todas las cotizaciones
  */
 export async function getCotizaciones(): Promise<Cotizacion[]> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     console.warn('⚠️ Airtable no configurado');
     return [];
   }
@@ -179,7 +178,7 @@ export async function getCotizaciones(): Promise<Cotizacion[]> {
  * Obtener cotizaciones por teléfono (portal cliente B2C)
  */
 export async function getCotizacionesByTelefono(telefono: string): Promise<Cotizacion[]> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID || !telefono) return [];
+  if (!AIRTABLE_BASE_ID || !telefono) return [];
   try {
     // Los números quedan guardados en formatos distintos ('+573108304572',
     // '+57 315 4759681', '315 383 6043'...) — comparamos solo los últimos
@@ -208,7 +207,7 @@ export async function getCotizacionesByTelefono(telefono: string): Promise<Cotiz
  * Obtener cotización por ID con sus items
  */
 export async function getCotizacionById(id: string): Promise<Cotizacion | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     console.warn('⚠️ Airtable no configurado');
     return null;
   }
@@ -242,7 +241,7 @@ export async function getCotizacionById(id: string): Promise<Cotizacion | null> 
  * Obtener items de una cotización
  */
 export async function getCotizacionItems(cotizacionId: string): Promise<CotizacionItem[]> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return [];
   }
 
@@ -418,7 +417,7 @@ export async function getCotizacionItems(cotizacionId: string): Promise<Cotizaci
 export async function createCotizacion(
   cotizacion: Omit<Cotizacion, 'id'>
 ): Promise<Cotizacion | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     console.warn('⚠️ Airtable no configurado');
     return null;
   }
@@ -462,7 +461,7 @@ export async function createCotizacion(
 export async function addCotizacionItem(
   item: Omit<CotizacionItem, 'id'>
 ): Promise<CotizacionItem | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     console.warn('⚠️ Airtable no configurado');
     return null;
   }
@@ -537,7 +536,7 @@ export async function updateCotizacion(
   id: string,
   updates: Partial<Cotizacion>
 ): Promise<Cotizacion | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return null;
   }
 
@@ -586,7 +585,7 @@ export async function updateCotizacion(
  * Eliminar item de cotización
  */
 export async function deleteCotizacionItem(id: string): Promise<boolean> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return false;
   }
 
@@ -614,7 +613,7 @@ export async function deleteCotizacionItem(id: string): Promise<boolean> {
  * Actualizar item de cotización
  */
 export async function updateCotizacionItem(id: string, updates: Partial<CotizacionItem>): Promise<CotizacionItem | null> {
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  if (!AIRTABLE_BASE_ID) {
     return null;
   }
 

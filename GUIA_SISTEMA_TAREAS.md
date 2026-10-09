@@ -129,7 +129,7 @@ Puedes actualizar directamente en Airtable y recargar la vista en la app.
 
 2. Verifica credenciales en `.env`:
    ```bash
-   VITE_AIRTABLE_API_KEY=patDWx13o3qtNjLqv...
+   AIRTABLE_API_KEY=pat_TU_TOKEN_AQUI
    VITE_AIRTABLE_BASE_ID=appiReH55Qhrbv4Lk
    ```
 

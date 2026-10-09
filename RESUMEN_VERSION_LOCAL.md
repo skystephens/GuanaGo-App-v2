@@ -168,7 +168,7 @@ Contraseña:    Test123456!
 
 **Frontend (.env.local):**
 - `VITE_API_URL`: http://localhost:3001/api
-- `VITE_AIRTABLE_API_KEY`: patDWx13o3qtNjLqv...
+- `AIRTABLE_API_KEY`: pat_TU_TOKEN_AQUI
 - `VITE_AIRTABLE_BASE_ID`: appiReH55Qhrbv4Lk
 - `VITE_ENV`: development
 
@@ -176,7 +176,7 @@ Contraseña:    Test123456!
 - `NODE_ENV`: development
 - `PORT`: 3001
 - `JWT_SECRET`: your-super-secret-jwt-key
-- `AIRTABLE_API_KEY`: patDWx13o3qtNjLqv...
+- `AIRTABLE_API_KEY`: pat_TU_TOKEN_AQUI
 - `AIRTABLE_BASE_ID`: appiReH55Qhrbv4Lk
 
 ---

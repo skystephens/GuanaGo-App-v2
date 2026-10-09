@@ -131,7 +131,7 @@ Ya está creado en la raíz. Contiene:
 
 ```env
 VITE_API_URL=http://localhost:3001/api
-VITE_AIRTABLE_API_KEY=patDWx13o3qtNjLqv.37cd343946b889d2044f1f5fa9039c06931d38a192f794c115f0efd21cca1658
+AIRTABLE_API_KEY=pat_TU_TOKEN_AQUI
 VITE_AIRTABLE_BASE_ID=appiReH55Qhrbv4Lk
 VITE_ENV=development
 VITE_ENABLE_PARTNER_DASHBOARD=true
@@ -145,7 +145,7 @@ Ya está creado en la carpeta backend. Contiene:
 NODE_ENV=development
 PORT=3001
 JWT_SECRET=your-super-secret-jwt-key-development-only
-AIRTABLE_API_KEY=patDWx13o3qtNjLqv.37cd343946b889d2044f1f5fa9039c06931d38a192f794c115f0efd21cca1658
+AIRTABLE_API_KEY=pat_TU_TOKEN_AQUI
 AIRTABLE_BASE_ID=appiReH55Qhrbv4Lk
 ```
 
@@ -365,7 +365,7 @@ app.use(cors({
 
 ```bash
 # Abre .env.local y verifica:
-VITE_AIRTABLE_API_KEY=patDWx13o3qtNjLqv.37cd343946b889d2044f1f5fa9039c06931d38a192f794c115f0efd21cca1658
+AIRTABLE_API_KEY=pat_TU_TOKEN_AQUI
 VITE_AIRTABLE_BASE_ID=appiReH55Qhrbv4Lk
 
 # Si está vacío, obtén las credenciales de Airtable:

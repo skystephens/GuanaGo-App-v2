@@ -10,9 +10,9 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { AppRoute } from '../../types';
 
-const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY || '';
+// El token de Airtable vive SOLO en el backend; se accede vía /api/airtable (backend/routes/airtableProxy.js)
 const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
-const AIRTABLE_API_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
+const AIRTABLE_API_URL = `/api/airtable/v0/${AIRTABLE_BASE_ID}`;
 
 interface Props {
   onBack: () => void;
@@ -22,7 +22,7 @@ interface Props {
 async function contarRapido(tabla: string, filtro?: string): Promise<string> {
   try {
     const url = `${AIRTABLE_API_URL}/${encodeURIComponent(tabla)}?pageSize=100${filtro ? `&filterByFormula=${encodeURIComponent(filtro)}` : ''}`;
-    const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` } });
+    const r = await fetch(url);
     if (!r.ok) return '—';
     const data = await r.json();
     const n = data.records?.length || 0;

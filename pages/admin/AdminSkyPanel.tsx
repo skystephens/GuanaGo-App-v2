@@ -12,14 +12,14 @@ import {
 import { AppRoute } from '../../types';
 
 // ─── AIRTABLE CONFIG ─────────────────────────────────────────
-const AT_TOKEN = import.meta.env.VITE_AIRTABLE_API_KEY;
+// El token de Airtable vive SOLO en el backend; se accede vía /api/airtable (backend/routes/airtableProxy.js)
 
 type AirtableRecord = { id: string; fields: Record<string, any> };
 
 async function fetchAirtable(baseId: string, table: string, params = ""): Promise<AirtableRecord[]> {
-  if (!baseId || !AT_TOKEN) return [];
-  const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(table)}${params}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${AT_TOKEN}` } });
+  if (!baseId) return [];
+  const url = `/api/airtable/v0/${baseId}/${encodeURIComponent(table)}${params}`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`Airtable ${res.status}`);
   const json = await res.json();
   return json.records as AirtableRecord[];

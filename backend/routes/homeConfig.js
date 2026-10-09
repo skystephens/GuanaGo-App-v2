@@ -15,7 +15,7 @@ const router = express.Router();
 const TABLE = 'Home_Config';
 
 const AT = () => {
-  const key  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+  const key  = process.env.AIRTABLE_API_KEY;
   const base = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
   return { key, base, url: `https://api.airtable.com/v0/${base}/${encodeURIComponent(TABLE)}` };
 };

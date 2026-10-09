@@ -149,7 +149,7 @@
   - [ ] "Updated cache from API"
   - [ ] "Fetched X records from ServiciosTuristicos_SAI"
 - [ ] Si hay error:
-  - [ ] Verificar `.env` tiene `VITE_AIRTABLE_API_KEY` ✓
+  - [ ] Verificar `.env` tiene `AIRTABLE_API_KEY` ✓
   - [ ] Verificar `.env` tiene `VITE_AIRTABLE_BASE_ID` ✓
   - [ ] Verificar API Key es válida
   - [ ] Verificar tabla `ServiciosTuristicos_SAI` existe

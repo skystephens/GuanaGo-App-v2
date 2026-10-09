@@ -32,10 +32,10 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 // Reemplaza el localStorage anterior: ahora todo se guarda de verdad, accesible
 // desde cualquier dispositivo con sesión de Super Admin.
 
-const AT_KEY  = import.meta.env.VITE_AIRTABLE_API_KEY || '';
+// El token de Airtable vive SOLO en el backend; se accede vía /api/airtable (backend/routes/airtableProxy.js)
 const AT_BASE = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
-const AT_URL  = `https://api.airtable.com/v0/${AT_BASE}`;
-const AT_HEADERS = { Authorization: `Bearer ${AT_KEY}`, 'Content-Type': 'application/json' };
+const AT_URL  = `/api/airtable/v0/${AT_BASE}`;
+const AT_HEADERS = { 'Content-Type': 'application/json' };
 
 async function atList(tabla: string) {
   let all: any[] = [];

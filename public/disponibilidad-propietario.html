@@ -202,7 +202,7 @@ const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
 const DAYS   = ['D','L','M','X','J','V','S'];
 
 const ALOJ_ID  = new URLSearchParams(location.search).get('id');
-const API_KEY  = new URLSearchParams(location.search).get('k') || '';
+const API_KEY  = ''; // el token de Airtable ya no viaja al navegador (se usa /api/airtable)
 // Modos de operación:
 //   IS_ADMIN → tiene id + api key  → llama Airtable directo
 //   IS_PROXY → tiene id, sin key   → usa proxy del backend (propietario)
@@ -223,11 +223,11 @@ let st = {
 
 // ── API ──────────────────────────────────────────────────
 async function at(method, tbl, params, body) {
-  const url = new URL(`https://api.airtable.com/v0/${BASE_ID}/${tbl}`);
+  const url = new URL(`/api/airtable/v0/${BASE_ID}/${tbl}`, location.origin);
   if (params) Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
   const r = await fetch(url, {
     method,
-    headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined
   });
   if (!r.ok) throw new Error(`AT ${r.status}: ${await r.text()}`);

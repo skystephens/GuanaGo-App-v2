@@ -33,7 +33,7 @@ const PAYU_CHECKOUT = {
 const PAGOS_TABLE = 'PagosTemporales';
 
 async function savePagoTemporal(referenceCode, fields, payuUrl, meta) {
-  const AT_KEY  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+  const AT_KEY  = process.env.AIRTABLE_API_KEY;
   const AT_BASE = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
   if (!AT_KEY) throw new Error('AIRTABLE_API_KEY no configurado');
 
@@ -54,7 +54,7 @@ async function savePagoTemporal(referenceCode, fields, payuUrl, meta) {
 }
 
 async function getPagoTemporal(referenceCode) {
-  const AT_KEY  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+  const AT_KEY  = process.env.AIRTABLE_API_KEY;
   const AT_BASE = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
   if (!AT_KEY) return null;
 
@@ -290,7 +290,7 @@ router.post('/webhook', express.urlencoded({ extended: true }), async (req, res)
   const entityId = match?.[1];
 
   if (entityId && state_pol === '4') {
-    const AT_KEY  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+    const AT_KEY  = process.env.AIRTABLE_API_KEY;
     const AT_BASE = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
     const AT_HDR  = { 'Authorization': `Bearer ${AT_KEY}`, 'Content-Type': 'application/json' };
     const AT      = (table) => `https://api.airtable.com/v0/${AT_BASE}/${encodeURIComponent(table)}`;

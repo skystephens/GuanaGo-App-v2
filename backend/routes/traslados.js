@@ -12,7 +12,7 @@ import express from 'express';
 const router = express.Router();
 
 const AT = () => {
-  const key  = process.env.AIRTABLE_API_KEY || process.env.VITE_AIRTABLE_API_KEY;
+  const key  = process.env.AIRTABLE_API_KEY;
   const base = process.env.AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
   return { key, base, headers: { Authorization: `Bearer ${key}` } };
 };

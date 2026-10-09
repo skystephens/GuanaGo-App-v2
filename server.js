@@ -67,9 +67,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 
+// Proxy de Airtable para GuiaSAI-B2B (reemplaza proxy.php de WordPress).
+// DEBE ir ANTES de express.static: el build del B2B copia public/api/proxy.php a
+// dist/agencias/api/ y, si static va primero, se sirve el código fuente PHP en vez de ejecutar este proxy.
+// El frontend llama: /agencias/api/proxy.php?path=/v0/BASE/TABLA?...
+app.all('/agencias/api/proxy.php', airtableRateLimit, (req, res) =>
+  forwardToAirtable(req, res, String(req.query.path || ''))
+);
+
 // Static files — los archivos con hash (JS/CSS de Vite) se cachean agresivo
 // porque su nombre cambia con cada build. index.html NUNCA debe cachearse:
 // es el que le dice al navegador cuál es el hash actual del bundle.
+app.use((req, res, next) => (req.path.endsWith('.php') ? res.status(404).end() : next()));
 app.use(express.static(distPath, { 
   maxAge: '1h',
   etag: false,
@@ -83,6 +92,7 @@ app.use(express.static(distPath, {
 // ==================== API ROUTES ====================
 
 import validateAdminPinRoutes from './backend/routes/validateAdminPin.js';
+import airtableProxyRoutes, { forwardToAirtable, rateLimit as airtableRateLimit } from './backend/routes/airtableProxy.js';
 import debugRoutes from './backend/routes/debug.js';
 import userAuthRoutes from './backend/routes/userAuth.js';
 import firebaseAuthRoutes from './backend/routes/firebaseAuth.js';
@@ -107,14 +117,15 @@ app.get('/api/config-check', (req, res) => {
     environment: config.nodeEnv,
     airtable: {
       hasApiKey: Boolean(airtableKey),
-      apiKeyLength: airtableKey?.length || 0,
-      apiKeyPrefix: airtableKey?.substring(0, 6) || 'N/A',
       hasBaseId: Boolean(airtableBase),
       baseId: airtableBase || 'NOT_SET'
     },
     envVarsLoaded: Object.keys(process.env).filter(k => k.startsWith('AIRTABLE') || k.startsWith('VITE')).length
   });
 });
+
+// Proxy seguro de Airtable (el token vive solo en el servidor)
+app.use('/api/airtable', airtableProxyRoutes);
 
 // Auth routes
 app.use('/api/auth', authRoutes);
@@ -178,43 +189,7 @@ console.log('✅ Rutas API configuradas');
 // ==================== GUIASAI B2B ====================
 const agenciasDistPath = path.join(__dirname, 'dist', 'agencias');
 
-// Proxy de Airtable para GuiaSAI-B2B (reemplaza proxy.php de WordPress)
-// El frontend llama: /agencias/api/proxy.php?path=/v0/BASE/TABLE?...
-app.all('/agencias/api/proxy.php', async (req, res) => {
-  const airtablePath = req.query.path;
-  if (!airtablePath) {
-    return res.status(400).json({ error: 'Missing path parameter' });
-  }
-
-  const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
-  if (!AIRTABLE_API_KEY) {
-    return res.status(503).json({ error: 'AIRTABLE_API_KEY not configured on server' });
-  }
-
-  try {
-    const targetUrl = `https://api.airtable.com${airtablePath}`;
-    const fetchOptions = {
-      method: req.method,
-      headers: {
-        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    };
-
-    // Pasar body en PATCH/POST
-    if (req.method === 'POST' || req.method === 'PATCH' || req.method === 'PUT') {
-      fetchOptions.body = JSON.stringify(req.body);
-    }
-
-    const airtableRes = await fetch(targetUrl, fetchOptions);
-    const data = await airtableRes.json();
-    res.status(airtableRes.status).json(data);
-  } catch (err) {
-    console.error('❌ GuiaSAI Airtable proxy error:', err.message);
-    res.status(500).json({ error: 'Proxy error', details: err.message });
-  }
-});
-
+// (El proxy de Airtable del B2B está definido arriba, antes de express.static)
 // Archivos estáticos de GuiaSAI-B2B
 app.use('/agencias', express.static(agenciasDistPath, { maxAge: '1h', etag: false }));
 
