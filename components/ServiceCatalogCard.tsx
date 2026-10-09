@@ -21,14 +21,14 @@ interface ServiceCatalogCardProps {
     maxGuests?: number;
   };
   onViewDetails: () => void;
-  /** Mostrar precio en COP (true) o USD (false). Default false */
+  /** Forzar COP (true) o USD (false). Si se omite: usa service.moneda y, si no existe, COP. */
   priceCOP?: boolean;
 }
 
 const ServiceCatalogCard: React.FC<ServiceCatalogCardProps> = ({
   service,
   onViewDetails,
-  priceCOP = false,
+  priceCOP,
 }) => {
   const { i18n } = useTranslation();
   const category = service.category || 'tour';
@@ -43,6 +43,12 @@ const ServiceCatalogCard: React.FC<ServiceCatalogCardProps> = ({
   const _accType = ((service.accommodationType || (service as any).tipo || '') as string).toLowerCase();
   const isPricePerUnit = category === 'hotel' && ['casa', 'apartamento', 'apartamentos', 'villa', 'finca'].some(k => _accType.includes(k));
   const rating   = service.rating || 4.5;
+  // Los precios del catálogo están en COP; solo se muestra USD si se pide explícitamente
+  // (priceCOP={false}) o si el servicio trae moneda === 'USD'.
+  const currency: string = priceCOP === true ? 'COP'
+    : priceCOP === false ? 'USD'
+    : String((service as any).moneda || 'COP').toUpperCase();
+  const isCOP = currency === 'COP';
 
   return (
     <div
@@ -94,10 +100,10 @@ const ServiceCatalogCard: React.FC<ServiceCatalogCardProps> = ({
             {price > 0 && !(service as any).precioBajoPedido ? (
               <>
                 <span className="text-emerald-600 font-black text-base">
-                  ${priceCOP ? price.toLocaleString('es-CO') : price.toLocaleString()}
+                  ${isCOP ? price.toLocaleString('es-CO') : price.toLocaleString()}
                 </span>
                 <span className="text-[10px] text-gray-400 ml-1">
-                  {priceCOP ? 'COP' : 'USD'} {category !== 'hotel' ? '/ persona' : isPricePerUnit ? '/ noche' : '/ noche · persona'}
+                  {currency} {category !== 'hotel' ? '/ persona' : isPricePerUnit ? '/ noche' : '/ noche · persona'}
                 </span>
               </>
             ) : (
