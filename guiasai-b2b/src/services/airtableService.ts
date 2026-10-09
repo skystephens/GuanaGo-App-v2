@@ -15,7 +15,7 @@ import {
   getTransportsFromJSON,
 } from './tariffService'
 
-const AIRTABLE_BASE_ID = (import.meta as any).env.VITE_AIRTABLE_BASE_ID || ''
+const AIRTABLE_BASE_ID = (import.meta as any).env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk'
 
 /**
  * Construye la URL del proxy según el entorno:

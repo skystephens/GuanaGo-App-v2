@@ -11,7 +11,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { AppRoute } from '../../types';
 
 // El token de Airtable vive SOLO en el backend; se accede vía /api/airtable (backend/routes/airtableProxy.js)
-const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
+const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
 const AIRTABLE_API_URL = `/api/airtable/v0/${AIRTABLE_BASE_ID}`;
 
 interface Props {
