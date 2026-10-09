@@ -33,7 +33,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 // desde cualquier dispositivo con sesión de Super Admin.
 
 // El token de Airtable vive SOLO en el backend; se accede vía /api/airtable (backend/routes/airtableProxy.js)
-const AT_BASE = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
+const AT_BASE = import.meta.env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
 const AT_URL  = `/api/airtable/v0/${AT_BASE}`;
 const AT_HEADERS = { 'Content-Type': 'application/json' };
 

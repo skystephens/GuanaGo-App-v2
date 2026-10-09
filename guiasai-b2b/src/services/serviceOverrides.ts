@@ -14,7 +14,7 @@ const fbSaveImageOverrides = async (_: any) => {}
 const fbSaveServiceOverrides = async (_: any) => {}
 const fbSavePaquetes = async (_: any) => {}
 
-const AIRTABLE_BASE_ID = (import.meta as any).env.VITE_AIRTABLE_BASE_ID || ''
+const AIRTABLE_BASE_ID = (import.meta as any).env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk'
 
 function buildProxyUrl(airtablePath: string): string {
   if ((import.meta as any).env.DEV) {

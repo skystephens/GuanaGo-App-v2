@@ -19,7 +19,7 @@ import {
 } from './firebaseService'
 
 // ── Configuración Airtable (igual que en airtableService.ts) ─────────────────
-const AIRTABLE_BASE_ID = (import.meta as any).env.VITE_AIRTABLE_BASE_ID || ''
+const AIRTABLE_BASE_ID = (import.meta as any).env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk'
 
 function buildProxyUrl(airtablePath: string): string {
   if ((import.meta as any).env.DEV) {

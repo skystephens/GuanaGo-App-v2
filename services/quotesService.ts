@@ -6,7 +6,7 @@
 import { Cotizacion, CotizacionItem, QuoteStatus, QuoteItemStatus, Tour, ItinerarioDia, QuoteDisplayConfig, DEFAULT_QUOTE_DISPLAY_CONFIG } from '../types';
 
 // El token de Airtable vive SOLO en el backend; el frontend llama a /api/airtable (ver backend/routes/airtableProxy.js)
-const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
+const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || 'appiReH55Qhrbv4Lk';
 const AIRTABLE_API_URL = `/api/airtable/v0/${AIRTABLE_BASE_ID}`;
 
 const parseImagenesField = (raw: any): string[] => {
