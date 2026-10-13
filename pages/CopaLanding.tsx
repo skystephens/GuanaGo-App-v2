@@ -25,7 +25,7 @@ const COMITE = [
   { nombre: 'Jacir Davis Blanco', rol: 'Anfitrión · Logística de escenarios' },
   { nombre: 'Carlos Colorado', rol: 'Logística de arbitraje y reglamento' },
   { nombre: 'Daniela Espinosa', rol: 'Organizadora · Todas las categorías' },
-  { nombre: 'Sky Stephens', rol: 'Anfitriona · Hospedaje, transporte y alimentación' },
+  { nombre: 'Sky Stephens', rol: 'Anfitrión · Hospedaje, transporte y alimentación' },
 ];
 
 const CATEGORIAS = [
