@@ -9,6 +9,11 @@ import express from 'express';
 const router = express.Router();
 const TABLE = 'Paquetes_Internacionales';
 
+// El campo de precio se llama *_USD pero los paquetes de Colombia (Bitacora Tours) vienen en COP.
+// Ningún paquete real en USD supera 100.000, así que un valor mayor es COP.
+const monedaDe = (f) =>
+  f['Categoria'] === 'Colombia' || (f['Precio_Desde_Doble_USD'] || 0) > 100000 ? 'COP' : 'USD';
+
 let cache = { data: null, ts: 0 };
 const CACHE_MS = 5 * 60_000;
 
@@ -57,11 +62,18 @@ router.get('/', async (_req, res) => {
       precioNino: rec.fields['Precio_Nino_USD'] || null,
       flyerDrive: rec.fields['Flyer_Drive'] || '',
       imagen: rec.fields['Imagen_URL'] || '',
-      notas: rec.fields['Notas_Tarifa'] || '',
+      // Notas_Tarifa quedó DEPRECADO (singleSelect); el texto libre vive en Notas_Tarifa_Texto
+      notas: rec.fields['Notas_Tarifa_Texto'] || '',
+      destacado: rec.fields['Destacado'] === true,
+      moneda: monedaDe(rec.fields),
     })).filter(p => p.nombre);
     console.log(`✅ paquetes-internacionales: ${paquetes.length} con nombre válido (de ${data.records?.length ?? 0} totales)`);
 
-    paquetes.sort((a, b) => (a.categoria + String(a.precioDesde).padStart(6, '0')).localeCompare(b.categoria + String(b.precioDesde).padStart(6, '0')));
+    // Destacados primero; dentro de cada grupo, por categoría y precio
+    paquetes.sort((a, b) => {
+      if (a.destacado !== b.destacado) return a.destacado ? -1 : 1;
+      return (a.categoria + String(a.precioDesde).padStart(9, '0')).localeCompare(b.categoria + String(b.precioDesde).padStart(9, '0'));
+    });
     if (paquetes.length > 0) cache = { data: paquetes, ts: Date.now() };
     res.json(paquetes);
   } catch (err) {
@@ -104,7 +116,9 @@ router.get('/admin', async (_req, res) => {
       precioNino: rec.fields['Precio_Nino_USD'] || null,
       flyerDrive: rec.fields['Flyer_Drive'] || '',
       imagen: rec.fields['Imagen_URL'] || '',
-      notas: rec.fields['Notas_Tarifa'] || '',
+      notas: rec.fields['Notas_Tarifa_Texto'] || '',
+      destacado: rec.fields['Destacado'] === true,
+      moneda: monedaDe(rec.fields),
       operador: rec.fields['Operador'] || '',
       estado: rec.fields['Estado'] || '',
       publicado: rec.fields['Publicado'] === true,
@@ -129,7 +143,8 @@ const buildFields = (body) => {
   if (body.precioNino !== undefined) fields['Precio_Nino_USD'] = body.precioNino === '' ? null : Number(body.precioNino);
   if (body.flyerDrive !== undefined) fields['Flyer_Drive'] = body.flyerDrive;
   if (body.imagen !== undefined) fields['Imagen_URL'] = body.imagen;
-  if (body.notas !== undefined) fields['Notas_Tarifa'] = body.notas;
+  if (body.notas !== undefined) fields['Notas_Tarifa_Texto'] = body.notas;
+  if (body.destacado !== undefined) fields['Destacado'] = !!body.destacado;
   if (body.operador !== undefined) fields['Operador'] = body.operador;
   if (body.estado !== undefined) fields['Estado'] = body.estado;
   if (body.publicado !== undefined) fields['Publicado'] = !!body.publicado;

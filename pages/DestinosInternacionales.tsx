@@ -17,6 +17,7 @@ interface PaqueteIntl {
   origen: string; salidas: string; precioDesde: number;
   precioSencilla: number | null; precioNino: number | null;
   flyerDrive: string; imagen: string; notas: string;
+  destacado?: boolean; moneda?: 'COP' | 'USD';
 }
 
 interface Props {
@@ -28,12 +29,16 @@ const emojiPara = (categoria: string) =>
   categoria === 'Colombia' ? '🇨🇴' : categoria === 'América' ? '🌎' : categoria === 'Europa' ? '🇪🇺' :
   categoria === 'África' ? '🦁' : categoria === 'Asia' ? '🌏' : '🕌';
 
-const fmtPrecio = (categoria: string, n: number | null) => {
+const fmtPrecio = (p: PaqueteIntl, n: number | null) => {
   if (!n) return null;
-  return categoria === 'Colombia'
+  const esCOP = p.moneda ? p.moneda === 'COP' : p.categoria === 'Colombia';
+  return esCOP
     ? `$${Math.round(n).toLocaleString('es-CO')} COP`
     : `USD $${Math.round(n).toLocaleString('en-US')}`;
 };
+
+// "Próxima salida" de un paquete: primera fecha de la lista (separadas por |)
+const primeraSalidaDe = (p: PaqueteIntl) => (p.salidas || '').split('|')[0].trim();
 
 const wa = 'https://wa.me/573153836043';
 
@@ -66,7 +71,11 @@ const DestinosInternacionales: React.FC<Props> = ({ onBack }) => {
   }
 
   const categorias = ['Todos', ...Array.from(new Set(paquetes.map(p => p.categoria).filter(Boolean)))];
-  const filtrados = categoria === 'Todos' ? paquetes : paquetes.filter(p => p.categoria === categoria);
+  const enCategoria = categoria === 'Todos' ? paquetes : paquetes.filter(p => p.categoria === categoria);
+  // El paquete marcado "Destacado" en Airtable se muestra aparte, arriba de la grilla
+  const destacado = enCategoria.find(p => p.destacado) || null;
+  const filtrados = enCategoria.filter(p => p !== destacado);
+  const cuenta = (c: string) => (c === 'Todos' ? paquetes.length : paquetes.filter(p => p.categoria === c).length);
 
   return (
     <div className="min-h-screen bg-white">
@@ -109,7 +118,7 @@ const DestinosInternacionales: React.FC<Props> = ({ onBack }) => {
                   categoria === c ? 'bg-[#003D5C] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                 }`}
               >
-                {c}
+                {c} <span className="opacity-70 font-medium ml-0.5">{cuenta(c)}</span>
               </button>
             ))}
           </div>
@@ -117,22 +126,72 @@ const DestinosInternacionales: React.FC<Props> = ({ onBack }) => {
 
         {loading ? (
           <div className="flex justify-center py-24"><Loader2 className="animate-spin text-gray-300" size={32} /></div>
-        ) : filtrados.length === 0 ? (
+        ) : !destacado && filtrados.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-gray-400">
             <Globe2 size={48} className="mb-3 opacity-20" />
             <p className="text-sm font-bold">No hay paquetes disponibles en esta categoría todavía</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtrados.map(p => (
-              <TarjetaPaquete key={p.id} p={p} onClick={() => setDetalleId(p.id)} />
-            ))}
-          </div>
+          <>
+            {destacado && (
+              <div className="mb-8">
+                <p className="text-[11px] font-bold tracking-[.14em] uppercase text-teal-700 mb-3">Salida destacada</p>
+                <TarjetaDestacada p={destacado} onClick={() => setDetalleId(destacado.id)} />
+              </div>
+            )}
+            {filtrados.length > 0 && (
+              <>
+                {destacado && (
+                  <p className="text-[11px] font-bold tracking-[.14em] uppercase text-gray-500 mb-3">Todos los paquetes</p>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filtrados.map(p => (
+                    <TarjetaPaquete key={p.id} p={p} onClick={() => setDetalleId(p.id)} />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         )}
       </div>
     </div>
   );
 };
+
+function TarjetaDestacada({ p, onClick }: { p: PaqueteIntl; onClick: () => void }) {
+  const primeraImagen = (p.imagen || '').split(',')[0].trim();
+  const proxima = primeraSalidaDe(p);
+  // Con foto: velo azul marino sobre la imagen. Sin foto: degradado de marca.
+  const fondo = primeraImagen
+    ? `linear-gradient(115deg, rgba(0,61,92,.94) 0%, rgba(0,61,92,.82) 55%, rgba(0,61,92,.45) 100%), url('${primeraImagen}')`
+    : 'linear-gradient(115deg, #003D5C 0%, #003D5C 55%, #2AABBB 130%)';
+  return (
+    <button
+      onClick={onClick}
+      className="w-full text-left rounded-3xl overflow-hidden text-white shadow-sm hover:shadow-xl transition-shadow bg-cover bg-center"
+      style={{ backgroundImage: fondo }}
+    >
+      <div className="p-6 md:p-8">
+        {proxima && (
+          <span className="inline-block bg-orange-100 text-orange-800 text-[11px] font-bold uppercase tracking-wide px-3 py-1 rounded-full">
+            Próxima salida · {proxima}
+          </span>
+        )}
+        <h3 className="text-2xl md:text-4xl font-black mt-4 leading-tight">{p.nombre}</h3>
+        <p className="text-sm md:text-base mt-2 opacity-90">
+          {p.duracion}{p.origen ? ` · Desde ${p.origen}` : ''}
+        </p>
+        <div className="flex items-end justify-between flex-wrap gap-4 mt-8">
+          <div>
+            <p className="text-xs opacity-85">Desde, por persona en doble</p>
+            <p className="text-2xl md:text-3xl font-black">{fmtPrecio(p, p.precioDesde)}</p>
+          </div>
+          <span className="px-5 py-3 rounded-xl bg-white text-[#003D5C] text-sm font-bold">Ver detalle</span>
+        </div>
+      </div>
+    </button>
+  );
+}
 
 function TarjetaPaquete({ p, onClick }: { p: PaqueteIntl; onClick: () => void }) {
   const emoji = emojiPara(p.categoria);
@@ -155,7 +214,7 @@ function TarjetaPaquete({ p, onClick }: { p: PaqueteIntl; onClick: () => void })
         <div className="flex items-center justify-between mt-3">
           <div>
             <p className="text-[9px] uppercase tracking-wide text-slate-400 font-semibold">Desde · por persona</p>
-            <p className="font-black text-[#003D5C]">{fmtPrecio(p.categoria, p.precioDesde)}</p>
+            <p className="font-black text-[#003D5C]">{fmtPrecio(p, p.precioDesde)}</p>
           </div>
           <span className="text-xs font-bold text-orange-500">Más info →</span>
         </div>
@@ -256,18 +315,18 @@ function DetallePaquete({ paquete: p, relacionados, onBack, onVerOtro, onSalir }
                 <tbody>
                   <tr className="border-b border-gray-100">
                     <td className="px-4 py-2.5 text-gray-500">Doble</td>
-                    <td className="px-4 py-2.5 text-right font-black text-[#003D5C]">{fmtPrecio(p.categoria, p.precioDesde) || '—'}</td>
+                    <td className="px-4 py-2.5 text-right font-black text-[#003D5C]">{fmtPrecio(p, p.precioDesde) || '—'}</td>
                   </tr>
                   {p.precioSencilla ? (
                     <tr className="border-b border-gray-100">
                       <td className="px-4 py-2.5 text-gray-500">Sencilla</td>
-                      <td className="px-4 py-2.5 text-right font-black text-[#003D5C]">{fmtPrecio(p.categoria, p.precioSencilla)}</td>
+                      <td className="px-4 py-2.5 text-right font-black text-[#003D5C]">{fmtPrecio(p, p.precioSencilla)}</td>
                     </tr>
                   ) : null}
                   {p.precioNino ? (
                     <tr>
                       <td className="px-4 py-2.5 text-gray-500">Niño</td>
-                      <td className="px-4 py-2.5 text-right font-black text-[#003D5C]">{fmtPrecio(p.categoria, p.precioNino)}</td>
+                      <td className="px-4 py-2.5 text-right font-black text-[#003D5C]">{fmtPrecio(p, p.precioNino)}</td>
                     </tr>
                   ) : null}
                 </tbody>
