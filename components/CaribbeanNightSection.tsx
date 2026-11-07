@@ -101,11 +101,11 @@ const CaribbeanNightSection: React.FC<CaribbeanNightSectionProps> = ({ onNavigat
             Caribbean <span style={{ color: '#22d3ee' }}>Night</span>
           </h2>
 
-          {/* Horario fijo — todos los jueves */}
+          {/* Horario fijo — todos los viernes */}
           <div className="flex flex-wrap items-center gap-3 mb-1">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.25)' }}>
               <Music size={13} style={{ color: '#22d3ee' }} />
-              <span className="text-xs font-bold" style={{ color: '#a5f3fc' }}>Todos los jueves</span>
+              <span className="text-xs font-bold" style={{ color: '#a5f3fc' }}>Todos los viernes</span>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)' }}>
               <span className="text-xs font-bold" style={{ color: '#fdba74' }}>9:30 PM</span>

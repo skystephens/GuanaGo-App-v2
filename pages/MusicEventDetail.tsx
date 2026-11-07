@@ -117,7 +117,7 @@ const MusicEventDetail: React.FC<MusicEventDetailProps> = ({ data, onBack, onNav
         year: 'numeric'
       }),
       time: '9:30 PM',
-      dayOfWeek: 'Jueves'
+      dayOfWeek: 'Viernes'
     };
   };
 

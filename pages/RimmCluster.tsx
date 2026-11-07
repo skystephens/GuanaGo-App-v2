@@ -137,7 +137,7 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
             Caribbean <span className="text-cyan-300">Night</span>
           </h1>
           <p className="text-white/70 text-sm">
-            Todos los <span className="text-orange-400 font-bold">Jueves 9:30 PM</span> • Música Kriol en vivo
+            Todos los <span className="text-orange-400 font-bold">Viernes 9:30 PM</span> • Música Kriol en vivo
           </p>
         </div>
       </div>
@@ -208,7 +208,7 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
           // pad to full weeks
           while (cells.length % 7 !== 0) cells.push(null);
 
-          const isThursday = (day: number) => new Date(year, month, day).getDay() === 4;
+          const isFriday = (day: number) => new Date(year, month, day).getDay() === 5;
           const isToday = (day: number) =>
             day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
           const isPast = (day: number) => new Date(year, month, day) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -227,7 +227,7 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
                   <p className="text-white font-bold capitalize">{monthName}</p>
                   <p className="text-orange-400 text-xs font-medium flex items-center justify-center gap-1 mt-0.5">
                     <Clock size={11} />
-                    Todos los jueves · 9:30 PM
+                    Todos los viernes · 9:30 PM
                   </p>
                 </div>
                 <button
@@ -251,7 +251,7 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
               <div className="grid grid-cols-7 gap-y-1">
                 {cells.map((day, i) => {
                   if (!day) return <div key={`e-${i}`} />;
-                  const thu = isThursday(day);
+                  const thu = isFriday(day);
                   const tod = isToday(day);
                   const past = isPast(day);
                   return (
@@ -292,7 +292,7 @@ const RimmCluster: React.FC<RimmClusterProps> = ({ onBack, onNavigate }) => {
                 <div>
                   <p className="text-white text-sm font-bold">Evento fijo semanal</p>
                   <p className="text-gray-400 text-xs mt-0.5">
-                    Caribbean Night se realiza <span className="text-orange-300 font-medium">todos los jueves del año</span> a las 9:30 PM. Los artistas rotan cada semana.
+                    Caribbean Night se realiza <span className="text-orange-300 font-medium">todos los viernes del año</span> a las 9:30 PM. Los artistas rotan cada semana.
                   </p>
                 </div>
               </div>

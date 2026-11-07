@@ -656,16 +656,16 @@ export const api = {
           
           // Convertir artistas a formato de eventos musicales
           return artists.map((artist: any, index: number) => {
-            // Generar fechas de jueves próximos para eventos
+            // Generar fechas de viernes próximos para eventos
             const eventDate = new Date();
-            eventDate.setDate(eventDate.getDate() + ((4 - eventDate.getDay() + 7) % 7) + (index * 7)); // Próximos jueves
+            eventDate.setDate(eventDate.getDate() + ((5 - eventDate.getDay() + 7) % 7) + (index * 7)); // Próximos viernes
             
             return {
               id: artist.id || `artist-${index}`,
               eventName: `Caribbean Night - ${artist.name}`,
               date: eventDate.toISOString().split('T')[0],
               time: '9:30 PM',
-              dayOfWeek: 'Jueves',
+              dayOfWeek: 'Viernes',
               price: 85000, // Precio base Caribbean Night
               artistName: artist.name,
               imageUrl: artist.imageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600',
@@ -788,14 +788,14 @@ export const api = {
   }
 };
 
-// Mock data para Caribbean Night events (desarrollo) - JUEVES 9:30 PM
+// Mock data para Caribbean Night events (desarrollo) - VIERNES 9:30 PM
 const MOCK_CARIBBEAN_EVENTS = [
   {
     id: 'cn-001',
     eventName: 'Caribbean Night - Live Stieg Edition',
-    date: '2026-01-16', // Jueves
+    date: '2026-01-16', // Viernes
     time: '9:30 PM',
-    dayOfWeek: 'Jueves',
+    dayOfWeek: 'Viernes',
     price: 85000,
     artistName: 'Stieg',
     imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600',
@@ -807,9 +807,9 @@ const MOCK_CARIBBEAN_EVENTS = [
   {
     id: 'cn-002',
     eventName: 'Reggae Roots Night',
-    date: '2026-01-23', // Jueves
+    date: '2026-01-23', // Viernes
     time: '9:30 PM',
-    dayOfWeek: 'Jueves',
+    dayOfWeek: 'Viernes',
     price: 75000,
     artistName: 'Island Vibes Band',
     imageUrl: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=600',
@@ -821,9 +821,9 @@ const MOCK_CARIBBEAN_EVENTS = [
   {
     id: 'cn-003',
     eventName: 'Calypso Sunset Session',
-    date: '2026-01-30', // Jueves
+    date: '2026-01-30', // Viernes
     time: '9:30 PM',
-    dayOfWeek: 'Jueves',
+    dayOfWeek: 'Viernes',
     price: 65000,
     artistName: 'Caribbean Soul',
     imageUrl: 'https://images.unsplash.com/photo-1501612780327-45045538702b?w=600',
