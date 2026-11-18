@@ -630,6 +630,19 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
         className="bg-white rounded-3xl w-full max-w-sm max-h-[90dvh] overflow-y-auto shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
+        {/* ── Marca GuíaSAI ── */}
+        <div className="flex items-center gap-3 px-5 pt-4 pb-3 bg-white border-b border-gray-100">
+          <img
+            src="/logo-guiasai.png"
+            alt="GuíaSAI"
+            crossOrigin="anonymous"
+            className="h-12 w-auto object-contain shrink-0"
+          />
+          <p className="text-[8px] text-gray-400 font-bold tracking-widest uppercase leading-snug">
+            Turismo Raizal<br />San Andrés Islas
+          </p>
+        </div>
+
         {/* ── Header naranja ── */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-6 relative">
           {/* X cerrar */}
