@@ -631,16 +631,20 @@ function VoucherModal({ voucher, onClose, onUpdateEstado }: {
         onClick={e => e.stopPropagation()}
       >
         {/* ── Marca GuíaSAI ── */}
-        <div className="flex items-center gap-3 px-5 pt-4 pb-3 bg-white border-b border-gray-100">
+        <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3 bg-white border-b border-gray-100">
           <img
             src="/logo-guiasai.png"
             alt="GuíaSAI"
             crossOrigin="anonymous"
             className="h-12 w-auto object-contain shrink-0"
           />
-          <p className="text-[8px] text-gray-400 font-bold tracking-widest uppercase leading-snug">
-            Turismo Raizal<br />San Andrés Islas
-          </p>
+          <div className="text-right space-y-1">
+            <div className="flex items-center justify-end gap-1.5 text-[11px] text-gray-600 font-semibold">
+              <Phone size={11} className="text-orange-500" />
+              <span>+57 315 383 6043</span>
+            </div>
+            <p className="text-[10px] text-gray-500 font-bold tracking-wide">RNT: 48674</p>
+          </div>
         </div>
 
         {/* ── Header naranja ── */}
